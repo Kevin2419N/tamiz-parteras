@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 import {
     Building2,
     HeartHandshake,
@@ -23,6 +24,7 @@ import {
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [activeTab, setActiveTab] = useState<'INSTITUCIONAL' | 'PARTERA'>('INSTITUCIONAL');
 
     // Tab 1: Institutional State
@@ -129,7 +131,7 @@ export const Login: React.FC = () => {
             activo: true,
         };
 
-        localStorage.setItem('tamiz_user', JSON.stringify(userSimulado));
+        login(userSimulado);
         navigate('/dashboard');
     };
 

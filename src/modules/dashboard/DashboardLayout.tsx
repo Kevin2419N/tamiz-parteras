@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { UserRole } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 import {
     FileText,
     Users,
@@ -26,6 +27,7 @@ import {
 export const DashboardLayout: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     // UI State
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -207,7 +209,10 @@ export const DashboardLayout: React.FC = () => {
                             </div>
 
                             <button
-                                onClick={() => navigate('/login')}
+                                onClick={() => {
+                                    logout();
+                                    navigate('/');
+                                }}
                                 className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 rounded-xl border border-rose-900/40 transition-colors"
                             >
                                 <LogOut className="w-4 h-4" />
@@ -216,7 +221,10 @@ export const DashboardLayout: React.FC = () => {
                         </div>
                     ) : (
                         <button
-                            onClick={() => navigate('/login')}
+                            onClick={() => {
+                                logout();
+                                navigate('/');
+                            }}
                             className="p-2.5 text-rose-400 hover:bg-rose-950/30 rounded-xl border border-rose-900/40 w-full flex justify-center"
                             title="Cerrar Sesión"
                         >
@@ -291,7 +299,10 @@ export const DashboardLayout: React.FC = () => {
 
                         {/* Botón Salir */}
                         <button
-                            onClick={() => navigate('/login')}
+                            onClick={() => {
+                                logout();
+                                navigate('/');
+                            }}
                             className="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/40 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
                         >
                             <LogOut className="w-3.5 h-3.5" />
@@ -334,7 +345,8 @@ export const DashboardLayout: React.FC = () => {
                         <button
                             onClick={() => {
                                 setMobileMenuOpen(false);
-                                navigate('/login');
+                                logout();
+                                navigate('/');
                             }}
                             className="w-full flex items-center gap-3 px-3 py-3 text-xs text-rose-400 font-bold"
                         >
