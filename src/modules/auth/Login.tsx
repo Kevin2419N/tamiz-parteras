@@ -17,8 +17,7 @@ import {
     Camera,
     X,
     CheckCircle2,
-    HelpCircle,
-    Sparkles
+    HelpCircle
 } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -145,36 +144,31 @@ export const Login: React.FC = () => {
         <div className="min-h-screen bg-slate-50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-100/70 via-slate-50 to-emerald-100/50 flex flex-col items-center justify-center p-4 selection:bg-emerald-600 selection:text-white">
 
             {/* Header Institucional de Servicios de Salud de Oaxaca */}
-            <header className="w-full max-w-4xl mb-6 flex flex-col sm:flex-row items-center justify-between bg-white/95 border border-slate-200/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-md gap-4">
-                <div className="flex items-center gap-4">
+            <header className="w-full max-w-4xl mb-6 flex flex-col md:flex-row items-center justify-between bg-white/95 border border-slate-200/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-md gap-3 md:gap-4 text-center">
+                <div className="flex items-center justify-center gap-6 md:contents">
                     <img
                         src="/logo-jurisdiccion.png"
-                        alt="Logo Jurisdicción Sanitaria No. 2 Istmo - SSO Oaxaca"
+                        alt="Logo Jurisdicción Sanitaria No. 2 Istmo"
                         loading="eager"
                         fetchPriority="high"
-                        className="h-12 w-auto object-contain shrink-0"
+                        className="h-12 md:h-16 w-auto object-contain shrink-0 md:order-1"
                     />
-                    <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-md border border-teal-200">
-                                GOBIERNO DEL ESTADO DE OAXACA
-                            </span>
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
-                                SSO - SERVICIOS DE SALUD DE OAXACA
-                            </span>
-                        </div>
-                        <h1 className="text-lg font-black text-slate-900 tracking-tight mt-1">
-                            Jurisdicción Sanitaria No. 2 - Istmo (Juchitán de Zaragoza)
-                        </h1>
-                        <p className="text-xs text-slate-600 font-medium">
-                            Sistema Web de Gestión Operativa para Tamiz Neonatal y Red de Parteras Tradicionales
-                        </p>
-                    </div>
+                    <img
+                        src="/Logo-Secretaria.png"
+                        alt="Logo Secretaría de Salud"
+                        loading="eager"
+                        fetchPriority="high"
+                        className="h-12 md:h-16 w-auto object-contain shrink-0 md:order-3"
+                    />
                 </div>
 
-                <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    <span>Acceso Operativo 2026</span>
+                <div className="flex flex-col items-center text-center md:order-2">
+                    <h1 className="text-slate-900 text-xl md:text-2xl font-bold text-center">
+                        Jurisdicción Sanitaria No. 2 - Istmo
+                    </h1>
+                    <p className="text-slate-500 text-xs md:text-sm font-medium text-center">
+                        Sistema Web de Gestión Operativa para Tamiz Neonatal y Red de Parteras Tradicionales
+                    </p>
                 </div>
             </header>
 
