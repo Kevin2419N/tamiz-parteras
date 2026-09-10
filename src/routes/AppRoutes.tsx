@@ -6,7 +6,7 @@ import { DashboardLayout } from '../modules/dashboard/DashboardLayout';
 import { RegistroTamizPage } from '../modules/tamiz/RegistroTamizPage';
 import { PadronParterasPage } from '../modules/parteras/PadronParterasPage';
 import { CalendarioAtencionPage } from '../modules/parteras/CalendarioAtencionPage';
-import { NotificationCenter } from '../modules/notificaciones/NotificationCenter';
+import { NotificacionesPage } from '../modules/notificaciones/NotificacionesPage';
 
 // Componente Guard para proteger rutas privadas
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -38,7 +38,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="tamiz/nuevo" element={<RegistroTamizPage />} />
                 <Route path="parteras" element={<PadronParterasPage />} />
                 <Route path="parteras/calendario" element={<CalendarioAtencionPage />} />
-                <Route path="notificaciones" element={<NotificationCenter />} />
+                <Route path="notificaciones" element={<NotificacionesPage />} />
             </Route>
 
             {/* Redirección por defecto ante rutas desconocidas */}
