@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { CapturistaDashboard } from './components/CapturistaDashboard';
-import { ParteraDashboard } from './components/ParteraDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
+import { DashboardPartera } from '../parteras/DashboardPartera';
 import {
     FileText,
     Users,
@@ -117,123 +117,125 @@ export const DashboardLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-100/80 text-slate-800 flex flex-col md:flex-row selection:bg-emerald-600 selection:text-white">
 
-            {/* SIDEBAR DESKTOP COLAPSABLE (MODO CLARO) */}
-            <aside
-                className={`hidden md:flex flex-col bg-white border-r border-slate-200/90 p-4 justify-between transition-all duration-300 shrink-0 shadow-sm ${sidebarCollapsed ? 'w-20' : 'w-64'
-                    }`}
-            >
-                <div>
-                    {/* Header Brand */}
-                    <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
-                        {!sidebarCollapsed ? (
-                            <div className="flex items-center gap-3 overflow-hidden">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#9D2449] to-[#7A1B38] p-0.5 shadow-md shadow-[#9D2449]/20 shrink-0">
-                                    <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-[#9D2449] font-black text-sm">
-                                        TP
+            {/* SIDEBAR DESKTOP COLAPSABLE (MODO CLARO) - Oculto para rol PARTERA_TRADICIONAL */}
+            {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && (
+                <aside
+                    className={`hidden md:flex flex-col bg-white border-r border-slate-200/90 p-4 justify-between transition-all duration-300 shrink-0 shadow-sm ${sidebarCollapsed ? 'w-20' : 'w-64'
+                        }`}
+                >
+                    <div>
+                        {/* Header Brand */}
+                        <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
+                            {!sidebarCollapsed ? (
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#9D2449] to-[#7A1B38] p-0.5 shadow-md shadow-[#9D2449]/20 shrink-0">
+                                        <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-[#9D2449] font-black text-sm">
+                                            TP
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h2 className="font-black text-sm text-slate-900 leading-snug truncate">Tamiz & Parteras</h2>
+                                        <p className="text-[11px] font-semibold text-[#9D2449] truncate">Jurisdicción No. 2 - Istmo</p>
                                     </div>
                                 </div>
-                                <div>
-                                    <h2 className="font-black text-sm text-slate-900 leading-snug truncate">Tamiz & Parteras</h2>
-                                    <p className="text-[11px] font-semibold text-[#9D2449] truncate">Jurisdicción No. 2 - Istmo</p>
+                            ) : (
+                                <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-[#9D2449] font-bold text-base mx-auto">
+                                    TP
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-[#9D2449] font-bold text-base mx-auto">
-                                TP
-                            </div>
-                        )}
+                            )}
 
-                        <button
-                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                            title={sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'}
-                        >
-                            {sidebarCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-                        </button>
+                            <button
+                                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                                className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                                title={sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'}
+                            >
+                                {sidebarCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+                            </button>
+                        </div>
+
+                        {/* Rutas Principales */}
+                        <nav className="space-y-1">
+                            {navItems.map((item) => {
+                                const Icon = item.icon;
+                                const active = isActive(item.path);
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        className={`flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold transition-all ${active
+                                            ? 'bg-[#9D2449] text-white shadow-md shadow-[#9D2449]/20'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                                            }`}
+                                        title={sidebarCollapsed ? item.label : undefined}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-white' : 'text-slate-500'}`} />
+                                            {!sidebarCollapsed && <span>{item.label}</span>}
+                                        </div>
+                                        {!sidebarCollapsed && item.badge ? (
+                                            <span className="bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                                {item.badge}
+                                            </span>
+                                        ) : null}
+                                    </Link>
+                                );
+                            })}
+
+                            {/* Configuración */}
+                            <Link
+                                to="/configuracion"
+                                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-bold transition-all ${isActive('/configuracion')
+                                    ? 'bg-[#9D2449] text-white shadow-md shadow-[#9D2449]/20'
+                                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                                    }`}
+                                title={sidebarCollapsed ? 'Configuración' : undefined}
+                            >
+                                <Settings className={`w-5 h-5 shrink-0 ${isActive('/configuracion') ? 'text-white' : 'text-slate-500'}`} />
+                                {!sidebarCollapsed && <span>Configuración</span>}
+                            </Link>
+                        </nav>
                     </div>
 
-                    {/* Rutas Principales */}
-                    <nav className="space-y-1">
-                        {navItems.map((item) => {
-                            const Icon = item.icon;
-                            const active = isActive(item.path);
-                            return (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold transition-all ${active
-                                        ? 'bg-[#9D2449] text-white shadow-md shadow-[#9D2449]/20'
-                                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                                        }`}
-                                    title={sidebarCollapsed ? item.label : undefined}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-white' : 'text-slate-500'}`} />
-                                        {!sidebarCollapsed && <span>{item.label}</span>}
+                    {/* Footer Sidebar: User Avatar & Logout */}
+                    <div className="pt-4 border-t border-slate-200">
+                        {!sidebarCollapsed ? (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-bold text-xs shrink-0">
+                                        {currentUser.nombre.substring(0, 2).toUpperCase()}
                                     </div>
-                                    {!sidebarCollapsed && item.badge ? (
-                                        <span className="bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                                            {item.badge}
-                                        </span>
-                                    ) : null}
-                                </Link>
-                            );
-                        })}
-
-                        {/* Configuración */}
-                        <Link
-                            to="/configuracion"
-                            className={`flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-bold transition-all ${isActive('/configuracion')
-                                ? 'bg-[#9D2449] text-white shadow-md shadow-[#9D2449]/20'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                                }`}
-                            title={sidebarCollapsed ? 'Configuración' : undefined}
-                        >
-                            <Settings className={`w-5 h-5 shrink-0 ${isActive('/configuracion') ? 'text-white' : 'text-slate-500'}`} />
-                            {!sidebarCollapsed && <span>Configuración</span>}
-                        </Link>
-                    </nav>
-                </div>
-
-                {/* Footer Sidebar: User Avatar & Logout */}
-                <div className="pt-4 border-t border-slate-200">
-                    {!sidebarCollapsed ? (
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-200">
-                                <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-bold text-xs shrink-0">
-                                    {currentUser.nombre.substring(0, 2).toUpperCase()}
+                                    <div className="overflow-hidden">
+                                        <p className="text-xs font-bold text-slate-900 truncate">{currentUser.nombre}</p>
+                                        <p className="text-[10px] font-semibold text-teal-700 truncate">{currentUser.rol}</p>
+                                    </div>
                                 </div>
-                                <div className="overflow-hidden">
-                                    <p className="text-xs font-bold text-slate-900 truncate">{currentUser.nombre}</p>
-                                    <p className="text-[10px] font-semibold text-teal-700 truncate">{currentUser.rol}</p>
-                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        logout();
+                                        navigate('/');
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-rose-700 hover:text-rose-800 hover:bg-rose-50 rounded-xl border border-rose-200 transition-colors"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Cerrar Sesión</span>
+                                </button>
                             </div>
-
+                        ) : (
                             <button
                                 onClick={() => {
                                     logout();
                                     navigate('/');
                                 }}
-                                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-rose-700 hover:text-rose-800 hover:bg-rose-50 rounded-xl border border-rose-200 transition-colors"
+                                className="p-2.5 text-rose-700 hover:bg-rose-50 rounded-xl border border-rose-200 w-full flex justify-center"
+                                title="Cerrar Sesión"
                             >
-                                <LogOut className="w-4 h-4" />
-                                <span>Cerrar Sesión</span>
+                                <LogOut className="w-5 h-5" />
                             </button>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={() => {
-                                logout();
-                                navigate('/');
-                            }}
-                            className="p-2.5 text-rose-700 hover:bg-rose-50 rounded-xl border border-rose-200 w-full flex justify-center"
-                            title="Cerrar Sesión"
-                        >
-                            <LogOut className="w-5 h-5" />
-                        </button>
-                    )}
-                </div>
-            </aside>
+                        )}
+                    </div>
+                </aside>
+            )}
 
             {/* NAVBAR SUPERIOR RESPONSIVE (MODO CLARO) */}
             <div className="flex-1 flex flex-col min-w-0">
@@ -400,7 +402,7 @@ export const DashboardLayout: React.FC = () => {
                 <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
                     {location.pathname === '/dashboard' ? (
                         currentUser.rol === UserRole.PARTERA_TRADICIONAL ? (
-                            <ParteraDashboard nombrePartera={currentUser.nombre} />
+                            <DashboardPartera />
                         ) : currentUser.rol === UserRole.CAPTURISTA_TAMIZ ? (
                             <CapturistaDashboard userName={currentUser.nombre} />
                         ) : (
