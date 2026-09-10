@@ -5,12 +5,14 @@ interface AuthContextType {
     user: User | null;
     login: (userData: User) => void;
     logout: () => void;
+    updateUser: (userData: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     login: () => { },
     logout: () => { },
+    updateUser: () => { },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -27,8 +29,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('tamiz_user');
     };
 
+    const updateUser = (userData: User) => {
+        setUser(userData);
+        localStorage.setItem('tamiz_user', JSON.stringify(userData));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, login, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );
