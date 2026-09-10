@@ -279,7 +279,7 @@ export const PadronParterasPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setShowRegisterModal(true)}
-                        className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
+                        className="px-4 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Registrar Nueva Partera</span>

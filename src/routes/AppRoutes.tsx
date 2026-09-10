@@ -7,6 +7,7 @@ import { RegistroTamizPage } from '../modules/tamiz/RegistroTamizPage';
 import { PadronParterasPage } from '../modules/parteras/PadronParterasPage';
 import { CalendarioAtencionPage } from '../modules/parteras/CalendarioAtencionPage';
 import { NotificacionesPage } from '../modules/notificaciones/NotificacionesPage';
+import { ConfiguracionPage } from '../modules/configuracion/ConfiguracionPage';
 
 // Componente Guard para proteger rutas privadas
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -20,7 +21,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 export const AppRoutes: React.FC = () => {
     return (
         <Routes>
-            {/* La ruta raíz '/' es estrictamente la pantalla de Login */}
+            {/* La ruta raíz '/' es strictly la pantalla de Login */}
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
 
@@ -39,6 +40,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="parteras" element={<PadronParterasPage />} />
                 <Route path="parteras/calendario" element={<CalendarioAtencionPage />} />
                 <Route path="notificaciones" element={<NotificacionesPage />} />
+                <Route path="configuracion" element={<ConfiguracionPage />} />
             </Route>
 
             {/* Redirección por defecto ante rutas desconocidas */}

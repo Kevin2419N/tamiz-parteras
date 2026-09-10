@@ -175,12 +175,12 @@ export const Login: React.FC = () => {
             {/* Contenedor Principal (Modo Claro) */}
             <main className="w-full max-w-4xl bg-white border border-slate-200/90 rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12">
 
-                {/* Banner Informativo Lateral Cálido e Institucional */}
-                <div className="md:col-span-4 bg-gradient-to-b from-teal-800 via-teal-900 to-slate-900 p-6 flex flex-col justify-between text-white relative overflow-hidden">
-                    <div className="absolute -top-10 -left-10 w-40 h-40 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
+                {/* Banner Informativo Lateral Guinda e Institucional */}
+                <div className="md:col-span-4 bg-gradient-to-b from-[#9D2449] via-[#7A1B38] to-slate-900 p-6 flex flex-col justify-between text-white relative overflow-hidden">
+                    <div className="absolute -top-10 -left-10 w-40 h-40 bg-rose-400/20 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="relative z-10 space-y-4">
-                        <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 w-fit text-teal-200">
+                        <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 w-fit text-rose-200">
                             <HeartHandshake className="w-8 h-8" />
                         </div>
 
@@ -188,21 +188,21 @@ export const Login: React.FC = () => {
                             <h2 className="text-xl font-black leading-tight text-white">
                                 Salud Reproductiva
                             </h2>
-                            <p className="text-xs text-teal-100/90 mt-2 leading-relaxed">
+                            <p className="text-xs text-rose-100/90 mt-2 leading-relaxed">
                                 Plataforma incluyente para el registro oportuno de tamices neonatales y la vinculación de la medicina tradicional del Istmo.
                             </p>
                         </div>
 
                         <div className="space-y-2.5 pt-2">
-                            <div className="flex items-center gap-2.5 text-xs text-teal-100 font-medium">
+                            <div className="flex items-center gap-2.5 text-xs text-rose-100 font-medium">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                                 <span>Captura Directa de Muestras de Tamiz</span>
                             </div>
-                            <div className="flex items-center gap-2.5 text-xs text-teal-100 font-medium">
+                            <div className="flex items-center gap-2.5 text-xs text-rose-100 font-medium">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                                 <span>Acceso por Voz y QR para Parteras</span>
                             </div>
-                            <div className="flex items-center gap-2.5 text-xs text-teal-100 font-medium">
+                            <div className="flex items-center gap-2.5 text-xs text-rose-100 font-medium">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                                 <span>Alertas de Emergencia Obstétrica</span>
                             </div>
@@ -226,8 +226,8 @@ export const Login: React.FC = () => {
                                 aria-controls="panel-institucional"
                                 id="tab-institucional"
                                 onClick={() => setActiveTab('INSTITUCIONAL')}
-                                className={`py-3 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 ${activeTab === 'INSTITUCIONAL'
-                                    ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
+                                className={`py-3 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9D2449] ${activeTab === 'INSTITUCIONAL'
+                                    ? 'bg-[#9D2449] text-white shadow-md shadow-[#9D2449]/20'
                                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
                                     }`}
                             >
@@ -241,8 +241,8 @@ export const Login: React.FC = () => {
                                 aria-controls="panel-partera"
                                 id="tab-partera"
                                 onClick={() => setActiveTab('PARTERA')}
-                                className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${activeTab === 'PARTERA'
-                                    ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20 ring-2 ring-emerald-600'
+                                className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9D2449] ${activeTab === 'PARTERA'
+                                    ? 'bg-[#9D2449] text-white shadow-md shadow-[#9D2449]/20 ring-2 ring-[#9D2449]'
                                     : 'text-slate-700 hover:text-slate-900 hover:bg-white/80'
                                     }`}
                             >
@@ -265,7 +265,7 @@ export const Login: React.FC = () => {
                                         <select
                                             value={rolSeleccionado}
                                             onChange={(e) => setRolSeleccionado(e.target.value as UserRole)}
-                                            className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-teal-800 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-500/20"
+                                            className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-[#9D2449] focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-[#9D2449]/20"
                                         >
                                             <option value={UserRole.CAPTURISTA_TAMIZ}>Capturista de Tamiz Neonatal</option>
                                             <option value={UserRole.ADMIN_JURISDICCIONAL}>Administrador Jurisdiccional</option>
@@ -287,7 +287,7 @@ export const Login: React.FC = () => {
                                                 placeholder="usuario@salud.gob.mx"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#9D2449] focus:ring-2 focus:ring-[#9D2449]/20 transition-all"
                                             />
                                         </div>
                                     </div>
@@ -301,7 +301,7 @@ export const Login: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowForgotPasswordModal(true)}
-                                                className="text-[11px] font-bold text-teal-700 hover:text-teal-900 hover:underline focus-visible:outline-none"
+                                                className="text-[11px] font-bold text-[#9D2449] hover:text-[#7A1B38] hover:underline focus-visible:outline-none"
                                             >
                                                 ¿Olvidó su contraseña?
                                             </button>
@@ -315,7 +315,7 @@ export const Login: React.FC = () => {
                                                 placeholder="••••••••••••"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#9D2449] focus:ring-2 focus:ring-[#9D2449]/20 transition-all"
                                             />
                                         </div>
                                     </div>
@@ -324,7 +324,7 @@ export const Login: React.FC = () => {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full py-3.5 px-6 rounded-xl font-bold text-xs sm:text-sm text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-60"
+                                        className="w-full py-3.5 px-6 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#9D2449] hover:bg-[#7A1B38] shadow-md shadow-[#9D2449]/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-60"
                                     >
                                         {isSubmitting ? (
                                             <>

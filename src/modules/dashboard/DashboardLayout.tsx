@@ -128,18 +128,18 @@ export const DashboardLayout: React.FC = () => {
                     <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
                         {!sidebarCollapsed ? (
                             <div className="flex items-center gap-3 overflow-hidden">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-600 to-emerald-700 p-0.5 shadow-md shadow-teal-600/20 shrink-0">
-                                    <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-emerald-700 font-black text-sm">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#9D2449] to-[#7A1B38] p-0.5 shadow-md shadow-[#9D2449]/20 shrink-0">
+                                    <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-[#9D2449] font-black text-sm">
                                         TP
                                     </div>
                                 </div>
                                 <div>
                                     <h2 className="font-black text-sm text-slate-900 leading-snug truncate">Tamiz & Parteras</h2>
-                                    <p className="text-[11px] font-semibold text-teal-700 truncate">Jurisdicción No. 2 - Istmo</p>
+                                    <p className="text-[11px] font-semibold text-[#9D2449] truncate">Jurisdicción No. 2 - Istmo</p>
                                 </div>
                             </div>
                         ) : (
-                            <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-base mx-auto">
+                            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-[#9D2449] font-bold text-base mx-auto">
                                 TP
                             </div>
                         )}
@@ -163,7 +163,7 @@ export const DashboardLayout: React.FC = () => {
                                     key={item.path}
                                     to={item.path}
                                     className={`flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold transition-all ${active
-                                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                                        ? 'bg-[#9D2449] text-white shadow-md shadow-[#9D2449]/20'
                                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                                         }`}
                                     title={sidebarCollapsed ? item.label : undefined}
@@ -182,14 +182,17 @@ export const DashboardLayout: React.FC = () => {
                         })}
 
                         {/* Configuración */}
-                        <button
-                            onClick={() => setShowConfigModal(true)}
-                            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all text-left"
+                        <Link
+                            to="/configuracion"
+                            className={`flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-bold transition-all ${isActive('/configuracion')
+                                ? 'bg-[#9D2449] text-white shadow-md shadow-[#9D2449]/20'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                                }`}
                             title={sidebarCollapsed ? 'Configuración' : undefined}
                         >
-                            <Settings className="w-5 h-5 shrink-0 text-slate-500" />
+                            <Settings className={`w-5 h-5 shrink-0 ${isActive('/configuracion') ? 'text-white' : 'text-slate-500'}`} />
                             {!sidebarCollapsed && <span>Configuración</span>}
-                        </button>
+                        </Link>
                     </nav>
                 </div>
 
@@ -399,28 +402,28 @@ export const DashboardLayout: React.FC = () => {
                     {location.pathname === '/dashboard' ? (
                         <div className="space-y-6 max-w-7xl mx-auto">
 
-                            {/* Encabezado Bienvenida + Botones Rápidos (Modo Institucional Cálido) */}
-                            <div className="bg-gradient-to-r from-teal-800 via-teal-900 to-slate-900 p-6 rounded-3xl text-white shadow-md border border-teal-700/50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                            {/* Encabezado Bienvenida + Botones Rápidos (Modo Institucional Guinda) */}
+                            <div className="bg-gradient-to-r from-[#9D2449] via-[#7A1B38] to-slate-900 p-6 rounded-3xl text-white shadow-md border border-[#9D2449]/40 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs uppercase tracking-wider font-extrabold text-teal-300">
+                                        <span className="text-xs uppercase tracking-wider font-extrabold text-rose-200">
                                             Jurisdicción Sanitaria No. 2 - Istmo
                                         </span>
-                                        <span className="text-xs text-teal-300/60">•</span>
-                                        <span className="text-xs text-teal-100 font-medium">Juchitán de Zaragoza, Oaxaca</span>
+                                        <span className="text-xs text-rose-200/60">•</span>
+                                        <span className="text-xs text-rose-100 font-medium">Juchitán de Zaragoza, Oaxaca</span>
                                     </div>
                                     <h2 className="text-2xl font-black text-white mt-1">
                                         Bienvenido, {currentUser.nombre.split(' ')[0]} {currentUser.nombre.split(' ')[1]}
                                     </h2>
-                                    <p className="text-xs text-teal-100/80 mt-1">
+                                    <p className="text-xs text-rose-100/80 mt-1">
                                         Monitoreo en tiempo real del programa de Tamiz Neonatal y la Red Comunitaria de Parteras.
                                     </p>
                                 </div>
 
                                 <div className="flex flex-wrap gap-3 w-full sm:w-auto">
                                     <Link
-                                        to="/tamiz"
-                                        className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                                        to="/tamiz/nuevo"
+                                        className="flex-1 sm:flex-initial px-4 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 border border-rose-300/30"
                                     >
                                         <Plus className="w-4 h-4" />
                                         <span>Nuevo Registro de Tamiz</span>

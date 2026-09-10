@@ -129,13 +129,13 @@ export const RegistroTamizPage: React.FC = () => {
                     <div
                         onClick={() => setCurrentStep(1)}
                         className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === 1
-                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            ? 'bg-rose-50 border-[#9D2449] shadow-sm'
                             : currentStep > 1
-                                ? 'bg-slate-50 border-slate-200 text-emerald-800'
+                                ? 'bg-slate-50 border-slate-200 text-[#9D2449]'
                                 : 'bg-slate-50/60 border-slate-200 opacity-60'
                             }`}
                     >
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 1 ? 'bg-emerald-600 text-white' : currentStep > 1 ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-600'
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 1 ? 'bg-[#9D2449] text-white' : currentStep > 1 ? 'bg-rose-100 text-[#9D2449]' : 'bg-slate-200 text-slate-600'
                             }`}>
                             {currentStep > 1 ? <Check className="w-4 h-4" /> : '1'}
                         </div>
@@ -149,13 +149,13 @@ export const RegistroTamizPage: React.FC = () => {
                     <div
                         onClick={() => setCurrentStep(2)}
                         className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === 2
-                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            ? 'bg-rose-50 border-[#9D2449] shadow-sm'
                             : currentStep > 2
-                                ? 'bg-slate-50 border-slate-200 text-emerald-800'
+                                ? 'bg-slate-50 border-slate-200 text-[#9D2449]'
                                 : 'bg-slate-50/60 border-slate-200 opacity-60'
                             }`}
                     >
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 2 ? 'bg-emerald-600 text-white' : currentStep > 2 ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-600'
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 2 ? 'bg-[#9D2449] text-white' : currentStep > 2 ? 'bg-rose-100 text-[#9D2449]' : 'bg-slate-200 text-slate-600'
                             }`}>
                             {currentStep > 2 ? <Check className="w-4 h-4" /> : '2'}
                         </div>
@@ -169,13 +169,13 @@ export const RegistroTamizPage: React.FC = () => {
                     <div
                         onClick={() => setCurrentStep(3)}
                         className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === 3
-                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            ? 'bg-rose-50 border-[#9D2449] shadow-sm'
                             : currentStep > 3
-                                ? 'bg-slate-50 border-slate-200 text-emerald-800'
+                                ? 'bg-slate-50 border-slate-200 text-[#9D2449]'
                                 : 'bg-slate-50/60 border-slate-200 opacity-60'
                             }`}
                     >
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 3 ? 'bg-emerald-600 text-white' : currentStep > 3 ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-600'
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 3 ? 'bg-[#9D2449] text-white' : currentStep > 3 ? 'bg-rose-100 text-[#9D2449]' : 'bg-slate-200 text-slate-600'
                             }`}>
                             {currentStep > 3 ? <Check className="w-4 h-4" /> : '3'}
                         </div>
@@ -189,11 +189,11 @@ export const RegistroTamizPage: React.FC = () => {
                     <div
                         onClick={() => setCurrentStep(4)}
                         className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === 4
-                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            ? 'bg-rose-50 border-[#9D2449] shadow-sm'
                             : 'bg-slate-50/60 border-slate-200 opacity-60'
                             }`}
                     >
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 4 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 4 ? 'bg-[#9D2449] text-white' : 'bg-slate-200 text-slate-600'
                             }`}>
                             4
                         </div>
@@ -599,7 +599,7 @@ export const RegistroTamizPage: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleNext}
-                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
+                            className="px-5 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
                         >
                             <span>Siguiente</span>
                             <ArrowRight className="w-4 h-4" />
@@ -607,7 +607,7 @@ export const RegistroTamizPage: React.FC = () => {
                     ) : (
                         <button
                             type="submit"
-                            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-2 transition-all"
+                            className="px-6 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-black text-xs rounded-xl shadow-md flex items-center gap-2 transition-all"
                         >
                             <ShieldCheck className="w-4 h-4" />
                             <span>Finalizar y Guardar Folio</span>
