@@ -75,6 +75,7 @@ export interface ResultadoTamiz {
 export interface ParteraTradicional {
     id: string;
     nombreCompleto: string;
+    nombreZapoteco?: string;
     curp: string;
     telefono: string;
     lenguaMaterna: string;
@@ -84,7 +85,10 @@ export interface ParteraTradicional {
     certificadoVigente: boolean;
     experienciaAnos: number;
     totalAtenciones: number;
+    tamicesCanalizadosPct?: number;
     estatusRegistro: 'ACTIVA' | 'INACTIVA' | 'EN_VALIDACION';
+    estatusAcreditacion?: 'ACREDITADA' | 'EN_PROCESO' | 'VISITA_PENDIENTE';
+    pinAcceso?: string;
     fechaRegistro: string;
 }
 
