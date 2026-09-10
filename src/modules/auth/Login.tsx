@@ -150,6 +150,8 @@ export const Login: React.FC = () => {
                     <img
                         src="/logo-jurisdiccion.png"
                         alt="Logo Jurisdicción Sanitaria No. 2 Istmo - SSO Oaxaca"
+                        loading="eager"
+                        fetchPriority="high"
                         className="h-12 w-auto object-contain shrink-0"
                     />
                     <div>
@@ -190,7 +192,7 @@ export const Login: React.FC = () => {
 
                         <div>
                             <h2 className="text-xl font-black leading-tight text-white">
-                                Salud Maternal e Infantil Integrada
+                                Salud Reproductiva
                             </h2>
                             <p className="text-xs text-teal-100/90 mt-2 leading-relaxed">
                                 Plataforma incluyente para el registro oportuno de tamices neonatales y la vinculación de la medicina tradicional del Istmo.
@@ -211,10 +213,6 @@ export const Login: React.FC = () => {
                                 <span>Alertas de Emergencia Obstétrica</span>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="relative z-10 mt-6 pt-4 border-t border-teal-700/50 text-[11px] text-teal-200/80 font-medium leading-normal">
-                        Juchitán • Tehuantepec • Salina Cruz • Ciudad Ixtepec • San Blas Atempa • Asunción Ixtaltepec • Espinal
                     </div>
                 </div>
 
