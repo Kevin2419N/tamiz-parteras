@@ -10,7 +10,6 @@ import {
     LayoutDashboard,
     Menu,
     X,
-    ShieldCheck,
     AlertTriangle,
     Plus,
     Settings,
@@ -248,8 +247,12 @@ export const DashboardLayout: React.FC = () => {
                             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
 
-                        <div className="flex items-center gap-2.5">
-                            <ShieldCheck className="w-6 h-6 text-emerald-700 shrink-0" />
+                        <div className="flex items-center gap-3">
+                            <img
+                                src="/logo-jurisdiccion.png"
+                                alt="Logo Jurisdicción Sanitaria No. 2 Istmo - SSO Oaxaca"
+                                className="h-12 w-auto object-contain shrink-0"
+                            />
                             <div>
                                 <span className="text-[10px] font-black uppercase text-teal-800 tracking-wider block">
                                     GOBIERNO DE OAXACA • SSO

@@ -18,8 +18,7 @@ import {
     X,
     CheckCircle2,
     HelpCircle,
-    Sparkles,
-    ShieldCheck
+    Sparkles
 } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -148,11 +147,11 @@ export const Login: React.FC = () => {
             {/* Header Institucional de Servicios de Salud de Oaxaca */}
             <header className="w-full max-w-4xl mb-6 flex flex-col sm:flex-row items-center justify-between bg-white/95 border border-slate-200/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-md gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-700 p-0.5 shadow-lg shadow-teal-600/20 shrink-0">
-                        <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center text-emerald-700">
-                            <ShieldCheck className="w-8 h-8" />
-                        </div>
-                    </div>
+                    <img
+                        src="/logo-jurisdiccion.png"
+                        alt="Logo Jurisdicción Sanitaria No. 2 Istmo - SSO Oaxaca"
+                        className="h-12 w-auto object-contain shrink-0"
+                    />
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-md border border-teal-200">
