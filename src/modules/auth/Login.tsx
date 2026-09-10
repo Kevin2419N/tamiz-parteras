@@ -125,7 +125,7 @@ export const Login: React.FC = () => {
             nombre: userNombre || (email.split('@')[0].toUpperCase()),
             email: email,
             rol: rol,
-            jurisdiccion: 'Jurisdicción II Altos - San Cristóbal de las Casas',
+            jurisdiccion: 'Jurisdicción Sanitaria No. 2 - Istmo (Juchitán de Zaragoza)',
             activo: true,
         };
 
@@ -157,14 +157,14 @@ export const Login: React.FC = () => {
                     <div>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md border border-teal-500/20">
-                                GOBIERNO DE CHIAPAS
+                                GOBIERNO DEL ESTADO DE OAXACA
                             </span>
                             <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                                SECTOR SALUD
+                                SSO - SERVICIOS DE SALUD DE OAXACA
                             </span>
                         </div>
                         <h1 className="text-lg font-black text-white tracking-tight mt-1">
-                            Jurisdicción Sanitaria No. II • Altos de Chiapas
+                            Jurisdicción Sanitaria No. 2 - Istmo (Juchitán de Zaragoza)
                         </h1>
                         <p className="text-xs text-slate-400">
                             Sistema Web de Gestión Operativa para Tamiz Neonatal y Red de Parteras Tradicionales
@@ -216,7 +216,7 @@ export const Login: React.FC = () => {
                     </div>
 
                     <div className="relative z-10 mt-6 pt-4 border-t border-teal-800/40 text-[11px] text-teal-300/70">
-                        San Cristóbal de las Casas • Chamula • Tenejapa • Huixtán
+                        Juchitán • Tehuantepec • Salina Cruz • Ciudad Ixtepec • San Blas Atempa • Asunción Ixtaltepec • Espinal
                     </div>
                 </div>
 
@@ -237,8 +237,8 @@ export const Login: React.FC = () => {
                                 id="tab-institucional"
                                 onClick={() => setActiveTab('INSTITUCIONAL')}
                                 className={`py-3 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${activeTab === 'INSTITUCIONAL'
-                                        ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+                                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
                                     }`}
                             >
                                 <Building2 className="w-4 h-4 shrink-0" />
@@ -252,8 +252,8 @@ export const Login: React.FC = () => {
                                 id="tab-partera"
                                 onClick={() => setActiveTab('PARTERA')}
                                 className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${activeTab === 'PARTERA'
-                                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-400'
-                                        : 'text-slate-300 hover:text-white hover:bg-slate-900'
+                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-400'
+                                    : 'text-slate-300 hover:text-white hover:bg-slate-900'
                                     }`}
                             >
                                 <HeartHandshake className="w-4 h-4 shrink-0" />
@@ -373,8 +373,8 @@ export const Login: React.FC = () => {
                                         type="button"
                                         onClick={isSpeaking ? stopVoice : speakInstructions}
                                         className={`px-3 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${isSpeaking
-                                                ? 'bg-amber-500 text-slate-950 shadow-md'
-                                                : 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20'
+                                            ? 'bg-amber-500 text-slate-950 shadow-md'
+                                            : 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20'
                                             }`}
                                     >
                                         {isSpeaking ? (
@@ -432,8 +432,8 @@ export const Login: React.FC = () => {
                                                     <div
                                                         key={idx}
                                                         className={`w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center ${filled
-                                                                ? 'bg-emerald-400 border-emerald-300 shadow-md shadow-emerald-400/40'
-                                                                : 'border-slate-700 bg-slate-900'
+                                                            ? 'bg-emerald-400 border-emerald-300 shadow-md shadow-emerald-400/40'
+                                                            : 'border-slate-700 bg-slate-900'
                                                             }`}
                                                     >
                                                         {filled && <span className="w-2 h-2 rounded-full bg-slate-950" />}
@@ -496,7 +496,7 @@ export const Login: React.FC = () => {
 
                     {/* Pie de Página de Soporte */}
                     <footer className="mt-8 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
-                        <span>Jurisdicción II Altos • Programa de Tamiz Neonatal</span>
+                        <span>Jurisdicción Sanitaria No. 2 - Istmo • Programa de Tamiz Neonatal</span>
                         <div className="flex items-center gap-2 text-slate-400">
                             <HelpCircle className="w-4 h-4 text-teal-400" />
                             <span>Soporte Técnico: 800 123 4567</span>

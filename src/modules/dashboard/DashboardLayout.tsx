@@ -39,7 +39,7 @@ export const DashboardLayout: React.FC = () => {
         nombre: 'Dra. Carmen Silva Juárez',
         email: 'carmen.silva@salud.gob.mx',
         rol: UserRole.CAPTURISTA_TAMIZ as UserRole,
-        jurisdiccion: 'Jurisdicción Sanitaria No. II',
+        jurisdiccion: 'Jurisdicción Sanitaria No. 2 - Istmo',
     });
 
     const simulatedUsers = [
@@ -47,25 +47,25 @@ export const DashboardLayout: React.FC = () => {
             nombre: 'Dra. Carmen Silva Juárez',
             email: 'carmen.silva@salud.gob.mx',
             rol: UserRole.CAPTURISTA_TAMIZ as UserRole,
-            jurisdiccion: 'Jurisdicción Sanitaria No. II',
+            jurisdiccion: 'Jurisdicción Sanitaria No. 2 - Istmo',
         },
         {
             nombre: 'Dr. Alejandro Morales',
             email: 'admin.jurisdiccion2@salud.gob.mx',
             rol: UserRole.ADMIN_JURISDICCIONAL as UserRole,
-            jurisdiccion: 'Jurisdicción Sanitaria No. II',
+            jurisdiccion: 'Jurisdicción Sanitaria No. 2 - Istmo',
         },
         {
             nombre: 'Lic. María Elena Santiz',
             email: 'gestor.parteras@salud.gob.mx',
             rol: UserRole.GESTOR_PARTERAS as UserRole,
-            jurisdiccion: 'Jurisdicción Sanitaria No. II',
+            jurisdiccion: 'Jurisdicción Sanitaria No. 2 - Istmo',
         },
         {
             nombre: 'Doña Rosa Santiz Gómez',
             email: 'partera.rosa@comunidad.org',
             rol: UserRole.PARTERA_TRADICIONAL as UserRole,
-            jurisdiccion: 'Comunidad San Juan Chamula',
+            jurisdiccion: 'Comunidad Juchitán de Zaragoza',
         },
     ];
 
@@ -101,14 +101,15 @@ export const DashboardLayout: React.FC = () => {
         { mes: 'Sep', cantidad: 195 },
     ];
 
-    // Mock Births Distribution Data by Community for Chart 2 (Juchitán, Tehuantepec, Salina Cruz, Ixtepec, Chamula, Tenejapa)
+    // Mock Births Distribution Data by Community for Chart 2 (Juchitán, Tehuantepec, Salina Cruz, Ciudad Ixtepec, San Blas Atempa, Asunción Ixtaltepec, Espinal)
     const communityBirthsData = [
         { comunidad: 'Juchitán', partos: 45, tamicesPct: 92 },
         { comunidad: 'Tehuantepec', partos: 38, tamicesPct: 88 },
         { comunidad: 'Salina Cruz', partos: 32, tamicesPct: 95 },
-        { comunidad: 'Ixtepec', partos: 26, tamicesPct: 90 },
-        { comunidad: 'Chamula', partos: 54, tamicesPct: 85 },
-        { comunidad: 'Tenejapa', partos: 30, tamicesPct: 82 },
+        { comunidad: 'Ciudad Ixtepec', partos: 26, tamicesPct: 90 },
+        { comunidad: 'San Blas Atempa', partos: 35, tamicesPct: 86 },
+        { comunidad: 'Asunción Ixtaltepec', partos: 28, tamicesPct: 84 },
+        { comunidad: 'Espinal', partos: 22, tamicesPct: 89 },
     ];
 
     const maxPartos = Math.max(...communityBirthsData.map((d) => d.partos));
@@ -133,7 +134,7 @@ export const DashboardLayout: React.FC = () => {
                                 </div>
                                 <div>
                                     <h2 className="font-bold text-sm text-white leading-snug truncate">Tamiz & Parteras</h2>
-                                    <p className="text-[11px] text-slate-400 truncate">Jurisdicción No. II</p>
+                                    <p className="text-[11px] text-slate-400 truncate">Jurisdicción No. 2 - Istmo</p>
                                 </div>
                             </div>
                         ) : (
@@ -243,7 +244,7 @@ export const DashboardLayout: React.FC = () => {
                             <ShieldCheck className="w-6 h-6 text-teal-400 shrink-0" />
                             <div>
                                 <span className="text-[10px] font-black uppercase text-teal-400 tracking-wider block">
-                                    SECTOR SALUD • CHIAPAS
+                                    GOBIERNO DE OAXACA • SSO
                                 </span>
                                 <h1 className="text-xs sm:text-sm font-black text-white leading-none">
                                     Gestión Tamiz & Parteras Tradicionales
@@ -353,10 +354,10 @@ export const DashboardLayout: React.FC = () => {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs uppercase tracking-wider font-extrabold text-teal-400">
-                                            Jurisdicción Sanitaria No. II
+                                            Jurisdicción Sanitaria No. 2 - Istmo
                                         </span>
                                         <span className="text-xs text-slate-500">•</span>
-                                        <span className="text-xs text-slate-400">Altos & Istmo de Chiapas</span>
+                                        <span className="text-xs text-slate-400">Juchitán de Zaragoza, Oaxaca</span>
                                     </div>
                                     <h2 className="text-2xl font-black text-white mt-1">
                                         Bienvenido, {currentUser.nombre.split(' ')[0]} {currentUser.nombre.split(' ')[1]}
@@ -576,7 +577,7 @@ export const DashboardLayout: React.FC = () => {
                                                 <span>Partos por Comunidad (Parteras)</span>
                                             </h3>
                                             <p className="text-xs text-slate-400">
-                                                Atenciones en Juchitán, Tehuantepec, Salina Cruz, Ixtepec, Chamula y Tenejapa.
+                                                Atenciones en Juchitán, Tehuantepec, Salina Cruz, Ciudad Ixtepec, San Blas Atempa, Asunción Ixtaltepec y Espinal.
                                             </p>
                                         </div>
 
@@ -648,7 +649,7 @@ export const DashboardLayout: React.FC = () => {
                                         </div>
                                         <h4 className="text-xs font-bold text-white">Muestra M-1092 Muestra Coagulada</h4>
                                         <p className="text-[11px] text-slate-300">
-                                            RN Gómez Santiz en Chamula requiere re-toma inmediata por coagulación en Tarjeta de Guthrie.
+                                            RN Gómez Santiz en Juchitán de Zaragoza requiere re-toma inmediata por coagulación en Tarjeta de Guthrie.
                                         </p>
                                         <button className="text-[11px] font-bold text-rose-300 hover:underline pt-1">
                                             Gestionar Re-Toma &rarr;
@@ -663,7 +664,7 @@ export const DashboardLayout: React.FC = () => {
                                             </span>
                                             <span className="text-[10px] text-slate-400">Hace 1 hora</span>
                                         </div>
-                                        <h4 className="text-xs font-bold text-white">Riesgo Materno en Tenejapa</h4>
+                                        <h4 className="text-xs font-bold text-white">Riesgo Materno en Tehuantepec</h4>
                                         <p className="text-[11px] text-slate-300">
                                             Doña Juana López emitió referencia por presión arterial elevada en embarazo de 36 SDG.
                                         </p>
@@ -682,7 +683,7 @@ export const DashboardLayout: React.FC = () => {
                                         </div>
                                         <h4 className="text-xs font-bold text-white">Lote L-2026 Recibido</h4>
                                         <p className="text-[11px] text-slate-300">
-                                            El Laboratorio Central confirmó la recepción de 45 muestras de la Jurisdicción II.
+                                            El LESP Oaxaca confirmó la recepción de 45 muestras de la Jurisdicción No. 2 Istmo.
                                         </p>
                                         <button className="text-[11px] font-bold text-teal-300 hover:underline pt-1">
                                             Ver Código de Rastreo &rarr;
@@ -722,7 +723,7 @@ export const DashboardLayout: React.FC = () => {
                                 <input
                                     type="text"
                                     disabled
-                                    value="Jurisdicción Sanitaria No. II - Altos de Chiapas"
+                                    value="Jurisdicción Sanitaria No. 2 - Istmo (Juchitán de Zaragoza)"
                                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-300"
                                 />
                             </div>
