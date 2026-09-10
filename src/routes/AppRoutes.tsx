@@ -35,6 +35,7 @@ export const AppRoutes: React.FC = () => {
             >
                 <Route path="dashboard" element={null} />
                 <Route path="tamiz" element={<RegistroTamizPage />} />
+                <Route path="tamiz/nuevo" element={<RegistroTamizPage />} />
                 <Route path="parteras" element={<PadronParterasPage />} />
                 <Route path="parteras/calendario" element={<CalendarioAtencionPage />} />
                 <Route path="notificaciones" element={<NotificationCenter />} />

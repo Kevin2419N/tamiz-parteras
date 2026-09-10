@@ -1,251 +1,673 @@
 import React, { useState } from 'react';
-import type { RegistroTamiz } from '../../types';
-import { Search, Plus, FileText, CheckCircle2, Clock, AlertCircle, Filter, Send, Download } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+    Baby,
+    User,
+    FileText,
+    CheckCircle2,
+    ArrowLeft,
+    ArrowRight,
+    AlertTriangle,
+    ShieldCheck,
+    Printer,
+    HeartHandshake,
+    Check,
+    QrCode
+} from 'lucide-react';
 
 export const RegistroTamizPage: React.FC = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filtroEstatus, setFiltroEstatus] = useState<string>('TODOS');
-    const [showModalNuevo, setShowModalNuevo] = useState(false);
+    const navigate = useNavigate();
 
-    // Mock data for Tamiz registrations
-    const [registros] = useState<RegistroTamiz[]>([
-        {
-            id: 'TAM-2026-001',
-            folio: 'TMZ-98214',
-            nombreRecienNacido: 'RN López Hernández',
-            fechaNacimiento: '2026-09-02',
-            semanasGestacion: 39,
-            pesoGramos: 3200,
-            nombreMadre: 'María Elena Hernández Jiménez',
-            telefonoContacto: '967 112 4433',
-            jurisdiccion: 'Jurisdicción II Altos',
-            unidadSaludId: 'CS San Cristóbal Centro',
-            capturistaId: 'CAP-04',
-            fechaToma: '2026-09-04',
-            estatus: 'PROCESADO',
-        },
-        {
-            id: 'TAM-2026-002',
-            folio: 'TMZ-98215',
-            nombreRecienNacido: 'RN Gómez Santiz',
-            fechaNacimiento: '2026-09-05',
-            semanasGestacion: 38,
-            pesoGramos: 2950,
-            nombreMadre: 'Juana Santiz Cruz',
-            telefonoContacto: '967 445 8899',
-            jurisdiccion: 'Jurisdicción II Altos',
-            unidadSaludId: 'CS Chamula',
-            capturistaId: 'CAP-04',
-            fechaToma: '2026-09-07',
-            estatus: 'ENVIADO',
-        },
-        {
-            id: 'TAM-2026-003',
-            folio: 'TMZ-98216',
-            nombreRecienNacido: 'RN Pérez Ruiz',
-            fechaNacimiento: '2026-09-08',
-            semanasGestacion: 40,
-            pesoGramos: 3400,
-            nombreMadre: 'Lucía Ruiz Velasco',
-            telefonoContacto: '961 776 5544',
-            jurisdiccion: 'Jurisdicción I Centro',
-            unidadSaludId: 'CS Tuxtla Terán',
-            capturistaId: 'CAP-02',
-            fechaToma: '2026-09-09',
-            estatus: 'PENDIENTE',
-        },
-    ]);
+    // Wizard Step State (1, 2, 3, 4)
+    const [currentStep, setCurrentStep] = useState<number>(1);
 
-    const registrosFiltrados = registros.filter((reg) => {
-        const coincideBusqueda =
-            reg.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            reg.nombreMadre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            reg.nombreRecienNacido.toLowerCase().includes(searchTerm.toLowerCase());
+    // Modal Exito
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [createdFolio, setCreatedFolio] = useState<string>('');
 
-        const coincideFiltro = filtroEstatus === 'TODOS' || reg.estatus === filtroEstatus;
+    // Form Data State
+    const [formData, setFormData] = useState({
+        // Paso 1: Recién Nacido
+        nombresRN: '',
+        apellidosRN: '',
+        fechaHoraNacimiento: '2026-09-07T08:30',
+        sexo: 'MASCULINO',
+        pesoGramos: 3200,
+        tallaCm: 50,
+        semanasGestacion: 39,
+        atendidoPorPartera: true,
+        parteraId: 'PAR-OAX-001',
 
-        return coincideBusqueda && coincideFiltro;
+        // Paso 2: Madre / Tutor
+        nombreMadre: '',
+        curpMadre: '',
+        telefonoContacto: '',
+        direccion: '',
+        municipio: 'Juchitán de Zaragoza',
+        comunidad: 'Juchitán de Zaragoza',
+
+        // Paso 3: Muestra / Ficha de Guthrie
+        folioGuthrie: 'TMZ-OAX-2026-98217',
+        fechaHoraToma: '2026-09-09T10:00',
+        tipoMuestra: 'Sangre Talar (Tarjeta Guthrie S&S 903)',
+        responsableToma: 'Lic. María Elena Santiz (Enfermería Jurisdicción 2)',
+        observaciones: 'Muestra adecuada, 4 gotas completas en papel filtro sin coagulación.',
     });
 
-    return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+    // Mock Parteras List for Istmo
+    const parterasIstmo = [
+        { id: 'PAR-OAX-001', nombre: 'Doña Rosa Santiz Gómez (Na Rosa - Juchitán)' },
+        { id: 'PAR-OAX-002', nombre: 'Doña Juana López Pérez (Na Juana - Tehuantepec)' },
+        { id: 'PAR-OAX-003', nombre: 'Doña Petrona Cruz Velasco (Na Petrona - Salina Cruz)' },
+        { id: 'PAR-OAX-004', nombre: 'Doña Asunción Girón Morales (Na Chona - Ixtepec)' },
+        { id: 'PAR-OAX-005', nombre: 'Doña Micaela Ruiz Hernández (Na Micaela - San Blas Atempa)' },
+        { id: 'PAR-OAX-006', nombre: 'Doña Lucía Jiménez Toledo (Na Lucía - Ixtaltepec)' },
+    ];
 
-            {/* Encabezado */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    // Calculate hours between birth and sample collection for the Guthrie Alert
+    const calcularHorasTranscurridas = (): number => {
+        try {
+            const nacimiento = new Date(formData.fechaHoraNacimiento).getTime();
+            const toma = new Date(formData.fechaHoraToma).getTime();
+            const diffMs = toma - nacimiento;
+            return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
+        } catch {
+            return 48;
+        }
+    };
+
+    const horasPostParto = calcularHorasTranscurridas();
+    const esPrioridadAltaLab = horasPostParto > 72;
+
+    const handleNext = () => {
+        if (currentStep < 4) setCurrentStep(currentStep + 1);
+    };
+
+    const handlePrev = () => {
+        if (currentStep > 1) setCurrentStep(currentStep - 1);
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreatedFolio(formData.folioGuthrie);
+        setShowSuccessModal(true);
+    };
+
+    return (
+        <div className="space-y-6 max-w-5xl mx-auto selection:bg-emerald-600 selection:text-white">
+
+            {/* Header del Módulo */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <span className="text-xs uppercase tracking-wider font-bold text-teal-400">Módulo de Laboratorio</span>
-                    <h1 className="text-2xl font-extrabold text-white mt-1">Registro de Folios & Muestras de Tamiz</h1>
-                    <p className="text-xs text-slate-400 mt-1">
-                        Captura de datos del recién nacido, gotas en papel filtro (Tarjeta de Guthrie) y rastreo de muestras.
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs uppercase tracking-wider font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                            GOBIERNO DE OAXACA • SSO
+                        </span>
+                        <span className="text-xs text-slate-400">•</span>
+                        <span className="text-xs font-semibold text-slate-600">Programa Estatal de Tamiz Neonatal</span>
+                    </div>
+                    <h1 className="text-2xl font-black text-slate-900 mt-1">Registro de Muestra de Tamiz Neonatal</h1>
+                    <p className="text-xs font-medium text-slate-600 mt-1">
+                        Jurisdicción Sanitaria No. 2 • Istmo de Tehuantepec (Juchitán, Tehuantepec, Salina Cruz, Ixtepec, Atempa, Ixtaltepec, Espinal).
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowModalNuevo(true)}
-                        className="px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-teal-500/20 transition-all flex items-center gap-2"
+                <button
+                    onClick={() => navigate('/dashboard')}
+                    className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-2 transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Volver al Dashboard</span>
+                </button>
+            </div>
+
+            {/* Stepper Wizard Indicator (4 Pasos) */}
+            <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm">
+                <div className="grid grid-cols-4 gap-2">
+
+                    {/* Paso 1 */}
+                    <div
+                        onClick={() => setCurrentStep(1)}
+                        className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === 1
+                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            : currentStep > 1
+                                ? 'bg-slate-50 border-slate-200 text-emerald-800'
+                                : 'bg-slate-50/60 border-slate-200 opacity-60'
+                            }`}
                     >
-                        <Plus className="w-4 h-4" />
-                        <span>Registrar Nueva Muestra</span>
-                    </button>
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 1 ? 'bg-emerald-600 text-white' : currentStep > 1 ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-600'
+                            }`}>
+                            {currentStep > 1 ? <Check className="w-4 h-4" /> : '1'}
+                        </div>
+                        <div className="hidden md:block overflow-hidden">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Paso 1</span>
+                            <p className="text-xs font-black text-slate-900 truncate">Recién Nacido</p>
+                        </div>
+                    </div>
+
+                    {/* Paso 2 */}
+                    <div
+                        onClick={() => setCurrentStep(2)}
+                        className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === 2
+                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            : currentStep > 2
+                                ? 'bg-slate-50 border-slate-200 text-emerald-800'
+                                : 'bg-slate-50/60 border-slate-200 opacity-60'
+                            }`}
+                    >
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 2 ? 'bg-emerald-600 text-white' : currentStep > 2 ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-600'
+                            }`}>
+                            {currentStep > 2 ? <Check className="w-4 h-4" /> : '2'}
+                        </div>
+                        <div className="hidden md:block overflow-hidden">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Paso 2</span>
+                            <p className="text-xs font-black text-slate-900 truncate">Madre / Tutor</p>
+                        </div>
+                    </div>
+
+                    {/* Paso 3 */}
+                    <div
+                        onClick={() => setCurrentStep(3)}
+                        className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === 3
+                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            : currentStep > 3
+                                ? 'bg-slate-50 border-slate-200 text-emerald-800'
+                                : 'bg-slate-50/60 border-slate-200 opacity-60'
+                            }`}
+                    >
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 3 ? 'bg-emerald-600 text-white' : currentStep > 3 ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-600'
+                            }`}>
+                            {currentStep > 3 ? <Check className="w-4 h-4" /> : '3'}
+                        </div>
+                        <div className="hidden md:block overflow-hidden">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Paso 3</span>
+                            <p className="text-xs font-black text-slate-900 truncate">Muestra / Ficha</p>
+                        </div>
+                    </div>
+
+                    {/* Paso 4 */}
+                    <div
+                        onClick={() => setCurrentStep(4)}
+                        className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === 4
+                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            : 'bg-slate-50/60 border-slate-200 opacity-60'
+                            }`}
+                    >
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === 4 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                            }`}>
+                            4
+                        </div>
+                        <div className="hidden md:block overflow-hidden">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Paso 4</span>
+                            <p className="text-xs font-black text-slate-900 truncate">Confirmación</p>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            {/* KPI Muestras */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium">Capturados este Mes</p>
-                        <p className="text-xl font-bold text-white mt-1">142</p>
-                    </div>
-                    <div className="p-3 bg-teal-500/10 text-teal-400 rounded-xl">
-                        <FileText className="w-5 h-5" />
-                    </div>
-                </div>
+            {/* FORMULARIO POR PASOS */}
+            <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-6">
 
-                <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium">Enviados a Laboratorio</p>
-                        <p className="text-xl font-bold text-amber-400 mt-1">89</p>
-                    </div>
-                    <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
-                        <Send className="w-5 h-5" />
-                    </div>
-                </div>
+                {/* PASO 1: RECIÉN NACIDO */}
+                {currentStep === 1 && (
+                    <div className="space-y-5 animate-fadeIn">
+                        <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
+                            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
+                                <Baby className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-black text-slate-900">Paso 1: Datos del Recién Nacido</h3>
+                                <p className="text-xs text-slate-500 font-medium">Información biológica y somatometría del neonato.</p>
+                            </div>
+                        </div>
 
-                <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium">Resultados Validados</p>
-                        <p className="text-xl font-bold text-emerald-400 mt-1">53</p>
-                    </div>
-                    <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
-                        <CheckCircle2 className="w-5 h-5" />
-                    </div>
-                </div>
-            </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Nombres del Recién Nacido *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Ej: Mateo / RN Gómez"
+                                    value={formData.nombresRN}
+                                    onChange={(e) => setFormData({ ...formData, nombresRN: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
 
-            {/* Barra de Filtros */}
-            <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row gap-3 justify-between">
-                <div className="relative flex-1">
-                    <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por Folio, nombre de la madre o recién nacido..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
-                    />
-                </div>
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Apellidos *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Ej: Gómez Santiz"
+                                    value={formData.apellidosRN}
+                                    onChange={(e) => setFormData({ ...formData, apellidosRN: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+                        </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
-                        <Filter className="w-4 h-4 text-slate-400" />
-                        <select
-                            value={filtroEstatus}
-                            onChange={(e) => setFiltroEstatus(e.target.value)}
-                            className="bg-transparent text-xs text-slate-300 focus:outline-none"
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Fecha y Hora de Nacimiento *</label>
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    value={formData.fechaHoraNacimiento}
+                                    onChange={(e) => setFormData({ ...formData, fechaHoraNacimiento: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Sexo Biológico</label>
+                                <select
+                                    value={formData.sexo}
+                                    onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600"
+                                >
+                                    <option value="MASCULINO">Masculino</option>
+                                    <option value="FEMENINO">Femenino</option>
+                                    <option value="INDETERMINADO">Indeterminado</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Semanas de Gestación (SDG)</label>
+                                <input
+                                    type="number"
+                                    min="24"
+                                    max="44"
+                                    value={formData.semanasGestacion}
+                                    onChange={(e) => setFormData({ ...formData, semanasGestacion: Number(e.target.value) })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Peso al Nacer (Gramos) *</label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="500"
+                                    max="6000"
+                                    placeholder="Ej: 3200"
+                                    value={formData.pesoGramos}
+                                    onChange={(e) => setFormData({ ...formData, pesoGramos: Number(e.target.value) })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Talla (Centímetros)</label>
+                                <input
+                                    type="number"
+                                    min="30"
+                                    max="65"
+                                    placeholder="Ej: 50"
+                                    value={formData.tallaCm}
+                                    onChange={(e) => setFormData({ ...formData, tallaCm: Number(e.target.value) })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Parto atendido por Partera Tradicional */}
+                        <div className="p-4 bg-emerald-50/80 rounded-2xl border border-emerald-200 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <HeartHandshake className="w-5 h-5 text-emerald-700" />
+                                    <span className="text-xs font-black text-emerald-950">
+                                        ¿El parto fue atendido por una Partera Tradicional Acreditada?
+                                    </span>
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    checked={formData.atendidoPorPartera}
+                                    onChange={(e) => setFormData({ ...formData, atendidoPorPartera: e.target.checked })}
+                                    className="w-5 h-5 accent-emerald-600 cursor-pointer"
+                                />
+                            </div>
+
+                            {formData.atendidoPorPartera && (
+                                <div className="pt-2 border-t border-emerald-200 text-xs">
+                                    <label className="block text-emerald-900 font-bold mb-1">
+                                        Seleccionar Partera de la Red Comunitaria (Istmo de Tehuantepec)
+                                    </label>
+                                    <select
+                                        value={formData.parteraId}
+                                        onChange={(e) => setFormData({ ...formData, parteraId: e.target.value })}
+                                        className="w-full bg-white border border-emerald-300 rounded-xl px-3.5 py-2 text-slate-900 font-semibold focus:outline-none focus:border-emerald-600"
+                                    >
+                                        {parterasIstmo.map((p) => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.nombre}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* PASO 2: MADRE / TUTOR */}
+                {currentStep === 2 && (
+                    <div className="space-y-5 animate-fadeIn">
+                        <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
+                            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
+                                <User className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-black text-slate-900">Paso 2: Datos de la Madre / Tutor</h3>
+                                <p className="text-xs text-slate-500 font-medium">Información de contacto y localización de la madre.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Nombre Completo de la Madre *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Ej: Juana Santiz Cruz"
+                                    value={formData.nombreMadre}
+                                    onChange={(e) => setFormData({ ...formData, nombreMadre: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">CURP de la Madre</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ej: SACJ900512HOCMNN04"
+                                    value={formData.curpMadre}
+                                    onChange={(e) => setFormData({ ...formData, curpMadre: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Teléfono de Contacto / WhatsApp *</label>
+                                <input
+                                    type="tel"
+                                    required
+                                    placeholder="Ej: 971 123 4567"
+                                    value={formData.telefonoContacto}
+                                    onChange={(e) => setFormData({ ...formData, telefonoContacto: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Comunidad / Municipio del Istmo *</label>
+                                <select
+                                    value={formData.municipio}
+                                    onChange={(e) => setFormData({ ...formData, municipio: e.target.value, comunidad: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-semibold focus:outline-none focus:border-emerald-600"
+                                >
+                                    <option value="Juchitán de Zaragoza">Juchitán de Zaragoza</option>
+                                    <option value="Santo Domingo Tehuantepec">Santo Domingo Tehuantepec</option>
+                                    <option value="Salina Cruz">Salina Cruz</option>
+                                    <option value="Ciudad Ixtepec">Ciudad Ixtepec</option>
+                                    <option value="San Blas Atempa">San Blas Atempa</option>
+                                    <option value="Asunción Ixtaltepec">Asunción Ixtaltepec</option>
+                                    <option value="El Espinal">El Espinal</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="text-xs">
+                            <label className="block text-slate-700 font-bold mb-1">Dirección / Referencia de Domicilio</label>
+                            <input
+                                type="text"
+                                placeholder="Ej: Calle 5 de Mayo No. 12, Barrio Cheguigo, Juchitán"
+                                value={formData.direccion}
+                                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* PASO 3: MUESTRA / FICHA GUTHRIE */}
+                {currentStep === 3 && (
+                    <div className="space-y-5 animate-fadeIn">
+                        <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
+                            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
+                                <FileText className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-black text-slate-900">Paso 3: Muestra de Tamiz & Ficha de Guthrie</h3>
+                                <p className="text-xs text-slate-500 font-medium">Folio del papel filtro y tiempo transcurrido post-parto.</p>
+                            </div>
+                        </div>
+
+                        {/* Banner de Alerta Visual para Muestras > 72 Horas */}
+                        {esPrioridadAltaLab && (
+                            <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl flex items-start gap-3 shadow-sm">
+                                <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5 animate-bounce" />
+                                <div className="text-xs text-amber-950 space-y-1">
+                                    <h4 className="font-extrabold text-amber-900">
+                                        ¡Aviso de Prioridad de Laboratorio! ({horasPostParto} horas transcurridas)
+                                    </h4>
+                                    <p className="font-medium">
+                                        La muestra ha sido tomada después de las 72 horas del nacimiento. Se etiquetará con **Prioridad Alta** para el procesamiento inmediato en el Laboratorio Estatal de Salud Pública (LESP Oaxaca).
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Folio de Ficha / Papel Filtro Guthrie *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Ej: TMZ-OAX-2026-98217"
+                                    value={formData.folioGuthrie}
+                                    onChange={(e) => setFormData({ ...formData, folioGuthrie: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Fecha y Hora de Toma de Muestra *</label>
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    value={formData.fechaHoraToma}
+                                    onChange={(e) => setFormData({ ...formData, fechaHoraToma: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Tipo / Calidad de Muestra</label>
+                                <input
+                                    type="text"
+                                    value={formData.tipoMuestra}
+                                    onChange={(e) => setFormData({ ...formData, tipoMuestra: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-1">Responsable de la Toma de Muestra</label>
+                                <input
+                                    type="text"
+                                    value={formData.responsableToma}
+                                    onChange={(e) => setFormData({ ...formData, responsableToma: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="text-xs">
+                            <label className="block text-slate-700 font-bold mb-1">Observaciones Clínicas / Notas de Toma</label>
+                            <textarea
+                                rows={2}
+                                value={formData.observaciones}
+                                onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* PASO 4: CONFIRMACIÓN Y VISTA PREVIA */}
+                {currentStep === 4 && (
+                    <div className="space-y-5 animate-fadeIn">
+                        <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
+                            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
+                                <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-black text-slate-900">Paso 4: Resumen y Confirmación de Expediente</h3>
+                                <p className="text-xs text-slate-500 font-medium">Verifique que los datos capturados sean correctos antes de guardar.</p>
+                            </div>
+                        </div>
+
+                        {/* Card Expediente Vista Previa */}
+                        <div className="bg-slate-50 p-5 rounded-3xl border border-slate-200 space-y-4 text-xs">
+                            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                                <span className="font-mono font-bold text-emerald-800 text-sm">{formData.folioGuthrie}</span>
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    LISTO PARA ENVÍO
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Recién Nacido</span>
+                                    <p className="font-extrabold text-slate-900">{formData.nombresRN} {formData.apellidosRN}</p>
+                                    <p className="text-slate-600">{formData.sexo} • {formData.semanasGestacion} SDG</p>
+                                    <p className="text-slate-600">{formData.pesoGramos}g • {formData.tallaCm}cm</p>
+                                    {formData.atendidoPorPartera && (
+                                        <p className="text-emerald-700 font-bold pt-1">Atendido por Partera Tradicional</p>
+                                    )}
+                                </div>
+
+                                <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Madre / Tutor</span>
+                                    <p className="font-extrabold text-slate-900">{formData.nombreMadre || 'No ingresado'}</p>
+                                    <p className="text-slate-600">{formData.telefonoContacto}</p>
+                                    <p className="text-slate-600">{formData.municipio}</p>
+                                    <p className="text-slate-500 truncate">{formData.direccion}</p>
+                                </div>
+
+                                <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Muestra & Ficha</span>
+                                    <p className="font-bold text-slate-900">{formData.folioGuthrie}</p>
+                                    <p className="text-slate-600">Toma: {formData.fechaHoraToma.replace('T', ' ')}</p>
+                                    <p className="text-slate-600">Tiempo: {horasPostParto} hrs post-parto</p>
+                                    {esPrioridadAltaLab ? (
+                                        <p className="text-amber-700 font-black">Prioridad Alta Lab (&gt;72h)</p>
+                                    ) : (
+                                        <p className="text-emerald-700 font-semibold">Toma Oportuna (&lt;72h)</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* NAVEGACIÓN Y BOTONES DEL WIZARD */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                    {currentStep > 1 ? (
+                        <button
+                            type="button"
+                            onClick={handlePrev}
+                            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-2 transition-colors"
                         >
-                            <option value="TODOS" className="bg-slate-900">Todos los Estatus</option>
-                            <option value="PENDIENTE" className="bg-slate-900">Pendientes</option>
-                            <option value="ENVIADO" className="bg-slate-900">Enviados</option>
-                            <option value="PROCESADO" className="bg-slate-900">Procesados</option>
-                        </select>
-                    </div>
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>Anterior</span>
+                        </button>
+                    ) : (
+                        <div />
+                    )}
 
-                    <button className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-800 text-xs font-semibold flex items-center gap-2">
-                        <Download className="w-4 h-4" />
-                        Exportar
-                    </button>
+                    {currentStep < 4 ? (
+                        <button
+                            type="button"
+                            onClick={handleNext}
+                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
+                        >
+                            <span>Siguiente</span>
+                            <ArrowRight className="w-4 h-4" />
+                        </button>
+                    ) : (
+                        <button
+                            type="submit"
+                            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-2 transition-all"
+                        >
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>Finalizar y Guardar Folio</span>
+                        </button>
+                    )}
                 </div>
-            </div>
 
-            {/* Tabla de Registros */}
-            <div className="bg-slate-950/80 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-300">
-                        <thead className="bg-slate-900 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
-                            <tr>
-                                <th className="px-5 py-4">Folio Tamiz</th>
-                                <th className="px-5 py-4">Recién Nacido</th>
-                                <th className="px-5 py-4">Madre / Contacto</th>
-                                <th className="px-5 py-4">Fecha Toma</th>
-                                <th className="px-5 py-4">Semanas / Peso</th>
-                                <th className="px-5 py-4">Estatus</th>
-                                <th className="px-5 py-4 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/60">
-                            {registrosFiltrados.map((reg) => (
-                                <tr key={reg.id} className="hover:bg-slate-900/50 transition-colors">
-                                    <td className="px-5 py-4 font-mono font-bold text-teal-400">{reg.folio}</td>
-                                    <td className="px-5 py-4 font-medium text-white">{reg.nombreRecienNacido}</td>
-                                    <td className="px-5 py-4">
-                                        <p className="font-medium text-slate-200">{reg.nombreMadre}</p>
-                                        <p className="text-[11px] text-slate-400">{reg.telefonoContacto}</p>
-                                    </td>
-                                    <td className="px-5 py-4 text-slate-400">{reg.fechaToma}</td>
-                                    <td className="px-5 py-4 text-slate-400">{reg.semanasGestacion} SDG / {reg.pesoGramos}g</td>
-                                    <td className="px-5 py-4">
-                                        {reg.estatus === 'PROCESADO' && (
-                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-fit">
-                                                <CheckCircle2 className="w-3 h-3" /> Procesado
-                                            </span>
-                                        )}
-                                        {reg.estatus === 'ENVIADO' && (
-                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 w-fit">
-                                                <Clock className="w-3 h-3" /> Enviado Lab
-                                            </span>
-                                        )}
-                                        {reg.estatus === 'PENDIENTE' && (
-                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/30 flex items-center gap-1.5 w-fit">
-                                                <AlertCircle className="w-3 h-3" /> Pendiente Envío
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-5 py-4 text-right">
-                                        <button className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-teal-400 rounded-lg border border-slate-700 text-xs font-semibold">
-                                            Ver Ficha
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            </form>
 
-            {/* Modal Simulado de Registro */}
-            {showModalNuevo && (
-                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-4">
-                        <h3 className="text-lg font-bold text-white">Captura de Muestra de Tamiz Neonatal</h3>
-                        <p className="text-xs text-slate-400">Complete los datos básicos tomados de la Tarjeta de Guthrie.</p>
+            {/* MODAL DE ÉXITO CON FOLIO Y CÓDIGO QR / BARRAS SIMULADO */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl text-center">
 
-                        <div className="space-y-3">
-                            <div>
-                                <label className="block text-xs text-slate-400 mb-1">Folio del Papel Filtro</label>
-                                <input type="text" placeholder="TMZ-98217" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
-                            </div>
-                            <div>
-                                <label className="block text-xs text-slate-400 mb-1">Nombre de la Madre</label>
-                                <input type="text" placeholder="Nombre completo" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Semanas Gestación</label>
-                                    <input type="number" placeholder="39" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center border-2 border-emerald-300 animate-bounce">
+                            <CheckCircle2 className="w-9 h-9" />
+                        </div>
+
+                        <div>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                                REGISTRO EXITOSO • SSO OAXACA
+                            </span>
+                            <h3 className="text-xl font-black text-slate-900 mt-2">Muestra Registrada Correctamente</h3>
+                            <p className="text-xs text-slate-500 font-medium mt-1">
+                                El folio de la Tarjeta de Guthrie se integró a la red de la Jurisdicción Sanitaria No. 2.
+                            </p>
+                        </div>
+
+                        {/* Tarjeta de Folio + Código QR de Muestra */}
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Folio Oficial Asignado</span>
+                            <p className="text-xl font-black text-slate-900 font-mono tracking-widest">{createdFolio}</p>
+
+                            {/* SVG Simulado de Código de Barras / QR */}
+                            <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
+                                <div className="w-32 h-20 bg-slate-900 p-2 rounded-lg flex items-center justify-center">
+                                    <QrCode className="w-16 h-16 text-emerald-400" />
                                 </div>
-                                <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Peso (Gramos)</label>
-                                    <input type="number" placeholder="3100" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
-                                </div>
+                                <span className="text-[10px] font-mono text-slate-500 mt-1">Rastreo LESP Oaxaca</span>
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
-                            <button onClick={() => setShowModalNuevo(false)} className="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancelar</button>
-                            <button onClick={() => setShowModalNuevo(false)} className="px-4 py-2 bg-teal-500 text-white text-xs font-bold rounded-xl">Guardar Folio</button>
+                        {/* Botones del Modal */}
+                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                            <button
+                                onClick={() => alert('Generando comprobante oficial en formato PDF para laboratorio...')}
+                                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
+                            >
+                                <Printer className="w-4 h-4" />
+                                <span>Imprimir Comprobante</span>
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
+                            >
+                                Volver al Dashboard
+                            </button>
                         </div>
+
                     </div>
                 </div>
             )}
