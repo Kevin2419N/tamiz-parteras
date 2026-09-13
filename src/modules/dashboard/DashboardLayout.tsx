@@ -237,122 +237,124 @@ export const DashboardLayout: React.FC = () => {
                 </aside>
             )}
 
-            {/* NAVBAR SUPERIOR RESPONSIVE (MODO CLARO) */}
+            {/* NAVBAR SUPERIOR RESPONSIVE (MODO CLARO) - Oculto para módulo Partera */}
             <div className="flex-1 flex flex-col min-w-0">
 
-                <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sticky top-0 z-20 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 shadow-sm text-center">
+                {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && !location.pathname.includes('/parteras/comunitaria') && (
+                    <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sticky top-0 z-20 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 shadow-sm text-center">
 
-                    {/* Botón de Menú Móvil & Controles Rápidos */}
-                    <div className="md:hidden flex items-center justify-between w-full border-b border-slate-100 pb-2">
-                        <button
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
-                            title="Menú"
-                        >
-                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                        </button>
-                        <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                {currentUser.rol.replace('_', ' ')}
-                            </span>
-                            <Link
-                                to="/notificaciones"
-                                className="relative p-1.5 text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 rounded-lg"
-                                title="Notificaciones"
-                            >
-                                <Bell className="w-4 h-4" />
-                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">
-                                    3
-                                </span>
-                            </Link>
+                        {/* Botón de Menú Móvil & Controles Rápidos */}
+                        <div className="md:hidden flex items-center justify-between w-full border-b border-slate-100 pb-2">
                             <button
-                                onClick={() => {
-                                    logout();
-                                    navigate('/');
-                                }}
-                                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200"
-                                title="Salir"
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                className="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
+                                title="Menú"
                             >
-                                <LogOut className="w-4 h-4" />
+                                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                             </button>
-                        </div>
-                    </div>
-
-                    {/* Fila de Logos Responsiva */}
-                    <div className="flex items-center justify-center gap-6 md:contents">
-                        <img
-                            src="/logo-jurisdiccion.png"
-                            alt="Logo Jurisdicción Sanitaria No. 2 Istmo"
-                            loading="eager"
-                            fetchPriority="high"
-                            className="h-12 md:h-16 w-auto object-contain shrink-0 md:order-1"
-                        />
-                        <div className="flex items-center gap-3 md:order-3">
-                            <img
-                                src="/Logo-Secretaria.png"
-                                alt="Logo Secretaría de Salud"
-                                loading="eager"
-                                fetchPriority="high"
-                                className="h-12 md:h-16 w-auto object-contain shrink-0"
-                            />
-
-                            {/* Selector de Usuario Simulado + Badges + Cerrar Sesión (Escritorio) */}
-                            <div className="hidden lg:flex items-center gap-2 border-l border-slate-200 pl-3">
-                                <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap">
-                                    Rol: {currentUser.rol.replace('_', ' ')}
+                            <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    {currentUser.rol.replace('_', ' ')}
                                 </span>
-
-                                <div className="bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 flex items-center gap-2">
-                                    <span className="text-[10px] text-slate-600 font-bold">Prueba:</span>
-                                    <select
-                                        value={currentUser.email}
-                                        onChange={handleRoleSwitch}
-                                        className="bg-transparent text-xs text-slate-900 focus:outline-none font-bold"
-                                    >
-                                        {simulatedUsers.map((u) => (
-                                            <option key={u.email} value={u.email} className="bg-white text-slate-900">
-                                                {u.nombre} ({u.rol})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
                                 <Link
                                     to="/notificaciones"
-                                    className="relative p-2 text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-500/40 transition-colors shrink-0"
+                                    className="relative p-1.5 text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 rounded-lg"
                                     title="Notificaciones"
                                 >
                                     <Bell className="w-4 h-4" />
-                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">
+                                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">
                                         3
                                     </span>
                                 </Link>
-
                                 <button
                                     onClick={() => {
                                         logout();
                                         navigate('/');
                                     }}
-                                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
+                                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200"
+                                    title="Salir"
                                 >
-                                    <LogOut className="w-3.5 h-3.5" />
-                                    <span>Salir</span>
+                                    <LogOut className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Columna Central (Centrada) */}
-                    <div className="flex flex-col items-center text-center md:order-2">
-                        <h1 className="text-slate-900 text-xl md:text-2xl font-bold text-center">
-                            Jurisdicción Sanitaria No. 2 - Istmo
-                        </h1>
-                        <p className="text-slate-500 text-xs md:text-sm font-medium text-center">
-                            Sistema Web de Gestión Operativa para Tamiz Neonatal y Red de Parteras Tradicionales
-                        </p>
-                    </div>
+                        {/* Fila de Logos Responsiva */}
+                        <div className="flex items-center justify-center gap-6 md:contents">
+                            <img
+                                src="/logo-jurisdiccion.png"
+                                alt="Logo Jurisdicción Sanitaria No. 2 Istmo"
+                                loading="eager"
+                                fetchPriority="high"
+                                className="h-12 md:h-16 w-auto object-contain shrink-0 md:order-1"
+                            />
+                            <div className="flex items-center gap-3 md:order-3">
+                                <img
+                                    src="/Logo-Secretaria.png"
+                                    alt="Logo Secretaría de Salud"
+                                    loading="eager"
+                                    fetchPriority="high"
+                                    className="h-12 md:h-16 w-auto object-contain shrink-0"
+                                />
 
-                </header>
+                                {/* Selector de Usuario Simulado + Badges + Cerrar Sesión (Escritorio) */}
+                                <div className="hidden lg:flex items-center gap-2 border-l border-slate-200 pl-3">
+                                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap">
+                                        Rol: {currentUser.rol.replace('_', ' ')}
+                                    </span>
+
+                                    <div className="bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 flex items-center gap-2">
+                                        <span className="text-[10px] text-slate-600 font-bold">Prueba:</span>
+                                        <select
+                                            value={currentUser.email}
+                                            onChange={handleRoleSwitch}
+                                            className="bg-transparent text-xs text-slate-900 focus:outline-none font-bold"
+                                        >
+                                            {simulatedUsers.map((u) => (
+                                                <option key={u.email} value={u.email} className="bg-white text-slate-900">
+                                                    {u.nombre} ({u.rol})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <Link
+                                        to="/notificaciones"
+                                        className="relative p-2 text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-500/40 transition-colors shrink-0"
+                                        title="Notificaciones"
+                                    >
+                                        <Bell className="w-4 h-4" />
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">
+                                            3
+                                        </span>
+                                    </Link>
+
+                                    <button
+                                        onClick={() => {
+                                            logout();
+                                            navigate('/');
+                                        }}
+                                        className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
+                                    >
+                                        <LogOut className="w-3.5 h-3.5" />
+                                        <span>Salir</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Columna Central (Centrada) */}
+                        <div className="flex flex-col items-center text-center md:order-2">
+                            <h1 className="text-slate-900 text-xl md:text-2xl font-bold text-center">
+                                Jurisdicción Sanitaria No. 2 - Istmo
+                            </h1>
+                            <p className="text-slate-500 text-xs md:text-sm font-medium text-center">
+                                Sistema Web de Gestión Operativa para Tamiz Neonatal y Red de Parteras Tradicionales
+                            </p>
+                        </div>
+
+                    </header>
+                )}
 
                 {/* MENU DRAWER MOBILE */}
                 {mobileMenuOpen && (
