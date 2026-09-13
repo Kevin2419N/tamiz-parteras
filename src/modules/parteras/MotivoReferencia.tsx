@@ -9,8 +9,17 @@ import {
     VolumeX,
     Info,
     Sparkles,
-    AlertCircle,
-    Stethoscope
+    Stethoscope,
+    Building2,
+    User,
+    Calendar,
+    MapPin,
+    UserCheck,
+    Megaphone,
+    Pill,
+    MessageSquare,
+    FolderOpen,
+    ShieldCheck
 } from 'lucide-react';
 
 interface MotivoReferenciaProps {
@@ -26,7 +35,7 @@ export interface MotivoItem {
     id: string;
     titulo: string;
     imagen: string;
-    fila: 1 | 2;
+    categoria: 'MADRE' | 'INFANTIL' | 'TAMIZ' | 'PREVENCION';
     bullets?: string[];
 }
 
@@ -38,21 +47,23 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     campoEscuchandoExternal,
     iniciarDictadoExternal
 }) => {
-    // Datos de Identificación
-    const [centroSalud, setCentroSalud] = useState('Hospital General de Juchitán');
-    const [nombreUsuaria, setNombreUsuaria] = useState('María Elena Santiz');
-    const [edad, setEdad] = useState('26');
+    // Datos de Identificación (Campos de la usuaria inician VACÍOS para permitir dictado limpio)
+    const [centroSalud, setCentroSalud] = useState('');
+    const [nombreUsuaria, setNombreUsuaria] = useState('');
+    const [edad, setEdad] = useState('');
     const [sexo, setSexo] = useState<'F' | 'M'>('F');
     const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
-    const [localidad, setLocalidad] = useState('La Ventosa');
-    const [municipio, setMunicipio] = useState('Juchitán de Zaragoza');
+    const [localidad, setLocalidad] = useState('');
+    const [municipio, setMunicipio] = useState('');
+
+    // Datos de la Partera (Prellenados únicamente los datos del perfil autenticado)
     const [nombrePartera, setNombrePartera] = useState('Doña Rosa Santiz Gómez');
     const [localidadPartera, setLocalidadPartera] = useState('San Pedro Juchitán');
 
     // Motivos Seleccionados
     const [motivosSeleccionados, setMotivosSeleccionados] = useState<string[]>([]);
 
-    // Contrareferencia Médica
+    // Contrareferencia Médica (Sección Única al final del documento)
     const [mostrarContrareferencia, setMostrarContrareferencia] = useState(false);
     const [estadoContra, setEstadoContra] = useState<'CONTROLADA' | 'PARA_CONTROL_PARTERA'>('CONTROLADA');
     const [diagnostico, setDiagnostico] = useState('');
@@ -61,7 +72,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     const [nombreMedico, setNombreMedico] = useState('Dr. Alejandro Murat H.');
     const [centroMedico, setCentroMedico] = useState('Centro de Salud Urbano Juchitán');
 
-    // Dictado por voz estado interno
+    // Dictado por voz Web Speech API estado
     const [listeningFieldInternal, setListeningFieldInternal] = useState<string | null>(null);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [dictationNotification, setDictationNotification] = useState<string | null>(null);
@@ -99,32 +110,33 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         };
     }, []);
 
-    // Manejo fluido de dictado por voz: concatenar si ya existe texto
+    // Web Speech API con soporte de prefijos y actualización directa de React state
     const handleVoiceDictation = (fieldKey: string, fieldLabel: string) => {
         if (iniciarDictadoExternal) {
             iniciarDictadoExternal(fieldKey);
             return;
         }
 
-        speakText(`Dictando para el campo ${fieldLabel}. Hable después del tono.`);
-        setListeningFieldInternal(fieldKey);
-        setDictationNotification(`🎙️ Escuchando dictado para: ${fieldLabel}...`);
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-        const SpeechRec = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-
-        if (SpeechRec) {
+        if (SpeechRecognition) {
             try {
-                const recognition = new SpeechRec();
+                const recognition = new SpeechRecognition();
                 recognition.lang = 'es-MX';
                 recognition.continuous = false;
                 recognition.interimResults = false;
+
+                recognition.onstart = () => {
+                    setListeningFieldInternal(fieldKey);
+                    setDictationNotification(`Escuchando dictado para ${fieldLabel}...`);
+                };
 
                 recognition.onresult = (event: any) => {
                     const transcript = event.results[0][0].transcript;
                     actualizarValorCampo(fieldKey, transcript);
                     setListeningFieldInternal(null);
-                    setDictationNotification(`✅ Capturado: "${transcript}"`);
-                    speakText(`Registrado ${transcript}`);
+                    setDictationNotification(`Capturado: "${transcript}"`);
+                    speakText(`Registrado: ${transcript}`);
                     setTimeout(() => setDictationNotification(null), 3000);
                 };
 
@@ -147,6 +159,8 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     };
 
     const simularDictado = (fieldKey: string, fieldLabel: string) => {
+        setListeningFieldInternal(fieldKey);
+        setDictationNotification(`Escuchando dictado para ${fieldLabel}...`);
         setTimeout(() => {
             const simulaciones: Record<string, string> = {
                 centroSalud: 'Centro de Salud Urbano Juchitán',
@@ -154,16 +168,16 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 edad: '28',
                 localidad: 'Unión Hidalgo',
                 municipio: 'Juchitán de Zaragoza',
-                nombrePartera: 'Doña Juana Cruz Ruiz',
-                localidadPartera: 'La Ventosa',
-                diagnostico: 'Paciente con embarazo normoevalutivo de 34 semanas.',
-                tratamiento: 'Continuar con ácido fólico y reposo relativo.',
-                observacionesMedico: 'Cita de seguimiento en 15 días en la unidad de salud.'
+                nombrePartera: 'Doña Rosa Santiz Gómez',
+                localidadPartera: 'San Pedro Juchitán',
+                diagnostico: 'Paciente con embarazo de 34 semanas sin complicaciones.',
+                tratamiento: 'Continuar con ácido fólico y cita de seguimiento.',
+                observacionesMedico: 'Seguimiento por la partera en comunidad.'
             };
             const simulado = simulaciones[fieldKey] || 'Texto dictado por voz';
             actualizarValorCampo(fieldKey, simulado);
             setListeningFieldInternal(null);
-            setDictationNotification(`✅ Dictado por voz registrado para ${fieldLabel}: "${simulado}"`);
+            setDictationNotification(`Dictado registrado para ${fieldLabel}: "${simulado}"`);
             speakText(`Registrado: ${simulado}`);
             setTimeout(() => setDictationNotification(null), 3500);
         }, 1200);
@@ -188,10 +202,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         let nuevosMotivos: string[];
         if (motivosSeleccionados.includes(id)) {
             nuevosMotivos = motivosSeleccionados.filter(m => m !== id);
-            speakText(`Desmarcado ${titulo}`);
+            speakText(`Desmarcado: ${titulo}`);
         } else {
             nuevosMotivos = [...motivosSeleccionados, id];
-            speakText(`Seleccionado ${titulo}`);
+            speakText(`Seleccionado: ${titulo}`);
         }
         setMotivosSeleccionados(nuevosMotivos);
     };
@@ -202,153 +216,94 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         if (onSuccess) onSuccess();
     };
 
-    // Matriz de Motivos Oficial Fila 1 y Fila 2 (Tamiz separado en 2 tarjetas distintas)
-    const motivosFila1: MotivoItem[] = [
+    // Matriz Completa de Motivos (Separación rigurosa de Tamiz en 2 tarjetas independientes)
+    const listaMotivos: MotivoItem[] = [
         {
             id: 'COMPLICACIONES_EMBARAZO',
             titulo: 'COMPLICACIONES DEL EMBARAZO',
             imagen: '/Complicaciones-del-embarazo.png',
-            fila: 1
+            categoria: 'MADRE'
         },
         {
             id: 'APLICAR_TOXOIDE_TETANICO',
             titulo: 'APLICAR TOXOIDE TETÁNICO',
             imagen: '/Aplicar-Toxoide-Tetanico.png',
-            fila: 1
+            categoria: 'MADRE'
         },
         {
             id: 'ABORTO',
             titulo: 'ABORTO',
             imagen: '/Aborto.png',
-            fila: 1
+            categoria: 'MADRE'
         },
         {
             id: 'PARTO_COMPLICADO',
             titulo: 'PARTO COMPLICADO',
             imagen: '/Parto-Complicado.png',
-            fila: 1
+            categoria: 'MADRE'
         },
         {
             id: 'PUERPERIO_COMPLICADO',
             titulo: 'PUERPERIO COMPLICADO',
             imagen: '/Puerferico-Complicado.png',
-            fila: 1
+            categoria: 'MADRE'
         },
         {
             id: 'ZIKA',
             titulo: 'ZIKA',
             imagen: '/Zika.png',
-            fila: 1,
+            categoria: 'MADRE',
             bullets: ['Fiebre', 'Dolor articulaciones', 'Salpullido', 'Conjuntivitis']
-        }
-    ];
-
-    const motivosFila2: MotivoItem[] = [
+        },
         {
             id: 'NINO_CON_COMPLICACIONES',
             titulo: 'NIÑO CON COMPLICACIONES',
             imagen: '/Niño-Con-Complicaciones.png',
-            fila: 2
+            categoria: 'INFANTIL'
         },
         {
             id: 'NINA_CON_COMPLICACIONES',
             titulo: 'NIÑA CON COMPLICACIONES',
             imagen: '/Niña-Con-Complicaciones.png',
-            fila: 2
+            categoria: 'INFANTIL'
         },
         {
             id: 'TAMIZ_METABOLICO',
             titulo: 'TAMIZ METABÓLICO',
             imagen: '/Tamiz-Metabolico.png',
-            fila: 2
+            categoria: 'TAMIZ'
         },
         {
             id: 'TAMIZ_AUDITIVO',
             titulo: 'TAMIZ AUDITIVO',
             imagen: '/Tamiz-Auditivo.png',
-            fila: 2
+            categoria: 'TAMIZ'
         },
         {
             id: 'APLICAR_VITAMINA_A_Y_K',
             titulo: "APLICAR VITAMINA 'A' Y 'K'",
             imagen: '/Aplicar-Vitamina-A-Y-K.png',
-            fila: 2
+            categoria: 'PREVENCION'
         },
         {
             id: 'VACUNA_BCG_ANTI_HEPATITIS',
             titulo: 'VACUNA BCG / ANTI HEPATITIS B',
             imagen: '/Vacuna.png',
-            fila: 2
+            categoria: 'PREVENCION'
         },
         {
             id: 'TOMA_DE_PAPANICOLAOU',
             titulo: 'TOMA DE PAPANICOLAOU',
             imagen: '/Toma-De-Papanicolao.png',
-            fila: 2
+            categoria: 'PREVENCION'
         },
         {
             id: 'OTROS',
             titulo: 'OTROS',
             imagen: '/Otros.png',
-            fila: 2
+            categoria: 'PREVENCION'
         }
     ];
-
-    const renderCard = (item: MotivoItem) => {
-        const isSelected = motivosSeleccionados.includes(item.id);
-        return (
-            <button
-                type="button"
-                key={item.id}
-                onClick={() => toggleMotivo(item.id, item.titulo)}
-                className={`relative group flex flex-col justify-between items-center p-5 rounded-3xl transition-all duration-300 cursor-pointer select-none text-center min-h-[270px] sm:min-h-[290px] w-full border-4 ${isSelected
-                    ? 'border-[#9D2449] bg-rose-50/90 shadow-xl scale-[1.02] ring-4 ring-[#9D2449]/20'
-                    : 'border-slate-200 bg-white hover:border-[#9D2449]/60 hover:bg-slate-50/90 shadow-sm hover:shadow-md'
-                    }`}
-            >
-                {/* Checkmark flotante en la esquina superior derecha */}
-                <div className="absolute top-3.5 right-3.5 z-10">
-                    {isSelected ? (
-                        <div className="w-8 h-8 rounded-full bg-[#9D2449] text-white flex items-center justify-center shadow-lg border-2 border-white animate-in zoom-in-50">
-                            <Check className="w-5 h-5 stroke-[3]" />
-                        </div>
-                    ) : (
-                        <div className="w-7 h-7 rounded-full border-2 border-slate-300 bg-white/90 group-hover:border-rose-400" />
-                    )}
-                </div>
-
-                {/* Contenedor de Imagen Generoso (sin fondos duros: mix-blend-multiply) */}
-                <div className="w-full flex-1 flex items-center justify-center py-2 px-1">
-                    <img
-                        src={item.imagen}
-                        alt={item.titulo}
-                        className="h-28 sm:h-36 w-auto max-w-full object-contain mix-blend-multiply drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
-                        loading="eager"
-                    />
-                </div>
-
-                {/* Texto del Motivo en Mayúsculas Destacado */}
-                <div className="w-full pt-3">
-                    <span className={`block font-black text-xs sm:text-sm tracking-tight leading-snug uppercase ${isSelected ? 'text-[#9D2449]' : 'text-slate-900'
-                        }`}>
-                        {item.titulo}
-                    </span>
-
-                    {/* Viñetas informativas para ZIKA */}
-                    {item.bullets && item.bullets.length > 0 && (
-                        <div className="mt-2 text-[10px] sm:text-[11px] text-slate-700 bg-amber-50/95 p-2 rounded-xl border border-amber-200 text-left space-y-0.5 shadow-inner">
-                            {item.bullets.map((b, idx) => (
-                                <div key={idx} className="flex items-center gap-1.5 font-bold">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#9D2449] shrink-0" />
-                                    <span>{b}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </button>
-        );
-    };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8 max-w-7xl mx-auto selection:bg-[#9D2449] selection:text-white">
@@ -359,7 +314,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     <button
                         type="button"
                         onClick={onBack}
-                        className="px-5 py-2.5 bg-rose-50/90 hover:bg-rose-100 text-[#9D2449] border border-rose-200 rounded-2xl font-black text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-sm"
+                        className="px-5 py-2.5 bg-rose-50/90 hover:bg-rose-100 text-[#9D2449] border border-rose-200 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-sm"
                     >
                         <ChevronLeft className="w-5 h-5" />
                         <span>Regresar al Menú Principal</span>
@@ -369,10 +324,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
 
             {/* NOTIFICACIÓN DE DICTADO O VOZ ACTIVA */}
             {(dictationNotification || isCurrentlyListening) && (
-                <div className="bg-amber-100 border-2 border-amber-400 p-4 rounded-2xl flex items-center justify-between gap-3 text-amber-950 font-bold text-sm shadow-md animate-pulse">
+                <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-2xl flex items-center justify-between gap-3 text-amber-950 font-bold text-sm shadow-md animate-pulse">
                     <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-[#9D2449]" />
-                        <span>{dictationNotification || `🎙️ Dictado activo para campo: ${activeListeningField}`}</span>
+                        <span>{dictationNotification || `Dictado activo para campo: ${activeListeningField}`}</span>
                     </div>
                 </div>
             )}
@@ -404,9 +359,9 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 {/* BANNER TÍTULO DESTACADO "ACUDE A TU UNIDAD DE SALUD" */}
                 <div className="bg-gradient-to-r from-[#9D2449] via-[#7A1B38] to-[#9D2449] text-white py-4 px-6 rounded-2xl text-center shadow-lg">
                     <h2 className="text-2xl sm:text-3xl font-black tracking-wider uppercase drop-shadow-sm flex items-center justify-center gap-3">
-                        <span>📢</span>
+                        <Megaphone className="w-7 h-7 text-rose-200" />
                         <span>ACUDE A TU UNIDAD DE SALUD</span>
-                        <span>📢</span>
+                        <Megaphone className="w-7 h-7 text-rose-200" />
                     </h2>
                     <p className="text-xs sm:text-sm text-rose-100 font-medium mt-1">
                         Hoja Oficial de Referencia Comunitario • Red de Servicios de Salud de Oaxaca
@@ -421,13 +376,13 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                             isSpeaking
                                 ? stopSpeech()
                                 : speakText(
-                                    'Hoja de Referencia de Parteras Tradicionales. Servicios de Salud de Oaxaca. Para completar el documento, toque los botones de micrófono para dictar con su voz, y toque las tarjetas ilustradas para seleccionar el motivo de referencia.'
+                                    'Hoja de Referencia de Parteras Tradicionales. Servicios de Salud de Oaxaca. Presione el botón de micrófono para dictar los datos y toque las tarjetas para marcar el motivo.'
                                 )
                         }
                         className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-[#9D2449] border-2 border-rose-200 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-sm"
                     >
                         {isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        <span>{isSpeaking ? 'Detener Voz' : '🔊 Escuchar Instrucciones del Formulario'}</span>
+                        <span>{isSpeaking ? 'Detener Voz' : 'Escuchar Instrucciones del Formulario'}</span>
                     </button>
                 </div>
 
@@ -444,9 +399,12 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
 
                         {/* Centro de Salud u Hospital */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-black text-slate-800 uppercase flex items-center justify-between">
-                                <span>🏥 Centro de Salud u Hospital</span>
-                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar 🎙️</span>
+                            <label className="block text-xs font-black text-slate-800 uppercase flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                    <Building2 className="w-4 h-4 text-[#9D2449]" />
+                                    Centro de Salud u Hospital
+                                </span>
+                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar por voz</span>
                             </label>
                             <div className="relative flex items-center w-full">
                                 <input
@@ -454,7 +412,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                     required
                                     value={centroSalud}
                                     onChange={(e) => setCentroSalud(e.target.value)}
-                                    placeholder="Ej. Centro de Salud San Pedro Juchitán"
+                                    placeholder="Toca el micrófono para dictar..."
                                     className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-4 pr-14 py-3.5 text-sm sm:text-base font-bold text-slate-900 focus:outline-none focus:bg-white transition-all shadow-sm"
                                 />
                                 <button
@@ -473,9 +431,12 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
 
                         {/* Nombre de la Usuaria (O) */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-black text-slate-800 uppercase flex items-center justify-between">
-                                <span>👩‍🦱 Nombre de la Usuaria (O)</span>
-                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar 🎙️</span>
+                            <label className="block text-xs font-black text-slate-800 uppercase flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                    <User className="w-4 h-4 text-[#9D2449]" />
+                                    Nombre de la Usuaria (O)
+                                </span>
+                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar por voz</span>
                             </label>
                             <div className="relative flex items-center w-full">
                                 <input
@@ -483,7 +444,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                     required
                                     value={nombreUsuaria}
                                     onChange={(e) => setNombreUsuaria(e.target.value)}
-                                    placeholder="Ej. María Elena Santiz"
+                                    placeholder="Toca el micrófono para dictar o escribe..."
                                     className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-4 pr-14 py-3.5 text-sm sm:text-base font-bold text-slate-900 focus:outline-none focus:bg-white transition-all shadow-sm"
                                 />
                                 <button
@@ -503,17 +464,24 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                         {/* Edad | Sexo | Fecha */}
                         <div className="grid grid-cols-3 gap-3">
                             <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase">🎂 Edad</label>
+                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center gap-1">
+                                    <Calendar className="w-3.5 h-3.5 text-[#9D2449]" />
+                                    Edad
+                                </label>
                                 <input
                                     type="number"
                                     value={edad}
+                                    placeholder="Ej. 26"
                                     onChange={(e) => setEdad(e.target.value)}
                                     className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-3 py-3.5 text-sm font-bold text-slate-900"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase">👤 Sexo</label>
+                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center gap-1">
+                                    <UserCheck className="w-3.5 h-3.5 text-[#9D2449]" />
+                                    Sexo
+                                </label>
                                 <select
                                     value={sexo}
                                     onChange={(e) => setSexo(e.target.value as 'F' | 'M')}
@@ -525,7 +493,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase">📅 Fecha</label>
+                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center gap-1">
+                                    <Calendar className="w-3.5 h-3.5 text-[#9D2449]" />
+                                    Fecha
+                                </label>
                                 <input
                                     type="date"
                                     value={fecha}
@@ -539,13 +510,16 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Localidad */}
                             <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase">🏡 Localidad</label>
+                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center gap-1">
+                                    <MapPin className="w-3.5 h-3.5 text-[#9D2449]" />
+                                    Localidad
+                                </label>
                                 <div className="relative flex items-center w-full">
                                     <input
                                         type="text"
                                         value={localidad}
                                         onChange={(e) => setLocalidad(e.target.value)}
-                                        placeholder="Localidad"
+                                        placeholder="Toca el micrófono..."
                                         className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-3 pr-12 py-3 text-sm font-bold text-slate-900"
                                     />
                                     <button
@@ -563,13 +537,16 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
 
                             {/* Municipio */}
                             <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase">🏛️ Municipio</label>
+                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center gap-1">
+                                    <Building2 className="w-3.5 h-3.5 text-[#9D2449]" />
+                                    Municipio
+                                </label>
                                 <div className="relative flex items-center w-full">
                                     <input
                                         type="text"
                                         value={municipio}
                                         onChange={(e) => setMunicipio(e.target.value)}
-                                        placeholder="Municipio"
+                                        placeholder="Toca el micrófono..."
                                         className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-3 pr-12 py-3 text-sm font-bold text-slate-900"
                                     />
                                     <button
@@ -586,11 +563,14 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                             </div>
                         </div>
 
-                        {/* Nombre de la Partera (O) */}
+                        {/* Nombre de la Partera (Prellenado perfil autenticado) */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-black text-slate-800 uppercase flex items-center justify-between">
-                                <span>👩‍🌾 Nombre de la Partera (O)</span>
-                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar 🎙️</span>
+                            <label className="block text-xs font-black text-slate-800 uppercase flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                    <ShieldCheck className="w-4 h-4 text-[#9D2449]" />
+                                    Nombre de la Partera (O)
+                                </span>
+                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar por voz</span>
                             </label>
                             <div className="relative flex items-center w-full">
                                 <input
@@ -598,7 +578,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                     required
                                     value={nombrePartera}
                                     onChange={(e) => setNombrePartera(e.target.value)}
-                                    placeholder="Ej. Doña Rosa Santiz Gómez"
+                                    placeholder="Nombre de la Partera"
                                     className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-4 pr-14 py-3.5 text-sm sm:text-base font-bold text-slate-900 focus:outline-none focus:bg-white transition-all shadow-sm"
                                 />
                                 <button
@@ -615,11 +595,14 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                             </div>
                         </div>
 
-                        {/* Localidad de la Partera */}
+                        {/* Localidad de la Partera (Prellenado perfil autenticado) */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-black text-slate-800 uppercase flex items-center justify-between">
-                                <span>📍 Localidad de la Partera</span>
-                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar 🎙️</span>
+                            <label className="block text-xs font-black text-slate-800 uppercase flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-[#9D2449]" />
+                                    Localidad de la Partera
+                                </span>
+                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar por voz</span>
                             </label>
                             <div className="relative flex items-center w-full">
                                 <input
@@ -627,7 +610,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                     required
                                     value={localidadPartera}
                                     onChange={(e) => setLocalidadPartera(e.target.value)}
-                                    placeholder="Ej. San Pedro Juchitán"
+                                    placeholder="Localidad de la Partera"
                                     className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-4 pr-14 py-3.5 text-sm sm:text-base font-bold text-slate-900 focus:outline-none focus:bg-white transition-all shadow-sm"
                                 />
                                 <button
@@ -648,58 +631,83 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 </div>
             </div>
 
-            {/* 2. MATRIZ TÁCTIL "MOTIVO DE LA REFERENCIA" */}
-            <div className="bg-white rounded-3xl border-4 border-slate-200 p-6 sm:p-8 shadow-xl space-y-8">
+            {/* 2. GRID ADAPTATIVO REPARADO "MOTIVO DE LA REFERENCIA" */}
+            <div className="bg-white rounded-3xl border-4 border-slate-200 p-6 sm:p-8 shadow-xl space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-4 border-[#9D2449] pb-4">
                     <div>
                         <span className="text-xs font-black uppercase text-[#9D2449] tracking-wider bg-rose-100 px-3 py-1 rounded-full border border-rose-300">
-                            SELECCIÓN DE CASILLAS POR ILUSTRACIONES
+                            SELECCIÓN TÁCTIL ILUSTRADA
                         </span>
                         <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase mt-1">
                             MOTIVO DE LA REFERENCIA
                         </h2>
                     </div>
-                    <div className="text-xs font-extrabold text-slate-600 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-300">
+                    <div className="text-xs font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-300">
                         Seleccionados: <span className="text-[#9D2449] text-base font-black">{motivosSeleccionados.length}</span>
                     </div>
                 </div>
 
-                {/* FILA 1 DE LA MATRIZ (MADRE / EMBARAZO) */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded-full bg-[#9D2449]" />
-                        <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">
-                            FILA 1: ATENCIÓN DE LA MADRE, EMBARAZO Y ENFERMEDADES TRANSMISIBLES
-                        </h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-                        {motivosFila1.map(renderCard)}
-                    </div>
-                </div>
+                {/* GRID ADAPTATIVO: grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 p-2 */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 p-2">
+                    {listaMotivos.map((item) => {
+                        const isSelected = motivosSeleccionados.includes(item.id);
+                        return (
+                            <button
+                                type="button"
+                                key={item.id}
+                                onClick={() => toggleMotivo(item.id, item.titulo)}
+                                className={`flex flex-col items-center justify-between p-4 min-h-[180px] sm:min-h-[200px] bg-white border-2 rounded-2xl transition-all duration-200 cursor-pointer group select-none relative w-full ${isSelected
+                                    ? 'border-[#9D2449] bg-rose-50/90 shadow-md ring-4 ring-[#9D2449]/20'
+                                    : 'border-slate-200 hover:border-[#9D2449] hover:shadow-md'
+                                    }`}
+                            >
+                                {/* Checkmark flotante discreto */}
+                                <div className="absolute top-2 right-2 z-10">
+                                    {isSelected ? (
+                                        <div className="w-6 h-6 rounded-full bg-[#9D2449] text-white flex items-center justify-center shadow-md">
+                                            <Check className="w-4 h-4 stroke-[3]" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-5 h-5 rounded-full border-2 border-slate-300 bg-white group-hover:border-rose-400" />
+                                    )}
+                                </div>
 
-                {/* FILA 2 DE LA MATRIZ (INFANTIL / TAMIZ SEPARADO / PREVENCIÓN) */}
-                <div className="space-y-4 pt-4 border-t-2 border-slate-200">
-                    <div className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded-full bg-[#9D2449]" />
-                        <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">
-                            FILA 2: SALUD INFANTIL, TAMIZ SEPARADO, VACUNACIÓN Y ESTUDIOS PREVENTIVOS
-                        </h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-5">
-                        {motivosFila2.map(renderCard)}
-                    </div>
+                                {/* Contenedor de Imagen de Altura Homogénea */}
+                                <div className="w-full flex-1 flex items-center justify-center py-2 px-1">
+                                    <img
+                                        src={item.imagen}
+                                        alt={item.titulo}
+                                        className="h-24 md:h-28 w-auto object-contain mix-blend-multiply drop-shadow-sm transition-transform duration-200 group-hover:scale-105"
+                                        loading="eager"
+                                    />
+                                </div>
+
+                                {/* Texto del Motivo Centrado de Tamaño Responsivo (Sin Desbordamientos) */}
+                                <div className="w-full pt-2">
+                                    <span className={`text-xs md:text-sm font-bold text-center leading-snug w-full px-1 block break-words uppercase ${isSelected ? 'text-[#9D2449]' : 'text-slate-800'
+                                        }`}>
+                                        {item.titulo}
+                                    </span>
+
+                                    {/* Viñetas para ZIKA */}
+                                    {item.bullets && (
+                                        <div className="mt-1 text-[10px] text-slate-700 bg-amber-50 p-1.5 rounded-lg border border-amber-200 text-left space-y-0.5">
+                                            {item.bullets.map((b, idx) => (
+                                                <div key={idx} className="flex items-center gap-1 font-semibold">
+                                                    <span className="w-1 h-1 rounded-full bg-[#9D2449] shrink-0" />
+                                                    <span className="truncate">{b}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* AVISO DE SELECCIÓN */}
-            {motivosSeleccionados.length === 0 && (
-                <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl flex items-center gap-3 text-amber-900 font-bold text-sm">
-                    <AlertCircle className="w-6 h-6 text-amber-700 shrink-0" />
-                    <span>Toque al menos una tarjeta de Motivo de Referencia para indicar la causa de la consulta en la hoja oficial.</span>
-                </div>
-            )}
-
-            {/* 3. SECCIÓN COMPLEMENTARIA: CONTRAREFERENCIA MÉDICA */}
+            {/* 3. MÓDULO ÚNICO DE CONTRAREFERENCIA MÉDICA AL FINAL DEL DOCUMENTO */}
             <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl border-2 border-slate-800 space-y-6 shadow-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-4">
                     <div className="flex items-center gap-3">
@@ -714,9 +722,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     <button
                         type="button"
                         onClick={() => setMostrarContrareferencia(!mostrarContrareferencia)}
-                        className="px-4 py-2 bg-rose-500/20 text-rose-300 border border-rose-400/30 hover:bg-rose-500/30 rounded-2xl text-xs font-bold transition-all active:scale-95 self-start sm:self-auto"
+                        className="px-4 py-2 bg-rose-500/20 text-rose-300 border border-rose-400/30 hover:bg-rose-500/30 rounded-2xl text-xs font-bold transition-all active:scale-95 self-start sm:self-auto flex items-center gap-2"
                     >
-                        {mostrarContrareferencia ? 'Ocultar Sección Médica' : '📂 Abrir Sección Médico Tratante'}
+                        <FolderOpen className="w-4 h-4" />
+                        <span>{mostrarContrareferencia ? 'Ocultar Sección Médica' : 'Abrir Sección Médico Tratante'}</span>
                     </button>
                 </div>
 
@@ -728,43 +737,49 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setEstadoContra('CONTROLADA')}
-                                    className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all ${estadoContra === 'CONTROLADA'
+                                    className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 ${estadoContra === 'CONTROLADA'
                                         ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg'
                                         : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
                                         }`}
                                 >
-                                    ✅ Paciente Controlada / Alta Hospitalaria
+                                    <Check className="w-5 h-5" />
+                                    <span>Paciente Controlada / Alta Hospitalaria</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setEstadoContra('PARA_CONTROL_PARTERA')}
-                                    className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all ${estadoContra === 'PARA_CONTROL_PARTERA'
+                                    className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 ${estadoContra === 'PARA_CONTROL_PARTERA'
                                         ? 'bg-sky-600 border-sky-400 text-white shadow-lg'
                                         : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
                                         }`}
                                 >
-                                    👩‍🦱 Regresa para Control con la Partera
+                                    <User className="w-5 h-5" />
+                                    <span>Regresa para Control con la Partera</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* Diagnóstico */}
                         <div className="space-y-2">
-                            <label className="block text-xs font-bold text-slate-300 uppercase">🩺 Diagnóstico del Médico</label>
+                            <label className="block text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
+                                <Stethoscope className="w-4 h-4 text-rose-400" />
+                                Diagnóstico del Médico
+                            </label>
                             <div className="relative flex items-center w-full">
                                 <textarea
                                     rows={2}
-                                    placeholder="Dictar o escribir diagnóstico médico..."
+                                    placeholder="Escribir o dictar diagnóstico médico..."
                                     value={diagnostico}
                                     onChange={(e) => setDiagnostico(e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 pr-16 text-sm text-white focus:outline-none focus:border-rose-400"
+                                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 pr-24 text-sm text-white focus:outline-none focus:border-rose-400"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => handleVoiceDictation('diagnostico', 'Diagnóstico Médico')}
-                                    className="absolute right-3 top-3 p-2 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold hover:bg-rose-500/30"
+                                    className="absolute right-3 top-3 px-3 py-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold hover:bg-rose-500/30 flex items-center gap-1.5"
                                 >
-                                    🎙️ Dictar
+                                    <Mic className="w-4 h-4" />
+                                    <span>Dictar</span>
                                 </button>
                             </div>
                         </div>
@@ -772,7 +787,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                         {/* Tratamiento e Indicaciones */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="block text-xs font-bold text-slate-300 uppercase">💊 Tratamiento Indicado</label>
+                                <label className="block text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
+                                    <Pill className="w-4 h-4 text-rose-400" />
+                                    Tratamiento Indicado
+                                </label>
                                 <textarea
                                     rows={2}
                                     placeholder="Tratamiento y medicamentos..."
@@ -782,7 +800,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="block text-xs font-bold text-slate-300 uppercase">💬 Indicaciones a la Partera</label>
+                                <label className="block text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
+                                    <MessageSquare className="w-4 h-4 text-rose-400" />
+                                    Indicaciones a la Partera
+                                </label>
                                 <textarea
                                     rows={2}
                                     placeholder="Indicaciones para el seguimiento en comunidad..."
@@ -796,7 +817,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                         {/* Nombre y Firma del Médico */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                             <div>
-                                <label className="block text-xs font-bold text-slate-300 uppercase">👨‍⚕️ Nombre del Médico Tratante</label>
+                                <label className="block text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
+                                    <UserCheck className="w-4 h-4 text-rose-400" />
+                                    Nombre del Médico Tratante
+                                </label>
                                 <input
                                     type="text"
                                     value={nombreMedico}
@@ -805,7 +829,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-300 uppercase">🏢 Unidad de Salud que Emite</label>
+                                <label className="block text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
+                                    <Building2 className="w-4 h-4 text-rose-400" />
+                                    Unidad de Salud que Emite
+                                </label>
                                 <input
                                     type="text"
                                     value={centroMedico}
@@ -818,13 +845,13 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 )}
             </div>
 
-            {/* 4. BOTÓN FINAL DE ENVÍO ACCESIBLE EN GUINDA OAXACA */}
-            <div className="pt-4">
+            {/* 4. BOTÓN DE ENVÍO INSTITICIONAL EN GUINDA OAXACA */}
+            <div className="pt-2">
                 <button
                     type="submit"
-                    className="bg-[#9D2449] hover:bg-[#801D3B] text-white text-xl sm:text-2xl font-black py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all w-full flex items-center justify-center gap-3 active:scale-[0.99] border-2 border-rose-300/40 group"
+                    className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-lg font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-3 transition-transform active:scale-95 w-full"
                 >
-                    <Send className="w-7 h-7 group-hover:translate-x-1 transition-transform" />
+                    <Send className="w-6 h-6" />
                     <span>ENVIAR HOJA DE REFERENCIA AL CENTRO DE SALUD</span>
                 </button>
             </div>

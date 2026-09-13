@@ -261,7 +261,7 @@ export const DashboardPartera: React.FC = () => {
                                         1. Ficha de Referencia y Contrareferencia
                                     </span>
                                     <span className="inline-block px-3 py-1 bg-rose-100 text-rose-800 rounded-full text-xs font-extrabold border border-rose-300">
-                                        🚨 Urgencias & Sección Médica
+                                        Urgencias & Sección Médica
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium">
                                         Formato 1: Canalizaciones urgentes, Zika, Tamiz y módulo de respuesta médica.
@@ -286,7 +286,7 @@ export const DashboardPartera: React.FC = () => {
                                         2. Calendario de Atención a la Mujer
                                     </span>
                                     <span className="inline-block px-3 py-1 bg-purple-100 text-purple-900 rounded-full text-xs font-extrabold border border-purple-300">
-                                        🤰 Embarazo, Parto, Puerperio & †
+                                        Embarazo, Parto & Puerperio
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium">
                                         Formato 2: Control meses 1-9, cinta MUAC, parto vertical/horizontal y muerte materna.
@@ -311,7 +311,7 @@ export const DashboardPartera: React.FC = () => {
                                         3. Calendario del Niño/a (Menor de 2 años)
                                     </span>
                                     <span className="inline-block px-3 py-1 bg-sky-100 text-sky-900 rounded-full text-xs font-extrabold border border-sky-300">
-                                        👶 Duplicado, Tamiz, Vacunas & Huella
+                                        Tamiz, Vacunas & Huella
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium">
                                         Formato 3: Semáforo nutricional, fechas de tamiz/vacunas y firma/huella digital.
