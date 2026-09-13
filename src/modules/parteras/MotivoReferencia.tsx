@@ -4,7 +4,6 @@ import {
     MicOff,
     Send,
     Check,
-    ChevronLeft,
     Volume2,
     VolumeX,
     Info,
@@ -35,12 +34,10 @@ export interface MotivoItem {
     id: string;
     titulo: string;
     imagen: string;
-    categoria: 'MADRE' | 'INFANTIL' | 'TAMIZ' | 'PREVENCION';
     bullets?: string[];
 }
 
 export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
-    onBack,
     onSuccess,
     hablarTexto: propsHablarTexto,
     isListeningExternal,
@@ -110,8 +107,8 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         };
     }, []);
 
-    // Web Speech API con soporte de prefijos y actualización directa de React state
-    const handleVoiceDictation = (fieldKey: string, fieldLabel: string) => {
+    // Handler de escucha por voz directo y optimizado
+    const startListening = (setter: React.Dispatch<React.SetStateAction<string>>, fieldKey: string, fieldLabel: string) => {
         if (iniciarDictadoExternal) {
             iniciarDictadoExternal(fieldKey);
             return;
@@ -119,46 +116,46 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
 
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-        if (SpeechRecognition) {
-            try {
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'es-MX';
-                recognition.continuous = false;
-                recognition.interimResults = false;
-
-                recognition.onstart = () => {
-                    setListeningFieldInternal(fieldKey);
-                    setDictationNotification(`Escuchando dictado para ${fieldLabel}...`);
-                };
-
-                recognition.onresult = (event: any) => {
-                    const transcript = event.results[0][0].transcript;
-                    actualizarValorCampo(fieldKey, transcript);
-                    setListeningFieldInternal(null);
-                    setDictationNotification(`Capturado: "${transcript}"`);
-                    speakText(`Registrado: ${transcript}`);
-                    setTimeout(() => setDictationNotification(null), 3000);
-                };
-
-                recognition.onerror = () => {
-                    simularDictado(fieldKey, fieldLabel);
-                };
-
-                recognition.onend = () => {
-                    setListeningFieldInternal(null);
-                };
-
-                recognition.start();
-                return;
-            } catch (e) {
-                console.error(e);
-            }
+        if (!SpeechRecognition) {
+            simularDictado(setter, fieldKey, fieldLabel);
+            return;
         }
 
-        simularDictado(fieldKey, fieldLabel);
+        try {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-MX';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                setListeningFieldInternal(fieldKey);
+                setDictationNotification(`Escuchando voz para ${fieldLabel}...`);
+            };
+
+            recognition.onresult = (event: any) => {
+                const text = event.results[0][0].transcript;
+                setter(text);
+                setListeningFieldInternal(null);
+                setDictationNotification(`Capturado: "${text}"`);
+                speakText(`Registrado: ${text}`);
+                setTimeout(() => setDictationNotification(null), 3000);
+            };
+
+            recognition.onerror = () => {
+                simularDictado(setter, fieldKey, fieldLabel);
+            };
+
+            recognition.onend = () => {
+                setListeningFieldInternal(null);
+            };
+
+            recognition.start();
+        } catch (e) {
+            simularDictado(setter, fieldKey, fieldLabel);
+        }
     };
 
-    const simularDictado = (fieldKey: string, fieldLabel: string) => {
+    const simularDictado = (setter: React.Dispatch<React.SetStateAction<string>>, fieldKey: string, fieldLabel: string) => {
         setListeningFieldInternal(fieldKey);
         setDictationNotification(`Escuchando dictado para ${fieldLabel}...`);
         setTimeout(() => {
@@ -175,27 +172,12 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 observacionesMedico: 'Seguimiento por la partera en comunidad.'
             };
             const simulado = simulaciones[fieldKey] || 'Texto dictado por voz';
-            actualizarValorCampo(fieldKey, simulado);
+            setter(simulado);
             setListeningFieldInternal(null);
             setDictationNotification(`Dictado registrado para ${fieldLabel}: "${simulado}"`);
             speakText(`Registrado: ${simulado}`);
-            setTimeout(() => setDictationNotification(null), 3500);
+            setTimeout(() => setDictationNotification(null), 3000);
         }, 1200);
-    };
-
-    const actualizarValorCampo = (key: string, val: string) => {
-        switch (key) {
-            case 'centroSalud': setCentroSalud(prev => prev ? `${prev} ${val}` : val); break;
-            case 'nombreUsuaria': setNombreUsuaria(prev => prev ? `${prev} ${val}` : val); break;
-            case 'edad': setEdad(val); break;
-            case 'localidad': setLocalidad(prev => prev ? `${prev} ${val}` : val); break;
-            case 'municipio': setMunicipio(prev => prev ? `${prev} ${val}` : val); break;
-            case 'nombrePartera': setNombrePartera(prev => prev ? `${prev} ${val}` : val); break;
-            case 'localidadPartera': setLocalidadPartera(prev => prev ? `${prev} ${val}` : val); break;
-            case 'diagnostico': setDiagnostico(prev => prev ? `${prev} ${val}` : val); break;
-            case 'tratamiento': setTratamiento(prev => prev ? `${prev} ${val}` : val); break;
-            case 'observacionesMedico': setObservacionesMedico(prev => prev ? `${prev} ${val}` : val); break;
-        }
     };
 
     const toggleMotivo = (id: string, titulo: string) => {
@@ -216,111 +198,83 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         if (onSuccess) onSuccess();
     };
 
-    // Matriz Completa de Motivos (Separación rigurosa de Tamiz en 2 tarjetas independientes)
+    // Lista Completa de Motivos (14 Tarjetas Táctiles Ilustradas con Tamiz Separado)
     const listaMotivos: MotivoItem[] = [
         {
             id: 'COMPLICACIONES_EMBARAZO',
             titulo: 'COMPLICACIONES DEL EMBARAZO',
-            imagen: '/Complicaciones-del-embarazo.png',
-            categoria: 'MADRE'
+            imagen: '/Complicaciones-del-embarazo.png'
         },
         {
             id: 'APLICAR_TOXOIDE_TETANICO',
             titulo: 'APLICAR TOXOIDE TETÁNICO',
-            imagen: '/Aplicar-Toxoide-Tetanico.png',
-            categoria: 'MADRE'
+            imagen: '/Aplicar-Toxoide-Tetanico.png'
         },
         {
             id: 'ABORTO',
             titulo: 'ABORTO',
-            imagen: '/Aborto.png',
-            categoria: 'MADRE'
+            imagen: '/Aborto.png'
         },
         {
             id: 'PARTO_COMPLICADO',
             titulo: 'PARTO COMPLICADO',
-            imagen: '/Parto-Complicado.png',
-            categoria: 'MADRE'
+            imagen: '/Parto-Complicado.png'
         },
         {
             id: 'PUERPERIO_COMPLICADO',
             titulo: 'PUERPERIO COMPLICADO',
-            imagen: '/Puerferico-Complicado.png',
-            categoria: 'MADRE'
+            imagen: '/Puerferico-Complicado.png'
         },
         {
             id: 'ZIKA',
             titulo: 'ZIKA',
             imagen: '/Zika.png',
-            categoria: 'MADRE',
             bullets: ['Fiebre', 'Dolor articulaciones', 'Salpullido', 'Conjuntivitis']
         },
         {
             id: 'NINO_CON_COMPLICACIONES',
             titulo: 'NIÑO CON COMPLICACIONES',
-            imagen: '/Niño-Con-Complicaciones.png',
-            categoria: 'INFANTIL'
+            imagen: '/Niño-Con-Complicaciones.png'
         },
         {
             id: 'NINA_CON_COMPLICACIONES',
             titulo: 'NIÑA CON COMPLICACIONES',
-            imagen: '/Niña-Con-Complicaciones.png',
-            categoria: 'INFANTIL'
+            imagen: '/Niña-Con-Complicaciones.png'
         },
         {
             id: 'TAMIZ_METABOLICO',
             titulo: 'TAMIZ METABÓLICO',
-            imagen: '/Tamiz-Metabolico.png',
-            categoria: 'TAMIZ'
+            imagen: '/Tamiz-Metabolico.png'
         },
         {
             id: 'TAMIZ_AUDITIVO',
             titulo: 'TAMIZ AUDITIVO',
-            imagen: '/Tamiz-Auditivo.png',
-            categoria: 'TAMIZ'
+            imagen: '/Tamiz-Auditivo.png'
         },
         {
             id: 'APLICAR_VITAMINA_A_Y_K',
             titulo: "APLICAR VITAMINA 'A' Y 'K'",
-            imagen: '/Aplicar-Vitamina-A-Y-K.png',
-            categoria: 'PREVENCION'
+            imagen: '/Aplicar-Vitamina-A-Y-K.png'
         },
         {
             id: 'VACUNA_BCG_ANTI_HEPATITIS',
             titulo: 'VACUNA BCG / ANTI HEPATITIS B',
-            imagen: '/Vacuna.png',
-            categoria: 'PREVENCION'
+            imagen: '/Vacuna.png'
         },
         {
             id: 'TOMA_DE_PAPANICOLAOU',
             titulo: 'TOMA DE PAPANICOLAOU',
-            imagen: '/Toma-De-Papanicolao.png',
-            categoria: 'PREVENCION'
+            imagen: '/Toma-De-Papanicolao.png'
         },
         {
             id: 'OTROS',
             titulo: 'OTROS',
-            imagen: '/Otros.png',
-            categoria: 'PREVENCION'
+            imagen: '/Otros.png'
         }
     ];
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8 max-w-7xl mx-auto selection:bg-[#9D2449] selection:text-white">
-
-            {/* BOTÓN SUPERIOR FLOTANTE REGRESAR */}
-            {onBack && (
-                <div className="flex justify-start">
-                    <button
-                        type="button"
-                        onClick={onBack}
-                        className="px-5 py-2.5 bg-rose-50/90 hover:bg-rose-100 text-[#9D2449] border border-rose-200 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-sm"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                        <span>Regresar al Menú Principal</span>
-                    </button>
-                </div>
-            )}
 
             {/* NOTIFICACIÓN DE DICTADO O VOZ ACTIVA */}
             {(dictationNotification || isCurrentlyListening) && (
@@ -333,18 +287,18 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
             )}
 
             {/* 1. CABECERA LIMPIA INTEGRADA AL DOCUMENTO */}
-            <div className="bg-white rounded-3xl border-4 border-[#9D2449] p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="bg-white rounded-3xl border-4 border-[#9D2449] p-4 sm:p-8 shadow-xl space-y-6">
 
                 {/* LOGOS FLANQUEANDO EL TÍTULO INSTITUCIONAL */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6">
                     <img
                         src="/logo-jurisdiccion.png"
                         alt="Jurisdicción Sanitaria"
-                        className="h-16 sm:h-20 w-auto object-contain mix-blend-multiply"
+                        className="h-14 sm:h-20 w-auto object-contain mix-blend-multiply"
                     />
 
-                    <div className="text-center px-4 space-y-1">
-                        <h1 className="text-base sm:text-xl font-black text-[#9D2449] uppercase tracking-tight">
+                    <div className="text-center px-2 space-y-1">
+                        <h1 className="text-sm sm:text-xl font-black text-[#9D2449] uppercase tracking-tight">
                             SERVICIOS DE SALUD DE OAXACA - PROGRAMA DE PARTERAS TRADICIONALES
                         </h1>
                     </div>
@@ -352,18 +306,18 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     <img
                         src="/Logo-Secretaria.png"
                         alt="Secretaría de Salud de Oaxaca"
-                        className="h-16 sm:h-20 w-auto object-contain mix-blend-multiply"
+                        className="h-14 sm:h-20 w-auto object-contain mix-blend-multiply"
                     />
                 </div>
 
                 {/* BANNER TÍTULO DESTACADO "ACUDE A TU UNIDAD DE SALUD" */}
-                <div className="bg-gradient-to-r from-[#9D2449] via-[#7A1B38] to-[#9D2449] text-white py-4 px-6 rounded-2xl text-center shadow-lg">
-                    <h2 className="text-2xl sm:text-3xl font-black tracking-wider uppercase drop-shadow-sm flex items-center justify-center gap-3">
-                        <Megaphone className="w-7 h-7 text-rose-200" />
+                <div className="bg-gradient-to-r from-[#9D2449] via-[#7A1B38] to-[#9D2449] text-white py-3.5 sm:py-4 px-4 sm:px-6 rounded-2xl text-center shadow-lg">
+                    <h2 className="text-xl sm:text-3xl font-black tracking-wider uppercase drop-shadow-sm flex items-center justify-center gap-2 sm:gap-3">
+                        <Megaphone className="w-5 h-5 sm:w-7 sm:h-7 text-rose-200 shrink-0" />
                         <span>ACUDE A TU UNIDAD DE SALUD</span>
-                        <Megaphone className="w-7 h-7 text-rose-200" />
+                        <Megaphone className="w-5 h-5 sm:w-7 sm:h-7 text-rose-200 shrink-0" />
                     </h2>
-                    <p className="text-xs sm:text-sm text-rose-100 font-medium mt-1">
+                    <p className="text-[11px] sm:text-sm text-rose-100 font-medium mt-1">
                         Hoja Oficial de Referencia Comunitario • Red de Servicios de Salud de Oaxaca
                     </p>
                 </div>
@@ -390,12 +344,12 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 <div className="space-y-6 pt-2">
                     <div className="flex items-center gap-2 border-b-2 border-[#9D2449]/20 pb-2">
                         <Info className="w-6 h-6 text-[#9D2449]" />
-                        <h3 className="text-lg font-black text-slate-900 uppercase">
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 uppercase">
                             DATOS DE IDENTIFICACIÓN Y CANALIZACIÓN
                         </h3>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
 
                         {/* Centro de Salud u Hospital */}
                         <div className="space-y-2">
@@ -417,7 +371,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => handleVoiceDictation('centroSalud', 'Centro de Salud u Hospital')}
+                                    onClick={() => startListening(setCentroSalud, 'centroSalud', 'Centro de Salud u Hospital')}
                                     className={`absolute right-2 p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center ${activeListeningField === 'centroSalud'
                                         ? 'bg-rose-600 text-white animate-pulse ring-4 ring-rose-400/50'
                                         : 'bg-[#9D2449] hover:bg-[#7A1B38] text-white active:scale-95'
@@ -444,12 +398,12 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                     required
                                     value={nombreUsuaria}
                                     onChange={(e) => setNombreUsuaria(e.target.value)}
-                                    placeholder="Toca el micrófono para dictar o escribe..."
+                                    placeholder="Toca el micrófono para dictar..."
                                     className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-4 pr-14 py-3.5 text-sm sm:text-base font-bold text-slate-900 focus:outline-none focus:bg-white transition-all shadow-sm"
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => handleVoiceDictation('nombreUsuaria', 'Nombre de la Usuaria')}
+                                    onClick={() => startListening(setNombreUsuaria, 'nombreUsuaria', 'Nombre de la Usuaria')}
                                     className={`absolute right-2 p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center ${activeListeningField === 'nombreUsuaria'
                                         ? 'bg-rose-600 text-white animate-pulse ring-4 ring-rose-400/50'
                                         : 'bg-[#9D2449] hover:bg-[#7A1B38] text-white active:scale-95'
@@ -462,19 +416,34 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                         </div>
 
                         {/* Edad | Sexo | Fecha */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center gap-1">
-                                    <Calendar className="w-3.5 h-3.5 text-[#9D2449]" />
-                                    Edad
+                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center justify-between sm:justify-start gap-1">
+                                    <span className="flex items-center gap-1">
+                                        <Calendar className="w-3.5 h-3.5 text-[#9D2449]" />
+                                        Edad
+                                    </span>
+                                    <span className="sm:hidden text-[10px] text-[#9D2449]">Dictar 🎙️</span>
                                 </label>
-                                <input
-                                    type="number"
-                                    value={edad}
-                                    placeholder="Ej. 26"
-                                    onChange={(e) => setEdad(e.target.value)}
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-3 py-3.5 text-sm font-bold text-slate-900"
-                                />
+                                <div className="relative flex items-center w-full">
+                                    <input
+                                        type="number"
+                                        value={edad}
+                                        placeholder="Ej. 26"
+                                        onChange={(e) => setEdad(e.target.value)}
+                                        className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-3 pr-10 py-3.5 text-sm font-bold text-slate-900"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => startListening(setEdad, 'edad', 'Edad')}
+                                        className={`absolute right-1.5 p-2 rounded-xl transition-all ${activeListeningField === 'edad'
+                                            ? 'bg-rose-600 text-white animate-pulse'
+                                            : 'bg-[#9D2449] text-white'
+                                            }`}
+                                    >
+                                        <Mic className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-2">
@@ -485,7 +454,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 <select
                                     value={sexo}
                                     onChange={(e) => setSexo(e.target.value as 'F' | 'M')}
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-2 py-3.5 text-sm font-bold text-slate-900"
+                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-3 py-3.5 text-sm font-bold text-slate-900"
                                 >
                                     <option value="F">Femenino</option>
                                     <option value="M">Masculino</option>
@@ -524,7 +493,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => handleVoiceDictation('localidad', 'Localidad')}
+                                        onClick={() => startListening(setLocalidad, 'localidad', 'Localidad')}
                                         className={`absolute right-1.5 p-2 rounded-xl transition-all shadow-sm ${activeListeningField === 'localidad'
                                             ? 'bg-rose-600 text-white animate-pulse'
                                             : 'bg-[#9D2449] hover:bg-[#7A1B38] text-white'
@@ -551,7 +520,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => handleVoiceDictation('municipio', 'Municipio')}
+                                        onClick={() => startListening(setMunicipio, 'municipio', 'Municipio')}
                                         className={`absolute right-1.5 p-2 rounded-xl transition-all shadow-sm ${activeListeningField === 'municipio'
                                             ? 'bg-rose-600 text-white animate-pulse'
                                             : 'bg-[#9D2449] hover:bg-[#7A1B38] text-white'
@@ -583,7 +552,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => handleVoiceDictation('nombrePartera', 'Nombre de la Partera')}
+                                    onClick={() => startListening(setNombrePartera, 'nombrePartera', 'Nombre de la Partera')}
                                     className={`absolute right-2 p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center ${activeListeningField === 'nombrePartera'
                                         ? 'bg-rose-600 text-white animate-pulse ring-4 ring-rose-400/50'
                                         : 'bg-[#9D2449] hover:bg-[#7A1B38] text-white active:scale-95'
@@ -615,7 +584,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => handleVoiceDictation('localidadPartera', 'Localidad de la Partera')}
+                                    onClick={() => startListening(setLocalidadPartera, 'localidadPartera', 'Localidad de la Partera')}
                                     className={`absolute right-2 p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center ${activeListeningField === 'localidadPartera'
                                         ? 'bg-rose-600 text-white animate-pulse ring-4 ring-rose-400/50'
                                         : 'bg-[#9D2449] hover:bg-[#7A1B38] text-white active:scale-95'
@@ -631,8 +600,8 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 </div>
             </div>
 
-            {/* 2. GRID ADAPTATIVO REPARADO "MOTIVO DE LA REFERENCIA" */}
-            <div className="bg-white rounded-3xl border-4 border-slate-200 p-6 sm:p-8 shadow-xl space-y-6">
+            {/* 2. GRID ADAPTATIVO CON CENTRADO PERFECTO DE FILAS INCOMPLETAS */}
+            <div className="bg-white rounded-3xl border-4 border-slate-200 p-4 sm:p-8 shadow-xl space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-4 border-[#9D2449] pb-4">
                     <div>
                         <span className="text-xs font-black uppercase text-[#9D2449] tracking-wider bg-rose-100 px-3 py-1 rounded-full border border-rose-300">
@@ -647,8 +616,8 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     </div>
                 </div>
 
-                {/* GRID ADAPTATIVO: grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 p-2 */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 p-2">
+                {/* CONTENEDOR FLEX WRAP CENTRADO: flex flex-wrap justify-center gap-4 p-2 */}
+                <div className="flex flex-wrap justify-center gap-3 sm:gap-4 p-1 sm:p-2">
                     {listaMotivos.map((item) => {
                         const isSelected = motivosSeleccionados.includes(item.id);
                         return (
@@ -656,7 +625,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 type="button"
                                 key={item.id}
                                 onClick={() => toggleMotivo(item.id, item.titulo)}
-                                className={`flex flex-col items-center justify-between p-4 min-h-[180px] sm:min-h-[200px] bg-white border-2 rounded-2xl transition-all duration-200 cursor-pointer group select-none relative w-full ${isSelected
+                                className={`w-full max-w-[220px] sm:max-w-[240px] flex-1 min-w-[140px] sm:min-w-[160px] flex flex-col items-center justify-between p-3 sm:p-4 min-h-[170px] sm:min-h-[200px] bg-white border-2 rounded-2xl transition-all duration-200 cursor-pointer group select-none relative ${isSelected
                                     ? 'border-[#9D2449] bg-rose-50/90 shadow-md ring-4 ring-[#9D2449]/20'
                                     : 'border-slate-200 hover:border-[#9D2449] hover:shadow-md'
                                     }`}
@@ -677,12 +646,12 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                     <img
                                         src={item.imagen}
                                         alt={item.titulo}
-                                        className="h-24 md:h-28 w-auto object-contain mix-blend-multiply drop-shadow-sm transition-transform duration-200 group-hover:scale-105"
+                                        className="h-20 sm:h-28 w-auto object-contain mix-blend-multiply drop-shadow-sm transition-transform duration-200 group-hover:scale-105"
                                         loading="eager"
                                     />
                                 </div>
 
-                                {/* Texto del Motivo Centrado de Tamaño Responsivo (Sin Desbordamientos) */}
+                                {/* Texto del Motivo Centrado Responsivo */}
                                 <div className="w-full pt-2">
                                     <span className={`text-xs md:text-sm font-bold text-center leading-snug w-full px-1 block break-words uppercase ${isSelected ? 'text-[#9D2449]' : 'text-slate-800'
                                         }`}>
@@ -708,14 +677,14 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
             </div>
 
             {/* 3. MÓDULO ÚNICO DE CONTRAREFERENCIA MÉDICA AL FINAL DEL DOCUMENTO */}
-            <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl border-2 border-slate-800 space-y-6 shadow-2xl">
+            <div className="bg-slate-900 text-white p-4 sm:p-8 rounded-3xl border-2 border-slate-800 space-y-6 shadow-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-4">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0">
                             <Stethoscope className="w-7 h-7 text-rose-400" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black text-white uppercase">Módulo de Contrareferencia Médica</h3>
+                            <h3 className="text-lg sm:text-xl font-black text-white uppercase">Módulo de Contrareferencia Médica</h3>
                             <p className="text-xs text-slate-400">Respuesta oficial del Centro de Salud a la Partera Tradicional</p>
                         </div>
                     </div>
@@ -775,7 +744,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => handleVoiceDictation('diagnostico', 'Diagnóstico Médico')}
+                                    onClick={() => startListening(setDiagnostico, 'diagnostico', 'Diagnóstico Médico')}
                                     className="absolute right-3 top-3 px-3 py-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold hover:bg-rose-500/30 flex items-center gap-1.5"
                                 >
                                     <Mic className="w-4 h-4" />
@@ -845,7 +814,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 )}
             </div>
 
-            {/* 4. BOTÓN DE ENVÍO INSTITICIONAL EN GUINDA OAXACA */}
+            {/* 4. BOTÓN DE ENVÍO INSTITUCIONAL EN GUINDA OAXACA */}
             <div className="pt-2">
                 <button
                     type="submit"

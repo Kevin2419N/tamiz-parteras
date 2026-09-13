@@ -9,7 +9,8 @@ import {
     Baby,
     Info,
     QrCode,
-    KeyRound
+    KeyRound,
+    ChevronLeft
 } from 'lucide-react';
 import { FormatoReferencia } from './components/FormatoReferencia';
 import { FormatoCalendarioMujer } from './components/FormatoCalendarioMujer';
@@ -168,6 +169,19 @@ export const DashboardPartera: React.FC = () => {
             <header className="bg-gradient-to-r from-[#9D2449] via-[#7A1B38] to-slate-900 text-white p-4 sm:p-6 shadow-xl sticky top-0 z-40">
                 <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex items-center gap-3">
+                        {/* Botón de Regresar al Menú Principal dentro del Banner */}
+                        {vistaActiva !== 'HOME' && (
+                            <button
+                                type="button"
+                                onClick={() => setVistaActiva('HOME')}
+                                className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/25 text-xs md:text-sm font-medium px-4 py-2.5 rounded-full flex items-center gap-2 transition-all shadow-sm active:scale-95 shrink-0"
+                                title="Regresar al Menú Principal"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                <span>Regresar al Menú</span>
+                            </button>
+                        )}
+
                         <div className="w-12 h-12 bg-white/10 rounded-2xl border border-white/20 flex items-center justify-center text-white shrink-0">
                             <ShieldCheck className="w-7 h-7 text-rose-200" />
                         </div>
