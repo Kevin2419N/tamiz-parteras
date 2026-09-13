@@ -15,6 +15,7 @@ import {
 import { FormatoReferencia } from './components/FormatoReferencia';
 import { FormatoCalendarioMujer } from './components/FormatoCalendarioMujer';
 import { FormatoCalendarioNino } from './components/FormatoCalendarioNino';
+import { handleVoiceInput } from '../../utils/voiceUtils';
 
 export const DashboardPartera: React.FC = () => {
     // Estado de Autenticación PIN / QR
@@ -35,45 +36,16 @@ export const DashboardPartera: React.FC = () => {
     // Feedback Modal
     const [registroExitoso, setRegistroExitoso] = useState(false);
 
-    // Dictado por voz mediante Web Speech API
-    const iniciarDictado = (campo: string) => {
-        const windowSpeech = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-        if (!windowSpeech) {
-            alert('El dictado por voz no está disponible en este navegador. Puede escribir el texto.');
-            return;
-        }
-
-        try {
-            const recognition = new windowSpeech();
-            recognition.lang = 'es-MX';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            recognition.onstart = () => {
-                setIsListening(true);
-                setCampoEscuchando(campo);
-            };
-
-            recognition.onresult = (_event: any) => {
-                setIsListening(false);
-                setCampoEscuchando(null);
-            };
-
-            recognition.onerror = () => {
-                setIsListening(false);
-                setCampoEscuchando(null);
-            };
-
-            recognition.onend = () => {
-                setIsListening(false);
-                setCampoEscuchando(null);
-            };
-
-            recognition.start();
-        } catch (e) {
-            setIsListening(false);
-            setCampoEscuchando(null);
-        }
+    // Dictado por voz mediante Web Speech API universal
+    const iniciarDictado = (campo: string, setFieldState?: (val: string) => void) => {
+        if (!setFieldState) return;
+        handleVoiceInput(
+            (transcript) => setFieldState(transcript),
+            (listening) => {
+                setIsListening(listening);
+                setCampoEscuchando(listening ? campo : null);
+            }
+        );
     };
 
     // Altavoz de Instrucciones por Voz

@@ -9,23 +9,21 @@ import {
     Calendar,
     Pill
 } from 'lucide-react';
+import { handleVoiceInput } from '../../../utils/voiceUtils';
 
 interface FormatoCalendarioMujerProps {
     onBack: () => void;
     onSuccess: () => void;
     hablarTexto: (texto: string) => void;
-    isListening: boolean;
-    campoEscuchando: string | null;
-    iniciarDictado: (campo: string) => void;
+    isListening?: boolean;
+    campoEscuchando?: string | null;
+    iniciarDictado?: (campo: string) => void;
 }
 
 export const FormatoCalendarioMujer: React.FC<FormatoCalendarioMujerProps> = ({
     onBack,
     onSuccess,
-    hablarTexto,
-    isListening,
-    campoEscuchando,
-    iniciarDictado
+    hablarTexto
 }) => {
     // Datos de la mujer
     const [nombreMujer, setNombreMujer] = useState('');
@@ -33,6 +31,9 @@ export const FormatoCalendarioMujer: React.FC<FormatoCalendarioMujerProps> = ({
     const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
     const [municipio, setMunicipio] = useState('Juchitán de Zaragoza');
     const [localidad, setLocalidad] = useState('Álvaro Obregón');
+
+    // Estado interno de dictado por voz
+    const [listeningField, setListeningField] = useState<string | null>(null);
 
     // Control de Embarazo Normal (Meses 1-9)
     const [mesSeleccionado, setMesSeleccionado] = useState<number>(5);
@@ -69,6 +70,13 @@ export const FormatoCalendarioMujer: React.FC<FormatoCalendarioMujerProps> = ({
         } else {
             setPuerperioComplicaciones([...puerperioComplicaciones, id]);
         }
+    };
+
+    const startVoice = (setter: (val: string) => void, fieldKey: string) => {
+        handleVoiceInput(
+            (val) => setter(val),
+            (l) => setListeningField(l ? fieldKey : null)
+        );
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -119,13 +127,14 @@ export const FormatoCalendarioMujer: React.FC<FormatoCalendarioMujerProps> = ({
                             />
                             <button
                                 type="button"
-                                onClick={() => iniciarDictado('MUJER')}
-                                className={`px-4 py-3 rounded-2xl font-black text-xs flex items-center gap-1 shrink-0 ${isListening && campoEscuchando === 'MUJER'
+                                onClick={() => startVoice(setNombreMujer, 'nombreMujer')}
+                                className={`px-4 py-3 rounded-2xl font-black text-xs flex items-center gap-1 shrink-0 ${listeningField === 'nombreMujer'
                                     ? 'bg-rose-600 text-white animate-pulse'
                                     : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
                                     }`}
+                                title="Dictar por voz"
                             >
-                                {isListening && campoEscuchando === 'MUJER' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                {listeningField === 'nombreMujer' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                                 <span>🎙️</span>
                             </button>
                         </div>
@@ -134,12 +143,25 @@ export const FormatoCalendarioMujer: React.FC<FormatoCalendarioMujerProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="block text-xs font-black text-slate-700">Edad</label>
-                            <input
-                                type="number"
-                                value={edad}
-                                onChange={(e) => setEdad(e.target.value)}
-                                className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900"
-                            />
+                            <div className="flex gap-1.5">
+                                <input
+                                    type="number"
+                                    value={edad}
+                                    onChange={(e) => setEdad(e.target.value)}
+                                    className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-3 py-3 text-sm font-bold text-slate-900"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => startVoice(setEdad, 'edad')}
+                                    className={`px-3 py-2 rounded-2xl font-bold text-xs shrink-0 ${listeningField === 'edad'
+                                        ? 'bg-rose-600 text-white animate-pulse'
+                                        : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
+                                        }`}
+                                    title="Dictar edad"
+                                >
+                                    <Mic className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-xs font-black text-slate-700">Fecha</label>
@@ -154,21 +176,49 @@ export const FormatoCalendarioMujer: React.FC<FormatoCalendarioMujerProps> = ({
 
                     <div>
                         <label className="block text-xs font-black text-slate-700">Municipio</label>
-                        <input
-                            type="text"
-                            value={municipio}
-                            onChange={(e) => setMunicipio(e.target.value)}
-                            className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900"
-                        />
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={municipio}
+                                onChange={(e) => setMunicipio(e.target.value)}
+                                className="flex-1 bg-slate-50 border-2 border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => startVoice(setMunicipio, 'municipio')}
+                                className={`px-4 py-3 rounded-2xl font-black text-xs flex items-center gap-1 shrink-0 ${listeningField === 'municipio'
+                                    ? 'bg-rose-600 text-white animate-pulse'
+                                    : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
+                                    }`}
+                                title="Dictar municipio"
+                            >
+                                {listeningField === 'municipio' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                <span>🎙️</span>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label className="block text-xs font-black text-slate-700">Localidad</label>
-                        <input
-                            type="text"
-                            value={localidad}
-                            onChange={(e) => setLocalidad(e.target.value)}
-                            className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900"
-                        />
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={localidad}
+                                onChange={(e) => setLocalidad(e.target.value)}
+                                className="flex-1 bg-slate-50 border-2 border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => startVoice(setLocalidad, 'localidad')}
+                                className={`px-4 py-3 rounded-2xl font-black text-xs flex items-center gap-1 shrink-0 ${listeningField === 'localidad'
+                                    ? 'bg-rose-600 text-white animate-pulse'
+                                    : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
+                                    }`}
+                                title="Dictar localidad"
+                            >
+                                {listeningField === 'localidad' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                <span>🎙️</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

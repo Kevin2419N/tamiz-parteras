@@ -9,23 +9,21 @@ import {
     Calendar,
     PenTool
 } from 'lucide-react';
+import { handleVoiceInput } from '../../../utils/voiceUtils';
 
 interface FormatoCalendarioNinoProps {
     onBack: () => void;
     onSuccess: () => void;
     hablarTexto: (texto: string) => void;
-    isListening: boolean;
-    campoEscuchando: string | null;
-    iniciarDictado: (campo: string) => void;
+    isListening?: boolean;
+    campoEscuchando?: string | null;
+    iniciarDictado?: (campo: string) => void;
 }
 
 export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     onBack,
     onSuccess,
-    hablarTexto,
-    isListening,
-    campoEscuchando,
-    iniciarDictado
+    hablarTexto
 }) => {
     // Alternancia entre Vista Partera vs Duplicado Centro de Salud
     const [modoDuplicado, setModoDuplicado] = useState(false);
@@ -37,6 +35,9 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
     const [municipio, setMunicipio] = useState('Juchitán de Zaragoza');
     const [localidad, setLocalidad] = useState('La Ventosa');
+
+    // Estado interno de dictado por voz
+    const [listeningField, setListeningField] = useState<string | null>(null);
 
     // Semaforización Nutricional RN
     const [nutricionNino, setNutricionNino] = useState<'NEGRO' | 'AMARILLO' | 'ROJO'>('NEGRO');
@@ -64,6 +65,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     const [nombreSupervisor, setNombreSupervisor] = useState('Lic. Enf. Maria de la Luz V.');
     const [centroSaludSupervision, setCentroSaludSupervision] = useState('Jurisdicción Sanitaria No. 2 - Istmo');
     const [huellaRegistrada, setHuellaRegistrada] = useState(false);
+
+    const startVoice = (setter: (val: string) => void, fieldKey: string) => {
+        handleVoiceInput(
+            (val) => setter(val),
+            (l) => setListeningField(l ? fieldKey : null)
+        );
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -139,13 +147,14 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             />
                             <button
                                 type="button"
-                                onClick={() => iniciarDictado('NINO')}
-                                className={`px-4 py-3 rounded-2xl font-black text-xs shrink-0 ${isListening && campoEscuchando === 'NINO'
+                                onClick={() => startVoice(setNombreNino, 'nombreNino')}
+                                className={`px-4 py-3 rounded-2xl font-black text-xs shrink-0 flex items-center gap-1 ${listeningField === 'nombreNino'
                                     ? 'bg-rose-600 text-white animate-pulse'
                                     : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
                                     }`}
+                                title="Dictar por voz"
                             >
-                                {isListening && campoEscuchando === 'NINO' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                {listeningField === 'nombreNino' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                                 <span>🎙️</span>
                             </button>
                         </div>
@@ -165,10 +174,15 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             />
                             <button
                                 type="button"
-                                onClick={() => iniciarDictado('MADRE')}
-                                className="px-3 py-2 bg-rose-50 text-[#9D2449] border border-rose-200 rounded-2xl font-bold text-xs"
+                                onClick={() => startVoice(setNombreMadre, 'nombreMadre')}
+                                className={`px-4 py-3 rounded-2xl font-black text-xs shrink-0 flex items-center gap-1 ${listeningField === 'nombreMadre'
+                                    ? 'bg-rose-600 text-white animate-pulse'
+                                    : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
+                                    }`}
+                                title="Dictar por voz"
                             >
-                                🎙️
+                                {listeningField === 'nombreMadre' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                <span>🎙️</span>
                             </button>
                         </div>
                     </div>
@@ -176,12 +190,25 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="block text-xs font-black text-slate-700">Edad (Meses)</label>
-                            <input
-                                type="number"
-                                value={edadMeses}
-                                onChange={(e) => setEdadMeses(e.target.value)}
-                                className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900"
-                            />
+                            <div className="flex gap-1.5">
+                                <input
+                                    type="number"
+                                    value={edadMeses}
+                                    onChange={(e) => setEdadMeses(e.target.value)}
+                                    className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-3 py-3 text-sm font-bold text-slate-900"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => startVoice(setEdadMeses, 'edadMeses')}
+                                    className={`px-3 py-2 rounded-2xl font-bold text-xs shrink-0 ${listeningField === 'edadMeses'
+                                        ? 'bg-rose-600 text-white animate-pulse'
+                                        : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
+                                        }`}
+                                    title="Dictar edad"
+                                >
+                                    <Mic className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-xs font-black text-slate-700">Fecha Atencion</label>
@@ -197,21 +224,47 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="block text-xs font-black text-slate-700">Municipio</label>
-                            <input
-                                type="text"
-                                value={municipio}
-                                onChange={(e) => setMunicipio(e.target.value)}
-                                className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900"
-                            />
+                            <div className="flex gap-1.5">
+                                <input
+                                    type="text"
+                                    value={municipio}
+                                    onChange={(e) => setMunicipio(e.target.value)}
+                                    className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-3 py-3 text-sm font-bold text-slate-900"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => startVoice(setMunicipio, 'municipio')}
+                                    className={`px-3 py-2 rounded-2xl font-bold text-xs shrink-0 ${listeningField === 'municipio'
+                                        ? 'bg-rose-600 text-white animate-pulse'
+                                        : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
+                                        }`}
+                                    title="Dictar municipio"
+                                >
+                                    <Mic className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-xs font-black text-slate-700">Localidad</label>
-                            <input
-                                type="text"
-                                value={localidad}
-                                onChange={(e) => setLocalidad(e.target.value)}
-                                className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900"
-                            />
+                            <div className="flex gap-1.5">
+                                <input
+                                    type="text"
+                                    value={localidad}
+                                    onChange={(e) => setLocalidad(e.target.value)}
+                                    className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl px-3 py-3 text-sm font-bold text-slate-900"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => startVoice(setLocalidad, 'localidad')}
+                                    className={`px-3 py-2 rounded-2xl font-bold text-xs shrink-0 ${listeningField === 'localidad'
+                                        ? 'bg-rose-600 text-white animate-pulse'
+                                        : 'bg-rose-50 text-[#9D2449] border-2 border-rose-200'
+                                        }`}
+                                    title="Dictar localidad"
+                                >
+                                    <Mic className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

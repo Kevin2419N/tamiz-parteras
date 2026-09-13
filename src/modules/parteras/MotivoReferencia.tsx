@@ -20,6 +20,7 @@ import {
     FolderOpen,
     ShieldCheck
 } from 'lucide-react';
+import { handleVoiceInput } from '../../utils/voiceUtils';
 
 interface MotivoReferenciaProps {
     onBack?: () => void;
@@ -41,8 +42,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     onSuccess,
     hablarTexto: propsHablarTexto,
     isListeningExternal,
-    campoEscuchandoExternal,
-    iniciarDictadoExternal
+    campoEscuchandoExternal
 }) => {
     // Datos de Identificación (Campos de la usuaria inician VACÍOS para permitir dictado limpio)
     const [centroSalud, setCentroSalud] = useState('');
@@ -107,77 +107,23 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         };
     }, []);
 
-    // Handler de escucha por voz directo y optimizado
+    // Handler de escucha por voz directo y universal con handleVoiceInput
     const startListening = (setter: React.Dispatch<React.SetStateAction<string>>, fieldKey: string, fieldLabel: string) => {
-        if (iniciarDictadoExternal) {
-            iniciarDictadoExternal(fieldKey);
-            return;
-        }
-
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-        if (!SpeechRecognition) {
-            simularDictado(setter, fieldKey, fieldLabel);
-            return;
-        }
-
-        try {
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'es-MX';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            recognition.onstart = () => {
-                setListeningFieldInternal(fieldKey);
-                setDictationNotification(`Escuchando voz para ${fieldLabel}...`);
-            };
-
-            recognition.onresult = (event: any) => {
-                const text = event.results[0][0].transcript;
-                setter(text);
+        handleVoiceInput(
+            (transcript) => {
+                setter(transcript);
                 setListeningFieldInternal(null);
-                setDictationNotification(`Capturado: "${text}"`);
-                speakText(`Registrado: ${text}`);
+                setDictationNotification(`Capturado: "${transcript}"`);
+                speakText(`Registrado: ${transcript}`);
                 setTimeout(() => setDictationNotification(null), 3000);
-            };
-
-            recognition.onerror = () => {
-                simularDictado(setter, fieldKey, fieldLabel);
-            };
-
-            recognition.onend = () => {
-                setListeningFieldInternal(null);
-            };
-
-            recognition.start();
-        } catch (e) {
-            simularDictado(setter, fieldKey, fieldLabel);
-        }
-    };
-
-    const simularDictado = (setter: React.Dispatch<React.SetStateAction<string>>, fieldKey: string, fieldLabel: string) => {
-        setListeningFieldInternal(fieldKey);
-        setDictationNotification(`Escuchando dictado para ${fieldLabel}...`);
-        setTimeout(() => {
-            const simulaciones: Record<string, string> = {
-                centroSalud: 'Centro de Salud Urbano Juchitán',
-                nombreUsuaria: 'Guadalupe Martínez Hernández',
-                edad: '28',
-                localidad: 'Unión Hidalgo',
-                municipio: 'Juchitán de Zaragoza',
-                nombrePartera: 'Doña Rosa Santiz Gómez',
-                localidadPartera: 'San Pedro Juchitán',
-                diagnostico: 'Paciente con embarazo de 34 semanas sin complicaciones.',
-                tratamiento: 'Continuar con ácido fólico y cita de seguimiento.',
-                observacionesMedico: 'Seguimiento por la partera en comunidad.'
-            };
-            const simulado = simulaciones[fieldKey] || 'Texto dictado por voz';
-            setter(simulado);
-            setListeningFieldInternal(null);
-            setDictationNotification(`Dictado registrado para ${fieldLabel}: "${simulado}"`);
-            speakText(`Registrado: ${simulado}`);
-            setTimeout(() => setDictationNotification(null), 3000);
-        }, 1200);
+            },
+            (listening) => {
+                setListeningFieldInternal(listening ? fieldKey : null);
+                if (listening) {
+                    setDictationNotification(`Escuchando voz para ${fieldLabel}...`);
+                }
+            }
+        );
     };
 
     const toggleMotivo = (id: string, titulo: string) => {
