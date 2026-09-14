@@ -221,9 +221,9 @@ export const DashboardPartera: React.FC = () => {
                 {/* VISTA HOME: 3 TARJETAS TÁCTILES ILUSTRADAS PRINCIPALES */}
                 {vistaActiva === 'HOME' && (
                     <div className="space-y-6">
-                        <div className="bg-amber-50 border border-amber-300 p-4 rounded-3xl flex items-center gap-3">
+                        <div className="bg-amber-50 border border-amber-300 p-4 rounded-3xl flex items-center gap-3 shadow-sm">
                             <Info className="w-6 h-6 text-amber-700 shrink-0" />
-                            <p className="text-xs font-bold text-amber-900">
+                            <p className="text-xs md:text-sm font-bold text-amber-900">
                                 Toque una de las 3 tarjetas ilustradas de abajo para abrir la digitalización completa del formato físico correspondiente.
                             </p>
                         </div>
@@ -237,17 +237,17 @@ export const DashboardPartera: React.FC = () => {
                                     hablarTexto('Abriendo Formato 1: Ficha de Referencia y Contrareferencia.');
                                     setVistaActiva('REFERENCIA');
                                 }}
-                                className="bg-white rounded-3xl p-8 border-2 border-rose-200 hover:border-[#9D2449] shadow-md hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center text-center cursor-pointer group space-y-5 justify-between min-h-[320px]"
+                                className="bg-white rounded-3xl p-6 md:p-8 border-2 border-rose-200 hover:border-[#9D2449] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center text-center cursor-pointer relative overflow-hidden group justify-between min-h-[320px]"
                             >
-                                <div className="w-20 h-20 bg-rose-50 text-[#9D2449] rounded-3xl flex items-center justify-center border border-rose-200 shadow-sm group-hover:scale-105 transition-transform">
+                                <div className="w-20 h-20 bg-rose-50 text-[#9D2449] rounded-3xl flex items-center justify-center border border-rose-200 shadow-md shadow-rose-100/60 group-hover:scale-105 transition-transform">
                                     <Ambulance className="w-10 h-10 text-[#9D2449]" />
                                 </div>
                                 <div className="space-y-2">
+                                    <span className="inline-block px-3 py-1 bg-rose-100 text-[#9D2449] rounded-full text-xs font-black border border-rose-200 uppercase tracking-wider">
+                                        FORMATO 1
+                                    </span>
                                     <span className="block text-xl font-black text-slate-900 group-hover:text-[#9D2449] transition-colors">
                                         1. Ficha de Referencia y Contrareferencia
-                                    </span>
-                                    <span className="inline-block px-3.5 py-1 bg-rose-100/80 text-[#9D2449] rounded-full text-xs font-black border border-rose-200">
-                                        Urgencias & Sección Médica
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium leading-relaxed">
                                         Formato 1: Canalizaciones urgentes, Zika, Tamiz y módulo de respuesta médica.
@@ -262,17 +262,17 @@ export const DashboardPartera: React.FC = () => {
                                     hablarTexto('Abriendo Formato 2: Calendario de Atención a la Mujer.');
                                     setVistaActiva('MUJER');
                                 }}
-                                className="bg-white rounded-3xl p-8 border-2 border-purple-200 hover:border-purple-600 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center text-center cursor-pointer group space-y-5 justify-between min-h-[320px]"
+                                className="bg-white rounded-3xl p-6 md:p-8 border-2 border-purple-200 hover:border-purple-600 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center text-center cursor-pointer relative overflow-hidden group justify-between min-h-[320px]"
                             >
-                                <div className="w-20 h-20 bg-purple-50 text-purple-700 rounded-3xl flex items-center justify-center border border-purple-200 shadow-sm group-hover:scale-105 transition-transform">
+                                <div className="w-20 h-20 bg-purple-50 text-purple-700 rounded-3xl flex items-center justify-center border border-purple-200 shadow-md shadow-purple-100/60 group-hover:scale-105 transition-transform">
                                     <HeartPulse className="w-10 h-10 text-purple-700" />
                                 </div>
                                 <div className="space-y-2">
+                                    <span className="inline-block px-3 py-1 bg-purple-100 text-purple-900 rounded-full text-xs font-black border border-purple-200 uppercase tracking-wider">
+                                        FORMATO 2
+                                    </span>
                                     <span className="block text-xl font-black text-slate-900 group-hover:text-purple-700 transition-colors">
                                         2. Calendario de Atención a la Mujer
-                                    </span>
-                                    <span className="inline-block px-3.5 py-1 bg-purple-100/80 text-purple-900 rounded-full text-xs font-black border border-purple-200">
-                                        Embarazo, Parto & Puerperio
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium leading-relaxed">
                                         Formato 2: Control meses 1-9, cinta MUAC, parto vertical/horizontal y muerte materna.
@@ -287,17 +287,17 @@ export const DashboardPartera: React.FC = () => {
                                     hablarTexto('Abriendo Formato 3: Calendario del Niño menor de 2 años.');
                                     setVistaActiva('NINO');
                                 }}
-                                className="bg-white rounded-3xl p-8 border-2 border-sky-200 hover:border-sky-600 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center text-center cursor-pointer group space-y-5 justify-between min-h-[320px]"
+                                className="bg-white rounded-3xl p-6 md:p-8 border-2 border-teal-200 hover:border-teal-600 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center text-center cursor-pointer relative overflow-hidden group justify-between min-h-[320px]"
                             >
-                                <div className="w-20 h-20 bg-sky-50 text-sky-700 rounded-3xl flex items-center justify-center border border-sky-200 shadow-sm group-hover:scale-105 transition-transform">
-                                    <Baby className="w-10 h-10 text-sky-700" />
+                                <div className="w-20 h-20 bg-teal-50 text-teal-700 rounded-3xl flex items-center justify-center border border-teal-200 shadow-md shadow-teal-100/60 group-hover:scale-105 transition-transform">
+                                    <Baby className="w-10 h-10 text-teal-700" />
                                 </div>
                                 <div className="space-y-2">
-                                    <span className="block text-xl font-black text-slate-900 group-hover:text-sky-700 transition-colors">
-                                        3. Calendario del Niño/a (Menor de 2 años)
+                                    <span className="inline-block px-3 py-1 bg-teal-100 text-teal-900 rounded-full text-xs font-black border border-teal-200 uppercase tracking-wider">
+                                        FORMATO 3
                                     </span>
-                                    <span className="inline-block px-3.5 py-1 bg-sky-100/80 text-sky-900 rounded-full text-xs font-black border border-sky-200">
-                                        Tamiz, Vacunas & Huella
+                                    <span className="block text-xl font-black text-slate-900 group-hover:text-teal-700 transition-colors">
+                                        3. Calendario del Niño/a (Menor de 2 años)
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium leading-relaxed">
                                         Formato 3: Semáforo nutricional, fechas de tamiz/vacunas y firma/huella digital.
