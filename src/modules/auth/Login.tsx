@@ -141,7 +141,7 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-100/70 via-slate-50 to-emerald-100/50 flex flex-col items-center justify-center p-4 selection:bg-emerald-600 selection:text-white">
+        <div className="min-h-screen bg-slate-50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-100/60 via-slate-50 to-rose-100/40 flex flex-col items-center justify-center p-4 selection:bg-[#9D2449] selection:text-white">
 
             {/* Header Institucional de Servicios de Salud de Oaxaca */}
             <header className="w-full max-w-4xl mb-6 flex flex-col md:flex-row items-center justify-between bg-white/95 border border-slate-200/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-md gap-3 md:gap-4 text-center">
@@ -195,15 +195,15 @@ export const Login: React.FC = () => {
 
                         <div className="space-y-2.5 pt-2">
                             <div className="flex items-center gap-2.5 text-xs text-rose-100 font-medium">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                <CheckCircle2 className="w-4 h-4 text-rose-300 shrink-0" />
                                 <span>Captura Directa de Muestras de Tamiz</span>
                             </div>
                             <div className="flex items-center gap-2.5 text-xs text-rose-100 font-medium">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                <CheckCircle2 className="w-4 h-4 text-rose-300 shrink-0" />
                                 <span>Acceso por Voz y QR para Parteras</span>
                             </div>
                             <div className="flex items-center gap-2.5 text-xs text-rose-100 font-medium">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                <CheckCircle2 className="w-4 h-4 text-rose-300 shrink-0" />
                                 <span>Alertas de Emergencia Obstétrica</span>
                             </div>
                         </div>
@@ -348,9 +348,9 @@ export const Login: React.FC = () => {
                             <div id="panel-partera" role="tabpanel" aria-labelledby="tab-partera" className="space-y-6">
 
                                 {/* Asistente por Voz (Web Speech API) */}
-                                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
+                                <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2.5 bg-emerald-100 text-emerald-800 rounded-xl">
+                                        <div className="p-2.5 bg-rose-100 text-[#9D2449] rounded-xl">
                                             {isSpeaking ? <Volume2 className="w-6 h-6 animate-pulse text-amber-600" /> : <Volume2 className="w-6 h-6" />}
                                         </div>
                                         <div>
@@ -364,7 +364,7 @@ export const Login: React.FC = () => {
                                         onClick={isSpeaking ? stopVoice : speakInstructions}
                                         className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${isSpeaking
                                             ? 'bg-amber-500 text-slate-950 shadow-md'
-                                            : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-md shadow-emerald-700/20'
+                                            : 'bg-[#9D2449] hover:bg-[#7A1B38] text-white shadow-md shadow-[#9D2449]/20'
                                             }`}
                                     >
                                         {isSpeaking ? (
@@ -385,20 +385,20 @@ export const Login: React.FC = () => {
 
                                     {/* Opción A: Botón Gigante Escaneo QR */}
                                     <div className="space-y-3">
-                                        <span className="block text-xs font-extrabold uppercase tracking-wider text-emerald-800">
+                                        <span className="block text-xs font-extrabold uppercase tracking-wider text-[#9D2449]">
                                             Opción A: Credencial QR
                                         </span>
 
                                         <button
                                             type="button"
                                             onClick={handleStartQRScan}
-                                            className="w-full min-h-[140px] p-4 bg-emerald-50 hover:bg-emerald-100/80 border-2 border-emerald-500 rounded-3xl flex flex-col items-center justify-center gap-3 group transition-all transform active:scale-95 text-center focus-visible:ring-4 focus-visible:ring-emerald-600 shadow-sm"
+                                            className="w-full min-h-[140px] p-4 bg-rose-50/40 hover:bg-rose-50/90 border-2 border-[#9D2449] rounded-3xl flex flex-col items-center justify-center gap-3 group transition-all transform active:scale-95 text-center focus-visible:ring-4 focus-visible:ring-[#9D2449] shadow-sm"
                                         >
-                                            <div className="p-3.5 bg-emerald-600 text-white rounded-2xl shadow-md shadow-emerald-600/30 group-hover:scale-110 transition-transform">
+                                            <div className="p-3.5 bg-[#9D2449] text-white rounded-2xl shadow-md shadow-[#9D2449]/30 group-hover:scale-110 transition-transform">
                                                 <QrCode className="w-10 h-10" />
                                             </div>
                                             <div>
-                                                <span className="block text-sm font-black text-slate-900 group-hover:text-emerald-800">
+                                                <span className="block text-sm font-black text-slate-900 group-hover:text-[#9D2449]">
                                                     ESCANEAR CREDENCIAL QR
                                                 </span>
                                                 <span className="text-[11px] text-slate-600 font-medium">
@@ -410,7 +410,7 @@ export const Login: React.FC = () => {
 
                                     {/* Opción B: Teclado Numérico Gigante (Keypad PIN) */}
                                     <div className="space-y-3">
-                                        <span className="block text-xs font-extrabold uppercase tracking-wider text-teal-800">
+                                        <span className="block text-xs font-extrabold uppercase tracking-wider text-[#9D2449]">
                                             Opción B: Código PIN de 4 Números
                                         </span>
 
@@ -422,7 +422,7 @@ export const Login: React.FC = () => {
                                                     <div
                                                         key={idx}
                                                         className={`w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center ${filled
-                                                            ? 'bg-emerald-600 border-emerald-500 shadow-md'
+                                                            ? 'bg-[#9D2449] border-[#9D2449] shadow-md'
                                                             : 'border-slate-300 bg-white'
                                                             }`}
                                                     >
@@ -439,7 +439,7 @@ export const Login: React.FC = () => {
                                                     key={num}
                                                     type="button"
                                                     onClick={() => handleKeypadPress(num)}
-                                                    className="min-h-[52px] bg-white hover:bg-emerald-50 border border-slate-200 text-slate-900 font-black text-xl rounded-2xl shadow-sm transition-all transform active:scale-90 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-emerald-600"
+                                                    className="min-h-[52px] bg-white hover:bg-rose-50 border border-slate-200 text-slate-900 font-black text-xl rounded-2xl shadow-sm transition-all transform active:scale-90 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-[#9D2449]"
                                                 >
                                                     {num}
                                                 </button>
@@ -450,7 +450,7 @@ export const Login: React.FC = () => {
                                                 type="button"
                                                 onClick={handleKeypadDelete}
                                                 aria-label="Borrar último número"
-                                                className="min-h-[52px] bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-2xl flex items-center justify-center active:scale-90 transition-all font-bold"
+                                                className="min-h-[52px] bg-rose-50 hover:bg-rose-100 border border-rose-200 text-[#9D2449] rounded-2xl flex items-center justify-center active:scale-90 transition-all font-bold"
                                             >
                                                 <Delete className="w-5 h-5" />
                                             </button>
@@ -459,7 +459,7 @@ export const Login: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => handleKeypadPress('0')}
-                                                className="min-h-[52px] bg-white hover:bg-emerald-50 border border-slate-200 text-slate-900 font-black text-xl rounded-2xl shadow-sm transition-all transform active:scale-90 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-emerald-600"
+                                                className="min-h-[52px] bg-white hover:bg-rose-50 border border-slate-200 text-slate-900 font-black text-xl rounded-2xl shadow-sm transition-all transform active:scale-90 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-[#9D2449]"
                                             >
                                                 0
                                             </button>
@@ -488,7 +488,7 @@ export const Login: React.FC = () => {
                     <footer className="mt-8 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
                         <span>Jurisdicción Sanitaria No. 2 - Istmo • Programa de Tamiz Neonatal</span>
                         <div className="flex items-center gap-2 text-slate-600 font-medium">
-                            <HelpCircle className="w-4 h-4 text-teal-700" />
+                            <HelpCircle className="w-4 h-4 text-[#9D2449]" />
                             <span>Soporte Técnico: 800 123 4567</span>
                         </div>
                     </footer>
@@ -514,23 +514,23 @@ export const Login: React.FC = () => {
                         </div>
 
                         {/* Simulación de Visor de Cámara con Láser Animado */}
-                        <div className="relative w-full h-64 bg-slate-950 rounded-2xl overflow-hidden border-2 border-emerald-500/80 flex items-center justify-center">
+                        <div className="relative w-full h-64 bg-slate-950 rounded-2xl overflow-hidden border-2 border-[#9D2449] flex items-center justify-center">
 
                             {/* Fondo cámara simulada */}
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-teal-900/40 to-black opacity-80" />
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-rose-950/40 to-black opacity-80" />
 
                             {/* Marco de Escaneo QR */}
-                            <div className="relative w-44 h-44 border-2 border-dashed border-emerald-400 rounded-2xl flex items-center justify-center">
+                            <div className="relative w-44 h-44 border-2 border-dashed border-rose-400 rounded-2xl flex items-center justify-center">
                                 <Camera className="w-12 h-12 text-slate-600 opacity-50" />
 
                                 {isScanningQR && (
-                                    <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-lg shadow-emerald-400/80 animate-[bounce_2s_infinite]" />
+                                    <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-400 to-transparent shadow-lg shadow-rose-400/80 animate-[bounce_2s_infinite]" />
                                 )}
                             </div>
 
                             {qrScanSuccess && (
-                                <div className="absolute inset-0 bg-emerald-900/90 flex flex-col items-center justify-center gap-2 text-emerald-200 font-bold text-sm animate-fade-in">
-                                    <CheckCircle2 className="w-12 h-12 text-emerald-400 animate-bounce" />
+                                <div className="absolute inset-0 bg-rose-950/95 flex flex-col items-center justify-center gap-2 text-rose-100 font-bold text-sm animate-fade-in">
+                                    <CheckCircle2 className="w-12 h-12 text-rose-300 animate-bounce" />
                                     <span>¡Credencial QR Verificada!</span>
                                 </div>
                             )}
@@ -555,7 +555,7 @@ export const Login: React.FC = () => {
                         </p>
 
                         {forgotEmailSent ? (
-                            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-bold">
+                            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 font-bold">
                                 ✓ Se ha enviado el enlace a su correo electrónico.
                             </div>
                         ) : (
@@ -563,7 +563,7 @@ export const Login: React.FC = () => {
                                 type="email"
                                 placeholder="usuario@salud.gob.mx"
                                 defaultValue={email}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-teal-600"
+                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]"
                             />
                         )}
 
@@ -580,7 +580,7 @@ export const Login: React.FC = () => {
                             {!forgotEmailSent && (
                                 <button
                                     onClick={() => setForgotEmailSent(true)}
-                                    className="px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded-xl"
+                                    className="px-3.5 py-1.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl"
                                 >
                                     Enviar Enlace
                                 </button>
