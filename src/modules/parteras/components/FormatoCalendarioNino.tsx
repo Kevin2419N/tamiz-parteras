@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-    ChevronLeft,
     Mic,
     MicOff,
     CheckCircle2,
@@ -30,7 +29,6 @@ interface FormatoCalendarioNinoProps {
 }
 
 export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
-    onBack,
     onSuccess,
     hablarTexto
 }) => {
@@ -94,19 +92,8 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto">
-            {/* 1. TOGGLE DE VISTA Y BOTÓN REGRESAR */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                {/* Botón de regresar en Guinda Oaxaca */}
-                <button
-                    type="button"
-                    onClick={onBack}
-                    className="bg-[#9D2449] hover:bg-[#7A1B38] text-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 border border-rose-300/30 shrink-0"
-                >
-                    <ChevronLeft className="w-5 h-5" />
-                    <span>Regresar al Menú Principal</span>
-                </button>
-
-                {/* Toggle de Vista Partera / Centro de Salud */}
+            {/* 1. TOGGLE DE VISTA PARTERA / CENTRO DE SALUD (ALINEADO A LA DERECHA SIN BOTÓN DUPLICADO DE REGRESAR) */}
+            <div className="flex justify-end">
                 <div className="bg-slate-200/90 p-1.5 rounded-2xl flex items-center gap-1 border border-slate-300 w-full sm:w-auto">
                     <button
                         type="button"
@@ -115,8 +102,8 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             if (hablarTexto) hablarTexto("Vista Partera activa");
                         }}
                         className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all ${!modoDuplicado
-                            ? 'bg-[#9D2449] text-white shadow-md'
-                            : 'bg-transparent text-slate-700 hover:text-slate-900'
+                                ? 'bg-[#9D2449] text-white shadow-md'
+                                : 'bg-transparent text-slate-700 hover:text-slate-900'
                             }`}
                     >
                         <FileText className="w-4 h-4" />
@@ -130,8 +117,8 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             if (hablarTexto) hablarTexto("Mostrando copia oficial para el Centro de Salud");
                         }}
                         className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all ${modoDuplicado
-                            ? 'bg-[#9D2449] text-white shadow-md'
-                            : 'bg-transparent text-slate-700 hover:text-slate-900'
+                                ? 'bg-[#9D2449] text-white shadow-md'
+                                : 'bg-transparent text-slate-700 hover:text-slate-900'
                             }`}
                     >
                         <Building2 className="w-4 h-4" />
@@ -142,24 +129,24 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
 
             {/* Insignia para Copia Centro de Salud */}
             {modoDuplicado && (
-                <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-sm">
+                <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-sm animate-fadeIn">
                     <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-amber-400 text-slate-950 rounded-xl font-bold">
+                        <div className="p-2.5 bg-amber-400 text-slate-950 rounded-xl font-bold shadow-sm">
                             <Building2 className="w-6 h-6" />
                         </div>
                         <div>
-                            <span className="inline-block bg-amber-200 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-amber-400 mb-0.5">
+                            <span className="inline-block bg-amber-200 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-amber-400 mb-0.5">
                                 DUPLICADO OFICIAL SSO
                             </span>
                             <h4 className="text-sm font-black text-amber-950">
                                 Copia Oficial para Enviar al Centro de Salud
                             </h4>
-                            <p className="text-xs text-amber-800">
+                            <p className="text-xs text-amber-800 font-medium">
                                 Expediente oficial de reporte mensual para los Servicios de Salud de Oaxaca.
                             </p>
                         </div>
                     </div>
-                    <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-400/30 text-amber-900 font-extrabold text-xs rounded-xl border border-amber-400/50 shrink-0">
+                    <span className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-400/30 text-amber-900 font-extrabold text-xs rounded-xl border border-amber-400/50 shrink-0">
                         <Award className="w-4 h-4" /> Copia Institucional
                     </span>
                 </div>
@@ -174,7 +161,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 />
 
                 <div className="text-center space-y-1">
-                    <span className="inline-block px-3 py-1 bg-rose-100 text-[#9D2449] rounded-full text-[11px] font-black uppercase tracking-wider border border-rose-200">
+                    <span className="inline-block px-3.5 py-1 bg-rose-100 text-[#9D2449] rounded-full text-[11px] font-black uppercase tracking-wider border border-rose-200">
                         SERVICIOS DE SALUD DE OAXACA • FORMATO 3
                     </span>
                     <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
@@ -195,7 +182,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
             {/* 2. DATOS DE IDENTIFICACIÓN CON DICTADO POR VOZ REAL */}
             <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-md">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                    <div className="p-2.5 bg-rose-50 text-[#9D2449] rounded-xl">
+                    <div className="p-2.5 bg-rose-50 text-[#9D2449] rounded-xl border border-rose-100">
                         <User className="w-5 h-5 text-[#9D2449]" />
                     </div>
                     <div>
@@ -203,7 +190,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             Datos de Identificación
                         </h3>
                         <p className="text-xs text-slate-500 font-medium">
-                            Complete la información o presione el botón de micrófono para dictar por voz
+                            Complete la información o presione el botón de micrófono en Guinda Oaxaca para dictar por voz
                         </p>
                     </div>
                 </div>
@@ -361,7 +348,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 </div>
             </div>
 
-            {/* 3. ESTADO NUTRICIONAL DEL RECIÉN NACIDO (CINTA TRICOLOR TÁCTIL) */}
+            {/* 3. ESTADO NUTRICIONAL DEL RECIÉN NACIDO (PULIDO DE CINTA TRICOLOR TÁCTIL) */}
             <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-md">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                     <div className="p-2.5 bg-slate-100 text-slate-800 rounded-xl">
@@ -382,9 +369,9 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     <button
                         type="button"
                         onClick={() => setNutricionNino('NEGRO')}
-                        className={`p-5 rounded-2xl border-4 text-left space-y-3 transition-all ${nutricionNino === 'NEGRO'
-                            ? 'bg-slate-900 text-white border-slate-950 shadow-xl scale-[1.02] ring-4 ring-slate-900/20'
-                            : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
+                        className={`p-5 rounded-2xl border-4 text-left space-y-3 transition-all cursor-pointer ${nutricionNino === 'NEGRO'
+                                ? 'bg-slate-900 text-white border-emerald-500 shadow-xl scale-[1.02] ring-4 ring-emerald-500/20'
+                                : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
                             }`}
                     >
                         <div className="flex items-center justify-between">
@@ -402,17 +389,17 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </div>
                     </button>
 
-                    {/* Opción 2 (Amarillo): RIESGO DE DESNUTRICIÓN - ENVIAR AL CENTRO DE SALUD */}
+                    {/* Opción 2 (Amarillo): RIESGO DE DESNUTRICIÓN */}
                     <button
                         type="button"
                         onClick={() => setNutricionNino('AMARILLO')}
-                        className={`p-5 rounded-2xl border-4 text-left space-y-3 transition-all ${nutricionNino === 'AMARILLO'
-                            ? 'bg-amber-400 border-amber-600 text-amber-950 shadow-xl scale-[1.02] ring-4 ring-amber-400/30 font-extrabold'
-                            : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
+                        className={`p-5 rounded-2xl border-4 text-left space-y-3 transition-all cursor-pointer ${nutricionNino === 'AMARILLO'
+                                ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-xl scale-[1.02] ring-4 ring-amber-400/40 font-extrabold'
+                                : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
                             }`}
                     >
                         <div className="flex items-center justify-between">
-                            <span className="px-3 py-1 bg-amber-950/10 text-amber-900 font-black text-[10px] uppercase tracking-wider rounded-full border border-amber-950/20 flex items-center gap-1">
+                            <span className="px-3 py-1 bg-amber-950/20 text-amber-950 font-black text-[10px] uppercase tracking-wider rounded-full border border-amber-950/30 flex items-center gap-1">
                                 <AlertTriangle className="w-3.5 h-3.5" /> Advertencia
                             </span>
                             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${nutricionNino === 'AMARILLO' ? 'bg-amber-950 border-amber-900 text-amber-400' : 'border-slate-300'
@@ -426,13 +413,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </div>
                     </button>
 
-                    {/* Opción 3 (Rojo): DESNUTRIDO - ENVIAR URGENTE AL CENTRO DE SALUD */}
+                    {/* Opción 3 (Rojo): DESNUTRIDO GRAVE */}
                     <button
                         type="button"
                         onClick={() => setNutricionNino('ROJO')}
-                        className={`p-5 rounded-2xl border-4 text-left space-y-3 transition-all ${nutricionNino === 'ROJO'
-                            ? 'bg-rose-600 border-rose-800 text-white shadow-xl scale-[1.02] ring-4 ring-rose-600/30'
-                            : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
+                        className={`p-5 rounded-2xl border-4 text-left space-y-3 transition-all cursor-pointer ${nutricionNino === 'ROJO'
+                                ? 'bg-rose-600 text-white border-rose-700 shadow-xl scale-[1.02] ring-4 ring-rose-600/30 font-extrabold'
+                                : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
                             }`}
                     >
                         <div className="flex items-center justify-between">
@@ -445,17 +432,17 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             </div>
                         </div>
                         <div>
-                            <h4 className="font-black text-base tracking-tight">DESNUTRIDO</h4>
+                            <h4 className="font-black text-base tracking-tight">DESNUTRIDO GRAVE</h4>
                             <p className="text-xs opacity-90 mt-1 font-semibold">Brazalete Rojo: ENVIAR URGENTE AL CENTRO DE SALUD</p>
                         </div>
                     </button>
                 </div>
             </div>
 
-            {/* 4. SECCIÓN DE LACTANCIA MATERNA (USO DE NUEVAS IMÁGENES PNG) */}
+            {/* 4. SECCIÓN DE LACTANCIA MATERNA (VINCULACIÓN EXACTA DE IMÁGENES PNG) */}
             <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-md">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                    <div className="p-2.5 bg-rose-50 text-[#9D2449] rounded-xl">
+                    <div className="p-2.5 bg-rose-50 text-[#9D2449] rounded-xl border border-rose-100">
                         <Sparkles className="w-5 h-5 text-[#9D2449]" />
                     </div>
                     <div>
@@ -469,13 +456,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Tarjeta 1 */}
+                    {/* Opción 1: Sólo durante los primeros 6 meses */}
                     <button
                         type="button"
                         onClick={() => setTipoLactancia('PRIMEROS_6_MESES')}
-                        className={`p-6 rounded-3xl border-4 text-center space-y-4 transition-all flex flex-col items-center justify-between ${tipoLactancia === 'PRIMEROS_6_MESES'
-                            ? 'bg-rose-50/80 border-[#9D2449] shadow-xl ring-4 ring-rose-200 scale-[1.01]'
-                            : 'bg-slate-50 border-slate-200 hover:border-rose-200 hover:bg-slate-100'
+                        className={`p-6 rounded-3xl border-4 text-center space-y-4 transition-all flex flex-col items-center justify-between cursor-pointer ${tipoLactancia === 'PRIMEROS_6_MESES'
+                                ? 'bg-rose-50/80 border-[#9D2449] shadow-xl ring-4 ring-rose-200 scale-[1.01]'
+                                : 'bg-slate-50 border-slate-200 hover:border-rose-200 hover:bg-slate-100'
                             }`}
                     >
                         <div className="w-full flex justify-end">
@@ -501,13 +488,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </div>
                     </button>
 
-                    {/* Tarjeta 2 */}
+                    {/* Opción 2: Después de los 6 meses... */}
                     <button
                         type="button"
                         onClick={() => setTipoLactancia('DESPUES_6_MESES')}
-                        className={`p-6 rounded-3xl border-4 text-center space-y-4 transition-all flex flex-col items-center justify-between ${tipoLactancia === 'DESPUES_6_MESES'
-                            ? 'bg-rose-50/80 border-[#9D2449] shadow-xl ring-4 ring-rose-200 scale-[1.01]'
-                            : 'bg-slate-50 border-slate-200 hover:border-rose-200 hover:bg-slate-100'
+                        className={`p-6 rounded-3xl border-4 text-center space-y-4 transition-all flex flex-col items-center justify-between cursor-pointer ${tipoLactancia === 'DESPUES_6_MESES'
+                                ? 'bg-rose-50/80 border-[#9D2449] shadow-xl ring-4 ring-rose-200 scale-[1.01]'
+                                : 'bg-slate-50 border-slate-200 hover:border-rose-200 hover:bg-slate-100'
                             }`}
                     >
                         <div className="w-full flex justify-end">
@@ -535,10 +522,10 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 </div>
             </div>
 
-            {/* 5. TABLA DE CANALIZACIONES (REUTILIZACIÓN DE IMÁGENES DE 'PUBLIC/') */}
+            {/* 5. TABLA DE CANALIZACIONES (REUTILIZACIÓN EXACTA DE IMÁGENES PUBLIC CON INPUTS PILL) */}
             <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-md">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                    <div className="p-2.5 bg-sky-50 text-sky-800 rounded-xl">
+                    <div className="p-2.5 bg-sky-50 text-sky-800 rounded-xl border border-sky-100">
                         <Calendar className="w-5 h-5 text-sky-700" />
                     </div>
                     <div>
@@ -546,7 +533,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             Registro de Canalizaciones y Seguimiento Médico
                         </h3>
                         <p className="text-xs text-slate-500 font-medium">
-                            Ingrese Fecha de Referencia y Fecha de Aplicación para cada intervención médica
+                            Ingrese Fecha de Referencia y Fecha de Aplicación en formato limpio para cada intervención
                         </p>
                     </div>
                 </div>
@@ -557,8 +544,8 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         <div className="flex items-center gap-4">
                             <img
                                 src="/Tamiz-Metabolico.png"
-                                alt="Tamiz Metabolico Neonatal"
-                                className="h-20 w-auto object-contain mix-blend-multiply shrink-0"
+                                alt="Toma de Tamiz Neonatal"
+                                className="h-16 w-auto object-contain mix-blend-multiply shrink-0"
                             />
                             <div>
                                 <span className="inline-block px-2.5 py-0.5 bg-sky-100 text-sky-900 rounded-md text-[10px] font-black uppercase mb-1 border border-sky-200">
@@ -568,44 +555,44 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     1. TOMA DE TAMIZ NEONATAL
                                 </h4>
                                 <p className="text-xs text-slate-600 font-medium">
-                                    Tamiz metabólico neonatal mediante toma de gota en tarjeta de Guthrie
+                                    Tamiz metabólico neonatal mediante gota de sangre en tarjeta de Guthrie
                                 </p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 bg-white p-3 rounded-xl border border-slate-200">
+                        <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">
+                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1.5 text-center">
                                     Fecha Referencia
                                 </label>
                                 <input
                                     type="date"
                                     value={tamizRef}
                                     onChange={(e) => setTamizRef(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                    className="w-full rounded-xl border border-slate-300 text-slate-700 bg-slate-50 p-2 text-sm text-center font-bold focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">
+                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1.5 text-center">
                                     Fecha Aplicación
                                 </label>
                                 <input
                                     type="date"
                                     value={tamizApli}
                                     onChange={(e) => setTamizApli(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                    className="w-full rounded-xl border border-slate-300 text-slate-700 bg-slate-50 p-2 text-sm text-center font-bold focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* 2. VACUNA BCG Y ANTIHEPATITIS B */}
+                    {/* 2. VACUNA BCG / HEPATITIS B */}
                     <div className="p-5 rounded-2xl bg-slate-50 border-2 border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-slate-300 transition-colors">
                         <div className="flex items-center gap-4">
                             <img
                                 src="/Vacuna.png"
                                 alt="Vacuna BCG y Antihepatitis B"
-                                className="h-20 w-auto object-contain mix-blend-multiply shrink-0"
+                                className="h-16 w-auto object-contain mix-blend-multiply shrink-0"
                             />
                             <div>
                                 <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-900 rounded-md text-[10px] font-black uppercase mb-1 border border-emerald-200">
@@ -620,39 +607,39 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 bg-white p-3 rounded-xl border border-slate-200">
+                        <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">
+                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1.5 text-center">
                                     Fecha Referencia
                                 </label>
                                 <input
                                     type="date"
                                     value={bcgRef}
                                     onChange={(e) => setBcgRef(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                    className="w-full rounded-xl border border-slate-300 text-slate-700 bg-slate-50 p-2 text-sm text-center font-bold focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">
+                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1.5 text-center">
                                     Fecha Aplicación
                                 </label>
                                 <input
                                     type="date"
                                     value={bcgApli}
                                     onChange={(e) => setBcgApli(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                    className="w-full rounded-xl border border-slate-300 text-slate-700 bg-slate-50 p-2 text-sm text-center font-bold focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* 3. APLICACIÓN DE VITAMINAS A Y K */}
+                    {/* 3. VITAMINAS A Y K */}
                     <div className="p-5 rounded-2xl bg-slate-50 border-2 border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-slate-300 transition-colors">
                         <div className="flex items-center gap-4">
                             <img
                                 src="/Aplicar-Vitamina-A-Y-K.png"
                                 alt="Aplicación de Vitaminas A y K"
-                                className="h-20 w-auto object-contain mix-blend-multiply shrink-0"
+                                className="h-16 w-auto object-contain mix-blend-multiply shrink-0"
                             />
                             <div>
                                 <span className="inline-block px-2.5 py-0.5 bg-purple-100 text-purple-900 rounded-md text-[10px] font-black uppercase mb-1 border border-purple-200">
@@ -662,44 +649,44 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     3. APLICACIÓN DE VITAMINAS "A" Y "K"
                                 </h4>
                                 <p className="text-xs text-slate-600 font-medium">
-                                    Profilaxis vitamínica oral/inyectable para la salud neonatal
+                                    Profilaxis vitamínica oral/inyectable para la salud del recién nacido
                                 </p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 bg-white p-3 rounded-xl border border-slate-200">
+                        <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">
+                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1.5 text-center">
                                     Fecha Referencia
                                 </label>
                                 <input
                                     type="date"
                                     value={vitRef}
                                     onChange={(e) => setVitRef(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                    className="w-full rounded-xl border border-slate-300 text-slate-700 bg-slate-50 p-2 text-sm text-center font-bold focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">
+                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1.5 text-center">
                                     Fecha Aplicación
                                 </label>
                                 <input
                                     type="date"
                                     value={vitApli}
                                     onChange={(e) => setVitApli(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                    className="w-full rounded-xl border border-slate-300 text-slate-700 bg-slate-50 p-2 text-sm text-center font-bold focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* 4. TOMA DE TAMIZ AUDITIVO */}
+                    {/* 4. TAMIZ AUDITIVO */}
                     <div className="p-5 rounded-2xl bg-slate-50 border-2 border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-slate-300 transition-colors">
                         <div className="flex items-center gap-4">
                             <img
                                 src="/Tamiz-Auditivo.png"
                                 alt="Tamiz Auditivo Neonatal"
-                                className="h-20 w-auto object-contain mix-blend-multiply shrink-0"
+                                className="h-16 w-auto object-contain mix-blend-multiply shrink-0"
                             />
                             <div>
                                 <span className="inline-block px-2.5 py-0.5 bg-amber-100 text-amber-900 rounded-md text-[10px] font-black uppercase mb-1 border border-amber-200">
@@ -709,32 +696,32 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     4. TOMA DE TAMIZ AUDITIVO
                                 </h4>
                                 <p className="text-xs text-slate-600 font-medium">
-                                    Evaluación electrofisiológica de la función auditiva temprana
+                                    Evaluación electrofisiológica de la audición en la etapa neonatal
                                 </p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 bg-white p-3 rounded-xl border border-slate-200">
+                        <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">
+                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1.5 text-center">
                                     Fecha Referencia
                                 </label>
                                 <input
                                     type="date"
                                     value={auditivoRef}
                                     onChange={(e) => setAuditivoRef(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                    className="w-full rounded-xl border border-slate-300 text-slate-700 bg-slate-50 p-2 text-sm text-center font-bold focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">
+                                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1.5 text-center">
                                     Fecha Aplicación
                                 </label>
                                 <input
                                     type="date"
                                     value={auditivoApli}
                                     onChange={(e) => setAuditivoApli(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                    className="w-full rounded-xl border border-slate-300 text-slate-700 bg-slate-50 p-2 text-sm text-center font-bold focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                             </div>
                         </div>
@@ -743,7 +730,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
             </div>
 
             {/* 6. CIERRE ADMINISTRATIVO Y BOTÓN FINAL */}
-            <div className="bg-slate-900 text-white p-6 rounded-3xl border-2 border-slate-800 space-y-6 shadow-xl">
+            <div className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
                 <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                     <div className="p-2.5 bg-amber-400/20 text-amber-400 rounded-xl border border-amber-400/30">
                         <PenTool className="w-6 h-6" />
@@ -767,7 +754,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             type="text"
                             value={nombrePartera}
                             onChange={(e) => setNombrePartera(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                         />
                     </div>
                     <div>
@@ -778,7 +765,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             type="text"
                             value={cierreLocalidad}
                             onChange={(e) => setCierreLocalidad(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                         />
                     </div>
                     <div>
@@ -789,7 +776,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             type="text"
                             value={noMunicipio}
                             onChange={(e) => setNoMunicipio(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                         />
                     </div>
                 </div>
@@ -803,7 +790,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             type="text"
                             value={mesInformado}
                             onChange={(e) => setMesInformado(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                         />
                     </div>
                     <div>
@@ -814,7 +801,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             type="text"
                             value={nombreSupervisor}
                             onChange={(e) => setNombreSupervisor(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                         />
                     </div>
                     <div>
@@ -825,17 +812,17 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             type="text"
                             value={centroSalud}
                             onChange={(e) => setCentroSalud(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                         />
                     </div>
                 </div>
 
-                {/* BOTÓN DE CAPTURA DE HUELLA TÁCTIL SIMULADO */}
+                {/* BOTÓN DE CAPTURA DE HUELLA TÁCTIL SIMULADO (AMARILLO VIBRANTE) */}
                 <div className="p-4 bg-slate-800/90 rounded-2xl border border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl border transition-all ${huellaRegistrada
-                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                            : 'bg-amber-400/20 text-amber-400 border-amber-400/30'
+                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                : 'bg-amber-400/20 text-amber-400 border-amber-400/30'
                             }`}>
                             <Fingerprint className="w-7 h-7" />
                         </div>
@@ -856,21 +843,18 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                             setHuellaRegistrada(true);
                             if (hablarTexto) hablarTexto("Huella digital registrada correctamente.");
                         }}
-                        className={`px-5 py-3 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 shrink-0 ${huellaRegistrada
-                            ? 'bg-emerald-600 text-white shadow-md'
-                            : 'bg-amber-400 text-slate-950 hover:bg-amber-300 shadow-md active:scale-95'
-                            }`}
+                        className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-6 py-3 rounded-2xl shadow-md flex items-center gap-2 transition-transform active:scale-95 shrink-0 cursor-pointer"
                     >
-                        <Fingerprint className="w-4 h-4" />
+                        <Fingerprint className="w-5 h-5" />
                         <span>{huellaRegistrada ? 'Huella Registrada' : 'Capturar Huella Táctil'}</span>
                     </button>
                 </div>
             </div>
 
-            {/* BOTÓN GIGANTE DE ACCIÓN FINAL EN GUINDA OAXACA */}
+            {/* BOTÓN FINAL DE GUARDADO GUINDA OAXACA */}
             <button
                 type="submit"
-                className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xl py-4 rounded-2xl w-full shadow-lg font-bold flex items-center justify-center gap-3 active:scale-[0.99] transition-transform"
+                className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xl py-4 rounded-2xl w-full font-bold shadow-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-transform cursor-pointer"
             >
                 <Send className="w-6 h-6" />
                 <span>REGISTRAR CALENDARIO DEL NIÑO (FORMATO 3)</span>
