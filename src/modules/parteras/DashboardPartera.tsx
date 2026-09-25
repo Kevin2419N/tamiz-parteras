@@ -13,7 +13,7 @@ import {
     ChevronLeft
 } from 'lucide-react';
 import { FormatoReferencia } from './components/FormatoReferencia';
-import { FormatoCalendarioMujer } from './components/FormatoCalendarioMujer';
+import { CalendarioMujer } from './CalendarioMujer';
 import { FormatoCalendarioNino } from './components/FormatoCalendarioNino';
 import { handleVoiceInput } from '../../utils/voiceUtils';
 
@@ -323,7 +323,7 @@ export const DashboardPartera: React.FC = () => {
 
                 {/* VISTA 2: CALENDARIO DE ATENCIÓN A LA MUJER (FORMATO 2) */}
                 {vistaActiva === 'MUJER' && !registroExitoso && (
-                    <FormatoCalendarioMujer
+                    <CalendarioMujer
                         onBack={() => setVistaActiva('HOME')}
                         onSuccess={handleFormSuccess}
                         hablarTexto={hablarTexto}
