@@ -96,7 +96,40 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
             {/* MARCO EXTERIOR DE HOJA OFICIAL EN GUINDA OAXACA */}
             <div className="border-4 border-[#9D2449] bg-white rounded-3xl shadow-xl p-4 md:p-8 space-y-6 my-4">
 
-                {/* 1. TOGGLE DE VISTA PARTERA / CENTRO DE SALUD (ALINEADO A LA DERECHA) */}
+                {/* A) FILA SUPERIOR DE LOGOS Y TÍTULO TIPO HOJA OFICIAL (ESTÁNDAR FORMULARIOS 1, 2 Y 3) */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6">
+                    <img
+                        src="/logo-jurisdiccion.png"
+                        alt="Jurisdicción Sanitaria"
+                        className="h-16 md:h-20 w-auto object-contain mix-blend-multiply"
+                    />
+
+                    <div className="text-center px-2 space-y-1">
+                        <h1 className="text-sm sm:text-xl font-black text-[#9D2449] uppercase tracking-tight">
+                            SERVICIOS DE SALUD DE OAXACA - CALENDARIO DEL NIÑO(A) MENOR DE 2 AÑOS
+                        </h1>
+                    </div>
+
+                    <img
+                        src="/Logo-Secretaria.png"
+                        alt="Secretaría de Salud de Oaxaca"
+                        className="h-16 md:h-20 w-auto object-contain mix-blend-multiply"
+                    />
+                </div>
+
+                {/* B) BANNER PRINCIPAL GUINDA REDONDEADO (OBLIGATORIO ABAJO DE LOS LOGOS) */}
+                <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex flex-col md:flex-row items-center justify-center gap-2 my-4">
+                    <div className="flex items-center gap-2">
+                        <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
+                        <span>ACUDE A TU UNIDAD DE SALUD</span>
+                    </div>
+                    <span className="hidden md:inline">•</span>
+                    <span className="text-sm md:text-base font-normal text-rose-100">
+                        Calendario de Atención al Niño(a) Menor de 2 Años
+                    </span>
+                </div>
+
+                {/* C) BOTÓN DE VISTA (VISTA PARTERA / COPIA CENTRO DE SALUD) */}
                 <div className="flex justify-end">
                     <div className="bg-slate-200/90 p-1.5 rounded-2xl flex items-center gap-1 border border-slate-300 w-full sm:w-auto">
                         <button
@@ -131,12 +164,6 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </div>
 
-                {/* BANNER SUPERIOR INSTITUCIONAL "ACUDE A TU UNIDAD DE SALUD" */}
-                <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex items-center justify-center gap-3">
-                    <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
-                    <span>ACUDE A TU UNIDAD DE SALUD - CALENDARIO DEL NIÑO(A) MENOR DE 2 AÑOS</span>
-                </div>
-
                 {/* Insignia para Copia Centro de Salud */}
                 {modoDuplicado && (
                     <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-sm animate-fadeIn">
@@ -161,33 +188,6 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </span>
                     </div>
                 )}
-
-                {/* HEADER INSTITUCIONAL CON LOGOS FLANQUEANDO EL TÍTULO */}
-                <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
-                    <img
-                        src="/logo-jurisdiccion.png"
-                        alt="Logo Jurisdicción Sanitaria"
-                        className="h-16 w-auto object-contain shrink-0"
-                    />
-
-                    <div className="text-center space-y-1">
-                        <span className="inline-block px-3.5 py-1 bg-rose-100 text-[#9D2449] rounded-full text-[11px] font-black uppercase tracking-wider border border-rose-200">
-                            SERVICIOS DE SALUD DE OAXACA • FORMATO 3
-                        </span>
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                            CALENDARIO DE ATENCIÓN AL NIÑO(A) MENOR DE 2 AÑOS
-                        </h1>
-                        <p className="text-xs font-semibold text-slate-600">
-                            Control Comunitario de Salud Infantil, Nutrición, Tamiz y Esquema de Vacunación
-                        </p>
-                    </div>
-
-                    <img
-                        src="/Logo-Secretaria.png"
-                        alt="Logo Secretaría de Salud"
-                        className="h-16 w-auto object-contain shrink-0"
-                    />
-                </div>
 
                 {/* 2. DATOS DE IDENTIFICACIÓN CON DICTADO POR VOZ REAL */}
                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-md">

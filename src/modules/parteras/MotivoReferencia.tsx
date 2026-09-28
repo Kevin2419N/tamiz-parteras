@@ -220,7 +220,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     ];
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-7xl mx-auto selection:bg-[#9D2449] selection:text-white">
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-5xl mx-auto my-4 selection:bg-[#9D2449] selection:text-white">
 
             {/* NOTIFICACIÓN DE DICTADO O VOZ ACTIVA */}
             {(dictationNotification || isCurrentlyListening) && (
@@ -240,7 +240,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     <img
                         src="/logo-jurisdiccion.png"
                         alt="Jurisdicción Sanitaria"
-                        className="h-14 sm:h-20 w-auto object-contain mix-blend-multiply"
+                        className="h-16 md:h-20 w-auto object-contain mix-blend-multiply"
                     />
 
                     <div className="text-center px-2 space-y-1">
@@ -252,20 +252,20 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     <img
                         src="/Logo-Secretaria.png"
                         alt="Secretaría de Salud de Oaxaca"
-                        className="h-14 sm:h-20 w-auto object-contain mix-blend-multiply"
+                        className="h-16 md:h-20 w-auto object-contain mix-blend-multiply"
                     />
                 </div>
 
-                {/* BANNER TÍTULO DESTACADO "ACUDE A TU UNIDAD DE SALUD" */}
-                <div className="bg-gradient-to-r from-[#9D2449] via-[#7A1B38] to-[#9D2449] text-white py-3.5 sm:py-4 px-4 sm:px-6 rounded-2xl text-center shadow-lg">
-                    <h2 className="text-xl sm:text-3xl font-black tracking-wider uppercase drop-shadow-sm flex items-center justify-center gap-2 sm:gap-3">
-                        <Megaphone className="w-5 h-5 sm:w-7 sm:h-7 text-rose-200 shrink-0" />
+                {/* BANNER PRINCIPAL GUINDA REDONDEADO (OBLIGATORIO ABAJO DE LOS LOGOS) */}
+                <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex flex-col md:flex-row items-center justify-center gap-2 my-4">
+                    <div className="flex items-center gap-2">
+                        <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
                         <span>ACUDE A TU UNIDAD DE SALUD</span>
-                        <Megaphone className="w-5 h-5 sm:w-7 sm:h-7 text-rose-200 shrink-0" />
-                    </h2>
-                    <p className="text-[11px] sm:text-sm text-rose-100 font-medium mt-1">
-                        Hoja Oficial de Referencia Comunitario • Red de Servicios de Salud de Oaxaca
-                    </p>
+                    </div>
+                    <span className="hidden md:inline">•</span>
+                    <span className="text-sm md:text-base font-normal text-rose-100">
+                        Hoja Oficial de Referencia Comunitaria • Red de Servicios de Salud de Oaxaca
+                    </span>
                 </div>
 
                 {/* BOTÓN ASISTENCIA LECTURA POR VOZ */}

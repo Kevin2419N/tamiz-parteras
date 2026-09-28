@@ -4,7 +4,6 @@ import {
     Mic,
     MicOff,
     Send,
-    ChevronLeft,
     AlertTriangle,
     Calendar,
     Fingerprint,
@@ -34,7 +33,6 @@ export interface CalendarioMujerProps {
 }
 
 export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
-    onBack,
     onSuccess,
     hablarTexto
 }) => {
@@ -132,21 +130,41 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
             {/* 1. ENCUADRE INSTITUCIONAL Y MARCO DE HOJA FÍSICA */}
             <div className="border-4 border-[#9D2449] bg-white rounded-3xl shadow-xl p-4 md:p-8 space-y-8 my-4">
 
-                {/* 1. TOGGLE DE VISTA PARTERA / CENTRO DE SALUD Y BOTÓN REGRESAR */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <div>
-                        {onBack && (
-                            <button
-                                type="button"
-                                onClick={onBack}
-                                className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all active:scale-95 shadow-md cursor-pointer"
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                                <span>Regresar</span>
-                            </button>
-                        )}
+                {/* A) FILA SUPERIOR DE LOGOS Y TÍTULO TIPO HOJA OFICIAL (ESTÁNDAR FORMULARIOS 1, 2 Y 3) */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6">
+                    <img
+                        src="/logo-jurisdiccion.png"
+                        alt="Jurisdicción Sanitaria"
+                        className="h-16 md:h-20 w-auto object-contain mix-blend-multiply"
+                    />
+
+                    <div className="text-center px-2 space-y-1">
+                        <h1 className="text-sm sm:text-xl font-black text-[#9D2449] uppercase tracking-tight">
+                            SERVICIOS DE SALUD DE OAXACA - CALENDARIO DE ATENCIÓN A LA MUJER
+                        </h1>
                     </div>
 
+                    <img
+                        src="/Logo-Secretaria.png"
+                        alt="Secretaría de Salud de Oaxaca"
+                        className="h-16 md:h-20 w-auto object-contain mix-blend-multiply"
+                    />
+                </div>
+
+                {/* B) BANNER PRINCIPAL GUINDA REDONDEADO (OBLIGATORIO ABAJO DE LOS LOGOS) */}
+                <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex flex-col md:flex-row items-center justify-center gap-2 my-4">
+                    <div className="flex items-center gap-2">
+                        <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
+                        <span>ACUDE A TU UNIDAD DE SALUD</span>
+                    </div>
+                    <span className="hidden md:inline">•</span>
+                    <span className="text-sm md:text-base font-normal text-rose-100">
+                        Calendario de Atención a la Mujer (Embarazo, Parto y Puerperio)
+                    </span>
+                </div>
+
+                {/* C) BOTÓN DE VISTA (VISTA PARTERA / COPIA CENTRO DE SALUD) */}
+                <div className="flex justify-end">
                     <div className="bg-slate-200/90 p-1.5 rounded-2xl flex items-center gap-1 border border-slate-300 w-full sm:w-auto">
                         <button
                             type="button"
@@ -180,12 +198,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </div>
 
-                {/* BANNER SUPERIOR INSTITUCIONAL "ACUDE A TU UNIDAD DE SALUD" */}
-                <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex items-center justify-center gap-3">
-                    <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
-                    <span>ACUDE A TU UNIDAD DE SALUD - CALENDARIO DE ATENCIÓN A LA MUJER</span>
-                </div>
-
                 {/* Insignia para Copia Centro de Salud */}
                 {modoDuplicado && (
                     <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-sm animate-fadeIn">
@@ -210,33 +222,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         </span>
                     </div>
                 )}
-
-                {/* HEADER INSTITUCIONAL CON LOGOS FLANQUEANDO EL TÍTULO (HOMOLOGADO Y RESPONSIVO) */}
-                <div className="bg-white p-4 md:p-6 rounded-3xl border-2 border-slate-200 shadow-md flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-                    <img
-                        src="/logo-jurisdiccion.png"
-                        alt="Logo Jurisdicción Sanitaria"
-                        className="h-14 md:h-20 w-auto object-contain shrink-0 mix-blend-multiply"
-                    />
-
-                    <div className="text-center space-y-1">
-                        <span className="inline-block px-3.5 py-1 bg-rose-100 text-[#9D2449] rounded-full text-[11px] font-black uppercase tracking-wider border border-rose-200">
-                            SERVICIOS DE SALUD DE OAXACA • FORMATO 2
-                        </span>
-                        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-                            CALENDARIO DE ATENCIÓN A LA MUJER
-                        </h1>
-                        <p className="text-xs sm:text-sm font-semibold text-slate-600">
-                            Durante el Embarazo, Parto y Puerperio
-                        </p>
-                    </div>
-
-                    <img
-                        src="/Logo-Secretaria.png"
-                        alt="Logo Secretaría de Salud"
-                        className="h-14 md:h-20 w-auto object-contain shrink-0 mix-blend-multiply"
-                    />
-                </div>
 
                 {/* 2. DATOS DE IDENTIFICACIÓN CON BOTONES DE MICRÓFONO EN GUINDA OAXACA */}
                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-sm">
