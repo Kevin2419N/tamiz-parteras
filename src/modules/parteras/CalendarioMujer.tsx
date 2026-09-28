@@ -11,7 +11,12 @@ import {
     Check,
     ShieldAlert,
     User,
-    PenTool
+    PenTool,
+    Pill,
+    Droplet,
+    Ruler,
+    X,
+    Baby
 } from 'lucide-react';
 import { handleVoiceInput } from '../../utils/voiceUtils';
 
@@ -67,7 +72,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     const [referidoPuerperio, setReferidoPuerperio] = useState<boolean>(false);
     const [puerperioCheckboxes, setPuerperioCheckboxes] = useState<string[]>([]);
 
-    // 8. Muerte Materna †
+    // 8. Muerte Materna
     const [muerteMaternaEtapa, setMuerteMaternaEtapa] = useState<'EMBARAZO' | 'PARTO' | 'PUERPERIO' | null>(null);
 
     // 9. Cierre Administrativo
@@ -148,8 +153,12 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
 
                     <div className="hidden lg:flex items-center gap-2 shrink-0">
-                        <img src="/logo-jurisdiccion.png" alt="Jurisdicción" className="h-10 w-auto object-contain bg-white/90 p-1 rounded-lg" />
-                        <img src="/Logo-Secretaria.png" alt="Secretaría" className="h-10 w-auto object-contain bg-white/90 p-1 rounded-lg" />
+                        <div className="bg-white/95 backdrop-blur-xs p-1.5 rounded-xl border border-white/30 flex items-center justify-center shadow-xs">
+                            <img src="/logo-jurisdiccion.png" alt="Jurisdicción" className="h-9 w-auto object-contain mix-blend-multiply" />
+                        </div>
+                        <div className="bg-white/95 backdrop-blur-xs p-1.5 rounded-xl border border-white/30 flex items-center justify-center shadow-xs">
+                            <img src="/Logo-Secretaria.png" alt="Secretaría" className="h-9 w-auto object-contain mix-blend-multiply" />
+                        </div>
                     </div>
                 </div>
 
@@ -355,12 +364,14 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setAcidoFolico(!acidoFolico)}
-                                    className={`w-full py-2.5 px-3 rounded-xl border-2 font-black text-xs transition-all ${acidoFolico
+                                    className={`w-full py-2.5 px-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 ${acidoFolico
                                         ? 'bg-emerald-100 border-emerald-600 text-emerald-950'
                                         : 'bg-white border-slate-300 text-slate-700'
                                         }`}
                                 >
-                                    💊 Ácido Fólico (30 Días): {acidoFolico ? 'Entregado ✅' : 'Pendiente ❌'}
+                                    <Pill className="w-4 h-4 text-emerald-700 shrink-0" />
+                                    <span>Ácido Fólico (30 Días): {acidoFolico ? 'Entregado' : 'Pendiente'}</span>
+                                    {acidoFolico ? <Check className="w-4 h-4 text-emerald-700 ml-1 shrink-0" /> : <X className="w-4 h-4 text-slate-400 ml-1 shrink-0" />}
                                 </button>
                             </div>
 
@@ -374,12 +385,14 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setHierro(!hierro)}
-                                    className={`w-full py-2.5 px-3 rounded-xl border-2 font-black text-xs transition-all ${hierro
+                                    className={`w-full py-2.5 px-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 ${hierro
                                         ? 'bg-emerald-100 border-emerald-600 text-emerald-950'
                                         : 'bg-white border-slate-300 text-slate-700'
                                         }`}
                                 >
-                                    🩸 Sulfato Ferroso: {hierro ? 'Entregado ✅' : 'Pendiente ❌'}
+                                    <Droplet className="w-4 h-4 text-rose-700 shrink-0" />
+                                    <span>Sulfato Ferroso: {hierro ? 'Entregado' : 'Pendiente'}</span>
+                                    {hierro ? <Check className="w-4 h-4 text-emerald-700 ml-1 shrink-0" /> : <X className="w-4 h-4 text-slate-400 ml-1 shrink-0" />}
                                 </button>
                             </div>
                         </div>
@@ -416,48 +429,67 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             </div>
                         </div>
 
-                        {/* Estado Nutricional Madre - Cinta MUAC / Semáforo */}
-                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
-                            <label className="block text-xs font-black text-slate-900 uppercase">
-                                📏 Estado Nutricional Madre (Cinta MUAC / Semáforo)
-                            </label>
-                            <div className="grid grid-cols-3 gap-2">
+                        {/* Estado Nutricional Madre - Cinta MUAC Tricolor (Brazalete) */}
+                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Ruler className="w-4 h-4 text-slate-700" />
+                                <label className="block text-xs font-black text-slate-900 uppercase">
+                                    Estado Nutricional Madre (Cinta MUAC Tricolor)
+                                </label>
+                            </div>
+
+                            {/* Selector Táctil Tricolor Estilo Brazalete */}
+                            <div className="bg-slate-200 p-1.5 rounded-2xl border border-slate-300 grid grid-cols-3 gap-1.5 shadow-inner">
                                 <button
                                     type="button"
                                     onClick={() => setCintaMUAC('VERDE')}
-                                    className={`p-3 rounded-xl border-4 font-black text-xs text-center transition-all ${cintaMUAC === 'VERDE'
-                                        ? 'bg-emerald-100 border-emerald-600 text-emerald-950 shadow-md scale-[1.02]'
-                                        : 'bg-white border-slate-200 text-slate-700'
+                                    className={`py-3 px-2 rounded-xl font-black text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${cintaMUAC === 'VERDE'
+                                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-md scale-[1.03] ring-2 ring-emerald-400'
+                                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                                         }`}
                                 >
-                                    🟢 Verde: Adecuado
+                                    <div className="flex items-center gap-1">
+                                        {cintaMUAC === 'VERDE' && <Check className="w-4 h-4 text-white" />}
+                                        <span className="uppercase tracking-wider">Verde</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold opacity-90">Adecuado</span>
                                 </button>
+
                                 <button
                                     type="button"
                                     onClick={() => setCintaMUAC('AMARILLO')}
-                                    className={`p-3 rounded-xl border-4 font-black text-xs text-center transition-all ${cintaMUAC === 'AMARILLO'
-                                        ? 'bg-amber-100 border-amber-600 text-amber-950 shadow-md scale-[1.02]'
-                                        : 'bg-white border-slate-200 text-slate-700'
+                                    className={`py-3 px-2 rounded-xl font-black text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${cintaMUAC === 'AMARILLO'
+                                        ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-md scale-[1.03] ring-2 ring-amber-300'
+                                        : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
                                         }`}
                                 >
-                                    🟡 Amarillo: Riesgo
+                                    <div className="flex items-center gap-1">
+                                        {cintaMUAC === 'AMARILLO' && <Check className="w-4 h-4 text-slate-950" />}
+                                        <span className="uppercase tracking-wider">Amarillo</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold opacity-90">Riesgo</span>
                                 </button>
+
                                 <button
                                     type="button"
                                     onClick={() => setCintaMUAC('ROJO')}
-                                    className={`p-3 rounded-xl border-4 font-black text-xs text-center transition-all ${cintaMUAC === 'ROJO'
-                                        ? 'bg-rose-100 border-rose-600 text-rose-950 shadow-md scale-[1.02]'
-                                        : 'bg-white border-slate-200 text-slate-700'
+                                    className={`py-3 px-2 rounded-xl font-black text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${cintaMUAC === 'ROJO'
+                                        ? 'bg-rose-600 text-white border-rose-700 shadow-md scale-[1.03] ring-2 ring-rose-400'
+                                        : 'bg-rose-50 text-rose-900 border-rose-200 hover:bg-rose-100'
                                         }`}
                                 >
-                                    🔴 Rojo: Desnutrición
+                                    <div className="flex items-center gap-1">
+                                        {cintaMUAC === 'ROJO' && <Check className="w-4 h-4 text-white" />}
+                                        <span className="uppercase tracking-wider">Rojo</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold opacity-90">Desnutrición</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* 4. SECCIÓN EMBARAZO CON COMPLICACIONES (MAPA RADIAL / DIAGRAMA DE FLECHAS) */}
+                {/* 4. SECCIÓN EMBARAZO CON COMPLICACIONES (MAPA RADIAL SIMÉTRICO) */}
                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-6 shadow-sm">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
                         <div className="flex items-center gap-3">
@@ -490,66 +522,159 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoEmbarazo(true)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${referidoEmbarazo
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${referidoEmbarazo
                                     ? 'bg-[#9D2449] text-white shadow-sm ring-2 ring-rose-400'
                                     : 'bg-transparent text-slate-600'
                                     }`}
                             >
-                                SI 🚨
+                                <span>SI</span>
+                                <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
                             </button>
                         </div>
                     </div>
 
-                    {/* CONTENEDOR CENTRAL RADIAL */}
-                    <div className="bg-rose-50/50 border-2 border-rose-200 rounded-3xl p-6 space-y-6">
-                        {/* Imagen Central */}
-                        <div className="flex flex-col items-center justify-center text-center space-y-2">
-                            <img
-                                src="/EmbarazoConComplicaciones.png"
-                                alt="Embarazo con Complicaciones"
-                                className="h-28 mix-blend-multiply object-contain"
-                            />
-                            <span className="px-4 py-1 bg-rose-700 text-white rounded-full text-xs font-black uppercase shadow-md">
-                                EMBARAZO CON COMPLICACIONES
-                            </span>
-                        </div>
+                    {/* CONTENEDOR CENTRAL RADIAL CON CONECTORES SVG */}
+                    <div className="relative bg-rose-50/50 border-2 border-rose-200 rounded-3xl p-6 md:p-8 space-y-6 overflow-hidden">
+                        {/* Conectores Visuales SVG Radiales */}
+                        <svg className="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style={{ zIndex: 0 }}>
+                            <line x1="50%" y1="50%" x2="16%" y2="20%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
+                            <line x1="50%" y1="50%" x2="50%" y2="20%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
+                            <line x1="50%" y1="50%" x2="84%" y2="20%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
+                            <line x1="50%" y1="50%" x2="16%" y2="50%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
+                            <line x1="50%" y1="50%" x2="84%" y2="50%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
+                            <line x1="50%" y1="50%" x2="33%" y2="82%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
+                            <line x1="50%" y1="50%" x2="67%" y2="82%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
+                        </svg>
 
-                        {/* Grid Radial alrededor con tarjetas de síntomas seleccionables */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {[
-                                { id: 'DOLOR_CABEZA', img: '/DolorDeCabeza.png', label: 'Dolor de cabeza, zumbidos en oídos, ver lucecitas' },
-                                { id: 'HINCHAZON', img: '/Hinchazon.png', label: 'Hinchazón de cara, manos, piernas y pies' },
-                                { id: 'CONVULSIONES', img: '/Convulsiones.png', label: 'Convulsiones o ataques' },
-                                { id: 'ORINA_DIFICULTAD', img: '/DificultadesDeOrinar.png', label: 'Dificultad al orinar o con sangre' },
-                                { id: 'VOMITO_FRECUENTE', img: '/VomitoFrecuente.png', label: 'Vómito frecuente después de los 3 meses' },
-                                { id: 'DIFICULTAD_RESPIRAR', img: '/DificultadParaRespirar.png', label: 'Dificultad al respirar (labios y uñas moradas)' },
-                                { id: 'DOLOR_ANTES_8_MESES', img: '/DolorAntesDeLos8Meses.png', label: 'Dolor antes de los 8 meses' },
-                            ].map((item) => {
-                                const activo = sintomasComplicaciones.includes(item.id);
-                                return (
-                                    <button
-                                        type="button"
-                                        key={item.id}
-                                        onClick={() => toggleSintoma(item.id)}
-                                        className={`p-4 rounded-2xl border-4 text-center flex flex-col items-center justify-between gap-3 transition-all cursor-pointer ${activo
-                                            ? 'bg-rose-100 border-[#9D2449] shadow-lg scale-[1.02] ring-2 ring-rose-400'
-                                            : 'bg-white border-slate-200 hover:border-rose-300'
-                                            }`}
-                                    >
-                                        <img
-                                            src={item.img}
-                                            alt={item.label}
-                                            className="h-20 mix-blend-multiply object-contain"
-                                        />
-                                        <p className="text-xs font-extrabold text-slate-900 leading-tight">
-                                            {item.label}
-                                        </p>
-                                        <div className={`w-full py-1.5 rounded-xl text-[10px] font-black uppercase ${activo ? 'bg-[#9D2449] text-white' : 'bg-slate-100 text-slate-600'}`}>
-                                            {activo ? 'Seleccionado ✅' : 'Seleccionar'}
-                                        </div>
-                                    </button>
-                                );
-                            })}
+                        {/* Layout Radial Simétrico: Fila Superior, Fila Central (Con Tarjeta Principal), Fila Inferior */}
+                        <div className="relative z-10 space-y-6">
+                            {/* Fila 1: Top 3 Síntomas */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                {[
+                                    { id: 'DOLOR_CABEZA', img: '/DolorDeCabeza.png', label: 'Dolor de cabeza, zumbidos en oídos, ver lucecitas' },
+                                    { id: 'HINCHAZON', img: '/Hinchazon.png', label: 'Hinchazón de cara, manos, piernas y pies' },
+                                    { id: 'CONVULSIONES', img: '/Convulsiones.png', label: 'Convulsiones o ataques' },
+                                ].map((item) => {
+                                    const activo = sintomasComplicaciones.includes(item.id);
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={item.id}
+                                            onClick={() => toggleSintoma(item.id)}
+                                            className={`p-4 rounded-2xl border-4 text-center flex flex-col items-center justify-between gap-3 transition-all cursor-pointer ${activo
+                                                ? 'bg-rose-100 border-[#9D2449] shadow-lg scale-[1.02] ring-2 ring-rose-400'
+                                                : 'bg-white border-slate-200 hover:border-rose-300'
+                                                }`}
+                                        >
+                                            <img src={item.img} alt={item.label} className="h-16 mix-blend-multiply object-contain" />
+                                            <p className="text-xs font-extrabold text-slate-900 leading-tight">{item.label}</p>
+                                            <div className={`w-full py-1.5 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 ${activo ? 'bg-[#9D2449] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                <span>{activo ? 'Seleccionado' : 'Seleccionar'}</span>
+                                                {activo && <Check className="w-3.5 h-3.5 text-white" />}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Fila 2: Síntoma Izquierdo - TARJETA CENTRAL PRINCIPAL - Síntoma Derecho */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                                {/* Síntoma Izquierda */}
+                                <div className="md:col-span-1">
+                                    {(() => {
+                                        const item = { id: 'ORINA_DIFICULTAD', img: '/DificultadesDeOrinar.png', label: 'Dificultad al orinar o con sangre' };
+                                        const activo = sintomasComplicaciones.includes(item.id);
+                                        return (
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleSintoma(item.id)}
+                                                className={`w-full p-4 rounded-2xl border-4 text-center flex flex-col items-center justify-between gap-3 transition-all cursor-pointer ${activo
+                                                    ? 'bg-rose-100 border-[#9D2449] shadow-lg scale-[1.02] ring-2 ring-rose-400'
+                                                    : 'bg-white border-slate-200 hover:border-rose-300'
+                                                    }`}
+                                            >
+                                                <img src={item.img} alt={item.label} className="h-16 mix-blend-multiply object-contain" />
+                                                <p className="text-xs font-extrabold text-slate-900 leading-tight">{item.label}</p>
+                                                <div className={`w-full py-1.5 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 ${activo ? 'bg-[#9D2449] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                    <span>{activo ? 'Seleccionado' : 'Seleccionar'}</span>
+                                                    {activo && <Check className="w-3.5 h-3.5 text-white" />}
+                                                </div>
+                                            </button>
+                                        );
+                                    })()}
+                                </div>
+
+                                {/* TARJETA PRINCIPAL EN EL CENTRO */}
+                                <div className="md:col-span-2 bg-gradient-to-b from-rose-100 to-rose-200 border-4 border-[#9D2449] rounded-3xl p-5 text-center flex flex-col items-center justify-center shadow-xl scale-[1.03] space-y-2">
+                                    <div className="p-2 bg-rose-700 text-white rounded-full shadow-sm animate-pulse">
+                                        <AlertTriangle className="w-6 h-6" />
+                                    </div>
+                                    <img
+                                        src="/EmbarazoConComplicaciones.png"
+                                        alt="Embarazo con Complicaciones"
+                                        className="h-28 mix-blend-multiply object-contain my-1"
+                                    />
+                                    <span className="px-4 py-1.5 bg-[#9D2449] text-white rounded-full text-xs font-black uppercase tracking-wider shadow-md">
+                                        EMBARAZO CON COMPLICACIONES
+                                    </span>
+                                    <p className="text-[11px] font-bold text-rose-950 max-w-xs">
+                                        Identificación de Signos de Alarma Materna durante la Valoración
+                                    </p>
+                                </div>
+
+                                {/* Síntoma Derecha */}
+                                <div className="md:col-span-1">
+                                    {(() => {
+                                        const item = { id: 'VOMITO_FRECUENTE', img: '/VomitoFrecuente.png', label: 'Vómito frecuente después de los 3 meses' };
+                                        const activo = sintomasComplicaciones.includes(item.id);
+                                        return (
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleSintoma(item.id)}
+                                                className={`w-full p-4 rounded-2xl border-4 text-center flex flex-col items-center justify-between gap-3 transition-all cursor-pointer ${activo
+                                                    ? 'bg-rose-100 border-[#9D2449] shadow-lg scale-[1.02] ring-2 ring-rose-400'
+                                                    : 'bg-white border-slate-200 hover:border-rose-300'
+                                                    }`}
+                                            >
+                                                <img src={item.img} alt={item.label} className="h-16 mix-blend-multiply object-contain" />
+                                                <p className="text-xs font-extrabold text-slate-900 leading-tight">{item.label}</p>
+                                                <div className={`w-full py-1.5 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 ${activo ? 'bg-[#9D2449] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                    <span>{activo ? 'Seleccionado' : 'Seleccionar'}</span>
+                                                    {activo && <Check className="w-3.5 h-3.5 text-white" />}
+                                                </div>
+                                            </button>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Fila 3: Bottom 2 Síntomas Centrados */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                                {[
+                                    { id: 'DIFICULTAD_RESPIRAR', img: '/DificultadParaRespirar.png', label: 'Dificultad al respirar (labios y uñas moradas)' },
+                                    { id: 'DOLOR_ANTES_8_MESES', img: '/DolorAntesDeLos8Meses.png', label: 'Dolor antes de los 8 meses' },
+                                ].map((item) => {
+                                    const activo = sintomasComplicaciones.includes(item.id);
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={item.id}
+                                            onClick={() => toggleSintoma(item.id)}
+                                            className={`p-4 rounded-2xl border-4 text-center flex flex-col items-center justify-between gap-3 transition-all cursor-pointer ${activo
+                                                ? 'bg-rose-100 border-[#9D2449] shadow-lg scale-[1.02] ring-2 ring-rose-400'
+                                                : 'bg-white border-slate-200 hover:border-rose-300'
+                                                }`}
+                                        >
+                                            <img src={item.img} alt={item.label} className="h-16 mix-blend-multiply object-contain" />
+                                            <p className="text-xs font-extrabold text-slate-900 leading-tight">{item.label}</p>
+                                            <div className={`w-full py-1.5 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 ${activo ? 'bg-[#9D2449] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                <span>{activo ? 'Seleccionado' : 'Seleccionar'}</span>
+                                                {activo && <Check className="w-3.5 h-3.5 text-white" />}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -587,12 +712,13 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoAborto(true)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${referidoAborto
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${referidoAborto
                                     ? 'bg-[#9D2449] text-white shadow-sm ring-2 ring-rose-400'
                                     : 'bg-transparent text-slate-600'
                                     }`}
                             >
-                                SI 🚨
+                                <span>SI</span>
+                                <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
                             </button>
                         </div>
                     </div>
@@ -622,8 +748,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     <span className="font-black text-base text-slate-900">
                                         {item.title}
                                     </span>
-                                    <div className={`w-full py-2 rounded-xl text-xs font-black ${activo ? 'bg-[#9D2449] text-white' : 'bg-white border border-slate-300 text-slate-700'}`}>
-                                        {activo ? 'Registrado ✅' : 'Marcar'}
+                                    <div className={`w-full py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1 ${activo ? 'bg-[#9D2449] text-white' : 'bg-white border border-slate-300 text-slate-700'}`}>
+                                        <span>{activo ? 'Registrado' : 'Marcar'}</span>
+                                        {activo && <Check className="w-4 h-4 text-white" />}
                                     </div>
                                 </button>
                             );
@@ -682,7 +809,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         }`}
                                 >
                                     <img src="/NiñoVivo.png" alt="Niño Vivo" className="h-10 mix-blend-multiply object-contain" />
-                                    <span className="text-xs">🩵 Niño Vivo</span>
+                                    <Baby className="w-4 h-4 text-sky-600 shrink-0" />
+                                    <span className="text-xs">Niño Vivo</span>
                                 </button>
                                 <button
                                     type="button"
@@ -696,7 +824,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         }`}
                                 >
                                     <img src="/NiñaViva.png" alt="Niña Viva" className="h-10 mix-blend-multiply object-contain" />
-                                    <span className="text-xs">🩷 Niña Viva</span>
+                                    <Baby className="w-4 h-4 text-rose-500 shrink-0" />
+                                    <span className="text-xs">Niña Viva</span>
                                 </button>
                             </div>
                         </div>
@@ -735,7 +864,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         }`}
                                 >
                                     <img src="/NiñoVivo.png" alt="Niño Vivo" className="h-10 mix-blend-multiply object-contain" />
-                                    <span className="text-xs">🩵 Niño Vivo</span>
+                                    <Baby className="w-4 h-4 text-sky-600 shrink-0" />
+                                    <span className="text-xs">Niño Vivo</span>
                                 </button>
                                 <button
                                     type="button"
@@ -749,7 +879,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         }`}
                                 >
                                     <img src="/NiñaViva.png" alt="Niña Viva" className="h-10 mix-blend-multiply object-contain" />
-                                    <span className="text-xs">🩷 Niña Viva</span>
+                                    <Baby className="w-4 h-4 text-rose-500 shrink-0" />
+                                    <span className="text-xs">Niña Viva</span>
                                 </button>
                             </div>
                         </div>
@@ -789,12 +920,13 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoPartoComplicado(true)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${referidoPartoComplicado
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${referidoPartoComplicado
                                     ? 'bg-[#9D2449] text-white shadow-sm ring-2 ring-rose-400'
                                     : 'bg-transparent text-slate-600'
                                     }`}
                             >
-                                SI 🚨
+                                <span>SI</span>
+                                <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
                             </button>
                         </div>
                     </div>
@@ -803,8 +935,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         {[
                             { id: 'NINO_COMPLICADO', img: '/NiñoComplicado.png', title: 'Niño Complicado' },
                             { id: 'NINA_COMPLICADA', img: '/NiñaComplicado.png', title: 'Niña Complicada' },
-                            { id: 'NINO_MUERTO', img: '/NiñoMuerto.png', title: 'Niño Muerto †' },
-                            { id: 'NINA_MUERTA', img: '/NiñaMuerta.png', title: 'Niña Muerta †' },
+                            { id: 'NINO_MUERTO', img: '/NiñoMuerto.png', title: 'Defunción Recién Nacido (Niño)' },
+                            { id: 'NINA_MUERTA', img: '/NiñaMuerta.png', title: 'Defunción Recién Nacida (Niña)' },
                         ].map((item) => {
                             const activo = partoComplicadoOpcion === item.id;
                             return (
@@ -822,7 +954,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         alt={item.title}
                                         className="h-20 mix-blend-multiply object-contain"
                                     />
-                                    <span className="font-extrabold text-xs text-slate-900">
+                                    <span className="font-extrabold text-xs text-slate-900 leading-tight">
                                         {item.title}
                                     </span>
                                 </button>
@@ -848,44 +980,62 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Puerperio Normal: Cinta MUAC */}
+                        {/* Puerperio Normal: Cinta MUAC Tricolor (Brazalete) */}
                         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-                            <h4 className="font-black text-slate-900 text-sm uppercase">
-                                Puerperio Normal (Estado Nutricional MUAC)
-                            </h4>
-                            <p className="text-xs text-slate-600">
-                                Evaluación de la recuperación nutricia materna en la etapa posparto
+                            <div className="flex items-center gap-2">
+                                <Ruler className="w-4 h-4 text-slate-700" />
+                                <h4 className="font-black text-slate-900 text-xs uppercase">
+                                    Puerperio Normal (Cinta MUAC Tricolor)
+                                </h4>
+                            </div>
+                            <p className="text-xs text-slate-600 font-medium">
+                                Evaluación del estado nutricia posparto materna
                             </p>
-                            <div className="grid grid-cols-3 gap-2 pt-2">
+
+                            <div className="bg-slate-200 p-1.5 rounded-2xl border border-slate-300 grid grid-cols-3 gap-1.5 shadow-inner pt-2">
                                 <button
                                     type="button"
                                     onClick={() => setCintaMUACPuerperio('VERDE')}
-                                    className={`p-3 rounded-xl border-4 font-black text-xs text-center transition-all ${cintaMUACPuerperio === 'VERDE'
-                                        ? 'bg-emerald-100 border-emerald-600 text-emerald-950 shadow-md'
-                                        : 'bg-white border-slate-200 text-slate-700'
+                                    className={`py-3 px-2 rounded-xl font-black text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${cintaMUACPuerperio === 'VERDE'
+                                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-md scale-[1.03] ring-2 ring-emerald-400'
+                                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                                         }`}
                                 >
-                                    🟢 Verde
+                                    <div className="flex items-center gap-1">
+                                        {cintaMUACPuerperio === 'VERDE' && <Check className="w-4 h-4 text-white" />}
+                                        <span className="uppercase tracking-wider">Verde</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold opacity-90">Adecuado</span>
                                 </button>
+
                                 <button
                                     type="button"
                                     onClick={() => setCintaMUACPuerperio('AMARILLO')}
-                                    className={`p-3 rounded-xl border-4 font-black text-xs text-center transition-all ${cintaMUACPuerperio === 'AMARILLO'
-                                        ? 'bg-amber-100 border-amber-600 text-amber-950 shadow-md'
-                                        : 'bg-white border-slate-200 text-slate-700'
+                                    className={`py-3 px-2 rounded-xl font-black text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${cintaMUACPuerperio === 'AMARILLO'
+                                        ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-md scale-[1.03] ring-2 ring-amber-300'
+                                        : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
                                         }`}
                                 >
-                                    🟡 Amarillo
+                                    <div className="flex items-center gap-1">
+                                        {cintaMUACPuerperio === 'AMARILLO' && <Check className="w-4 h-4 text-slate-950" />}
+                                        <span className="uppercase tracking-wider">Amarillo</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold opacity-90">Riesgo</span>
                                 </button>
+
                                 <button
                                     type="button"
                                     onClick={() => setCintaMUACPuerperio('ROJO')}
-                                    className={`p-3 rounded-xl border-4 font-black text-xs text-center transition-all ${cintaMUACPuerperio === 'ROJO'
-                                        ? 'bg-rose-100 border-rose-600 text-rose-950 shadow-md'
-                                        : 'bg-white border-slate-200 text-slate-700'
+                                    className={`py-3 px-2 rounded-xl font-black text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${cintaMUACPuerperio === 'ROJO'
+                                        ? 'bg-rose-600 text-white border-rose-700 shadow-md scale-[1.03] ring-2 ring-rose-400'
+                                        : 'bg-rose-50 text-rose-900 border-rose-200 hover:bg-rose-100'
                                         }`}
                                 >
-                                    🔴 Rojo
+                                    <div className="flex items-center gap-1">
+                                        {cintaMUACPuerperio === 'ROJO' && <Check className="w-4 h-4 text-white" />}
+                                        <span className="uppercase tracking-wider">Rojo</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold opacity-90">Desnutrición</span>
                                 </button>
                             </div>
                         </div>
@@ -901,9 +1051,10 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => setReferidoPuerperio(!referidoPuerperio)}
-                                        className={`px-3 py-1 rounded-xl text-xs font-black border transition-all ${referidoPuerperio ? 'bg-[#9D2449] text-white border-[#7A1B38]' : 'bg-white text-slate-700 border-slate-300'}`}
+                                        className={`px-3 py-1 rounded-xl text-xs font-black border transition-all flex items-center gap-1 ${referidoPuerperio ? 'bg-[#9D2449] text-white border-[#7A1B38]' : 'bg-white text-slate-700 border-slate-300'}`}
                                     >
-                                        {referidoPuerperio ? 'SI 🚨' : 'NO'}
+                                        <span>{referidoPuerperio ? 'SI' : 'NO'}</span>
+                                        {referidoPuerperio && <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />}
                                     </button>
                                 </div>
                             </div>
@@ -926,12 +1077,12 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                                 type="button"
                                                 key={chk.id}
                                                 onClick={() => togglePuerperioCheckbox(chk.id)}
-                                                className={`w-full p-2.5 rounded-xl border-2 text-left font-bold text-xs flex items-center justify-between transition-all ${marcado
+                                                className={`w-full p-2.5 rounded-xl border-2 text-left font-bold text-xs flex items-center justify-between transition-all cursor-pointer ${marcado
                                                     ? 'bg-rose-200 border-[#9D2449] text-rose-950 font-black'
                                                     : 'bg-white border-slate-300 text-slate-700'
                                                     }`}
                                             >
-                                                <span>[{marcado ? 'X' : ' '}] {chk.label}</span>
+                                                <span>{chk.label}</span>
                                                 {marcado && <Check className="w-4 h-4 text-[#9D2449]" />}
                                             </button>
                                         );
@@ -942,17 +1093,17 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </div>
 
-                {/* 9. SECCIÓN MUERTE MATERNA */}
-                <div className="bg-rose-950 text-white p-6 rounded-3xl border-2 border-rose-900 space-y-4 shadow-xl">
-                    <div className="flex items-center gap-3 border-b border-rose-800 pb-3">
-                        <div className="p-2 bg-rose-900 text-rose-200 rounded-xl border border-rose-700">
-                            <ShieldAlert className="w-6 h-6 text-rose-400" />
+                {/* 9. SECCIÓN MUERTE MATERNA (BLOQUE DE ALERTA LIMPIA) */}
+                <div className="bg-rose-50/30 p-6 rounded-3xl border-2 border-rose-200 space-y-4 shadow-sm">
+                    <div className="flex items-center gap-3 border-b border-rose-200 pb-3">
+                        <div className="p-2.5 bg-rose-100 text-[#9D2449] rounded-xl border border-rose-200">
+                            <ShieldAlert className="w-6 h-6 text-[#9D2449]" />
                         </div>
                         <div>
-                            <h3 className="text-base font-black text-rose-100">
-                                7. Muerte Materna (Alerta Epidemiológica Médica) †
+                            <h3 className="text-base font-black text-slate-900">
+                                7. Muerte Materna (Alerta Epidemiológica Médica)
                             </h3>
-                            <p className="text-xs text-rose-300">
+                            <p className="text-xs text-rose-800 font-medium">
                                 Registro prioritario inmediato ante fallecimiento materno acontecido en la comunidad
                             </p>
                         </div>
@@ -960,9 +1111,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
-                            { id: 'EMBARAZO', img: '/MuerteMaternaEmbarazo.png', title: 'Embarazo †' },
-                            { id: 'PARTO', img: '/MuerteMaternaParto.png', title: 'Parto †' },
-                            { id: 'PUERPERIO', img: '/MuertePartoPuerperico.png', title: 'Puerperio †' },
+                            { id: 'EMBARAZO', img: '/MuerteMaternaEmbarazo.png', title: 'Embarazo' },
+                            { id: 'PARTO', img: '/MuerteMaternaParto.png', title: 'Parto' },
+                            { id: 'PUERPERIO', img: '/MuertePartoPuerperico.png', title: 'Puerperio' },
                         ].map((item) => {
                             const activo = muerteMaternaEtapa === item.id;
                             return (
@@ -970,20 +1121,30 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     type="button"
                                     key={item.id}
                                     onClick={() => setMuerteMaternaEtapa(activo ? null : (item.id as any))}
-                                    className={`p-4 rounded-2xl border-4 text-center flex flex-col items-center justify-between gap-3 transition-all cursor-pointer ${activo
-                                        ? 'bg-rose-600 text-white border-white shadow-xl scale-[1.03] ring-4 ring-rose-400'
-                                        : 'bg-rose-900/50 border-rose-800 text-rose-200 hover:bg-rose-900'
+                                    className={`p-5 rounded-2xl border-4 text-center flex flex-col items-center justify-between gap-3 transition-all cursor-pointer ${activo
+                                        ? 'bg-rose-100 border-[#9D2449] text-[#9D2449] shadow-lg scale-[1.02] ring-2 ring-rose-300'
+                                        : 'bg-white border-slate-200 text-slate-800 hover:border-rose-300 hover:bg-rose-50/50'
                                         }`}
                                 >
                                     <img
                                         src={item.img}
                                         alt={item.title}
-                                        className="h-20 mix-blend-multiply object-contain bg-white/10 p-2 rounded-xl"
+                                        className="h-24 mix-blend-multiply object-contain"
                                     />
-                                    <span className="font-black text-sm">{item.title}</span>
-                                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${activo ? 'bg-white text-rose-950 font-black' : 'bg-rose-800 text-rose-300'}`}>
-                                        {activo ? 'Registrado †' : 'Notificar'}
-                                    </span>
+                                    <span className="font-extrabold text-sm text-slate-900">{item.title}</span>
+                                    <div className={`w-full py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 ${activo ? 'bg-[#9D2449] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                        {activo ? (
+                                            <>
+                                                <span>Notificado</span>
+                                                <Check className="w-3.5 h-3.5 text-white" />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>Notificar</span>
+                                                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                                            </>
+                                        )}
+                                    </div>
                                 </button>
                             );
                         })}
@@ -1077,7 +1238,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 }`}
                         >
                             <Fingerprint className="w-6 h-6" />
-                            <span>{huellaRegistrada ? 'HUELLA DIGITAL CAPTURADA ✅' : 'CAPTURAR HUELLA DIGITAL DE LA PARTERA'}</span>
+                            <span>{huellaRegistrada ? 'HUELLA DIGITAL CAPTURADA' : 'CAPTURAR HUELLA DIGITAL DE LA PARTERA'}</span>
+                            {huellaRegistrada && <Check className="w-5 h-5 text-white" />}
                         </button>
                     </div>
 
