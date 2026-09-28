@@ -25,6 +25,31 @@ export interface ReferenciaFormato1 {
     respuestaContrareferencia?: string;
 }
 
+export interface RegistroMujer {
+    id: string;
+    folio: string;
+    nombreMujer: string;
+    partera: string;
+    municipio: string;
+    semanaGestacion: number;
+    nutricionMUAC: 'VERDE' | 'AMARILLO' | 'ROJO';
+    controlesRealizados: number;
+    alertas: string;
+}
+
+export interface RegistroNino {
+    id: string;
+    folio: string;
+    nombreNino: string;
+    nombreMadre: string;
+    partera: string;
+    municipio: string;
+    edadMeses: number;
+    tamizTomado: boolean;
+    vacunasCompletas: boolean;
+    alertas: string;
+}
+
 export interface UsuarioSSO {
     id: string;
     nombre: string;
@@ -43,4 +68,13 @@ export interface ParteraCredencial {
     pinCuatroDigitos: string;
     estatusAcreditacion: 'ACREDITADA' | 'EN_REVISION' | 'INACTIVA';
     fechaAcreditacion: string;
+}
+
+export interface LogSistema {
+    id: string;
+    fechaHora: string;
+    usuario: string;
+    accion: string;
+    modulo: string;
+    ip: string;
 }
