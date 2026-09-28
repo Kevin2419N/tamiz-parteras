@@ -117,8 +117,8 @@ export const DashboardLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-100/80 text-slate-800 flex flex-col md:flex-row selection:bg-emerald-600 selection:text-white">
 
-            {/* SIDEBAR DESKTOP COLAPSABLE (MODO CLARO) - Oculto para rol PARTERA_TRADICIONAL */}
-            {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && (
+            {/* SIDEBAR DESKTOP COLAPSABLE (MODO CLARO) - Oculto para rol PARTERA_TRADICIONAL y ADMIN_JURISDICCIONAL (Diseño Full-Width) */}
+            {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && currentUser.rol !== UserRole.ADMIN_JURISDICCIONAL && currentUser.rol !== UserRole.GESTOR_PARTERAS && (
                 <aside
                     className={`hidden md:flex flex-col bg-white border-r border-slate-200/90 p-4 justify-between transition-all duration-300 shrink-0 shadow-sm ${sidebarCollapsed ? 'w-20' : 'w-64'
                         }`}
@@ -286,7 +286,7 @@ export const DashboardLayout: React.FC = () => {
                                 alt="Logo Jurisdicción Sanitaria No. 2 Istmo"
                                 loading="eager"
                                 fetchPriority="high"
-                                className="h-12 md:h-16 w-auto object-contain shrink-0 md:order-1"
+                                className="h-12 md:h-16 w-auto object-contain shrink-0 md:order-1 mix-blend-multiply"
                             />
                             <div className="flex items-center gap-3 md:order-3">
                                 <img
@@ -294,7 +294,7 @@ export const DashboardLayout: React.FC = () => {
                                     alt="Logo Secretaría de Salud"
                                     loading="eager"
                                     fetchPriority="high"
-                                    className="h-12 md:h-16 w-auto object-contain shrink-0"
+                                    className="h-12 md:h-16 w-auto object-contain shrink-0 mix-blend-multiply"
                                 />
 
                                 {/* Selector de Usuario Simulado + Badges + Cerrar Sesión (Escritorio) */}
@@ -346,7 +346,7 @@ export const DashboardLayout: React.FC = () => {
                         {/* Columna Central (Centrada) */}
                         <div className="flex flex-col items-center text-center md:order-2">
                             <h1 className="text-slate-900 text-xl md:text-2xl font-bold text-center">
-                                Jurisdicción Sanitaria No. 2 - Istmo
+                                Jurisdicción Sanitaria No. 2 - Istmo • Sistema de Gestión Operativa
                             </h1>
                             <p className="text-slate-500 text-xs md:text-sm font-medium text-center">
                                 Sistema Web de Gestión Operativa para Tamiz Neonatal y Red de Parteras Tradicionales
@@ -400,8 +400,8 @@ export const DashboardLayout: React.FC = () => {
                     </div>
                 )}
 
-                {/* MAIN BODY AREA */}
-                <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+                {/* MAIN BODY AREA FULL-WIDTH */}
+                <main className="w-full min-h-screen bg-slate-50/80 p-3 sm:p-6 lg:p-8 overflow-y-auto">
                     {location.pathname === '/dashboard' ? (
                         currentUser.rol === UserRole.PARTERA_TRADICIONAL ? (
                             <DashboardPartera />

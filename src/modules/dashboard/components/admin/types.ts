@@ -17,16 +17,12 @@ export interface ReferenciaFormato1 {
     nombrePaciente: string;
     edad: number;
     parteraNombre: string;
-    motivoPrincipal: string;
-    comunidad: string;
+    motivoReferencia: string;
+    unidadDestino: string;
     municipio: string;
-    fecha: string;
-    nivelRiesgo: 'BAJO' | 'MEDIO' | 'ALTO' | 'CRITICO';
+    fechaReferencia: string;
     estatus: 'PENDIENTE' | 'CONTRAREFERIDO';
-    diagnosticoMedico?: string;
-    tratamiento?: string;
-    medicoResponsable?: string;
-    centroSaludRespuesta?: string;
+    respuestaContrareferencia?: string;
 }
 
 export interface UsuarioSSO {
@@ -34,22 +30,17 @@ export interface UsuarioSSO {
     nombre: string;
     email: string;
     rol: 'ADMIN_JURISDICCIONAL' | 'CAPTURISTA_TAMIZ' | 'GESTOR_PARTERAS' | 'MEDICO_UNIDAD';
-    unidadSalud: string;
-    activo: boolean;
+    unidadAsignada: string;
+    estatus: 'ACTIVO' | 'INACTIVO';
 }
 
 export interface ParteraCredencial {
     id: string;
     nombreCompleto: string;
-    nombreZapoteco?: string;
     curp: string;
-    comunidad: string;
     municipio: string;
-    jurisdiccion: string;
-    experienciaAnos: number;
-    pinAcceso: string;
-    certificadoVigente: boolean;
-    estatus: 'ACTIVA' | 'INACTIVA';
-    fechaExpedicion: string;
-    fotoUrl?: string;
+    comunidad: string;
+    pinCuatroDigitos: string;
+    estatusAcreditacion: 'ACREDITADA' | 'EN_REVISION' | 'INACTIVA';
+    fechaAcreditacion: string;
 }
