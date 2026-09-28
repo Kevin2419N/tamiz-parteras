@@ -16,7 +16,11 @@ import {
     Droplet,
     Ruler,
     X,
-    Baby
+    Baby,
+    FileText,
+    Building2,
+    Award,
+    Megaphone
 } from 'lucide-react';
 import { handleVoiceInput } from '../../utils/voiceUtils';
 
@@ -34,6 +38,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     onSuccess,
     hablarTexto
 }) => {
+    // 0. Modo Duplicado (Vista Partera vs Copia Centro de Salud)
+    const [modoDuplicado, setModoDuplicado] = useState(false);
+
     // 1. Datos de Identificación
     const [nombreMujer, setNombreMujer] = useState('');
     const [edad, setEdad] = useState('24');
@@ -125,41 +132,110 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
             {/* 1. ENCUADRE INSTITUCIONAL Y MARCO DE HOJA FÍSICA */}
             <div className="border-4 border-[#9D2449] bg-white rounded-3xl shadow-xl p-4 md:p-8 space-y-8 my-4">
 
-                {/* BANNER INSTITUCIONAL SUPERIOR CON BOTÓN REGRESAR */}
-                <div className="bg-[#9D2449] text-white rounded-2xl p-4 md:p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                {/* 1. TOGGLE DE VISTA PARTERA / CENTRO DE SALUD Y BOTÓN REGRESAR */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div>
                         {onBack && (
                             <button
                                 type="button"
                                 onClick={onBack}
-                                className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/25 text-xs md:text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all active:scale-95 shrink-0"
+                                className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all active:scale-95 shadow-md cursor-pointer"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                                 <span>Regresar</span>
                             </button>
                         )}
-                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20 shrink-0">
-                            <HeartPulse className="w-6 h-6 text-rose-200" />
-                        </div>
                     </div>
 
-                    <div className="text-center space-y-1 flex-1">
-                        <span className="inline-block px-3 py-0.5 bg-white/10 text-rose-100 rounded-full text-[10px] font-black uppercase tracking-wider border border-white/20">
-                            FORMATO OFICIAL NO. 2 • SSO OAXACA
+                    <div className="bg-slate-200/90 p-1.5 rounded-2xl flex items-center gap-1 border border-slate-300 w-full sm:w-auto">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setModoDuplicado(false);
+                                if (hablarTexto) hablarTexto("Vista Partera activa");
+                            }}
+                            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${!modoDuplicado
+                                ? 'bg-[#9D2449] text-white shadow-md'
+                                : 'bg-transparent text-slate-700 hover:text-slate-900'
+                                }`}
+                        >
+                            <FileText className="w-4 h-4" />
+                            <span>Vista Partera</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setModoDuplicado(true);
+                                if (hablarTexto) hablarTexto("Mostrando copia oficial para el Centro de Salud");
+                            }}
+                            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${modoDuplicado
+                                ? 'bg-[#9D2449] text-white shadow-md'
+                                : 'bg-transparent text-slate-700 hover:text-slate-900'
+                                }`}
+                        >
+                            <Building2 className="w-4 h-4" />
+                            <span>Copia para Centro de Salud</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* BANNER SUPERIOR INSTITUCIONAL "ACUDE A TU UNIDAD DE SALUD" */}
+                <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex items-center justify-center gap-3">
+                    <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
+                    <span>ACUDE A TU UNIDAD DE SALUD - CALENDARIO DE ATENCIÓN A LA MUJER</span>
+                </div>
+
+                {/* Insignia para Copia Centro de Salud */}
+                {modoDuplicado && (
+                    <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-sm animate-fadeIn">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-amber-400 text-slate-950 rounded-xl font-bold shadow-sm">
+                                <Building2 className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <span className="inline-block bg-amber-200 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-amber-400 mb-0.5">
+                                    DUPLICADO OFICIAL SSO
+                                </span>
+                                <h4 className="text-sm font-black text-amber-950">
+                                    Copia Oficial para Enviar al Centro de Salud
+                                </h4>
+                                <p className="text-xs text-amber-800 font-medium">
+                                    Expediente oficial de reporte mensual de atención materna para los Servicios de Salud de Oaxaca.
+                                </p>
+                            </div>
+                        </div>
+                        <span className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-400/30 text-amber-900 font-extrabold text-xs rounded-xl border border-amber-400/50 shrink-0">
+                            <Award className="w-4 h-4" /> Copia Institucional
                         </span>
-                        <h1 className="text-lg md:text-2xl font-black text-white tracking-tight uppercase">
-                            CALENDARIO DE ATENCIÓN A LA MUJER (EMBARAZO, PARTO Y PUERPERIO)
+                    </div>
+                )}
+
+                {/* HEADER INSTITUCIONAL CON LOGOS FLANQUEANDO EL TÍTULO (HOMOLOGADO Y RESPONSIVO) */}
+                <div className="bg-white p-4 md:p-6 rounded-3xl border-2 border-slate-200 shadow-md flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+                    <img
+                        src="/logo-jurisdiccion.png"
+                        alt="Logo Jurisdicción Sanitaria"
+                        className="h-14 md:h-20 w-auto object-contain shrink-0 mix-blend-multiply"
+                    />
+
+                    <div className="text-center space-y-1">
+                        <span className="inline-block px-3.5 py-1 bg-rose-100 text-[#9D2449] rounded-full text-[11px] font-black uppercase tracking-wider border border-rose-200">
+                            SERVICIOS DE SALUD DE OAXACA • FORMATO 2
+                        </span>
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                            CALENDARIO DE ATENCIÓN A LA MUJER
                         </h1>
+                        <p className="text-xs sm:text-sm font-semibold text-slate-600">
+                            Durante el Embarazo, Parto y Puerperio
+                        </p>
                     </div>
 
-                    <div className="hidden lg:flex items-center gap-2 shrink-0">
-                        <div className="bg-white/95 backdrop-blur-xs p-1.5 rounded-xl border border-white/30 flex items-center justify-center shadow-xs">
-                            <img src="/logo-jurisdiccion.png" alt="Jurisdicción" className="h-9 w-auto object-contain mix-blend-multiply" />
-                        </div>
-                        <div className="bg-white/95 backdrop-blur-xs p-1.5 rounded-xl border border-white/30 flex items-center justify-center shadow-xs">
-                            <img src="/Logo-Secretaria.png" alt="Secretaría" className="h-9 w-auto object-contain mix-blend-multiply" />
-                        </div>
-                    </div>
+                    <img
+                        src="/Logo-Secretaria.png"
+                        alt="Logo Secretaría de Salud"
+                        className="h-14 md:h-20 w-auto object-contain shrink-0 mix-blend-multiply"
+                    />
                 </div>
 
                 {/* 2. DATOS DE IDENTIFICACIÓN CON BOTONES DE MICRÓFONO EN GUINDA OAXACA */}
