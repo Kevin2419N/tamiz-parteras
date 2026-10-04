@@ -8,7 +8,8 @@ import {
     Settings,
     FileSpreadsheet,
     LogOut,
-    Award
+    Award,
+    Building2
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -18,13 +19,14 @@ import { TabReferencias } from './admin/TabReferencias';
 import { TabCalendarios } from './admin/TabCalendarios';
 import { TabUsuariosParteras } from './admin/TabUsuariosParteras';
 import { TabCuentasPersonal } from './admin/TabCuentasPersonal';
+import { TabUnidadesCLUES } from './admin/TabUnidadesCLUES';
 import { TabConfiguracionSistema } from './admin/TabConfiguracionSistema';
 
 interface AdminDashboardProps {
     userName?: string;
 }
 
-export type TabType = 'TAMIZ' | 'REFERENCIAS' | 'CALENDARIOS' | 'PARTERAS' | 'CUENTAS' | 'CONFIGURACION';
+export type TabType = 'TAMIZ' | 'REFERENCIAS' | 'CALENDARIOS' | 'PARTERAS' | 'CUENTAS' | 'CLUES' | 'CONFIGURACION';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName = 'Lic. Administrador Jurisdiccional' }) => {
     const [activeTab, setActiveTab] = useState<TabType>('TAMIZ');
@@ -113,16 +115,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName = 'Lic.
                 </div>
             </div>
 
-            {/* 3. SISTEMA DE NAVEGACIÓN POR 6 PESTAÑAS EJECUTIVAS */}
+            {/* 3. SISTEMA DE NAVEGACIÓN POR 7 PESTAÑAS EJECUTIVAS */}
             <div className="bg-slate-100 p-1.5 rounded-2xl flex flex-wrap lg:flex-nowrap gap-2 overflow-x-auto border border-slate-200 shadow-inner">
 
                 {/* Pestaña 1: Control de Tamiz Neonatal */}
                 <button
                     type="button"
                     onClick={() => setActiveTab('TAMIZ')}
-                    className={`flex-1 min-w-[150px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'TAMIZ'
-                            ? 'bg-[#9D2449] text-white shadow-md'
-                            : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'TAMIZ'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
                         }`}
                 >
                     <Droplet className={`w-4 h-4 ${activeTab === 'TAMIZ' ? 'text-rose-200' : 'text-slate-500'}`} />
@@ -133,9 +135,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName = 'Lic.
                 <button
                     type="button"
                     onClick={() => setActiveTab('REFERENCIAS')}
-                    className={`flex-1 min-w-[150px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'REFERENCIAS'
-                            ? 'bg-[#9D2449] text-white shadow-md'
-                            : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'REFERENCIAS'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
                         }`}
                 >
                     <HeartPulse className={`w-4 h-4 ${activeTab === 'REFERENCIAS' ? 'text-rose-200' : 'text-slate-500'}`} />
@@ -146,9 +148,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName = 'Lic.
                 <button
                     type="button"
                     onClick={() => setActiveTab('CALENDARIOS')}
-                    className={`flex-1 min-w-[150px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'CALENDARIOS'
-                            ? 'bg-[#9D2449] text-white shadow-md'
-                            : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'CALENDARIOS'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
                         }`}
                 >
                     <Calendar className={`w-4 h-4 ${activeTab === 'CALENDARIOS' ? 'text-rose-200' : 'text-slate-500'}`} />
@@ -159,9 +161,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName = 'Lic.
                 <button
                     type="button"
                     onClick={() => setActiveTab('PARTERAS')}
-                    className={`flex-1 min-w-[150px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'PARTERAS'
-                            ? 'bg-[#9D2449] text-white shadow-md'
-                            : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'PARTERAS'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
                         }`}
                 >
                     <Users className={`w-4 h-4 ${activeTab === 'PARTERAS' ? 'text-rose-200' : 'text-slate-500'}`} />
@@ -172,26 +174,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName = 'Lic.
                 <button
                     type="button"
                     onClick={() => setActiveTab('CUENTAS')}
-                    className={`flex-1 min-w-[150px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'CUENTAS'
-                            ? 'bg-[#9D2449] text-white shadow-md'
-                            : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'CUENTAS'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
                         }`}
                 >
                     <UserCheck className={`w-4 h-4 ${activeTab === 'CUENTAS' ? 'text-rose-200' : 'text-slate-500'}`} />
                     <span>5. Cuentas SSO</span>
                 </button>
 
-                {/* Pestaña 6: Configuración del Sistema */}
+                {/* Pestaña 6: Catálogo de Unidades Médicas CLUES */}
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('CLUES')}
+                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'CLUES'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                        }`}
+                >
+                    <Building2 className={`w-4 h-4 ${activeTab === 'CLUES' ? 'text-rose-200' : 'text-slate-500'}`} />
+                    <span>6. Unidades CLUES</span>
+                </button>
+
+                {/* Pestaña 7: Configuración & Seguridad */}
                 <button
                     type="button"
                     onClick={() => setActiveTab('CONFIGURACION')}
-                    className={`flex-1 min-w-[150px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'CONFIGURACION'
-                            ? 'bg-[#9D2449] text-white shadow-md'
-                            : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'CONFIGURACION'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
                         }`}
                 >
                     <Settings className={`w-4 h-4 ${activeTab === 'CONFIGURACION' ? 'text-rose-200' : 'text-slate-500'}`} />
-                    <span>6. Configuración</span>
+                    <span>7. Configuración & Seguridad</span>
                 </button>
             </div>
 
@@ -202,6 +217,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName = 'Lic.
                 {activeTab === 'CALENDARIOS' && <TabCalendarios />}
                 {activeTab === 'PARTERAS' && <TabUsuariosParteras />}
                 {activeTab === 'CUENTAS' && <TabCuentasPersonal />}
+                {activeTab === 'CLUES' && <TabUnidadesCLUES />}
                 {activeTab === 'CONFIGURACION' && <TabConfiguracionSistema />}
             </div>
 

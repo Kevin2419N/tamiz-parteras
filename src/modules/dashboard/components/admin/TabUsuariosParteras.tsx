@@ -359,21 +359,19 @@ export const TabUsuariosParteras: React.FC = () => {
 
                                 {/* COLUMNA 2 */}
                                 <div className="space-y-3.5">
-                                    {/* Municipio */}
+                                    {/* Municipio (TEXTO LIBRE) */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Municipio *</label>
-                                        <select
+                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
+                                            <span>Municipio / Localidad * (Texto Libre)</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Escriba el municipio..."
                                             value={newMunicipio}
                                             onChange={(e) => setNewMunicipio(e.target.value)}
                                             className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
-                                        >
-                                            <option value="Juchitán de Zaragoza">Juchitán de Zaragoza</option>
-                                            <option value="Santo Domingo Tehuantepec">Santo Domingo Tehuantepec</option>
-                                            <option value="Salina Cruz">Salina Cruz</option>
-                                            <option value="San Blas Atempa">San Blas Atempa</option>
-                                            <option value="Ciudad Ixtepec">Ciudad Ixtepec</option>
-                                            <option value="Matías Romero Avendaño">Matías Romero Avendaño</option>
-                                        </select>
+                                        />
                                     </div>
 
                                     {/* Comunidad / Barrio / Sección */}

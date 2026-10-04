@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, User, Phone, Key, Lock, Building2 } from 'lucide-react';
+import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, User, Phone, Lock, Building2 } from 'lucide-react';
 import type { UsuarioSSO, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 
@@ -71,6 +71,7 @@ export const TabCuentasPersonal: React.FC = () => {
     const [curp, setCurp] = useState('');
     const [email, setEmail] = useState('');
     const [telefono, setTelefono] = useState('');
+    const [municipio, setMunicipio] = useState('');
     const [rol, setRol] = useState<UsuarioSSO['rol']>('CAPTURISTA_TAMIZ');
     const [selectedCluesId, setSelectedCluesId] = useState<string>('');
     const [pinTemporal, setPinTemporal] = useState('');
@@ -98,6 +99,7 @@ export const TabCuentasPersonal: React.FC = () => {
             curp: curp.toUpperCase(),
             email: email.toLowerCase(),
             telefono,
+            municipio: municipio.trim() || foundUnit?.municipio || 'Juchitán de Zaragoza',
             rol,
             unidadAsignada: foundUnit ? `${foundUnit.nombre} (${foundUnit.clues})` : 'Unidad Médica SSO',
             clues: foundUnit?.clues || 'OASSA000000',
@@ -112,6 +114,7 @@ export const TabCuentasPersonal: React.FC = () => {
         setCurp('');
         setEmail('');
         setTelefono('');
+        setMunicipio('');
         setPinTemporal('');
     };
 
@@ -349,6 +352,18 @@ export const TabCuentasPersonal: React.FC = () => {
                                                 className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
                                             />
                                         </div>
+                                    </div>
+
+                                    {/* Municipio / Localidad (TEXTO LIBRE) */}
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1">Municipio / Localidad * (Texto Libre)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Escriba el municipio..."
+                                            value={municipio}
+                                            onChange={(e) => setMunicipio(e.target.value)}
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
+                                        />
                                     </div>
                                 </div>
 

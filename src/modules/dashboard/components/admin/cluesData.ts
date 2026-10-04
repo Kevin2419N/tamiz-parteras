@@ -7,6 +7,7 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA000451',
         municipio: 'Juchitán de Zaragoza',
         tipoUnidad: 'Centro de Salud',
+        nivelAtencion: 'Primer Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -15,6 +16,7 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA001230',
         municipio: 'Juchitán de Zaragoza',
         tipoUnidad: 'Hospital General',
+        nivelAtencion: 'Segundo Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -23,6 +25,7 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA002140',
         municipio: 'Santo Domingo Tehuantepec',
         tipoUnidad: 'CESSA',
+        nivelAtencion: 'Primer Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -31,6 +34,7 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA003450',
         municipio: 'Salina Cruz',
         tipoUnidad: 'Hospital General',
+        nivelAtencion: 'Segundo Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -39,6 +43,7 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA004120',
         municipio: 'Ciudad Ixtepec',
         tipoUnidad: 'Centro de Salud',
+        nivelAtencion: 'Primer Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -47,6 +52,7 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA005890',
         municipio: 'San Blas Atempa',
         tipoUnidad: 'Centro de Salud',
+        nivelAtencion: 'Primer Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -55,6 +61,7 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA006310',
         municipio: 'Matías Romero Avendaño',
         tipoUnidad: 'Hospital Comunitario',
+        nivelAtencion: 'Segundo Nivel',
         estatus: 'ACTIVO',
     },
 ];
@@ -83,4 +90,24 @@ export const subscribeCluesCatalog = (listener: Listener) => {
     return () => {
         listeners.delete(listener);
     };
+};
+
+export const exportDatabaseAsJSON = () => {
+    const backupData = {
+        sistema: 'Servicios de Salud de Oaxaca - Jurisdicción Sanitaria No. 2 Istmo',
+        version: '2026.4.0-PROD',
+        fechaExportacion: new Date().toISOString(),
+        servidor: 'BD-LOCAL-JURISDICCION-02',
+        catálogoCLUES: catalogStore,
+        totalUnidades: catalogStore.length,
+        politicaSeguridad: 'Cifrado AES-256 Institucional SSO Oaxaca',
+    };
+
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `SSO_Oaxaca_Respaldo_BD_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
 };

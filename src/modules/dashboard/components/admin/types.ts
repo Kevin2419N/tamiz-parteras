@@ -4,7 +4,18 @@ export interface UnidadCLUES {
     clues: string; // 11 caracteres (ej. OASSA000451)
     municipio: string;
     tipoUnidad: 'Centro de Salud' | 'CESSA' | 'Hospital General' | 'Hospital Comunitario';
+    nivelAtencion: 'Primer Nivel' | 'Segundo Nivel';
     estatus: 'ACTIVO' | 'INACTIVO';
+}
+
+export interface AvisoEpidemiologico {
+    id: string;
+    titulo: string;
+    contenido: string;
+    prioridad: 'ALTA' | 'MEDIA' | 'INFORMATIVA';
+    fechaPublicacion: string;
+    autor: string;
+    estatus: 'ACTIVO' | 'ARCHIVADO';
 }
 
 export interface MuestraGuthrie {
@@ -65,6 +76,7 @@ export interface UsuarioSSO {
     curp?: string;
     email: string;
     telefono?: string;
+    municipio?: string;
     rol: 'ADMIN_JURISDICCIONAL' | 'CAPTURISTA_TAMIZ' | 'GESTOR_PARTERAS' | 'MEDICO_UNIDAD' | 'SUPERVISOR_ZONA';
     unidadAsignada: string;
     clues?: string;
