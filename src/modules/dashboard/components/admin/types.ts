@@ -1,3 +1,12 @@
+export interface UnidadCLUES {
+    id: string;
+    nombre: string;
+    clues: string; // 11 caracteres (ej. OASSA000451)
+    municipio: string;
+    tipoUnidad: 'Centro de Salud' | 'CESSA' | 'Hospital General' | 'Hospital Comunitario';
+    estatus: 'ACTIVO' | 'INACTIVO';
+}
+
 export interface MuestraGuthrie {
     id: string;
     folio: string;
@@ -53,9 +62,13 @@ export interface RegistroNino {
 export interface UsuarioSSO {
     id: string;
     nombre: string;
+    curp?: string;
     email: string;
-    rol: 'ADMIN_JURISDICCIONAL' | 'CAPTURISTA_TAMIZ' | 'GESTOR_PARTERAS' | 'MEDICO_UNIDAD';
+    telefono?: string;
+    rol: 'ADMIN_JURISDICCIONAL' | 'CAPTURISTA_TAMIZ' | 'GESTOR_PARTERAS' | 'MEDICO_UNIDAD' | 'SUPERVISOR_ZONA';
     unidadAsignada: string;
+    clues?: string;
+    pinTemporal?: string;
     estatus: 'ACTIVO' | 'INACTIVO';
 }
 
@@ -63,8 +76,12 @@ export interface ParteraCredencial {
     id: string;
     nombreCompleto: string;
     curp: string;
+    lenguaMaterna?: string;
+    telefonoRecaudo?: string;
     municipio: string;
     comunidad: string;
+    centroSaludAdscripcion?: string;
+    cluesAdscripcion?: string;
     pinCuatroDigitos: string;
     estatusAcreditacion: 'ACREDITADA' | 'EN_REVISION' | 'INACTIVA';
     fechaAcreditacion: string;
@@ -78,3 +95,4 @@ export interface LogSistema {
     modulo: string;
     ip: string;
 }
+

@@ -240,7 +240,7 @@ export const DashboardLayout: React.FC = () => {
             {/* NAVBAR SUPERIOR RESPONSIVE (MODO CLARO) - Oculto para módulo Partera */}
             <div className="flex-1 flex flex-col min-w-0">
 
-                {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && !location.pathname.includes('/parteras/comunitaria') && (
+                {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && currentUser.rol !== UserRole.ADMIN_JURISDICCIONAL && currentUser.rol !== UserRole.GESTOR_PARTERAS && !location.pathname.includes('/parteras/comunitaria') && (
                     <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sticky top-0 z-20 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 shadow-sm text-center">
 
                         {/* Botón de Menú Móvil & Controles Rápidos */}
