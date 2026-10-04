@@ -3,8 +3,7 @@ export interface UnidadCLUES {
     nombre: string;
     clues: string; // 11 caracteres (ej. OASSA000451)
     municipio: string;
-    tipoUnidad: 'Centro de Salud' | 'CESSA' | 'Hospital General' | 'Hospital Comunitario';
-    nivelAtencion: 'Primer Nivel' | 'Segundo Nivel';
+    tipoUnidad: 'Centro de Salud' | 'CESSA' | 'Hospital General' | 'Hospital Bienestar';
     estatus: 'ACTIVO' | 'INACTIVO';
 }
 

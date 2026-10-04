@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, User, Phone, Lock, Building2 } from 'lucide-react';
+import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, Phone, Lock, Building2 } from 'lucide-react';
 import type { UsuarioSSO, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 
@@ -7,10 +7,11 @@ export const TabCuentasPersonal: React.FC = () => {
     const [usuarios, setUsuarios] = useState<UsuarioSSO[]>([
         {
             id: 'u1',
-            nombre: 'Lic. Administrador Jurisdiccional',
+            nombre: 'Lic. Alejandro Gómez Ruiz',
             curp: 'ADMJ800101HOCMNS01',
-            email: 'admin.istmo@salud.oaxaca.gob.mx',
+            email: 'alejandro.gomez@salud.oaxaca.gob.mx',
             telefono: '9711234567',
+            municipio: 'Juchitán de Zaragoza',
             rol: 'ADMIN_JURISDICCIONAL',
             unidadAsignada: 'Jurisdicción Sanitaria No. 2 - Istmo',
             clues: 'OASSA000001',
@@ -21,8 +22,9 @@ export const TabCuentasPersonal: React.FC = () => {
             id: 'u2',
             nombre: 'Dra. María Elena Ramos',
             curp: 'RAME820512MOCMNS03',
-            email: 'gestor.parteras@salud.oaxaca.gob.mx',
+            email: 'maria.ramos@salud.oaxaca.gob.mx',
             telefono: '9712345678',
+            municipio: 'Santo Domingo Tehuantepec',
             rol: 'GESTOR_PARTERAS',
             unidadAsignada: 'Programa Parteras Tradicionales',
             clues: 'OASSA000002',
@@ -33,8 +35,9 @@ export const TabCuentasPersonal: React.FC = () => {
             id: 'u3',
             nombre: 'Enf. Juan Carlos Morales',
             curp: 'MOJU850920HOCMNS04',
-            email: 'capturista.tamiz@salud.oaxaca.gob.mx',
+            email: 'juan.morales@salud.oaxaca.gob.mx',
             telefono: '9713456789',
+            municipio: 'Juchitán de Zaragoza',
             rol: 'CAPTURISTA_TAMIZ',
             unidadAsignada: 'Centro de Salud Urbano Juchitán',
             clues: 'OASSA000451',
@@ -45,8 +48,9 @@ export const TabCuentasPersonal: React.FC = () => {
             id: 'u4',
             nombre: 'Dr. Roberto Mendoza Cruz',
             curp: 'MECR781105HOCMNS08',
-            email: 'medico.juchitan@salud.oaxaca.gob.mx',
+            email: 'roberto.mendoza@salud.oaxaca.gob.mx',
             telefono: '9714567890',
+            municipio: 'Juchitán de Zaragoza',
             rol: 'MEDICO_UNIDAD',
             unidadAsignada: 'Hospital General de Juchitán Dr. Maceonio Benítez',
             clues: 'OASSA001230',
@@ -65,9 +69,11 @@ export const TabCuentasPersonal: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Form modal state
+    // Form modal state (Desglose en 3 campos)
     const [showModal, setShowModal] = useState(false);
-    const [nombre, setNombre] = useState('');
+    const [nombres, setNombres] = useState('');
+    const [apellidoPaterno, setApellidoPaterno] = useState('');
+    const [apellidoMaterno, setApellidoMaterno] = useState('');
     const [curp, setCurp] = useState('');
     const [email, setEmail] = useState('');
     const [telefono, setTelefono] = useState('');
@@ -84,6 +90,36 @@ export const TabCuentasPersonal: React.FC = () => {
         }
     }, [cluesList, selectedCluesId]);
 
+    // Normalizador para correo electrónico institucional
+    const cleanStringForEmail = (str: string) => {
+        return str
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]/g, "");
+    };
+
+    // Autogenerar Correo Institucional en tiempo real
+    const handleNombreChange = (val: string) => {
+        setNombres(val);
+        generateAutoEmail(val, apellidoPaterno);
+    };
+
+    const handleApellidoPaternoChange = (val: string) => {
+        setApellidoPaterno(val);
+        generateAutoEmail(nombres, val);
+    };
+
+    const generateAutoEmail = (nom: string, pat: string) => {
+        const primerNombre = cleanStringForEmail(nom.trim().split(' ')[0] || '');
+        const pPaterno = cleanStringForEmail(pat.trim());
+        if (primerNombre && pPaterno) {
+            setEmail(`${primerNombre}.${pPaterno}@salud.oaxaca.gob.mx`);
+        } else if (primerNombre) {
+            setEmail(`${primerNombre}@salud.oaxaca.gob.mx`);
+        }
+    };
+
     const generateRandomPin = () => {
         const pin = Math.floor(100000 + Math.random() * 900000).toString();
         setPinTemporal(pin);
@@ -92,10 +128,11 @@ export const TabCuentasPersonal: React.FC = () => {
     const handleCreateUser = (e: React.FormEvent) => {
         e.preventDefault();
         const foundUnit = cluesList.find((u) => u.id === selectedCluesId) || cluesList[0];
+        const nombreCompleto = `${nombres.trim()} ${apellidoPaterno.trim()} ${apellidoMaterno.trim()}`.trim();
 
         const newUser: UsuarioSSO = {
             id: `u-${Date.now()}`,
-            nombre,
+            nombre: nombreCompleto,
             curp: curp.toUpperCase(),
             email: email.toLowerCase(),
             telefono,
@@ -110,7 +147,9 @@ export const TabCuentasPersonal: React.FC = () => {
         setShowModal(false);
 
         // Reset form
-        setNombre('');
+        setNombres('');
+        setApellidoPaterno('');
+        setApellidoMaterno('');
         setCurp('');
         setEmail('');
         setTelefono('');
@@ -129,17 +168,34 @@ export const TabCuentasPersonal: React.FC = () => {
         }
     };
 
+    const getInitials = (name: string) => {
+        const words = name.replace(/^(Dr\.|Dra\.|Lic\.|Enf\.)\s+/, '').split(' ').filter(Boolean);
+        if (words.length >= 2) {
+            return `${words[0][0]}${words[1][0]}`.toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    };
+
     return (
         <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+
+            {/* CABECERA CON LOGOS INSTITUCIONALES */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                        <UserCheck className="w-5 h-5 text-[#9D2449]" />
-                        <span>Cuentas del Personal de Salud (Servidores Públicos SSO)</span>
-                    </h2>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        Gestión de accesos institucionales para médicos, capturistas de tamiz y gestores de jurisdicción.
-                    </p>
+                <div className="flex items-center gap-3">
+                    <img
+                        src="/logo-jurisdiccion.png"
+                        alt="Logo Jurisdicción"
+                        className="h-12 w-auto object-contain mix-blend-multiply hidden sm:block"
+                    />
+                    <div>
+                        <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                            <UserCheck className="w-5 h-5 text-[#9D2449]" />
+                            <span>Cuentas del Personal de Salud (Servidores Públicos SSO)</span>
+                        </h2>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                            Gestión de accesos institucionales para médicos, capturistas de tamiz y gestores jurisdiccionales.
+                        </p>
+                    </div>
                 </div>
 
                 <button
@@ -159,16 +215,21 @@ export const TabCuentasPersonal: React.FC = () => {
             <div className="space-y-3 md:hidden">
                 {usuarios.map((u) => (
                     <div key={u.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <h3 className="text-xs font-black text-slate-900">{u.nombre}</h3>
-                                {u.curp && <p className="text-[10px] text-slate-500 font-mono">CURP: {u.curp}</p>}
-                                <p className="text-[11px] text-slate-600 font-mono flex items-center gap-1 mt-0.5">
-                                    <Mail className="w-3 h-3 text-slate-400" />
-                                    {u.email}
-                                </p>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
+                                    {getInitials(u.nombre)}
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-black text-slate-900">{u.nombre}</h3>
+                                    {u.curp && <p className="text-[10px] text-slate-500 font-mono">CURP: {u.curp}</p>}
+                                    <p className="text-[11px] text-slate-600 font-mono flex items-center gap-1 mt-0.5">
+                                        <Mail className="w-3 h-3 text-slate-400" />
+                                        {u.email}
+                                    </p>
+                                </div>
                             </div>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
                                 {u.estatus}
                             </span>
                         </div>
@@ -193,29 +254,36 @@ export const TabCuentasPersonal: React.FC = () => {
                 ))}
             </div>
 
-            {/* VISTA ESCRITORIO (>= md) */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+            {/* TABLA PRO DE CUENTAS SSO (ESCRITORIO >= md) */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+                <table className="w-full text-left border-collapse text-xs font-semibold">
                     <thead>
-                        <tr className="bg-slate-50 text-[11px] font-black uppercase text-slate-600 border-b border-slate-200">
-                            <th className="py-3 px-4">Servidor Público / CURP</th>
-                            <th className="py-3 px-4">Correo Institucional</th>
-                            <th className="py-3 px-4">Rol en el Sistema</th>
-                            <th className="py-3 px-4">Unidad Médica / Adscripción CLUES</th>
-                            <th className="py-3 px-4 text-center">PIN Temporal</th>
-                            <th className="py-3 px-4 text-center">Estatus</th>
+                        <tr className="bg-slate-100/80 text-slate-700 font-bold uppercase text-xs border-b border-slate-200">
+                            <th className="py-3.5 px-4">Servidor Público / CURP</th>
+                            <th className="py-3.5 px-4">Correo Institucional</th>
+                            <th className="py-3.5 px-4">Rol en el Sistema</th>
+                            <th className="py-3.5 px-4">Unidad Médica / Adscripción CLUES</th>
+                            <th className="py-3.5 px-4 text-center">PIN Temporal</th>
+                            <th className="py-3.5 px-4 text-center">Estatus</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
                         {usuarios.map((u) => (
                             <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
                                 <td className="py-3.5 px-4">
-                                    <div className="font-black text-slate-900">{u.nombre}</div>
-                                    {u.curp && <div className="text-[10px] font-mono text-slate-500">CURP: {u.curp}</div>}
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
+                                            {getInitials(u.nombre)}
+                                        </div>
+                                        <div>
+                                            <div className="font-black text-slate-900">{u.nombre}</div>
+                                            {u.curp && <div className="text-[10px] font-mono text-slate-500">CURP: {u.curp}</div>}
+                                        </div>
+                                    </div>
                                 </td>
-                                <td className="py-3.5 px-4 text-slate-600 font-mono">{u.email}</td>
+                                <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">{u.email}</td>
                                 <td className="py-3.5 px-4">
-                                    <span className="bg-rose-50 text-[#9D2449] font-black px-2.5 py-1 rounded-lg border border-rose-200 text-[11px]">
+                                    <span className="bg-rose-50 text-[#9D2449] font-black px-2.5 py-1 rounded-full border border-rose-200 text-[10px] inline-block">
                                         {getRoleBadgeLabel(u.rol)}
                                     </span>
                                 </td>
@@ -224,7 +292,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                     {u.clues && <div className="text-[10px] font-mono text-slate-500">CLUES: {u.clues}</div>}
                                 </td>
                                 <td className="py-3.5 px-4 text-center">
-                                    <span className="bg-slate-100 text-slate-800 font-mono font-bold text-xs px-2.5 py-1 rounded-lg border border-slate-300">
+                                    <span className="bg-slate-100 text-slate-800 font-mono font-bold text-xs px-2.5 py-1 rounded-xl border border-slate-300 shadow-xs">
                                         {u.pinTemporal || '******'}
                                     </span>
                                 </td>
@@ -239,7 +307,7 @@ export const TabCuentasPersonal: React.FC = () => {
                 </table>
             </div>
 
-            {/* MODAL CREAR USUARIO INSTITUTIONAL SSO EN 2 COLUMNAS */}
+            {/* MODAL CREAR USUARIO INSTITUTIONAL SSO EN 2 COLUMNAS CON AUTOGENERACIÓN DE CORREO */}
             {showModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -270,36 +338,60 @@ export const TabCuentasPersonal: React.FC = () => {
                             <div className="space-y-0.5">
                                 <span className="font-extrabold uppercase tracking-wider block text-[10px]">Autenticación Institucional Cifrada (256-bit)</span>
                                 <p className="text-slate-700 font-medium text-[11px]">
-                                    El registro requiere un correo válido con dominio <code className="bg-white px-1 py-0.5 rounded border border-rose-200 font-mono text-[#9D2449] font-bold">@salud.oaxaca.gob.mx</code> y la clave CLUES asignada para auditoría de acciones.
+                                    El correo institucional se autogenera con el formato <code className="bg-white px-1 py-0.5 rounded border border-rose-200 font-mono text-[#9D2449] font-bold">nombre.apellidopaterno@salud.oaxaca.gob.mx</code>.
                                 </p>
                             </div>
                         </div>
 
                         {/* FORMULARIO EN LAYOUT DE 2 COLUMNAS */}
                         <form onSubmit={handleCreateUser} className="space-y-4 text-xs font-semibold">
+
+                            {/* NOMBRES DESGLOSADOS EN 3 CAMPOS */}
+                            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
+                                <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
+                                    Datos Personales del Servidor Público (Nombres y Apellidos *):
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1">Nombre(s) *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ej. Alejandro"
+                                            value={nombres}
+                                            onChange={(e) => handleNombreChange(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1">Apellido Paterno *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ej. Gómez"
+                                            value={apellidoPaterno}
+                                            onChange={(e) => handleApellidoPaternoChange(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1">Apellido Materno *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ej. Ruiz"
+                                            value={apellidoMaterno}
+                                            onChange={(e) => setApellidoMaterno(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                 {/* COLUMNA 1 */}
                                 <div className="space-y-3.5">
-                                    {/* Nombre Completo */}
-                                    <div>
-                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
-                                            <span>Nombre Completo *</span>
-                                            <span className="text-[10px] text-slate-400 font-normal">Nombre y Apellidos</span>
-                                        </label>
-                                        <div className="relative">
-                                            <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Ej. Dr. Alejandro Gómez Ruiz"
-                                                value={nombre}
-                                                onChange={(e) => setNombre(e.target.value)}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
-                                            />
-                                        </div>
-                                    </div>
-
                                     {/* CURP */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
@@ -315,14 +407,14 @@ export const TabCuentasPersonal: React.FC = () => {
                                             placeholder="GORA850412HOCMNS02"
                                             value={curp}
                                             onChange={(e) => setCurp(e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono uppercase focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono uppercase focus:outline-none focus:border-[#9D2449]"
                                         />
                                     </div>
 
-                                    {/* Correo Electrónico Institucional */}
+                                    {/* Correo Electrónico Institucional (Autogenerado) */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
-                                            <span>Correo Electrónico Institucional *</span>
+                                            <span>Correo Electrónico Institucional * (Autogenerado)</span>
                                             <span className="text-[10px] text-emerald-700 font-bold">@salud.oaxaca.gob.mx</span>
                                         </label>
                                         <div className="relative">
@@ -333,7 +425,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                                 placeholder="alejandro.gomez@salud.oaxaca.gob.mx"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
+                                                className="w-full pl-9 pr-3 py-2.5 bg-emerald-50/60 border border-emerald-300 rounded-xl text-slate-900 font-mono font-bold focus:outline-none focus:border-[#9D2449]"
                                             />
                                         </div>
                                     </div>
@@ -349,7 +441,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                                 placeholder="971 123 4567"
                                                 value={telefono}
                                                 onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ''))}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
+                                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449]"
                                             />
                                         </div>
                                     </div>
@@ -362,7 +454,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                             placeholder="Escriba el municipio..."
                                             value={municipio}
                                             onChange={(e) => setMunicipio(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-semibold"
                                         />
                                     </div>
                                 </div>
@@ -375,7 +467,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                         <select
                                             value={rol}
                                             onChange={(e) => setRol(e.target.value as UsuarioSSO['rol'])}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-semibold"
                                         >
                                             <option value="CAPTURISTA_TAMIZ">Capturista de Tamiz Neonatal</option>
                                             <option value="MEDICO_UNIDAD">Médico de Unidad / Hospital</option>
@@ -394,7 +486,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                         <select
                                             value={selectedCluesId}
                                             onChange={(e) => setSelectedCluesId(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-medium text-xs"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-medium text-xs"
                                         >
                                             {cluesList.map((unit) => (
                                                 <option key={unit.id} value={unit.id}>
@@ -424,7 +516,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                                 placeholder="PIN o Clave de 6 dígitos"
                                                 value={pinTemporal}
                                                 onChange={(e) => setPinTemporal(e.target.value)}
-                                                className="w-full pl-9 pr-16 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
+                                                className="w-full pl-9 pr-16 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449]"
                                             />
                                             <button
                                                 type="button"

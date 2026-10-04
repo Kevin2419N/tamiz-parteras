@@ -7,7 +7,6 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA000451',
         municipio: 'Juchitán de Zaragoza',
         tipoUnidad: 'Centro de Salud',
-        nivelAtencion: 'Primer Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -16,7 +15,6 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA001230',
         municipio: 'Juchitán de Zaragoza',
         tipoUnidad: 'Hospital General',
-        nivelAtencion: 'Segundo Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -25,7 +23,6 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA002140',
         municipio: 'Santo Domingo Tehuantepec',
         tipoUnidad: 'CESSA',
-        nivelAtencion: 'Primer Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -34,7 +31,6 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA003450',
         municipio: 'Salina Cruz',
         tipoUnidad: 'Hospital General',
-        nivelAtencion: 'Segundo Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -43,7 +39,6 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA004120',
         municipio: 'Ciudad Ixtepec',
         tipoUnidad: 'Centro de Salud',
-        nivelAtencion: 'Primer Nivel',
         estatus: 'ACTIVO',
     },
     {
@@ -52,16 +47,14 @@ export const INITIAL_CLUES_LIST: UnidadCLUES[] = [
         clues: 'OASSA005890',
         municipio: 'San Blas Atempa',
         tipoUnidad: 'Centro de Salud',
-        nivelAtencion: 'Primer Nivel',
         estatus: 'ACTIVO',
     },
     {
         id: 'clues-7',
-        nombre: 'Hospital Comunitario Matías Romero',
+        nombre: 'Hospital Bienestar Matías Romero',
         clues: 'OASSA006310',
         municipio: 'Matías Romero Avendaño',
-        tipoUnidad: 'Hospital Comunitario',
-        nivelAtencion: 'Segundo Nivel',
+        tipoUnidad: 'Hospital Bienestar',
         estatus: 'ACTIVO',
     },
 ];

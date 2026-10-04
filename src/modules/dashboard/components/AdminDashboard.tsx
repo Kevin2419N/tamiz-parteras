@@ -193,7 +193,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName = 'Lic.
                         }`}
                 >
                     <Building2 className={`w-4 h-4 ${activeTab === 'CLUES' ? 'text-rose-200' : 'text-slate-500'}`} />
-                    <span>6. Unidades CLUES</span>
+                    <span>6. Unidades y CLUES</span>
                 </button>
 
                 {/* Pestaña 7: Configuración & Seguridad */}

@@ -1,31 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, QrCode, Key, Printer, X, MapPin, CheckCircle2, UserCheck, Heart, Phone, Building2, Languages, ShieldCheck } from 'lucide-react';
+import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Phone, Key, QrCode, UserCheck, Printer, CheckCircle2 } from 'lucide-react';
 import type { ParteraCredencial, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 
 export const TabUsuariosParteras: React.FC = () => {
-    const [selectedParteraQR, setSelectedParteraQR] = useState<ParteraCredencial | null>(null);
-    const [showRegisterModal, setShowRegisterModal] = useState(false);
-
-    // Dynamic CLUES Catalog
-    const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
-
-    useEffect(() => {
-        const unsubscribe = subscribeCluesCatalog((updatedList) => {
-            setCluesList(updatedList);
-        });
-        return unsubscribe;
-    }, []);
-
     const [parteras, setParteras] = useState<ParteraCredencial[]>([
         {
             id: 'p1',
-            nombreCompleto: 'Doña Rosa Santiz Gómez',
-            curp: 'SAGR620412MOCMNS09',
+            nombreCompleto: 'Doña María Elena Velasco Morales',
+            curp: 'VEMA650810MOCMNS09',
             lenguaMaterna: 'Zapoteco del Istmo',
-            telefonoRecaudo: '9711029384',
+            telefonoRecaudo: '9711234567',
             municipio: 'Juchitán de Zaragoza',
-            comunidad: 'Sección Séptima',
+            comunidad: 'Sección Segunda',
             centroSaludAdscripcion: 'Centro de Salud Urbano Juchitán',
             cluesAdscripcion: 'OASSA000451',
             pinCuatroDigitos: '4892',
@@ -34,12 +21,12 @@ export const TabUsuariosParteras: React.FC = () => {
         },
         {
             id: 'p2',
-            nombreCompleto: 'Doña Juana Martínez Velázquez',
-            curp: 'MAVJ580903MOCMNS02',
+            nombreCompleto: 'Doña Rosa Santiz Gómez',
+            curp: 'SAGR720315MOCMNS02',
             lenguaMaterna: 'Zapoteco del Istmo',
             telefonoRecaudo: '9719876543',
             municipio: 'Santo Domingo Tehuantepec',
-            comunidad: 'Barrio Guichivere',
+            comunidad: 'Barrio Lieza',
             centroSaludAdscripcion: 'CESSA Tehuantepec',
             cluesAdscripcion: 'OASSA002140',
             pinCuatroDigitos: '1204',
@@ -62,8 +49,21 @@ export const TabUsuariosParteras: React.FC = () => {
         },
     ]);
 
-    // Form states for new partera modal
-    const [newNombre, setNewNombre] = useState('');
+    // Dynamic CLUES Catalog Store
+    const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
+
+    useEffect(() => {
+        const unsubscribe = subscribeCluesCatalog((updatedList) => {
+            setCluesList(updatedList);
+        });
+        return unsubscribe;
+    }, []);
+
+    // Form states for new partera modal (Desglose en 3 campos de nombre)
+    const [showRegisterModal, setShowRegisterModal] = useState(false);
+    const [nombres, setNombres] = useState('');
+    const [apellidoPaterno, setApellidoPaterno] = useState('');
+    const [apellidoMaterno, setApellidoMaterno] = useState('');
     const [newCurp, setNewCurp] = useState('');
     const [newLengua, setNewLengua] = useState('Zapoteco del Istmo');
     const [newTelefono, setNewTelefono] = useState('');
@@ -71,6 +71,9 @@ export const TabUsuariosParteras: React.FC = () => {
     const [newComunidad, setNewComunidad] = useState('');
     const [selectedCluesId, setSelectedCluesId] = useState('');
     const [newPin, setNewPin] = useState('');
+
+    // Modal para Ver y Generar Credencial QR
+    const [selectedParteraQR, setSelectedParteraQR] = useState<ParteraCredencial | null>(null);
 
     useEffect(() => {
         if (cluesList.length > 0 && !selectedCluesId) {
@@ -86,10 +89,11 @@ export const TabUsuariosParteras: React.FC = () => {
     const handleRegisterPartera = (e: React.FormEvent) => {
         e.preventDefault();
         const unit = cluesList.find((u) => u.id === selectedCluesId) || cluesList[0];
+        const nombreCompletoCompuesto = `${nombres.trim()} ${apellidoPaterno.trim()} ${apellidoMaterno.trim()}`.trim();
 
         const created: ParteraCredencial = {
             id: `p-${Date.now()}`,
-            nombreCompleto: newNombre,
+            nombreCompleto: nombreCompletoCompuesto,
             curp: newCurp.toUpperCase(),
             lenguaMaterna: newLengua,
             telefonoRecaudo: newTelefono,
@@ -105,27 +109,45 @@ export const TabUsuariosParteras: React.FC = () => {
         setShowRegisterModal(false);
 
         // Reset form
-        setNewNombre('');
+        setNombres('');
+        setApellidoPaterno('');
+        setApellidoMaterno('');
         setNewCurp('');
         setNewTelefono('');
         setNewComunidad('');
         setNewPin('');
     };
 
+    const getInitials = (name: string) => {
+        const words = name.split(' ').filter(Boolean);
+        if (words.length >= 2) {
+            return `${words[0][0]}${words[1][0]}`.toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    };
+
     return (
         <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+
+            {/* CABECERA INSTITUCIONAL */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                        <Users className="w-5 h-5 text-[#9D2449]" />
-                        <span>Padrón y Credencialización de Parteras Tradicionales</span>
-                    </h2>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        Acreditación oficial SSO, asignación de PIN táctil de 4 dígitos y vinculación con la unidad CLUES.
-                    </p>
+                <div className="flex items-center gap-3">
+                    <img
+                        src="/logo-jurisdiccion.png"
+                        alt="Logo Jurisdicción Sanitaria No. 2"
+                        className="h-12 w-auto object-contain mix-blend-multiply hidden sm:block"
+                    />
+                    <div>
+                        <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                            <Heart className="w-5 h-5 text-[#9D2449] fill-rose-100" />
+                            <span>Padrón Oficial de Parteras Tradicionales Acreditadas</span>
+                        </h2>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                            Red Intercultural de Salud Materna • Istmo de Tehuantepec (Jurisdicción Sanitaria No. 2)
+                        </p>
+                    </div>
                 </div>
 
-                {/* BOTÓN REGISTRAR NUEVA PARTERA ACREDITADA */}
                 <button
                     type="button"
                     onClick={() => {
@@ -135,23 +157,28 @@ export const TabUsuariosParteras: React.FC = () => {
                     className="px-4 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto active:scale-95"
                 >
                     <Plus className="w-4 h-4 text-rose-200" />
-                    <span>+ Registrar Partera Acreditada</span>
+                    <span>+ Registrar Nueva Partera</span>
                 </button>
             </div>
 
             {/* VISTA MÓVIL (< md) */}
             <div className="space-y-3 md:hidden">
                 {parteras.map((p) => (
-                    <div key={p.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 uppercase tracking-wider block w-fit mb-1">
-                                    {p.estatusAcreditacion}
-                                </span>
-                                <h3 className="text-xs font-black text-slate-900">{p.nombreCompleto}</h3>
-                                <p className="text-[11px] text-slate-500 font-mono">CURP: {p.curp}</p>
+                    <div key={p.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
+                                    {getInitials(p.nombreCompleto)}
+                                </div>
+                                <div>
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-block mb-0.5">
+                                        {p.estatusAcreditacion}
+                                    </span>
+                                    <h3 className="text-xs font-black text-slate-900">{p.nombreCompleto}</h3>
+                                    <p className="text-[10px] text-slate-500 font-mono">CURP: {p.curp}</p>
+                                </div>
                             </div>
-                            <div className="bg-amber-100 text-amber-900 font-mono font-black text-xs px-2.5 py-1 rounded-xl flex items-center gap-1 border border-amber-300">
+                            <div className="bg-amber-100 text-amber-900 font-mono font-black text-xs px-2.5 py-1 rounded-xl flex items-center gap-1 border border-amber-300 shrink-0">
                                 <Key className="w-3 h-3 text-amber-700" />
                                 <span>PIN: {p.pinCuatroDigitos}</span>
                             </div>
@@ -174,7 +201,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                     <span className="font-bold text-[#9D2449] truncate max-w-[150px]">{p.centroSaludAdscripcion}</span>
                                 </div>
                             )}
-                            <div className="text-[10px] text-slate-400 pt-1">Acreditada: {p.fechaAcreditacion}</div>
                         </div>
 
                         <button
@@ -189,27 +215,34 @@ export const TabUsuariosParteras: React.FC = () => {
                 ))}
             </div>
 
-            {/* VISTA ESCRITORIO (>= md) */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+            {/* TABLA PRO DE PADRÓN DE PARTERAS (ESCRITORIO >= md) */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+                <table className="w-full text-left border-collapse text-xs font-semibold">
                     <thead>
-                        <tr className="bg-slate-50 text-[11px] font-black uppercase text-slate-600 border-b border-slate-200">
-                            <th className="py-3 px-4">Partera Tradicional / Lengua</th>
-                            <th className="py-3 px-4">CURP</th>
-                            <th className="py-3 px-4">Ubicación (Municipio / Comunidad)</th>
-                            <th className="py-3 px-4">Centro de Salud (CLUES)</th>
-                            <th className="py-3 px-4 text-center">PIN Táctil</th>
-                            <th className="py-3 px-4 text-right">Credencialización</th>
+                        <tr className="bg-slate-100/80 text-slate-700 font-bold uppercase text-xs border-b border-slate-200">
+                            <th className="py-3.5 px-4">Partera Tradicional / Lengua</th>
+                            <th className="py-3.5 px-4">CURP</th>
+                            <th className="py-3.5 px-4">Ubicación (Municipio / Comunidad)</th>
+                            <th className="py-3.5 px-4">Centro de Salud (CLUES)</th>
+                            <th className="py-3.5 px-4 text-center">PIN Táctil</th>
+                            <th className="py-3.5 px-4 text-right">Credencialización</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
                         {parteras.map((p) => (
                             <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
                                 <td className="py-3.5 px-4">
-                                    <div className="font-black text-slate-900">{p.nombreCompleto}</div>
-                                    <div className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
-                                        <Languages className="w-3 h-3 text-[#9D2449]" />
-                                        <span>{p.lenguaMaterna || 'Español'}</span>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
+                                            {getInitials(p.nombreCompleto)}
+                                        </div>
+                                        <div>
+                                            <div className="font-black text-slate-900">{p.nombreCompleto}</div>
+                                            <div className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+                                                <Languages className="w-3 h-3 text-[#9D2449]" />
+                                                <span>{p.lenguaMaterna || 'Español'}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                                 <td className="py-3.5 px-4 font-mono text-slate-600">{p.curp}</td>
@@ -247,7 +280,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 </table>
             </div>
 
-            {/* MODAL PARA REGISTRAR NUEVA PARTERA ACREDITADA (2 COLUMNAS COMPLETO) */}
+            {/* MODAL REGISTRAR PARTERA ACREDITADA (3 CAMPOS DE NOMBRE) */}
             {showRegisterModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -276,32 +309,62 @@ export const TabUsuariosParteras: React.FC = () => {
                         <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-2xl flex items-start gap-3 text-xs text-amber-900">
                             <ShieldCheck className="w-5 h-5 shrink-0 text-amber-700 mt-0.5" />
                             <div className="space-y-0.5">
-                                <span className="font-extrabold uppercase tracking-wider block text-[10px]">Acreditación Comunitaria y Enlace Intercultural</span>
+                                <span className="font-extrabold uppercase tracking-wider block text-[10px]">Acreditación Comunitaria e Identidad Intercultural</span>
                                 <p className="text-slate-700 font-medium text-[11px]">
-                                    La asignación del PIN de 4 dígitos permitirá a la partera dictar de forma táctil y por voz las hojas de referencia y seguimientos obstétricos comunitarios.
+                                    El registro desglosado de los apellidos permite la vinculación exacta con la clave CURP y la expedición homologada de credenciales QR.
                                 </p>
                             </div>
                         </div>
 
-                        {/* FORMULARIO EN LAYOUT DE 2 COLUMNAS */}
+                        {/* FORMULARIO DE REGISTRO EN 2 COLUMNAS */}
                         <form onSubmit={handleRegisterPartera} className="space-y-4 text-xs font-semibold">
+
+                            {/* NOMBRES DESGLOSADOS EN 3 CAMPOS */}
+                            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
+                                <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
+                                    Identidad de la Partera (Nombres y Apellidos *):
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1">Nombre(s) *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ej. María Elena"
+                                            value={nombres}
+                                            onChange={(e) => setNombres(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1">Apellido Paterno *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ej. Velasco"
+                                            value={apellidoPaterno}
+                                            onChange={(e) => setApellidoPaterno(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1">Apellido Materno *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ej. Morales"
+                                            value={apellidoMaterno}
+                                            onChange={(e) => setApellidoMaterno(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                 {/* COLUMNA 1 */}
                                 <div className="space-y-3.5">
-                                    {/* Nombre Completo de la Partera */}
-                                    <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Nombre Completo de la Partera *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="Ej. Doña María Elena Velasco"
-                                            value={newNombre}
-                                            onChange={(e) => setNewNombre(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
-                                        />
-                                    </div>
-
                                     {/* CURP de la Partera */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
@@ -317,7 +380,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                             placeholder="VEMA650810MOCMNS09"
                                             value={newCurp}
                                             onChange={(e) => setNewCurp(e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 uppercase font-mono focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 uppercase font-mono focus:outline-none focus:border-[#9D2449]"
                                         />
                                     </div>
 
@@ -330,7 +393,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                         <select
                                             value={newLengua}
                                             onChange={(e) => setNewLengua(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-semibold"
                                         >
                                             <option value="Zapoteco del Istmo">Zapoteco del Istmo (Diidxazá)</option>
                                             <option value="Ombeayiüts / Huave">Ombeayiüts / Huave (San Mateo / Ikoods)</option>
@@ -351,7 +414,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 placeholder="971 123 4567"
                                                 value={newTelefono}
                                                 onChange={(e) => setNewTelefono(e.target.value.replace(/\D/g, ''))}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
+                                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449]"
                                             />
                                         </div>
                                     </div>
@@ -361,42 +424,36 @@ export const TabUsuariosParteras: React.FC = () => {
                                 <div className="space-y-3.5">
                                     {/* Municipio (TEXTO LIBRE) */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
-                                            <span>Municipio / Localidad * (Texto Libre)</span>
-                                        </label>
+                                        <label className="block text-slate-800 font-bold mb-1">Municipio / Localidad * (Texto Libre)</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Escriba el municipio..."
                                             value={newMunicipio}
                                             onChange={(e) => setNewMunicipio(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-semibold"
                                         />
                                     </div>
 
-                                    {/* Comunidad / Barrio / Sección */}
+                                    {/* Comunidad / Barrio */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Comunidad / Barrio / Sección *</label>
+                                        <label className="block text-slate-800 font-bold mb-1">Comunidad / Barrio / Sección</label>
                                         <input
                                             type="text"
-                                            required
-                                            placeholder="Ej. Sección Séptima / Barrio Guichivere"
+                                            placeholder="Ej. Sección Segunda"
                                             value={newComunidad}
                                             onChange={(e) => setNewComunidad(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
                                         />
                                     </div>
 
-                                    {/* Centro de Salud de Adscripción (Conectado a CLUES) */}
+                                    {/* Centro de Salud Adscrito (CLUES) */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
-                                            <span>Centro de Salud de Adscripción (CLUES) *</span>
-                                            <Building2 className="w-3.5 h-3.5 text-[#9D2449]" />
-                                        </label>
+                                        <label className="block text-slate-800 font-bold mb-1">Centro de Salud Adscrito (CLUES) *</label>
                                         <select
                                             value={selectedCluesId}
                                             onChange={(e) => setSelectedCluesId(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-medium text-xs"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] text-xs font-semibold"
                                         >
                                             {cluesList.map((unit) => (
                                                 <option key={unit.id} value={unit.id}>
@@ -456,7 +513,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 </div>
             )}
 
-            {/* CREDENCIAL QR PARTERA (FORMATO BLANCO INSTITUCIONAL COMPLETO CON CLUES) */}
+            {/* CREDENCIAL QR PARTERA (FORMATO HOMOLOGADO CON LOGOS INSTITUCIONALES) */}
             {selectedParteraQR && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xl max-w-sm w-full space-y-4 text-center relative">
@@ -493,9 +550,12 @@ export const TabUsuariosParteras: React.FC = () => {
                             </span>
                         </div>
 
-                        {/* DATOS DE LA PARTERA */}
+                        {/* DATOS DE LA PARTERA CON AVATAR CIRCULAR */}
                         <div className="space-y-1 text-slate-900">
-                            <h4 className="text-base font-black text-[#9D2449]">{selectedParteraQR.nombreCompleto}</h4>
+                            <div className="w-14 h-14 rounded-full bg-[#9D2449] text-white mx-auto flex items-center justify-center font-black text-lg shadow-md border-2 border-rose-200">
+                                {getInitials(selectedParteraQR.nombreCompleto)}
+                            </div>
+                            <h4 className="text-base font-black text-[#9D2449] pt-1">{selectedParteraQR.nombreCompleto}</h4>
                             <p className="text-[11px] text-slate-500 font-mono">CURP: {selectedParteraQR.curp}</p>
                             <p className="text-[11px] font-bold text-slate-700">{selectedParteraQR.municipio} • {selectedParteraQR.comunidad}</p>
                             {selectedParteraQR.lenguaMaterna && (

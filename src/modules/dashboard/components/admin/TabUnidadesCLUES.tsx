@@ -12,7 +12,6 @@ export const TabUnidadesCLUES: React.FC = () => {
     const [nombreUnidad, setNombreUnidad] = useState('');
     const [municipio, setMunicipio] = useState('');
     const [tipoUnidad, setTipoUnidad] = useState<UnidadCLUES['tipoUnidad']>('Centro de Salud');
-    const [nivelAtencion, setNivelAtencion] = useState<UnidadCLUES['nivelAtencion']>('Primer Nivel');
     const [estatus, setEstatus] = useState<UnidadCLUES['estatus']>('ACTIVO');
 
     useEffect(() => {
@@ -29,7 +28,6 @@ export const TabUnidadesCLUES: React.FC = () => {
             nombre: nombreUnidad.trim(),
             municipio: municipio.trim() || 'Juchitán de Zaragoza',
             tipoUnidad,
-            nivelAtencion,
             estatus,
         });
         setShowModal(false);
@@ -43,7 +41,7 @@ export const TabUnidadesCLUES: React.FC = () => {
     return (
         <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
 
-            {/* ENCABEZADO PRINCIPAL DEL MÓDULO EXCLUSIVO */}
+            {/* ENCABEZADO PRINCIPAL DEL MÓDULO EXCLUSIVO CLUES */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-rose-50 text-[#9D2449] rounded-2xl border border-rose-200 shadow-sm">
@@ -54,7 +52,7 @@ export const TabUnidadesCLUES: React.FC = () => {
                             <span>Catálogo Oficial de Unidades Médicas y CLUES</span>
                         </h2>
                         <p className="text-xs text-slate-500 font-medium mt-0.5">
-                            Jurisdicción Sanitaria No. 2 • Red de Establecimientos de Salud del Istmo de Tehuantepec
+                            Jurisdicción Sanitaria No. 2 • Red de Establecimientos de Salud (Clave Única de Establecimientos de Salud)
                         </p>
                     </div>
                 </div>
@@ -106,8 +104,8 @@ export const TabUnidadesCLUES: React.FC = () => {
                                 </span>
                             </div>
                             <div className="text-right">
-                                <span className="text-[10px] text-slate-400 block font-bold uppercase">Tipo / Nivel</span>
-                                <span className="font-bold text-[#9D2449] text-[11px]">{u.tipoUnidad} ({u.nivelAtencion})</span>
+                                <span className="text-[10px] text-slate-400 block font-bold uppercase">Tipo</span>
+                                <span className="font-bold text-[#9D2449] text-[11px]">{u.tipoUnidad}</span>
                             </div>
                         </div>
                     </div>
@@ -118,12 +116,11 @@ export const TabUnidadesCLUES: React.FC = () => {
             <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
                 <table className="w-full text-left border-collapse text-xs font-semibold">
                     <thead>
-                        <tr className="bg-slate-50 text-[11px] font-black uppercase text-slate-600 border-b border-slate-200">
+                        <tr className="bg-slate-100/80 text-slate-700 font-bold uppercase text-xs border-b border-slate-200">
                             <th className="py-3.5 px-4">Nombre de la Unidad Médica</th>
                             <th className="py-3.5 px-4">Clave CLUES</th>
                             <th className="py-3.5 px-4">Municipio / Localidad</th>
                             <th className="py-3.5 px-4">Tipo de Establecimiento</th>
-                            <th className="py-3.5 px-4 text-center">Nivel de Atención</th>
                             <th className="py-3.5 px-4 text-center">Estatus</th>
                         </tr>
                     </thead>
@@ -139,14 +136,9 @@ export const TabUnidadesCLUES: React.FC = () => {
                                 <td className="py-3.5 px-4 font-bold text-slate-800">{u.municipio}</td>
                                 <td className="py-3.5 px-4 text-slate-700 font-medium">{u.tipoUnidad}</td>
                                 <td className="py-3.5 px-4 text-center">
-                                    <span className="bg-rose-50 text-[#9D2449] font-black text-[10px] px-2.5 py-1 rounded-full border border-rose-200">
-                                        {u.nivelAtencion}
-                                    </span>
-                                </td>
-                                <td className="py-3.5 px-4 text-center">
                                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${u.estatus === 'ACTIVO'
-                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                            : 'bg-amber-100 text-amber-800 border border-amber-300'
                                         }`}>
                                         {u.estatus}
                                     </span>
@@ -157,7 +149,7 @@ export const TabUnidadesCLUES: React.FC = () => {
                 </table>
             </div>
 
-            {/* MODAL DE REGISTRO DE UNIDAD MÉDICA */}
+            {/* MODAL DE REGISTRO DE UNIDAD MÉDICA (CLUES) */}
             {showModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
@@ -169,8 +161,8 @@ export const TabUnidadesCLUES: React.FC = () => {
                                     <Building2 className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-black text-slate-900">Dar de Alta Nueva Unidad Médica</h3>
-                                    <p className="text-xs text-slate-500 font-medium">Servicios de Salud de Oaxaca • Catálogo CLUES</p>
+                                    <h3 className="text-base font-black text-slate-900">Dar de Alta Nueva Unidad Médica (CLUES)</h3>
+                                    <p className="text-xs text-slate-500 font-medium">Servicios de Salud de Oaxaca • Catálogo Oficial CLUES</p>
                                 </div>
                             </div>
                             <button
@@ -197,7 +189,7 @@ export const TabUnidadesCLUES: React.FC = () => {
                                     type="text"
                                     required
                                     maxLength={11}
-                                    placeholder="Ej. OASSA000451"
+                                    placeholder="EJ. OASSA000451"
                                     value={claveClues}
                                     onChange={(e) => setClaveClues(e.target.value.toUpperCase())}
                                     className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono font-bold uppercase focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all"
@@ -233,34 +225,19 @@ export const TabUnidadesCLUES: React.FC = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                {/* Tipo de Establecimiento */}
-                                <div>
-                                    <label className="block text-slate-800 font-bold mb-1">Tipo de Establecimiento *</label>
-                                    <select
-                                        value={tipoUnidad}
-                                        onChange={(e) => setTipoUnidad(e.target.value as UnidadCLUES['tipoUnidad'])}
-                                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
-                                    >
-                                        <option value="Centro de Salud">Centro de Salud</option>
-                                        <option value="CESSA">CESSA</option>
-                                        <option value="Hospital General">Hospital General</option>
-                                        <option value="Hospital Comunitario">Hospital Comunitario</option>
-                                    </select>
-                                </div>
-
-                                {/* Nivel de Atención */}
-                                <div>
-                                    <label className="block text-slate-800 font-bold mb-1">Nivel de Atención *</label>
-                                    <select
-                                        value={nivelAtencion}
-                                        onChange={(e) => setNivelAtencion(e.target.value as UnidadCLUES['nivelAtencion'])}
-                                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
-                                    >
-                                        <option value="Primer Nivel">Primer Nivel</option>
-                                        <option value="Segundo Nivel">Segundo Nivel</option>
-                                    </select>
-                                </div>
+                            {/* Tipo de Establecimiento */}
+                            <div>
+                                <label className="block text-slate-800 font-bold mb-1">Tipo de Establecimiento *</label>
+                                <select
+                                    value={tipoUnidad}
+                                    onChange={(e) => setTipoUnidad(e.target.value as UnidadCLUES['tipoUnidad'])}
+                                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:bg-white transition-all font-semibold"
+                                >
+                                    <option value="Centro de Salud">Centro de Salud</option>
+                                    <option value="CESSA">CESSA</option>
+                                    <option value="Hospital General">Hospital General</option>
+                                    <option value="Hospital Bienestar">Hospital Bienestar</option>
+                                </select>
                             </div>
 
                             {/* Estatus */}
