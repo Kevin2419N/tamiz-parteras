@@ -6,18 +6,22 @@ export interface UnidadCLUES {
 }
 
 export interface GuthrieFormData {
-    // Sección A: Encabezado de la Tarjeta
+    // Sección A: Encabezado y Datos de la Muestra
     folio: string;
     unidadMedica: string;
     clues: string;
     jurisdiccion: string;
     estado: string;
+    nombreResponsableToma: string;
+    apellidoPaternoResponsableToma: string;
+    apellidoMaternoResponsableToma: string;
+    responsableToma: string; // Para compatibilidad
+    tecnicaToma: '1A_MUESTRA' | '2A_PREMATUREZ' | '2A_INADECUADA' | '2A_SOSPECHOSO' | '1A_TALON' | '2A_TALON' | 'REMUESTRA_SOSPECHA';
+    sospechosoEspecificar?: string;
+    calidadMuestraLab: 'ADECUADA' | 'INADECUADA';
+    responsableLaboratorio: string;
 
-    // Sección B: Datos Muestra / Responsable
-    responsableToma: string;
-    tecnicaToma: '1A_TALON' | '2A_TALON' | 'REMUESTRA_SOSPECHA';
-
-    // Sección C: Datos del Recién Nacido
+    // Sección B: Datos del Recién Nacido (RN)
     nombreRN: string;
     apellidoPaternoRN: string;
     apellidoMaternoRN: string;
@@ -26,29 +30,36 @@ export interface GuthrieFormData {
     fechaToma: string;
     horaToma: string;
     sexo: 'MASCULINO' | 'FEMENINO' | 'AMBIGUEDAD';
-    edadGestacional: 'PRETERMINO' | 'TERMINO' | 'POSTERMINO';
-    producto: 'UNICO' | 'GEMELAR_MULTIPLE';
+    edadGestacional: 'PRETERMINO_MENOR_37' | 'TERMINO_37_41' | 'POSTERMINO_MAYOR_42' | 'PRETERMINO' | 'TERMINO' | 'POSTERMINO';
+    producto: 'UNICO' | 'GEMELAR' | 'GEMELAR_MULTIPLE';
+    numeroGemelo?: string;
     pesoGramos: string;
     tallaCm: string;
     malformaciones: 'NO' | 'SI';
     malformacionesDetalle?: string;
     condicionesRN: 'SANO' | 'ENFERMO' | 'UCIN';
-    alimentacion: 'LACTANCIA_MATERNA' | 'FORMULA' | 'MIXTA' | 'AYUNO';
+    alimentacion: 'LECHE_MATERNA' | 'FORMULA' | 'MIXTA' | 'AYUNO';
 
-    // Sección D: Datos de la Madre
+    // Sección C: Datos de la Madre o Tutora
     nombreMadre: string;
     apellidoPaternoMadre: string;
     apellidoMaternoMadre: string;
     curpMadre: string;
-    calleNumero: string;
+    calle: string;
+    numExterior: string;
+    numInterior: string;
     coloniaLocalidad: string;
     municipioMadre: string;
+    estadoMadre: string;
     codigoPostalMadre: string;
+    telefonoFijo: string;
     telefonoCelular: string;
+    emailMadre: string;
     edadMadre: string;
     gestas: string;
     enfermedadTiroideaMetabolica: 'NO' | 'SI';
     enfermedadTiroideaDetalle?: string;
+    calleNumero?: string; // Compatibilidad
 }
 
 export interface RegistroTamizHistorial {
