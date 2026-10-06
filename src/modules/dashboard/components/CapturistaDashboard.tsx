@@ -138,7 +138,7 @@ export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
         const nuevoRegistro: RegistroTamizHistorial = {
             id: `REG-${Math.floor(100 + Math.random() * 900)}`,
             folio: newForm.folio,
-            rn: `RN ${newForm.apellidoPaternoMadre} ${newForm.apellidoMaternoMadre}`,
+            rn: `${newForm.nombreRN || 'RN'} ${newForm.apellidoPaternoRN} ${newForm.apellidoMaternoRN}`,
             madre: `${newForm.nombreMadre} ${newForm.apellidoPaternoMadre} ${newForm.apellidoMaternoMadre}`,
             curpMadre: newForm.curpMadre || 'SIN CURP',
             fechaToma: `${newForm.fechaToma} ${newForm.horaToma}`,
@@ -168,8 +168,8 @@ export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
         /* MARCO INSTITUCIONAL DEL SISTEMA DE DISEÑO DE PARTERAS Y SSO OAXACA */
         <div className="border-4 border-[#9D2449] bg-white rounded-3xl shadow-xl p-4 md:p-8 max-w-7xl mx-auto my-4 min-h-screen space-y-6">
 
-            {/* 1. CABECERA INSTITUCIONAL SUPERIOR HOMOLOGADA */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6 text-center md:text-left">
+            {/* 1. CABECERA INSTITUCIONAL SUPERIOR HOMOLOGADA (OCULTA EN IMPRESIÓN) */}
+            <div className="no-print flex flex-col md:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6 text-center md:text-left">
                 {/* Logo Izquierdo: Jurisdicción Sanitaria No. 2 */}
                 <img
                     src="/logo-jurisdiccion.png"
@@ -200,8 +200,8 @@ export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
                 />
             </div>
 
-            {/* 2. HERO BANNER OPERATIVO GUINDA OAXACA CON BOTONES RECICLADOS */}
-            <div className="bg-[#9D2449] text-white rounded-2xl p-6 shadow-md font-bold my-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* 2. HERO BANNER OPERATIVO GUINDA OAXACA CON BOTONES RECICLADOS (OCULTO EN IMPRESIÓN) */}
+            <div className="no-print bg-[#9D2449] text-white rounded-2xl p-6 shadow-md font-bold my-4 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="space-y-1.5 text-center md:text-left">
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-100 bg-white/15 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md">
                         <Building2 className="w-3.5 h-3.5 text-rose-200" />
@@ -249,16 +249,16 @@ export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
                 </div>
             </div>
 
-            {/* BANNER NOTIFICACIÓN ESCANEO IA */}
+            {/* BANNER NOTIFICACIÓN ESCANEO IA (OCULTO EN IMPRESIÓN) */}
             {aiNotification && (
-                <div className="bg-rose-50 border-2 border-[#9D2449] rounded-2xl p-4 flex items-center gap-3 text-xs font-bold text-[#9D2449] shadow-md animate-bounce">
+                <div className="no-print bg-rose-50 border-2 border-[#9D2449] rounded-2xl p-4 flex items-center gap-3 text-xs font-bold text-[#9D2449] shadow-md animate-bounce">
                     <Sparkles className="w-5 h-5 text-[#9D2449] shrink-0" />
                     <p className="flex-1">{aiNotification}</p>
                 </div>
             )}
 
-            {/* 3. TAB-NAVIGATION DE 4 PESTAÑAS EJECUTIVAS */}
-            <div className="bg-slate-100 p-1.5 rounded-2xl flex flex-wrap sm:flex-nowrap gap-2 overflow-x-auto border border-slate-200 shadow-inner">
+            {/* 3. TAB-NAVIGATION DE 4 PESTAÑAS EJECUTIVAS (OCULTAS EN IMPRESIÓN) */}
+            <div className="no-print bg-slate-100 p-1.5 rounded-2xl flex flex-wrap sm:flex-nowrap gap-2 overflow-x-auto border border-slate-200 shadow-inner">
 
                 {/* Pestaña 1: Captura Guthrie */}
                 <button

@@ -18,6 +18,9 @@ export interface GuthrieFormData {
     tecnicaToma: '1A_TALON' | '2A_TALON' | 'REMUESTRA_SOSPECHA';
 
     // Sección C: Datos del Recién Nacido
+    nombreRN: string;
+    apellidoPaternoRN: string;
+    apellidoMaternoRN: string;
     fechaNacimiento: string;
     horaNacimiento: string;
     fechaToma: string;
