@@ -8,6 +8,108 @@ interface ModalEscaneoIAProps {
     onScanComplete: (scannedData: Partial<GuthrieFormData>) => void;
 }
 
+export interface SampleCardItem {
+    title: string;
+    folio: string;
+    madre: string;
+    rn: string;
+    img: string;
+    data: Partial<GuthrieFormData>;
+}
+
+export const sampleCards: SampleCardItem[] = [
+    {
+        title: 'Muestra 1: Tarjeta Guthrie RN Gómez',
+        folio: '5458347',
+        madre: 'María Gómez Santiz',
+        rn: 'RN Gómez Santiz',
+        img: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80',
+        data: {
+            folio: '5458347',
+            unidadMedica: 'OCIMB000683 - Centro de Salud Urbano Juchitán',
+            clues: 'OCIMB000683',
+            jurisdiccion: '02 Istmo',
+            estado: 'Oaxaca',
+            nombreResponsableToma: 'María del Carmen',
+            apellidoPaternoResponsableToma: 'Reyes',
+            apellidoMaternoResponsableToma: 'Alvarez',
+            responsableToma: 'Enf. María del Carmen Reyes Alvarez',
+            tecnicaToma: '1A_MUESTRA',
+            fechaNacimiento: '2026-09-05',
+            horaNacimiento: '08:30',
+            fechaToma: '2026-09-08',
+            horaToma: '10:00',
+            sexo: 'MASCULINO',
+            edadGestacional: 'TERMINO_37_41',
+            producto: 'UNICO',
+            pesoGramos: '3250',
+            tallaCm: '50',
+            malformaciones: 'NO',
+            condicionesRN: 'SANO',
+            alimentacion: 'LECHE_MATERNA',
+            nombreMadre: 'María',
+            apellidoPaternoMadre: 'Gómez',
+            apellidoMaternoMadre: 'Santiz',
+            curpMadre: 'GOSM980412MOCMNN08',
+            calle: 'Av. Hidalgo',
+            numExterior: '45',
+            coloniaLocalidad: 'Centro',
+            municipioMadre: 'Juchitán de Zaragoza',
+            codigoPostalMadre: '70000',
+            telefonoCelular: '9711234567',
+            edadMadre: '28',
+            gestas: '2',
+            enfermedadTiroideaMetabolica: 'NO',
+            observacionesMuestra: 'Muestra tomada en talón izquierdo sin complicaciones.'
+        }
+    },
+    {
+        title: 'Muestra 2: Tarjeta Guthrie RN López',
+        folio: '5458348',
+        madre: 'Juana López Pérez',
+        rn: 'RN López Pérez',
+        img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80',
+        data: {
+            folio: '5458348',
+            unidadMedica: 'OASHG001245 - Hospital General Sto. Domingo Tehuantepec',
+            clues: 'OASHG001245',
+            jurisdiccion: '02 Istmo',
+            estado: 'Oaxaca',
+            nombreResponsableToma: 'Alejandro',
+            apellidoPaternoResponsableToma: 'Morales',
+            apellidoMaternoResponsableToma: 'García',
+            responsableToma: 'Dr. Alejandro Morales García',
+            tecnicaToma: '1A_MUESTRA',
+            fechaNacimiento: '2026-09-06',
+            horaNacimiento: '14:15',
+            fechaToma: '2026-09-09',
+            horaToma: '09:30',
+            sexo: 'FEMENINO',
+            edadGestacional: 'TERMINO_37_41',
+            producto: 'UNICO',
+            pesoGramos: '2980',
+            tallaCm: '48',
+            malformaciones: 'NO',
+            condicionesRN: 'SANO',
+            alimentacion: 'MIXTA',
+            nombreMadre: 'Juana',
+            apellidoPaternoMadre: 'López',
+            apellidoMaternoMadre: 'Pérez',
+            curpMadre: 'LOPJ010915MOCRPN03',
+            calle: 'Calle 5 de Mayo',
+            numExterior: '12',
+            coloniaLocalidad: 'Barrio Santa María',
+            municipioMadre: 'Santo Domingo Tehuantepec',
+            codigoPostalMadre: '70760',
+            telefonoCelular: '9719876543',
+            edadMadre: '25',
+            gestas: '1',
+            enfermedadTiroideaMetabolica: 'NO',
+            observacionesMuestra: 'Muestra óptima de talón derecho.'
+        }
+    }
+];
+
 export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose, onScanComplete }) => {
     const [isScanning, setIsScanning] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
@@ -15,89 +117,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     if (!isOpen) return null;
-
-    const sampleCards = [
-        {
-            title: 'Muestra 1: Tarjeta Guthrie RN Gómez',
-            folio: '5458347',
-            madre: 'María Gómez Santiz',
-            rn: 'RN Gómez Santiz',
-            img: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80',
-            data: {
-                folio: '5458347',
-                unidadMedica: 'OCIMB000683 - Centro de Salud Urbano Juchitán',
-                clues: 'OCIMB000683',
-                jurisdiccion: '02 Istmo',
-                estado: 'Oaxaca',
-                responsableToma: 'Enf. María del Carmen Reyes',
-                tecnicaToma: '1A_TALON' as const,
-                fechaNacimiento: '2026-09-05',
-                horaNacimiento: '08:30',
-                fechaToma: '2026-09-08',
-                horaToma: '10:00',
-                sexo: 'MASCULINO' as const,
-                edadGestacional: 'TERMINO' as const,
-                producto: 'UNICO' as const,
-                pesoGramos: '3250',
-                tallaCm: '50',
-                malformaciones: 'NO' as const,
-                condicionesRN: 'SANO' as const,
-                alimentacion: 'LACTANCIA_MATERNA' as const,
-                nombreMadre: 'María',
-                apellidoPaternoMadre: 'Gómez',
-                apellidoMaternoMadre: 'Santiz',
-                curpMadre: 'GOSM980412MOCMNN08',
-                calleNumero: 'Av. Hidalgo No. 45',
-                coloniaLocalidad: 'Centro',
-                municipioMadre: 'Juchitán de Zaragoza',
-                codigoPostalMadre: '70000',
-                telefonoCelular: '9711234567',
-                edadMadre: '28',
-                gestas: '2',
-                enfermedadTiroideaMetabolica: 'NO' as const,
-            }
-        },
-        {
-            title: 'Muestra 2: Tarjeta Guthrie RN López',
-            folio: '5458348',
-            madre: 'Juana López Pérez',
-            rn: 'RN López Pérez',
-            img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80',
-            data: {
-                folio: '5458348',
-                unidadMedica: 'OASHG001245 - Hospital General Sto. Domingo Tehuantepec',
-                clues: 'OASHG001245',
-                jurisdiccion: '02 Istmo',
-                estado: 'Oaxaca',
-                responsableToma: 'Dr. Alejandro Morales',
-                tecnicaToma: '1A_TALON' as const,
-                fechaNacimiento: '2026-09-06',
-                horaNacimiento: '14:15',
-                fechaToma: '2026-09-09',
-                horaToma: '09:30',
-                sexo: 'FEMENINO' as const,
-                edadGestacional: 'TERMINO' as const,
-                producto: 'UNICO' as const,
-                pesoGramos: '2980',
-                tallaCm: '48',
-                malformaciones: 'NO' as const,
-                condicionesRN: 'SANO' as const,
-                alimentacion: 'MIXTA' as const,
-                nombreMadre: 'Juana',
-                apellidoPaternoMadre: 'López',
-                apellidoMaternoMadre: 'Pérez',
-                curpMadre: 'LOPJ010915MOCRPN03',
-                calleNumero: 'Calle 5 de Mayo #12',
-                coloniaLocalidad: 'Barrio Santa María',
-                municipioMadre: 'Santo Domingo Tehuantepec',
-                codigoPostalMadre: '70760',
-                telefonoCelular: '9719876543',
-                edadMadre: '25',
-                gestas: '1',
-                enfermedadTiroideaMetabolica: 'NO' as const,
-            }
-        }
-    ];
 
     const runSimulatedScan = (scannedObj: Partial<GuthrieFormData>, imgSrc: string) => {
         setSelectedImage(imgSrc);

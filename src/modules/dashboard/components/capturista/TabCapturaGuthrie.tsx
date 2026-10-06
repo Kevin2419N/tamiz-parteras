@@ -10,7 +10,9 @@ import {
     Sparkles,
     Camera,
     FileText,
-    FlaskConical
+    FlaskConical,
+    Clock,
+    ClipboardList
 } from 'lucide-react';
 import type { GuthrieFormData, UnidadCLUES } from './types';
 
@@ -89,6 +91,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         gestas: '1',
         enfermedadTiroideaMetabolica: 'NO',
         enfermedadTiroideaDetalle: '',
+        observacionesMuestra: 'Muestra tomada en talón izquierdo sin complicaciones.',
     };
 
     const sampleAIData: GuthrieFormData = {
@@ -142,6 +145,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         gestas: '2',
         enfermedadTiroideaMetabolica: 'NO',
         enfermedadTiroideaDetalle: '',
+        observacionesMuestra: 'Muestra tomada en talón izquierdo sin complicaciones. Impregnación de papel filtro uniforme.',
     };
 
     const [formData, setFormData] = useState<GuthrieFormData>(defaultForm);
@@ -318,7 +322,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                             SECRETARÍA DE SALUD • SISTEMA NACIONAL DE SALUD • OAXACA
                         </span>
                         <h2 className="text-lg font-black text-slate-900">
-                            Cédula Oficial de Muestra Neonatal (Tarjeta Guthrie)
+                            Cédula Oficial de Muestra Neonatal — SSO Oaxaca
                         </h2>
                     </div>
 
@@ -712,10 +716,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                     </div>
 
-                    {/* COLUMNA DERECHA: SECCIÓN C (DATOS DE LA MADRE Y DOMICILIO COMPLETO) */}
+                    {/* COLUMNA DERECHA: SECCIÓN C (DATOS DE LA MADRE O TUTORA) Y SECCIÓN D (OBSERVACIONES) */}
                     <div className="space-y-6">
 
-                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 h-full flex flex-col justify-between">
+                        {/* SECCIÓN C: DATOS DE LA MADRE O TUTORA */}
+                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
                             <div>
                                 <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-[#9D2449] mb-4">
                                     <HeartPulse className="w-4 h-4" />
@@ -940,6 +945,42 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         </div>
                                     </div>
 
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SECCIÓN D: OBSERVACIONES Y CONTROL DE CALIDAD DE TOMA */}
+                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-[#9D2449]">
+                                <ClipboardList className="w-4 h-4" />
+                                <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN D • Observaciones / Control de Calidad de Toma</h3>
+                            </div>
+
+                            <div className="space-y-3.5 text-xs">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                                        Observaciones de la Muestra / Notas del Capturista
+                                    </label>
+                                    <textarea
+                                        rows={2}
+                                        placeholder="Ej: Muestra tomada en talón izquierdo sin complicaciones. Impregnación de papel filtro uniforme."
+                                        value={formData.observacionesMuestra || ''}
+                                        onChange={(e) => setFormData({ ...formData, observacionesMuestra: e.target.value })}
+                                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-medium focus:outline-none focus:border-[#9D2449] resize-none text-xs"
+                                    />
+                                </div>
+
+                                {/* RECUADRO DE AVISO INSTITUCIONAL LÍMITE DE ENVÍO (<72 HRS) */}
+                                <div className="p-3 bg-amber-50/90 border border-amber-300 rounded-xl flex items-start gap-2.5 text-slate-700 shadow-sm">
+                                    <Clock className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                                    <div className="text-[11px] space-y-0.5">
+                                        <span className="font-extrabold text-amber-900 block uppercase tracking-tight text-[10px]">
+                                            AVISO INSTITUCIONAL • TIEMPO LÍMITE DE ENVÍO
+                                        </span>
+                                        <p className="font-medium text-slate-700 leading-tight">
+                                            Las muestras en papel filtro deben remitirse al LESP en un periodo <strong className="text-amber-900 font-extrabold">no mayor a 72 horas</strong> posterior a la toma para garantizar la viabilidad diagnóstica.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

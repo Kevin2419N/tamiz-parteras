@@ -59,6 +59,7 @@ export interface GuthrieFormData {
     gestas: string;
     enfermedadTiroideaMetabolica: 'NO' | 'SI';
     enfermedadTiroideaDetalle?: string;
+    observacionesMuestra?: string;
     calleNumero?: string; // Compatibilidad
 }
 

@@ -4,8 +4,6 @@ import {
     Search,
     Truck,
     AlertTriangle,
-    Camera,
-    Plus,
     LogOut,
     Building2,
     Sparkles
@@ -200,30 +198,27 @@ export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
                 />
             </div>
 
-            {/* 2. HERO BANNER OPERATIVO GUINDA OAXACA (CENTRADO TOTAL) */}
-            <div className="no-print bg-[#9D2449] text-white rounded-2xl p-6 shadow-md font-bold my-4 flex flex-col items-center justify-center text-center space-y-2.5 relative">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-100 bg-white/15 px-3.5 py-1 rounded-full border border-white/20 backdrop-blur-md">
-                    <Building2 className="w-3.5 h-3.5 text-rose-200" />
-                    CAPTURISTA DE TAMIZ NEONATAL • CENTRO DE SALUD / LABORATORIO REGIONAL
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                    Bienvenido, CAPTURISTA.JURISDICCION2
-                </h2>
-                <p className="text-xs text-rose-100 font-semibold max-w-xl">
-                    Jurisdicción Sanitaria No. 2 - Istmo • Módulo Operativo Institucional SSO
-                </p>
-
-                <div className="pt-1">
-                    <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl border border-white/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 backdrop-blur-md shadow-sm"
-                        title="Cerrar Sesión"
-                    >
-                        <LogOut className="w-4 h-4 text-rose-200" />
-                        <span>Cerrar Sesión</span>
-                    </button>
+            {/* 2. HERO BANNER OPERATIVO GUINDA OAXACA (DELGADO Y REESTRUCTURADO) */}
+            <div className="no-print py-3 px-6 bg-[#9D2449] text-white rounded-2xl shadow-sm my-3 flex flex-col md:flex-row items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3 text-center md:text-left">
+                    <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                        Bienvenido, {userName}
+                    </h2>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-100 bg-white/15 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md">
+                        <Building2 className="w-3.5 h-3.5 text-rose-200" />
+                        Jurisdicción Sanitaria No. 2 - Istmo
+                    </span>
                 </div>
+
+                <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl border border-white/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 backdrop-blur-md shadow-sm shrink-0"
+                    title="Cerrar Sesión"
+                >
+                    <LogOut className="w-4 h-4 text-rose-200" />
+                    <span>Cerrar Sesión</span>
+                </button>
             </div>
 
             {/* BANNER NOTIFICACIÓN ESCANEO IA (OCULTO EN IMPRESIÓN) */}
