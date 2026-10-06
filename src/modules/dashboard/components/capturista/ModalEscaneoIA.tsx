@@ -105,10 +105,10 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
         setScanProgress(0);
 
         const steps = [
-            { pct: 25, text: '🔍 Analizando encuadre y código Folio Guthrie...' },
-            { pct: 50, text: '👶 Extrayendo datos del Recién Nacido (Peso, Talla, Fecha)...' },
-            { pct: 75, text: '👩 Detectando datos de la Madre y CURP...' },
-            { pct: 100, text: '🏥 Sincronizando Clave CLUES de Unidad Médica...' }
+            { pct: 25, text: 'Analizando encuadre y código Folio Guthrie...' },
+            { pct: 50, text: 'Extrayendo datos del Recién Nacido (Peso, Talla, Fecha)...' },
+            { pct: 75, text: 'Detectando datos de la Madre y CURP...' },
+            { pct: 100, text: 'Sincronizando Clave CLUES de Unidad Médica...' }
         ];
 
         steps.forEach((s, idx) => {

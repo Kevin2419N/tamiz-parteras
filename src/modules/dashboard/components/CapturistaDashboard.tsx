@@ -200,9 +200,9 @@ export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
                 />
             </div>
 
-            {/* 2. HERO BANNER OPERATIVO GUINDA OAXACA CON BOTONES RECICLADOS (OCULTO EN IMPRESIÓN) */}
+            {/* 2. HERO BANNER OPERATIVO GUINDA OAXACA (LIMPIO) */}
             <div className="no-print bg-[#9D2449] text-white rounded-2xl p-6 shadow-md font-bold my-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="space-y-1.5 text-center md:text-left">
+                <div className="space-y-1 text-center md:text-left">
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-100 bg-white/15 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md">
                         <Building2 className="w-3.5 h-3.5 text-rose-200" />
                         CAPTURISTA DE TAMIZ NEONATAL • CENTRO DE SALUD / LABORATORIO REGIONAL
@@ -215,36 +215,15 @@ export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
                     </p>
                 </div>
 
-                {/* DOS BOTONES PROMINENTES RECICLADOS */}
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto">
-                    <button
-                        type="button"
-                        onClick={() => setIsAIScanOpen(true)}
-                        className="flex-1 md:flex-none bg-white text-[#9D2449] hover:bg-rose-50 border border-white/40 rounded-full px-5 py-3 text-xs font-black flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-md"
-                    >
-                        <Camera className="w-4 h-4 text-[#9D2449]" />
-                        <span>📷 Captura Automática por IA (Escanear Tarjeta)</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setScannedFormData(undefined);
-                            setActiveTab('CAPTURA');
-                        }}
-                        className="flex-1 md:flex-none bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-full px-5 py-3 text-xs font-black flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 backdrop-blur-md"
-                    >
-                        <Plus className="w-4 h-4 text-rose-200" />
-                        <span>+ Captura Manual Guthrie</span>
-                    </button>
-
+                <div className="flex items-center gap-3 shrink-0">
                     <button
                         type="button"
                         onClick={handleLogout}
-                        className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20 transition-all cursor-pointer shrink-0"
+                        className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl border border-white/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 backdrop-blur-md"
                         title="Cerrar Sesión"
                     >
-                        <LogOut className="w-4 h-4" />
+                        <LogOut className="w-4 h-4 text-rose-200" />
+                        <span>Cerrar Sesión</span>
                     </button>
                 </div>
             </div>
