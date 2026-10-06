@@ -117,8 +117,8 @@ export const DashboardLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-100/80 text-slate-800 flex flex-col md:flex-row selection:bg-emerald-600 selection:text-white">
 
-            {/* SIDEBAR DESKTOP COLAPSABLE (MODO CLARO) - Oculto para rol PARTERA_TRADICIONAL y ADMIN_JURISDICCIONAL (Diseño Full-Width) */}
-            {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && currentUser.rol !== UserRole.ADMIN_JURISDICCIONAL && currentUser.rol !== UserRole.GESTOR_PARTERAS && (
+            {/* SIDEBAR DESKTOP COLAPSABLE (MODO CLARO) - Oculto para rol PARTERA_TRADICIONAL, ADMIN_JURISDICCIONAL, GESTOR_PARTERAS y CAPTURISTA_TAMIZ (Diseño Full-Width) */}
+            {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && currentUser.rol !== UserRole.ADMIN_JURISDICCIONAL && currentUser.rol !== UserRole.GESTOR_PARTERAS && currentUser.rol !== UserRole.CAPTURISTA_TAMIZ && (
                 <aside
                     className={`hidden md:flex flex-col bg-white border-r border-slate-200/90 p-4 justify-between transition-all duration-300 shrink-0 shadow-sm ${sidebarCollapsed ? 'w-20' : 'w-64'
                         }`}
@@ -240,7 +240,7 @@ export const DashboardLayout: React.FC = () => {
             {/* NAVBAR SUPERIOR RESPONSIVE (MODO CLARO) - Oculto para módulo Partera */}
             <div className="flex-1 flex flex-col min-w-0">
 
-                {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && currentUser.rol !== UserRole.ADMIN_JURISDICCIONAL && currentUser.rol !== UserRole.GESTOR_PARTERAS && !location.pathname.includes('/parteras/comunitaria') && (
+                {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && currentUser.rol !== UserRole.ADMIN_JURISDICCIONAL && currentUser.rol !== UserRole.GESTOR_PARTERAS && currentUser.rol !== UserRole.CAPTURISTA_TAMIZ && !location.pathname.includes('/parteras/comunitaria') && (
                     <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sticky top-0 z-20 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 shadow-sm text-center">
 
                         {/* Botón de Menú Móvil & Controles Rápidos */}

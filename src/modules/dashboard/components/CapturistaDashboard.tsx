@@ -1,252 +1,359 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
     FileText,
+    Search,
     Truck,
     AlertTriangle,
+    Camera,
     Plus,
-    ArrowUpRight,
-    Search,
-    CheckCircle2,
-    Clock,
-    Eye
+    LogOut,
+    Building2,
+    Sparkles
 } from 'lucide-react';
+import { useAuth } from '../../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+import type { GuthrieFormData, RegistroTamizHistorial } from './capturista/types';
+import { ModalEscaneoIA } from './capturista/ModalEscaneoIA';
+import { TabCapturaGuthrie } from './capturista/TabCapturaGuthrie';
+import { TabHistorialBusqueda } from './capturista/TabHistorialBusqueda';
+import { TabControlLotes } from './capturista/TabControlLotes';
+import { TabAlertasRecall } from './capturista/TabAlertasRecall';
 
 interface CapturistaDashboardProps {
-    userName: string;
+    userName?: string;
 }
 
-export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({ userName }) => {
-    const [searchTerm, setSearchTerm] = useState('');
+export type CapturistaTabType = 'CAPTURA' | 'HISTORIAL' | 'LOTES' | 'RECALL';
 
-    // Mock Recent Tamiz Records for Capturista
-    const [registrosRecientes] = useState([
+export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
+    userName = 'Dra. Carmen Silva Juárez'
+}) => {
+    const [activeTab, setActiveTab] = useState<CapturistaTabType>('CAPTURA');
+    const [isAIScanOpen, setIsAIScanOpen] = useState(false);
+    const [scannedFormData, setScannedFormData] = useState<Partial<GuthrieFormData> | undefined>(undefined);
+    const [aiNotification, setAiNotification] = useState<string | null>(null);
+
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+
+    // Mock initial dataset for Capturista Dashboard
+    const [registrosHistorial, setRegistrosHistorial] = useState<RegistroTamizHistorial[]>([
         {
-            folio: 'TMZ-OAX-2026-98217',
+            id: 'REG-001',
+            folio: '5458347',
             rn: 'RN Gómez Santiz',
             madre: 'María Gómez Santiz',
+            curpMadre: 'GOSM980412MOCMNN08',
             fechaToma: '2026-09-09 10:00',
             municipio: 'Juchitán de Zaragoza',
-            partera: 'Doña Rosa Santiz Gómez',
-            estatus: 'MUESTRA_COAGULADA', // Requiere retoma
-            prioridad: 'ALTA',
+            unidadMedica: 'Centro de Salud Urbano Juchitán',
+            clues: 'OCIMB000683',
+            tecnicaToma: '1ª Muestra Talón',
+            estatus: 'MUESTRA_COAGULADA',
+            prioridad: 'CRITICA',
+            motivoRecall: 'Muestra Coagulada / Se requiere Re-toma',
+            telefonoContacto: '9711234567'
         },
         {
-            folio: 'TMZ-OAX-2026-98216',
+            id: 'REG-002',
+            folio: '5458346',
             rn: 'RN López Pérez',
             madre: 'Juana López Pérez',
+            curpMadre: 'LOPJ010915MOCRPN03',
             fechaToma: '2026-09-09 08:30',
             municipio: 'Santo Domingo Tehuantepec',
-            partera: 'Doña Juana López Pérez',
+            unidadMedica: 'Hospital General Sto. Domingo Tehuantepec',
+            clues: 'OASHG001245',
+            tecnicaToma: '1ª Muestra Talón',
             estatus: 'EN_TRANSITO_LAB',
-            prioridad: 'NORMAL',
+            prioridad: 'NORMAL'
         },
         {
-            folio: 'TMZ-OAX-2026-98215',
+            id: 'REG-003',
+            folio: '5458345',
             rn: 'RN Cruz Toledo',
             madre: 'Ana Cruz Toledo',
+            curpMadre: 'CUTA990203MOCRRN05',
             fechaToma: '2026-09-08 16:45',
             municipio: 'Salina Cruz',
-            partera: 'Doña Petrona Cruz Velasco',
+            unidadMedica: 'Centro de Salud Salina Cruz',
+            clues: 'OASCS002190',
+            tecnicaToma: '1ª Muestra Talón',
             estatus: 'PROCESADA_NORMAL',
-            prioridad: 'NORMAL',
+            prioridad: 'NORMAL'
         },
         {
-            folio: 'TMZ-OAX-2026-98214',
+            id: 'REG-004',
+            folio: '5458344',
             rn: 'RN Girón Morales',
             madre: 'Beatriz Girón Morales',
+            curpMadre: 'GOMB021110MOCRR01',
             fechaToma: '2026-09-08 14:15',
             municipio: 'Ciudad Ixtepec',
-            partera: 'Doña Asunción Girón Morales',
+            unidadMedica: 'Centro de Salud Cd. Ixtepec',
+            clues: 'OASIX003410',
+            tecnicaToma: '1ª Muestra Talón',
             estatus: 'EN_TRANSITO_LAB',
-            prioridad: 'NORMAL',
+            prioridad: 'NORMAL'
         },
         {
-            folio: 'TMZ-OAX-2026-98213',
+            id: 'REG-005',
+            folio: '5458343',
             rn: 'RN Ruiz Atempa',
             madre: 'Carla Ruiz Atempa',
+            curpMadre: 'RUAC970520MOCNR09',
             fechaToma: '2026-09-07 11:20',
             municipio: 'San Blas Atempa',
-            partera: 'Doña Micaela Ruiz Hernández',
+            unidadMedica: 'CESSA San Blas Atempa',
+            clues: 'OASBA004120',
+            tecnicaToma: '1ª Muestra Talón',
             estatus: 'PROCESADA_NORMAL',
-            prioridad: 'NORMAL',
+            prioridad: 'NORMAL'
         },
+        {
+            id: 'REG-006',
+            folio: '5458342',
+            rn: 'RN Vásquez Mendoza',
+            madre: 'Diana Vásquez Mendoza',
+            curpMadre: 'VAMD001201MOCRM04',
+            fechaToma: '2026-09-06 09:10',
+            municipio: 'Asunción Ixtaltepec',
+            unidadMedica: 'Hospital General Ixtaltepec',
+            clues: 'OASIX003411',
+            tecnicaToma: '1ª Muestra Talón',
+            estatus: 'MUESTRA_INSUFICIENTE',
+            prioridad: 'ALTA',
+            motivoRecall: 'Muestra Insuficiente de Sangre en Círculo',
+            telefonoContacto: '9719876543'
+        }
     ]);
 
-    const registrosFiltrados = registrosRecientes.filter(
-        (r) =>
-            r.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.rn.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.madre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.municipio.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const getEstatusBadge = (estatus: string) => {
-        switch (estatus) {
-            case 'MUESTRA_COAGULADA':
-                return (
-                    <span className="px-2.5 py-1 bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-[10px] font-black flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600" /> Re-Toma Urgente
-                    </span>
-                );
-            case 'EN_TRANSITO_LAB':
-                return (
-                    <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-300 rounded-lg text-[10px] font-bold flex items-center gap-1">
-                        <Truck className="w-3.5 h-3.5 text-amber-600" /> En Tránsito Lab
-                    </span>
-                );
-            case 'PROCESADA_NORMAL':
-                return (
-                    <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg text-[10px] font-bold flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Resultado Normal
-                    </span>
-                );
-            default:
-                return (
-                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold">
-                        {estatus}
-                    </span>
-                );
-        }
+    const handleLogout = () => {
+        logout();
+        navigate('/');
     };
 
-    return (
-        <div className="space-y-6 max-w-7xl mx-auto selection:bg-rose-600 selection:text-white">
+    const handleSaveNewGuthrie = (newForm: GuthrieFormData) => {
+        const nuevoRegistro: RegistroTamizHistorial = {
+            id: `REG-${Math.floor(100 + Math.random() * 900)}`,
+            folio: newForm.folio,
+            rn: `RN ${newForm.apellidoPaternoMadre} ${newForm.apellidoMaternoMadre}`,
+            madre: `${newForm.nombreMadre} ${newForm.apellidoPaternoMadre} ${newForm.apellidoMaternoMadre}`,
+            curpMadre: newForm.curpMadre || 'SIN CURP',
+            fechaToma: `${newForm.fechaToma} ${newForm.horaToma}`,
+            municipio: newForm.municipioMadre || 'Juchitán de Zaragoza',
+            unidadMedica: newForm.unidadMedica.split('-')[1]?.trim() || newForm.unidadMedica,
+            clues: newForm.clues,
+            tecnicaToma: newForm.tecnicaToma === '1A_TALON' ? '1ª Muestra Talón' : 'Re-muestra',
+            estatus: 'EN_TRANSITO_LAB',
+            prioridad: 'NORMAL'
+        };
 
-            {/* Encabezado Principal Capturista (Guinda Oaxaca) */}
-            <div className="bg-gradient-to-r from-[#9D2449] via-[#7A1B38] to-slate-900 p-6 rounded-3xl text-white shadow-md border border-[#9D2449]/40 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs uppercase tracking-wider font-extrabold text-rose-200">
-                            CAPTURISTA • UNIDAD DE SALUD
-                        </span>
-                        <span className="text-xs text-rose-200/60">•</span>
-                        <span className="text-xs text-rose-100 font-medium">Jurisdicción Sanitaria No. 2 - Istmo</span>
-                    </div>
-                    <h1 className="text-2xl font-black text-white mt-1">
-                        Bienvenido, {userName}
+        setRegistrosHistorial([nuevoRegistro, ...registrosHistorial]);
+    };
+
+    const handleAIScanComplete = (scannedObj: Partial<GuthrieFormData>) => {
+        setScannedFormData(scannedObj);
+        setActiveTab('CAPTURA');
+        setAiNotification(`¡Tarjeta Guthrie (Folio ${scannedObj.folio}) extraída exitosamente por IA! Por favor revise y confirme los datos.`);
+        setTimeout(() => setAiNotification(null), 8000);
+    };
+
+    const recallAlertsCount = registrosHistorial.filter(
+        r => r.estatus === 'MUESTRA_COAGULADA' || r.estatus === 'MUESTRA_INSUFICIENTE' || r.estatus === 'RETOMA_SOLICITADA'
+    ).length;
+
+    return (
+        /* MARCO INSTITUCIONAL DEL SISTEMA DE DISEÑO DE PARTERAS Y SSO OAXACA */
+        <div className="border-4 border-[#9D2449] bg-white rounded-3xl shadow-xl p-4 md:p-8 max-w-7xl mx-auto my-4 min-h-screen space-y-6">
+
+            {/* 1. CABECERA INSTITUCIONAL SUPERIOR HOMOLOGADA */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6 text-center md:text-left">
+                {/* Logo Izquierdo: Jurisdicción Sanitaria No. 2 */}
+                <img
+                    src="/logo-jurisdiccion.png"
+                    alt="Logo Jurisdicción Sanitaria No. 2"
+                    loading="eager"
+                    className="h-20 w-auto object-contain mix-blend-multiply"
+                />
+
+                {/* Texto Central en Guinda Oaxaca */}
+                <div className="text-center space-y-0.5">
+                    <span className="text-xs font-black uppercase tracking-wider text-[#9D2449] block">
+                        SERVICIOS DE SALUD DE OAXACA • SISTEMA DE TAMIZ NEONATAL Y RED DE PARTERAS
+                    </span>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[#9D2449] tracking-tight">
+                        CENTRO DE CAPTURA Y CONTROL DE TAMIZ NEONATAL
                     </h1>
-                    <p className="text-xs text-rose-100/80 mt-1">
-                        Módulo operativo para el registro rápido de tarjetas de Guthrie y seguimiento de laboratorios.
+                    <p className="text-xs font-bold text-slate-600">
+                        Jurisdicción Sanitaria No. 2 - Istmo • SSO Oaxaca
                     </p>
                 </div>
 
-                <div className="w-full sm:w-auto">
-                    <Link
-                        to="/tamiz/nuevo"
-                        className="w-full sm:w-auto px-5 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 border border-rose-300/40 active:scale-95"
+                {/* Logo Derecho: Secretaría de Salud */}
+                <img
+                    src="/Logo-Secretaria.png"
+                    alt="Logo Secretaría de Salud"
+                    loading="eager"
+                    className="h-20 w-auto object-contain mix-blend-multiply"
+                />
+            </div>
+
+            {/* 2. HERO BANNER OPERATIVO GUINDA OAXACA CON BOTONES RECICLADOS */}
+            <div className="bg-[#9D2449] text-white rounded-2xl p-6 shadow-md font-bold my-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="space-y-1.5 text-center md:text-left">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-100 bg-white/15 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md">
+                        <Building2 className="w-3.5 h-3.5 text-rose-200" />
+                        CAPTURISTA DE TAMIZ NEONATAL • CENTRO DE SALUD / LABORATORIO REGIONAL
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                        Bienvenido, {userName}
+                    </h2>
+                    <p className="text-xs text-rose-100 font-semibold">
+                        Jurisdicción Sanitaria No. 2 - Istmo • Módulo Operativo Institucional SSO
+                    </p>
+                </div>
+
+                {/* DOS BOTONES PROMINENTES RECICLADOS */}
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto">
+                    <button
+                        type="button"
+                        onClick={() => setIsAIScanOpen(true)}
+                        className="flex-1 md:flex-none bg-white text-[#9D2449] hover:bg-rose-50 border border-white/40 rounded-full px-5 py-3 text-xs font-black flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-md"
                     >
-                        <Plus className="w-5 h-5" />
-                        <span>+ Nuevo Registro de Tamiz Neonatal</span>
-                    </Link>
+                        <Camera className="w-4 h-4 text-[#9D2449]" />
+                        <span>📷 Captura Automática por IA (Escanear Tarjeta)</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setScannedFormData(undefined);
+                            setActiveTab('CAPTURA');
+                        }}
+                        className="flex-1 md:flex-none bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-full px-5 py-3 text-xs font-black flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 backdrop-blur-md"
+                    >
+                        <Plus className="w-4 h-4 text-rose-200" />
+                        <span>+ Captura Manual Guthrie</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20 transition-all cursor-pointer shrink-0"
+                        title="Cerrar Sesión"
+                    >
+                        <LogOut className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
 
-            {/* 3 Métricas Operativas Clave */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-                {/* KPI 1: Muestras Registradas */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                    <div>
-                        <span className="text-xs font-bold text-slate-500">Tamices Registrados (Mes)</span>
-                        <p className="text-3xl font-black text-slate-900 mt-2">1,428</p>
-                        <div className="flex items-center gap-1 text-xs text-emerald-700 font-bold mt-1">
-                            <ArrowUpRight className="w-4 h-4" />
-                            <span>+12.4% vs mes anterior</span>
-                        </div>
-                    </div>
-                    <div className="p-3 bg-rose-50 text-[#9D2449] rounded-2xl border border-rose-200">
-                        <FileText className="w-7 h-7" />
-                    </div>
+            {/* BANNER NOTIFICACIÓN ESCANEO IA */}
+            {aiNotification && (
+                <div className="bg-rose-50 border-2 border-[#9D2449] rounded-2xl p-4 flex items-center gap-3 text-xs font-bold text-[#9D2449] shadow-md animate-bounce">
+                    <Sparkles className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <p className="flex-1">{aiNotification}</p>
                 </div>
+            )}
 
-                {/* KPI 2: En Tránsito Lab */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                    <div>
-                        <span className="text-xs font-bold text-slate-500">Tarjetas Guthrie en Tránsito</span>
-                        <p className="text-3xl font-black text-amber-600 mt-2">184</p>
-                        <p className="text-[11px] text-slate-500 font-medium mt-1">En envío a LESP Oaxaca</p>
-                    </div>
-                    <div className="p-3 bg-amber-50 text-amber-700 rounded-2xl border border-amber-200">
-                        <Truck className="w-7 h-7" />
-                    </div>
-                </div>
+            {/* 3. TAB-NAVIGATION DE 4 PESTAÑAS EJECUTIVAS */}
+            <div className="bg-slate-100 p-1.5 rounded-2xl flex flex-wrap sm:flex-nowrap gap-2 overflow-x-auto border border-slate-200 shadow-inner">
 
-                {/* KPI 3: Re-toma Urgente */}
-                <div className="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between">
-                    <div>
-                        <span className="text-xs font-bold text-rose-800">Alertas de Re-Toma Urgente</span>
-                        <p className="text-3xl font-black text-rose-600 mt-2">5</p>
-                        <p className="text-[11px] text-rose-700 font-bold mt-1">Coagulación / Muestra insuficiente</p>
-                    </div>
-                    <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl border border-rose-200 animate-pulse">
-                        <AlertTriangle className="w-7 h-7" />
-                    </div>
-                </div>
+                {/* Pestaña 1: Captura Guthrie */}
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('CAPTURA')}
+                    className={`flex-1 min-w-[150px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${activeTab === 'CAPTURA'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                        }`}
+                >
+                    <FileText className={`w-4 h-4 ${activeTab === 'CAPTURA' ? 'text-rose-200' : 'text-slate-500'}`} />
+                    <span>1. Captura de Tamiz Guthrie</span>
+                </button>
+
+                {/* Pestaña 2: Historial, Búsqueda y Fechas */}
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('HISTORIAL')}
+                    className={`flex-1 min-w-[150px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${activeTab === 'HISTORIAL'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                        }`}
+                >
+                    <Search className={`w-4 h-4 ${activeTab === 'HISTORIAL' ? 'text-rose-200' : 'text-slate-500'}`} />
+                    <span>2. Historial, Búsqueda y Fechas</span>
+                </button>
+
+                {/* Pestaña 3: Control de Lotes y Envíos */}
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('LOTES')}
+                    className={`flex-1 min-w-[150px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${activeTab === 'LOTES'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                        }`}
+                >
+                    <Truck className={`w-4 h-4 ${activeTab === 'LOTES' ? 'text-rose-200' : 'text-slate-500'}`} />
+                    <span>3. Control de Lotes y Envíos</span>
+                </button>
+
+                {/* Pestaña 4: Centro de Alertas Recall */}
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('RECALL')}
+                    className={`flex-1 min-w-[150px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer relative ${activeTab === 'RECALL'
+                        ? 'bg-[#9D2449] text-white shadow-md'
+                        : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                        }`}
+                >
+                    <AlertTriangle className={`w-4 h-4 ${activeTab === 'RECALL' ? 'text-rose-200' : 'text-rose-600'}`} />
+                    <span>4. Centro de Alertas Recall</span>
+                    {recallAlertsCount > 0 && (
+                        <span className="ml-1 bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full font-extrabold animate-pulse">
+                            {recallAlertsCount}
+                        </span>
+                    )}
+                </button>
 
             </div>
 
-            {/* Tabla de Muestras Recientes Registradas por la Unidad */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-200 pb-4">
-                    <div>
-                        <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-[#9D2449]" />
-                            <span>Muestras de Tamiz Neonatal Recientes</span>
-                        </h2>
-                        <p className="text-xs text-slate-500 font-medium">Registros ingresados en las últimas 48 horas.</p>
-                    </div>
+            {/* 4. CONTENIDO DINÁMICO SEGÚN PESTAÑA */}
+            <div className="pt-2">
+                {activeTab === 'CAPTURA' && (
+                    <TabCapturaGuthrie
+                        initialData={scannedFormData}
+                        onSaveSuccess={handleSaveNewGuthrie}
+                        onOpenAIScan={() => setIsAIScanOpen(true)}
+                    />
+                )}
 
-                    {/* Búsqueda de registros */}
-                    <div className="relative w-full sm:w-64">
-                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                        <input
-                            type="text"
-                            placeholder="Buscar por folio, madre o RN..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#9D2449]"
-                        />
-                    </div>
-                </div>
+                {activeTab === 'HISTORIAL' && (
+                    <TabHistorialBusqueda
+                        registros={registrosHistorial}
+                    />
+                )}
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-slate-200 text-[11px] font-bold uppercase text-slate-400">
-                                <th className="py-3 px-3">Folio Guthrie</th>
-                                <th className="py-3 px-3">Recién Nacido</th>
-                                <th className="py-3 px-3">Madre / Tutor</th>
-                                <th className="py-3 px-3">Comunidad / Municipio</th>
-                                <th className="py-3 px-3">Fecha Toma</th>
-                                <th className="py-3 px-3">Estatus Muestra</th>
-                                <th className="py-3 px-3 text-right">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-xs font-medium">
-                            {registrosFiltrados.map((item) => (
-                                <tr key={item.folio} className="hover:bg-slate-50 transition-colors">
-                                    <td className="py-3.5 px-3 font-mono font-bold text-slate-900">{item.folio}</td>
-                                    <td className="py-3.5 px-3 font-extrabold text-slate-900">{item.rn}</td>
-                                    <td className="py-3.5 px-3 text-slate-700">{item.madre}</td>
-                                    <td className="py-3.5 px-3 text-slate-600">{item.municipio}</td>
-                                    <td className="py-3.5 px-3 text-slate-500">{item.fechaToma}</td>
-                                    <td className="py-3.5 px-3">{getEstatusBadge(item.estatus)}</td>
-                                    <td className="py-3.5 px-3 text-right">
-                                        <button
-                                            onClick={() => alert(`Visualizando detalles del folio ${item.folio}`)}
-                                            className="p-1.5 text-slate-500 hover:text-[#9D2449] hover:bg-rose-50 rounded-lg transition-colors"
-                                            title="Ver Ficha Completa"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                {activeTab === 'LOTES' && (
+                    <TabControlLotes />
+                )}
+
+                {activeTab === 'RECALL' && (
+                    <TabAlertasRecall
+                        alertas={registrosHistorial.filter(
+                            r => r.estatus === 'MUESTRA_COAGULADA' || r.estatus === 'MUESTRA_INSUFICIENTE' || r.estatus === 'RETOMA_SOLICITADA'
+                        )}
+                    />
+                )}
             </div>
+
+            {/* 5. MODAL DE ESCANEO POR IA (SIMULADOR OCR) */}
+            <ModalEscaneoIA
+                isOpen={isAIScanOpen}
+                onClose={() => setIsAIScanOpen(false)}
+                onScanComplete={handleAIScanComplete}
+            />
 
         </div>
     );
