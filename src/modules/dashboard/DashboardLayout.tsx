@@ -254,7 +254,7 @@ export const DashboardLayout: React.FC = () => {
                             </button>
                             <div className="flex items-center gap-2">
                                 <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                    {currentUser.rol.replace('_', ' ')}
+                                    {String(currentUser.rol).replace('_', ' ')}
                                 </span>
                                 <Link
                                     to="/notificaciones"
@@ -300,7 +300,7 @@ export const DashboardLayout: React.FC = () => {
                                 {/* Selector de Usuario Simulado + Badges + Cerrar Sesión (Escritorio) */}
                                 <div className="hidden lg:flex items-center gap-2 border-l border-slate-200 pl-3">
                                     <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap">
-                                        Rol: {currentUser.rol.replace('_', ' ')}
+                                        Rol: {String(currentUser.rol).replace('_', ' ')}
                                     </span>
 
                                     <div className="bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 flex items-center gap-2">
