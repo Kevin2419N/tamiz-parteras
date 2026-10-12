@@ -69,6 +69,19 @@ export const Login: React.FC = () => {
         }
     };
 
+    // Auto-update default email when institutional role changes
+    const roleEmailMap: Record<UserRole, string> = {
+        [UserRole.CAPTURISTA_TAMIZ]: 'capturista.jurisdiccion2@salud.gob.mx',
+        [UserRole.MEDICO_UNIDAD]: 'medico.jurisdiccion2@salud.gob.mx',
+        [UserRole.ADMIN_JURISDICCIONAL]: 'admin.jurisdiccion2@salud.gob.mx',
+        [UserRole.PARTERA_TRADICIONAL]: '',
+    };
+
+    useEffect(() => {
+        const mapped = roleEmailMap[rolSeleccionado];
+        if (mapped) setEmail(mapped);
+    }, [rolSeleccionado]);
+
     useEffect(() => {
         return () => {
             if ('speechSynthesis' in window) {
@@ -268,8 +281,8 @@ export const Login: React.FC = () => {
                                             className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-[#9D2449] focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-[#9D2449]/20"
                                         >
                                             <option value={UserRole.CAPTURISTA_TAMIZ}>Capturista de Tamiz Neonatal</option>
+                                            <option value={UserRole.MEDICO_UNIDAD}>Médico de Unidad / Contrareferencias</option>
                                             <option value={UserRole.ADMIN_JURISDICCIONAL}>Administrador Jurisdiccional</option>
-                                            <option value={UserRole.GESTOR_PARTERAS}>Gestor Jurisdiccional de Parteras</option>
                                         </select>
                                     </div>
 

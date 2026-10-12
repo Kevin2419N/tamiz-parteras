@@ -23,7 +23,7 @@ export const NotificationCenter: React.FC = () => {
             nivelAlerta: 'WARNING',
             fechaCreacion: 'Hace 2 horas',
             leida: false,
-            rolesDestino: [UserRole.GESTOR_PARTERAS],
+            rolesDestino: [UserRole.MEDICO_UNIDAD],
         },
         {
             id: 'NOT-03',
@@ -91,8 +91,8 @@ export const NotificationCenter: React.FC = () => {
                         key={nivel}
                         onClick={() => setFiltroNivel(nivel)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${filtroNivel === nivel
-                                ? 'bg-teal-500 text-white shadow-md'
-                                : 'text-slate-400 hover:bg-slate-900'
+                            ? 'bg-teal-500 text-white shadow-md'
+                            : 'text-slate-400 hover:bg-slate-900'
                             }`}
                     >
                         {nivel === 'TODAS' ? 'Todas' : nivel === 'CRITICAL' ? 'Críticas' : nivel === 'WARNING' ? 'Advertencias' : 'Informativas'}
@@ -106,10 +106,10 @@ export const NotificationCenter: React.FC = () => {
                     <div
                         key={notif.id}
                         className={`p-5 rounded-2xl border transition-all ${notif.nivelAlerta === 'CRITICAL'
-                                ? 'bg-rose-950/20 border-rose-500/40'
-                                : notif.nivelAlerta === 'WARNING'
-                                    ? 'bg-amber-950/20 border-amber-500/40'
-                                    : 'bg-slate-950/80 border-slate-800'
+                            ? 'bg-rose-950/20 border-rose-500/40'
+                            : notif.nivelAlerta === 'WARNING'
+                                ? 'bg-amber-950/20 border-amber-500/40'
+                                : 'bg-slate-950/80 border-slate-800'
                             } ${notif.leida ? 'opacity-65' : ''}`}
                     >
                         <div className="flex items-start justify-between gap-4">
