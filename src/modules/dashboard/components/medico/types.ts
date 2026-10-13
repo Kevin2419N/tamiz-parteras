@@ -43,6 +43,9 @@ export interface RegistroSegundaMuestra {
     fechaObtension: string;
     fechaEnvio: string;
     laboratorioDestino: string;
+    laboratorioId?: 'LESP_OAXACA' | 'LAB_REGIONAL_ISTMO' | 'OTRO';
+    codigoTubo?: string;
+    valorTshPrevio?: string;
     resultadoConfirmatorio?: string;
     tratamientoIndicado?: string;
     observacionesMedico: string;
@@ -118,8 +121,8 @@ export interface ExpedientePerinatal {
     fppFecha: string; // FPP
     grupoSanguineo: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
     factorRh: 'POSITIVO' | 'NEGATIVO';
-    vihSerologia: 'NEGATIVO' | 'POSITIVO' | 'PENDIENTE' | 'NO_REALIZADO';
-    vdrlSerologia: ' NON_REACTIVE' | 'REACTIVE' | 'PENDIENTE' | 'NO_REALIZADO';
+    vihSerologia?: string;
+    vdrlSerologia?: string;
     vacunaTetanos: boolean;
     vacunaDosis2: boolean;
     // Antecedentes
@@ -142,6 +145,30 @@ export interface ExpedientePerinatal {
     perimetroCefalicoRNCm?: number;
     tamizRNRealizado?: boolean;
     folioGuthrie?: string;
+}
+
+export interface LabSerologiaForm {
+    grupoSanguineo: ExpedientePerinatal['grupoSanguineo'];
+    factorRh: 'POSITIVO' | 'NEGATIVO';
+    vihSerologia: string;
+    vdrlSerologia: string;
+    hemoglobinaGdL: string;
+    vacunaTetanos: boolean;
+    vacunaDosis2: boolean;
+    fechaVacuna1: string;
+    fechaVacuna2: string;
+}
+
+export interface PartoDatosRegistro {
+    fechaHoraNacimiento: string;
+    tipoPartoParto: 'EUTOCICO' | 'DISTOCICO' | 'CESAREA';
+    semanasParto: number;
+    apgar1: number;
+    apgar5: number;
+    pesoRNGramos: number;
+    tallaRNCm: number;
+    perimetroCefalicoRNCm: number;
+    folioGuthrie: string;
 }
 
 // ──────────────────────────────────────────
@@ -173,13 +200,16 @@ export interface FormularioContraRef {
     referenciaId: string;
     folioContraRef: string;
     fechaAtencion: string;
+    codigoCie10?: string;
     diagnosticoImpresion: string;
     hallazgosClinica: string;
     planManejo: string;
+    conductaMedica?: string;
     medicamentosIndicados: string;
     proximaCita: string;
     derivadaA?: string;
-    nivelDerivacion?: 'CSU' | 'HOSPITAL_GENERAL' | 'ESPECIALIDAD' | 'OTRO';
+    unidadDestino?: string;
+    nivelDerivacion?: 'SIN_DERIVACION' | 'CSU' | 'HOSPITAL_GENERAL' | 'ESPECIALIDAD' | 'OTRO';
     medicoFirma: string;
     cedulaProfesional: string;
     cluesUnidadEmisora: string;

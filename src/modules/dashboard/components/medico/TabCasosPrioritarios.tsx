@@ -12,6 +12,10 @@ import {
     Calendar,
     ChevronRight,
     Syringe,
+    Printer,
+    Pipette,
+    Hash,
+    Beaker,
 } from 'lucide-react';
 import type { CasoPrioritario, RegistroSegundaMuestra, EstatusResultado } from './types';
 
@@ -98,6 +102,95 @@ function getEstatusBadge(estatus: EstatusResultado): React.ReactNode {
     return <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${cls}`}>{label}</span>;
 }
 
+// ─── Cédula de Orden de Laboratorio (sección imprimible) ─────────────────────
+
+interface CedulaLabProps {
+    caso: CasoPrioritario;
+    datos: {
+        fechaObtension: string;
+        fechaEnvio: string;
+        codigoTubo: string;
+        valorTshPrevio: string;
+        laboratorioDestino: string;
+        tipoMuestra: string;
+        tratamiento: string;
+    };
+}
+
+const CedulaLaboratorio: React.FC<CedulaLabProps> = ({ caso, datos }) => (
+    <div className="print-cedula bg-white border-2 border-slate-400 rounded-xl p-5 space-y-3 text-xs">
+        {/* Encabezado institucional */}
+        <div className="text-center border-b-2 border-[#9D2449] pb-3">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                SERVICIOS DE SALUD DE OAXACA • JURISDICCIÓN SANITARIA NO. 2
+            </p>
+            <h2 className="text-sm font-black text-[#9D2449] mt-1">
+                CÉDULA DE ORDEN DE LABORATORIO CONFIRMATORIA
+            </h2>
+            <p className="text-[10px] text-slate-600 font-bold">
+                Programa de Tamiz Neonatal Ampliado — Istmo de Tehuantepec
+            </p>
+        </div>
+
+        {/* Datos del folio */}
+        <div className="grid grid-cols-3 gap-2 text-[10px]">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2">
+                <p className="font-black text-slate-400 uppercase tracking-wider text-[9px]">Folio Tamiz</p>
+                <p className="font-black text-[#9D2449]">{caso.folio}</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2">
+                <p className="font-black text-slate-400 uppercase tracking-wider text-[9px]">Fecha Obtención</p>
+                <p className="font-bold text-slate-900">{datos.fechaObtension || '—'}</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2">
+                <p className="font-black text-slate-400 uppercase tracking-wider text-[9px]">Fecha Envío</p>
+                <p className="font-bold text-slate-900">{datos.fechaEnvio || '—'}</p>
+            </div>
+        </div>
+
+        {/* Datos del paciente */}
+        <div className="border border-slate-200 rounded-lg p-3 space-y-1">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Datos del Recién Nacido</p>
+            <div className="grid grid-cols-2 gap-x-4 text-[10px]">
+                <div><span className="text-slate-500 font-bold">R.N.: </span><span className="font-black text-slate-900">{caso.nombreRN}</span></div>
+                <div><span className="text-slate-500 font-bold">Madre: </span><span className="font-bold text-slate-800">{caso.nombreMadre}</span></div>
+                <div><span className="text-slate-500 font-bold">CLUES: </span><span className="font-bold text-slate-800">{caso.clues}</span></div>
+                <div><span className="text-slate-500 font-bold">Unidad: </span><span className="font-medium text-slate-700">{caso.unidadMedica}</span></div>
+                <div><span className="text-slate-500 font-bold">Municipio: </span><span className="font-medium text-slate-700">{caso.municipio}</span></div>
+                <div><span className="text-slate-500 font-bold">Tel: </span><span className="font-medium text-slate-700">{caso.telefonoContacto}</span></div>
+            </div>
+        </div>
+
+        {/* Datos de la muestra */}
+        <div className="border-2 border-[#9D2449] rounded-lg p-3 space-y-2">
+            <p className="text-[9px] font-black text-[#9D2449] uppercase tracking-wider">Datos de la Muestra Confirmatoria</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                <div><span className="font-bold text-slate-500">Prueba objetivo: </span><span className="font-black text-slate-900">{caso.tipoPrueba}</span></div>
+                <div><span className="font-bold text-slate-500">Tipo de muestra: </span><span className="font-black text-slate-900">{datos.tipoMuestra === 'VENOSA_CONFIRMATORIA' ? 'Venosa Confirmatoria' : 'Re-toma Talón'}</span></div>
+                <div><span className="font-bold text-slate-500">Valor tamiz inicial: </span><span className="font-black text-rose-700">{datos.valorTshPrevio || caso.valorObtenido || '—'}</span></div>
+                <div><span className="font-bold text-slate-500">Código tubo (lila): </span><span className="font-black text-slate-900">{datos.codigoTubo || '—'}</span></div>
+                <div className="col-span-2"><span className="font-bold text-slate-500">Laboratorio destino: </span><span className="font-black text-slate-900">{datos.laboratorioDestino}</span></div>
+            </div>
+        </div>
+
+        {/* Indicaciones */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-[9px] text-amber-900">
+            <p className="font-black mb-1">INDICACIONES DE MANEJO DE MUESTRA:</p>
+            <p>• Tubo con EDTA (lila) 1–2 mL. Mantener en frío 2–8°C. Enviar dentro de 24h de obtención.</p>
+            <p>• No centrifugar. No congelar. Identificar con folio, CLUES y fecha de obtención.</p>
+            {datos.tratamiento && <p className="mt-1 font-bold">• Tratamiento empírico: {datos.tratamiento}</p>}
+        </div>
+
+        {/* Firma */}
+        <div className="flex justify-end pt-2">
+            <div className="border-t border-slate-400 w-44 pt-1 text-center text-[9px] text-slate-600">
+                Firma y Sello del Médico Responsable<br />
+                Fecha: {datos.fechaEnvio || '___/___/______'}
+            </div>
+        </div>
+    </div>
+);
+
 // ─── Modal 2ª Muestra ─────────────────────────────────────────────────────────
 
 interface Modal2MuestraProps {
@@ -111,8 +204,23 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
     const [fechaObtension, setFechaObtension] = useState('');
     const [fechaEnvio, setFechaEnvio] = useState('');
     const [labDestino, setLabDestino] = useState('LESP Oaxaca');
+    const [laboratorioId, setLaboratorioId] = useState<RegistroSegundaMuestra['laboratorioId']>('LESP_OAXACA');
+    const [codigoTubo, setCodigoTubo] = useState('');
+    const [valorTshPrevio, setValorTshPrevio] = useState(caso.valorObtenido ?? '');
     const [tratamiento, setTratamiento] = useState('');
     const [observaciones, setObservaciones] = useState('');
+    const [mostrarCedula, setMostrarCedula] = useState(false);
+
+    const labOpciones: Record<NonNullable<RegistroSegundaMuestra['laboratorioId']>, string> = {
+        LESP_OAXACA: 'LESP Oaxaca (Laboratorio Estatal de Salud Pública)',
+        LAB_REGIONAL_ISTMO: 'Laboratorio Regional Istmo — Juchitán',
+        OTRO: 'Otro laboratorio',
+    };
+
+    const handleLabChange = (id: RegistroSegundaMuestra['laboratorioId']) => {
+        setLaboratorioId(id);
+        setLabDestino(id ? labOpciones[id] : 'LESP Oaxaca');
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -122,89 +230,184 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
             fechaObtension,
             fechaEnvio,
             laboratorioDestino: labDestino,
+            laboratorioId,
+            codigoTubo,
+            valorTshPrevio,
             tratamientoIndicado: tratamiento,
             observacionesMedico: observaciones,
         });
         onClose();
     };
 
+    const cedulaData = {
+        fechaObtension,
+        fechaEnvio,
+        codigoTubo,
+        valorTshPrevio,
+        laboratorioDestino: labDestino,
+        tipoMuestra: tipo,
+        tratamiento,
+    };
+
     return (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="text-base font-black text-[#9D2449]">Registro de 2ª Muestra / Venosa Confirmatoria</h3>
-                        <p className="text-xs text-slate-500 mt-0.5">Folio <span className="font-bold text-slate-700">{caso.folio}</span> · {caso.nombreRN}</p>
+        <>
+            {/* CSS print para cédula */}
+            <style>{`
+                @media print {
+                    body * { visibility: hidden !important; }
+                    .print-cedula, .print-cedula * { visibility: visible !important; }
+                    .print-cedula { position: fixed !important; top: 1cm !important; left: 1cm !important; right: 1cm !important; }
+                    @page { margin: 1cm; size: A5 landscape; }
+                }
+            `}</style>
+
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
+                <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full shadow-2xl my-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-5 border-b border-slate-100">
+                        <div>
+                            <h3 className="text-sm font-black text-[#9D2449]">Registro de 2ª Muestra / Venosa Confirmatoria</h3>
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                                Folio <span className="font-black text-slate-700">{caso.folio}</span> · {caso.nombreRN} · {caso.tipoPrueba}
+                            </p>
+                        </div>
+                        <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">
+                            <X className="w-4 h-4" />
+                        </button>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500">
-                        <X className="w-4 h-4" />
-                    </button>
+
+                    <form onSubmit={handleSubmit} className="p-5 space-y-5">
+                        {/* Tipo de muestra */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Tipo de Muestra</label>
+                                <select
+                                    value={tipo}
+                                    onChange={e => setTipo(e.target.value as RegistroSegundaMuestra['tipoMuestra'])}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                >
+                                    <option value="TALON_RETOMA">Re-toma Talón (Guthrie)</option>
+                                    <option value="VENOSA_CONFIRMATORIA">Muestra Venosa Confirmatoria</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Prueba Objetivo</label>
+                                <div className="bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 text-xs font-black text-[#9D2449]">
+                                    {caso.tipoPrueba}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Fechas */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                    <Calendar className="w-3 h-3 inline mr-1" />Fecha Obtención
+                                </label>
+                                <input type="date" required value={fechaObtension} onChange={e => setFechaObtension(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                    <Calendar className="w-3 h-3 inline mr-1" />Fecha Envío Lab.
+                                </label>
+                                <input type="date" required value={fechaEnvio} onChange={e => setFechaEnvio(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                            </div>
+                        </div>
+
+                        {/* Datos clínicos */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                    <Beaker className="w-3 h-3 inline mr-1 text-[#9D2449]" />Valor TSH Tamiz Previo
+                                </label>
+                                <input type="text" placeholder="Ej. 25.4 mU/L" value={valorTshPrevio} onChange={e => setValorTshPrevio(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                    <Pipette className="w-3 h-3 inline mr-1 text-violet-600" />Código Tubo Lila (EDTA)
+                                </label>
+                                <input type="text" placeholder="Ej. TL-2026-001245" value={codigoTubo} onChange={e => setCodigoTubo(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                            </div>
+                        </div>
+
+                        {/* Laboratorio */}
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                <Hash className="w-3 h-3 inline mr-1" />Laboratorio Destino
+                            </label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {(Object.entries(labOpciones) as [NonNullable<RegistroSegundaMuestra['laboratorioId']>, string][]).map(([id, label]) => (
+                                    <button key={id} type="button"
+                                        onClick={() => handleLabChange(id)}
+                                        className={`text-left px-3 py-2 rounded-xl border text-[10px] font-bold transition-all ${laboratorioId === id
+                                            ? 'bg-[#9D2449] border-[#9D2449] text-white'
+                                            : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'}`}>
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Tratamiento */}
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Tratamiento Empírico Indicado (si aplica)</label>
+                            <input type="text" placeholder="Ej. Levotiroxina sódica 37.5 mcg/día vía oral en ayuno" value={tratamiento} onChange={e => setTratamiento(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                        </div>
+
+                        {/* Observaciones */}
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Observaciones del Médico</label>
+                            <textarea rows={2} value={observaciones} onChange={e => setObservaciones(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449] resize-none" />
+                        </div>
+
+                        {/* Cédula de Laboratorio desplegable */}
+                        <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                            <button type="button"
+                                onClick={() => setMostrarCedula(v => !v)}
+                                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-xs font-black text-slate-700">
+                                <span className="flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-[#9D2449]" />
+                                    Vista previa: Cédula de Orden de Laboratorio Confirmatoria
+                                </span>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${mostrarCedula ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'}`}>
+                                    {mostrarCedula ? 'Ocultar' : 'Ver Cédula'}
+                                </span>
+                            </button>
+                            {mostrarCedula && (
+                                <div className="p-4 space-y-3 bg-white">
+                                    <CedulaLaboratorio caso={caso} datos={cedulaData} />
+                                    <button type="button"
+                                        onClick={() => window.print()}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-700 text-white text-[10px] font-black rounded-xl transition-all">
+                                        <Printer className="w-3.5 h-3.5" />
+                                        Imprimir Cédula de Laboratorio (A5)
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Acciones del formulario */}
+                        <div className="flex justify-end gap-2 pt-1">
+                            <button type="button" onClick={onClose}
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                className="px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm transition-all active:scale-95">
+                                <Syringe className="w-3.5 h-3.5" />
+                                Registrar y Enviar a Lab.
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tipo de Muestra</label>
-                            <select
-                                value={tipo}
-                                onChange={e => setTipo(e.target.value as RegistroSegundaMuestra['tipoMuestra'])}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
-                            >
-                                <option value="TALON_RETOMA">Re-toma Talón (Guthrie)</option>
-                                <option value="VENOSA_CONFIRMATORIA">Muestra Venosa Confirmatoria</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Prueba Objetivo</label>
-                            <div className="bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-[#9D2449]">{caso.tipoPrueba}</div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Fecha Obtención</label>
-                            <input type="date" required value={fechaObtension} onChange={e => setFechaObtension(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
-                        </div>
-                        <div>
-                            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Fecha Envío Lab.</label>
-                            <input type="date" required value={fechaEnvio} onChange={e => setFechaEnvio(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Laboratorio Destino</label>
-                        <input type="text" value={labDestino} onChange={e => setLabDestino(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
-                    </div>
-
-                    <div>
-                        <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tratamiento Indicado (si aplica)</label>
-                        <input type="text" placeholder="Ej. Levotiroxina sódica 37.5 mcg/día" value={tratamiento} onChange={e => setTratamiento(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
-                    </div>
-
-                    <div>
-                        <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Observaciones del Médico</label>
-                        <textarea rows={3} value={observaciones} onChange={e => setObservaciones(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449] resize-none" />
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">
-                            Cancelar
-                        </button>
-                        <button type="submit"
-                            className="px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl flex items-center gap-2">
-                            <Syringe className="w-3.5 h-3.5" />
-                            Registrar y Enviar
-                        </button>
-                    </div>
-                </form>
             </div>
-        </div>
+        </>
     );
 };
 
@@ -274,14 +477,14 @@ export const TabCasosPrioritarios: React.FC = () => {
             {/* Tabla */}
             <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 <table className="w-full min-w-[700px] text-xs">
-                    <thead className="bg-slate-100 text-slate-600 uppercase tracking-wider text-[10px]">
+                    <thead className="bg-[#9D2449] text-white uppercase tracking-wider text-[10px]">
                         <tr>
                             <th className="text-left px-4 py-3 font-black">Folio / R.N.</th>
                             <th className="text-left px-4 py-3 font-black">Madre • CLUES</th>
                             <th className="text-left px-4 py-3 font-black">Prueba</th>
                             <th className="text-left px-4 py-3 font-black">Resultado</th>
                             <th className="text-left px-4 py-3 font-black">Estatus</th>
-                            <th className="px-4 py-3 font-black">Acción</th>
+                            <th className="px-4 py-3 font-black text-center">Acción</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -324,11 +527,11 @@ export const TabCasosPrioritarios: React.FC = () => {
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white rounded-xl text-[10px] font-bold shadow-sm transition-all active:scale-95"
                                             >
                                                 <FlaskConical className="w-3 h-3" />
-                                                2ª Muestra
+                                                2ª Muestra / Venosa
                                             </button>
                                         )}
                                         {caso.estatusResultado === 'EN_CONFIRMACION' && (
-                                            <span className="inline-flex items-center gap-1 text-blue-600 text-[10px] font-bold">
+                                            <span className="inline-flex items-center gap-1 text-blue-600 text-[10px] font-bold bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg">
                                                 <Clock className="w-3 h-3" /> En Lab.
                                             </span>
                                         )}
@@ -343,7 +546,7 @@ export const TabCasosPrioritarios: React.FC = () => {
                 </table>
             </div>
 
-            {/* Detalle colapsable del caso al pasar el mouse */}
+            {/* Leyenda */}
             {casosFiltrados.length > 0 && (
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
