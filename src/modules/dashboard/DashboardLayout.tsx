@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { CapturistaDashboard } from './components/CapturistaDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { DashboardPartera } from '../parteras/DashboardPartera';
+import { DashboardMedico } from './components/medico/DashboardMedico';
 import {
     FileText,
     Users,
@@ -407,6 +408,8 @@ export const DashboardLayout: React.FC = () => {
                             <DashboardPartera />
                         ) : currentUser.rol === UserRole.CAPTURISTA_TAMIZ ? (
                             <CapturistaDashboard userName={currentUser.nombre} />
+                        ) : currentUser.rol === UserRole.MEDICO_UNIDAD ? (
+                            <DashboardMedico userName={currentUser.nombre} />
                         ) : (
                             <AdminDashboard userName={currentUser.nombre} />
                         )
