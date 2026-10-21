@@ -79,7 +79,7 @@ export const DashboardPartera: React.FC = () => {
         if (pin === '1234' || pin.length === 4) {
             setAutenticado(true);
             setErrorPin(false);
-            hablarTexto('Acceso verificado. Bienvenida Doña Rosa Santiz.');
+            hablarTexto('Acceso verificado. Bienvenida.');
         } else {
             setErrorPin(true);
         }
@@ -164,7 +164,7 @@ export const DashboardPartera: React.FC = () => {
                                 </span>
                             </div>
                             <h1 className="text-xl sm:text-2xl font-black text-white mt-0.5">
-                                Doña Rosa Santiz Gómez
+                                Partera Tradicional
                             </h1>
                             <p className="text-xs text-rose-100/90 font-medium">
                                 Acreditada por Servicios de Salud de Oaxaca • PIN Verificado
@@ -180,7 +180,7 @@ export const DashboardPartera: React.FC = () => {
                                 isSpeaking
                                     ? detenerVoz()
                                     : hablarTexto(
-                                        'Bienvenida Doña Rosa. Seleccione entre las 3 opciones oficiales: Ficha de Referencia y Contrareferencia, Calendario de Atención a la Mujer o Calendario del Niño menor de 2 años.'
+                                        'Bienvenida. Seleccione entre las 3 opciones oficiales: Ficha de Referencia y Contrareferencia, Calendario de Atención a la Mujer o Calendario del Niño menor de 2 años.'
                                     )
                             }
                             className={`w-full sm:w-auto px-4 py-3 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 border ${isSpeaking

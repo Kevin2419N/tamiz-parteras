@@ -25,7 +25,7 @@ interface CapturistaDashboardProps {
 export type CapturistaTabType = 'CAPTURA' | 'HISTORIAL' | 'LOTES' | 'RECALL';
 
 export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
-    userName = 'Dra. Carmen Silva Juárez'
+    userName = ''
 }) => {
     const [activeTab, setActiveTab] = useState<CapturistaTabType>('CAPTURA');
     const [isAIScanOpen, setIsAIScanOpen] = useState(false);
@@ -35,97 +35,8 @@ export const CapturistaDashboard: React.FC<CapturistaDashboardProps> = ({
     const { logout } = useAuth();
     const navigate = useNavigate();
 
-    // Mock initial dataset for Capturista Dashboard
-    const [registrosHistorial, setRegistrosHistorial] = useState<RegistroTamizHistorial[]>([
-        {
-            id: 'REG-001',
-            folio: '5458347',
-            rn: 'RN Gómez Santiz',
-            madre: 'María Gómez Santiz',
-            curpMadre: 'GOSM980412MOCMNN08',
-            fechaToma: '2026-09-09 10:00',
-            municipio: 'Juchitán de Zaragoza',
-            unidadMedica: 'Centro de Salud Urbano Juchitán',
-            clues: 'OCIMB000683',
-            tecnicaToma: '1ª Muestra Talón',
-            estatus: 'MUESTRA_COAGULADA',
-            prioridad: 'CRITICA',
-            motivoRecall: 'Muestra Coagulada / Se requiere Re-toma',
-            telefonoContacto: '9711234567'
-        },
-        {
-            id: 'REG-002',
-            folio: '5458346',
-            rn: 'RN López Pérez',
-            madre: 'Juana López Pérez',
-            curpMadre: 'LOPJ010915MOCRPN03',
-            fechaToma: '2026-09-09 08:30',
-            municipio: 'Santo Domingo Tehuantepec',
-            unidadMedica: 'Hospital General Sto. Domingo Tehuantepec',
-            clues: 'OASHG001245',
-            tecnicaToma: '1ª Muestra Talón',
-            estatus: 'EN_TRANSITO_LAB',
-            prioridad: 'NORMAL'
-        },
-        {
-            id: 'REG-003',
-            folio: '5458345',
-            rn: 'RN Cruz Toledo',
-            madre: 'Ana Cruz Toledo',
-            curpMadre: 'CUTA990203MOCRRN05',
-            fechaToma: '2026-09-08 16:45',
-            municipio: 'Salina Cruz',
-            unidadMedica: 'Centro de Salud Salina Cruz',
-            clues: 'OASCS002190',
-            tecnicaToma: '1ª Muestra Talón',
-            estatus: 'PROCESADA_NORMAL',
-            prioridad: 'NORMAL'
-        },
-        {
-            id: 'REG-004',
-            folio: '5458344',
-            rn: 'RN Girón Morales',
-            madre: 'Beatriz Girón Morales',
-            curpMadre: 'GOMB021110MOCRR01',
-            fechaToma: '2026-09-08 14:15',
-            municipio: 'Ciudad Ixtepec',
-            unidadMedica: 'Centro de Salud Cd. Ixtepec',
-            clues: 'OASIX003410',
-            tecnicaToma: '1ª Muestra Talón',
-            estatus: 'EN_TRANSITO_LAB',
-            prioridad: 'NORMAL'
-        },
-        {
-            id: 'REG-005',
-            folio: '5458343',
-            rn: 'RN Ruiz Atempa',
-            madre: 'Carla Ruiz Atempa',
-            curpMadre: 'RUAC970520MOCNR09',
-            fechaToma: '2026-09-07 11:20',
-            municipio: 'San Blas Atempa',
-            unidadMedica: 'CESSA San Blas Atempa',
-            clues: 'OASBA004120',
-            tecnicaToma: '1ª Muestra Talón',
-            estatus: 'PROCESADA_NORMAL',
-            prioridad: 'NORMAL'
-        },
-        {
-            id: 'REG-006',
-            folio: '5458342',
-            rn: 'RN Vásquez Mendoza',
-            madre: 'Diana Vásquez Mendoza',
-            curpMadre: 'VAMD001201MOCRM04',
-            fechaToma: '2026-09-06 09:10',
-            municipio: 'Asunción Ixtaltepec',
-            unidadMedica: 'Hospital General Ixtaltepec',
-            clues: 'OASIX003411',
-            tecnicaToma: '1ª Muestra Talón',
-            estatus: 'MUESTRA_INSUFICIENTE',
-            prioridad: 'ALTA',
-            motivoRecall: 'Muestra Insuficiente de Sangre en Círculo',
-            telefonoContacto: '9719876543'
-        }
-    ]);
+    // Historial de tamiz — se llena dinámicamente al guardar cédulas Guthrie
+    const [registrosHistorial, setRegistrosHistorial] = useState<RegistroTamizHistorial[]>([]);
 
     const handleLogout = () => {
         logout();

@@ -127,3 +127,61 @@ export interface NotificacionAlerta {
     rolesDestino: UserRole[];
     entidadRelacionadaId?: string;
 }
+
+// ─────────────────────────────────────────────────────────
+// INTERFACES CANÓNICAS DEL SISTEMA (Fase 1.1 – Producción)
+// ─────────────────────────────────────────────────────────
+
+/** Perfil de usuario institucional del sistema. */
+export interface Usuario {
+    id: string;
+    nombre: string;
+    email: string;
+    rol: 'ADMIN' | 'MEDICO' | 'PARTERA';
+    centroSaludId: string;
+    estado: 'ACTIVO' | 'INACTIVO';
+    fechaCreacion: string; // ISO 8601
+}
+
+/** Paciente registrada en el sistema de tamizaje y parteras. */
+export interface Paciente {
+    id: string;
+    expediente: string;
+    nombre: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    fechaNacimiento: string; // ISO 8601
+    curp: string;
+    direccion: string;
+    telefono: string;
+    centroSaludId: string;
+    fechaRegistro: string; // ISO 8601
+}
+
+/** Registro de un tamizaje neonatal o metabólico. */
+export interface Tamizaje {
+    id: string;
+    pacienteId: string;
+    fechaRealizacion: string; // ISO 8601
+    tipoTamiz: string; // p.ej. 'TSH' | 'PKU' | 'PANEL_COMPLETO'
+    resultado: string; // p.ej. 'NORMAL' | 'SOSPECHOSO' | 'PATOLOGICO'
+    observaciones?: string;
+    parteraId?: string;
+    medicoId?: string;
+}
+
+/** Unidad de salud o centro de atención primaria. */
+export interface CentroSalud {
+    id: string;
+    nombre: string;
+    clave: string; // CLUES o clave interna
+    ubicacion: string;
+}
+
+/** Jurisdicción sanitaria agrupadora de centros de salud. */
+export interface Jurisdiccion {
+    id: string;
+    nombre: string;
+    clave: string;
+    ubicacion: string;
+}

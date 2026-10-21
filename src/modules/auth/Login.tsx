@@ -26,8 +26,8 @@ export const Login: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'INSTITUCIONAL' | 'PARTERA'>('INSTITUCIONAL');
 
     // Tab 1: Institutional State
-    const [email, setEmail] = useState('capturista.jurisdiccion2@salud.gob.mx');
-    const [password, setPassword] = useState('••••••••••••');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [rolSeleccionado, setRolSeleccionado] = useState<UserRole>(UserRole.CAPTURISTA_TAMIZ);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
@@ -69,18 +69,6 @@ export const Login: React.FC = () => {
         }
     };
 
-    // Auto-update default email when institutional role changes
-    const roleEmailMap: Record<UserRole, string> = {
-        [UserRole.CAPTURISTA_TAMIZ]: 'capturista.jurisdiccion2@salud.gob.mx',
-        [UserRole.MEDICO_UNIDAD]: 'medico.jurisdiccion2@salud.gob.mx',
-        [UserRole.ADMIN_JURISDICCIONAL]: 'admin.jurisdiccion2@salud.gob.mx',
-        [UserRole.PARTERA_TRADICIONAL]: '',
-    };
-
-    useEffect(() => {
-        const mapped = roleEmailMap[rolSeleccionado];
-        if (mapped) setEmail(mapped);
-    }, [rolSeleccionado]);
 
     useEffect(() => {
         return () => {
@@ -98,7 +86,7 @@ export const Login: React.FC = () => {
 
             if (newPin.length === 4) {
                 setTimeout(() => {
-                    triggerSuccessfulLogin(UserRole.PARTERA_TRADICIONAL, 'Doña Rosa Santiz Gómez (Partera Tradicional)');
+                    triggerSuccessfulLogin(UserRole.PARTERA_TRADICIONAL);
                 }, 400);
             }
         }
@@ -123,7 +111,7 @@ export const Login: React.FC = () => {
             setQrScanSuccess(true);
             setTimeout(() => {
                 setShowQRScannerModal(false);
-                triggerSuccessfulLogin(UserRole.PARTERA_TRADICIONAL, 'Doña Juana López Pérez (Partera Tradicional)');
+                triggerSuccessfulLogin(UserRole.PARTERA_TRADICIONAL);
             }, 1200);
         }, 2500);
     };
@@ -270,10 +258,10 @@ export const Login: React.FC = () => {
 
                                 <form onSubmit={handleInstitutionalSubmit} className="space-y-4">
 
-                                    {/* Selector de Rol Simulado para Pruebas Rápida */}
+                                    {/* Selector de Perfil de Acceso */}
                                     <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
                                         <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                                            Rol Operativo (Simulación rápida para evaluación)
+                                            Perfil de Acceso
                                         </label>
                                         <select
                                             value={rolSeleccionado}

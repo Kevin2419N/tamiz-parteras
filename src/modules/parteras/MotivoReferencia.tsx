@@ -54,8 +54,8 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     const [municipio, setMunicipio] = useState('');
 
     // Datos de la Partera (Prellenados únicamente los datos del perfil autenticado)
-    const [nombrePartera, setNombrePartera] = useState('Doña Rosa Santiz Gómez');
-    const [localidadPartera, setLocalidadPartera] = useState('San Pedro Juchitán');
+    const [nombrePartera, setNombrePartera] = useState('');
+    const [localidadPartera, setLocalidadPartera] = useState('');
 
     // Motivos Seleccionados
     const [motivosSeleccionados, setMotivosSeleccionados] = useState<string[]>([]);
@@ -66,8 +66,8 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     const [diagnostico, setDiagnostico] = useState('');
     const [tratamiento, setTratamiento] = useState('');
     const [observacionesMedico, setObservacionesMedico] = useState('');
-    const [nombreMedico, setNombreMedico] = useState('Dr. Alejandro Murat H.');
-    const [centroMedico, setCentroMedico] = useState('Centro de Salud Urbano Juchitán');
+    const [nombreMedico, setNombreMedico] = useState('');
+    const [centroMedico, setCentroMedico] = useState('');
 
     // Dictado por voz Web Speech API estado
     const [listeningFieldInternal, setListeningFieldInternal] = useState<string | null>(null);

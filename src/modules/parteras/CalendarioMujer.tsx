@@ -81,12 +81,12 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     const [muerteMaternaEtapa, setMuerteMaternaEtapa] = useState<'EMBARAZO' | 'PARTO' | 'PUERPERIO' | null>(null);
 
     // 9. Cierre Administrativo
-    const [nombrePartera, setNombrePartera] = useState('Rosa Santiz Gómez');
-    const [cierreLocalidad, setCierreLocalidad] = useState('La Ventosa');
-    const [noMunicipio, setNoMunicipio] = useState('043');
-    const [mesInformado, setMesInformado] = useState('Septiembre 2026');
-    const [nombreSupervisor, setNombreSupervisor] = useState('Lic. Enf. María de la Luz V.');
-    const [centroSalud, setCentroSalud] = useState('Centro de Salud La Ventosa / Jurisdicción Sanitaria No. 2 Istmo');
+    const [nombrePartera, setNombrePartera] = useState('');
+    const [cierreLocalidad, setCierreLocalidad] = useState('');
+    const [noMunicipio, setNoMunicipio] = useState('');
+    const [mesInformado, setMesInformado] = useState('');
+    const [nombreSupervisor, setNombreSupervisor] = useState('');
+    const [centroSalud, setCentroSalud] = useState('');
     const [huellaRegistrada, setHuellaRegistrada] = useState(false);
 
     // Web Speech API Voice Dictation

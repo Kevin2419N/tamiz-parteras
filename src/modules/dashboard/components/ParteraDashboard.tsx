@@ -28,44 +28,16 @@ export const ParteraDashboard: React.FC<ParteraDashboardProps> = ({ nombreParter
     const [notificacionEnviada, setNotificacionEnviada] = useState(false);
     const [partoData, setPartoData] = useState({
         nombreMadre: '',
-        comunidad: 'Juchitán de Zaragoza',
-        fechaHora: '2026-09-09T14:30',
+        comunidad: '',
+        fechaHora: '',
         sexoRN: 'MASCULINO',
-        pesoAproximado: '3.1 kg',
-        canalizadoTamiz: true,
-        observaciones: 'Parto sin complicaciones, recién nacido activo con buen llanto.',
+        pesoAproximado: '',
+        canalizadoTamiz: false,
+        observaciones: '',
     });
 
-    // Mock Recién Nacidos de la Partera
-    const [misBebes] = useState([
-        {
-            id: 'RN-001',
-            madre: 'María Gómez Santiz',
-            fechaNacimiento: '2026-09-07',
-            comunidad: 'Juchitán de Zaragoza',
-            sexo: 'MASCULINO',
-            folioTamiz: 'TMZ-OAX-2026-98217',
-            estatusTamiz: 'Tamiz Realizado (En Tránsito)',
-        },
-        {
-            id: 'RN-002',
-            madre: 'Juana López Pérez',
-            fechaNacimiento: '2026-09-02',
-            comunidad: 'Santo Domingo Tehuantepec',
-            sexo: 'FEMENINO',
-            folioTamiz: 'TMZ-OAX-2026-98104',
-            estatusTamiz: 'Tamiz Completado (Normal)',
-        },
-        {
-            id: 'RN-003',
-            madre: 'Lucía Jiménez Toledo',
-            fechaNacimiento: '2026-08-25',
-            comunidad: 'Asunción Ixtaltepec',
-            sexo: 'MASCULINO',
-            folioTamiz: 'TMZ-OAX-2026-97992',
-            estatusTamiz: 'Tamiz Completado (Normal)',
-        },
-    ]);
+    // Recién Nacidos canalizados por la partera (dinámico)
+    const [misBebes] = useState<{ id: string; madre: string; fechaNacimiento: string; comunidad: string; sexo: string; folioTamiz: string; estatusTamiz: string; }[]>([]);
 
     // Speech API Handler
     const hablarGuia = (texto: string) => {
@@ -106,11 +78,11 @@ export const ParteraDashboard: React.FC<ParteraDashboardProps> = ({ nombreParter
             setShowNotificarPartoModal(false);
             setPartoData({
                 nombreMadre: '',
-                comunidad: 'Juchitán de Zaragoza',
-                fechaHora: '2026-09-09T14:30',
+                comunidad: '',
+                fechaHora: '',
                 sexoRN: 'MASCULINO',
-                pesoAproximado: '3.1 kg',
-                canalizadoTamiz: true,
+                pesoAproximado: '',
+                canalizadoTamiz: false,
                 observaciones: '',
             });
         }, 1500);
@@ -344,7 +316,13 @@ export const ParteraDashboard: React.FC<ParteraDashboardProps> = ({ nombreParter
                         </div>
 
                         <div className="space-y-3">
-                            {misBebes.map((bebe) => (
+                            {misBebes.length === 0 ? (
+                                <div className="py-10 text-center space-y-2">
+                                    <Baby className="w-10 h-10 text-slate-300 mx-auto" />
+                                    <p className="text-sm font-bold text-slate-400">No hay recién nacidos registrados aún.</p>
+                                    <p className="text-xs text-slate-400">Los bebés que notifique aparecerán aquí.</p>
+                                </div>
+                            ) : misBebes.map((bebe) => (
                                 <div key={bebe.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                     <div>
                                         <p className="text-sm font-black text-slate-900">RN de {bebe.madre}</p>
@@ -356,6 +334,7 @@ export const ParteraDashboard: React.FC<ParteraDashboardProps> = ({ nombreParter
                                     </span>
                                 </div>
                             ))}
+                            }
                         </div>
                     </div>
                 </div>
