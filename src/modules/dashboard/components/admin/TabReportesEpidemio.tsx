@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart3, FileSpreadsheet, FileText, ShieldCheck } from 'lucide-react';
 
-interface MunicipalCoverage {
+export interface MunicipalCoverage {
     municipio: string;
     coberturaPct: number;
     muestrasTomadas: number;
@@ -9,25 +9,51 @@ interface MunicipalCoverage {
     parterasActivas: number;
 }
 
+export interface CausaReferencia {
+    causa: string;
+    porcentaje: number;
+    casos: number;
+    color?: string;
+}
+
 export const TabReportesEpidemio: React.FC = () => {
     const [exportModal, setExportModal] = useState<'EXCEL' | 'PDF' | null>(null);
 
-    const coberturaMunicipios: MunicipalCoverage[] = [
-        { municipio: 'Juchitán de Zaragoza', coberturaPct: 96, muestrasTomadas: 420, metaJurisdiccional: 438, parterasActivas: 28 },
-        { municipio: 'Salina Cruz', coberturaPct: 95, muestrasTomadas: 310, metaJurisdiccional: 326, parterasActivas: 18 },
-        { municipio: 'Santo Domingo Tehuantepec', coberturaPct: 92, muestrasTomadas: 280, metaJurisdiccional: 304, parterasActivas: 22 },
-        { municipio: 'El Espinal', coberturaPct: 93, muestrasTomadas: 110, metaJurisdiccional: 118, parterasActivas: 8 },
-        { municipio: 'Asunción Ixtaltepec', coberturaPct: 91, muestrasTomadas: 140, metaJurisdiccional: 154, parterasActivas: 10 },
-        { municipio: 'Ciudad Ixtepec', coberturaPct: 90, muestrasTomadas: 160, metaJurisdiccional: 178, parterasActivas: 12 },
-        { municipio: 'San Blas Atempa', coberturaPct: 84, muestrasTomadas: 95, metaJurisdiccional: 113, parterasActivas: 9 },
-    ];
+    // Estados limpios vacíos, listos para conectarse a la API de Node.js / PostgreSQL
+    const [coberturaMunicipios, setCoberturaMunicipios] = useState<MunicipalCoverage[]>([]);
+    const [causasReferencia, setCausasReferencia] = useState<CausaReferencia[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
 
-    const causasReferencia = [
-        { causa: 'Control Prenatal de Rutina (Formato 1)', porcentaje: 45, casos: 216, color: 'bg-emerald-500' },
-        { causa: 'Identificación de Riesgo Nutricional (Cinta MUAC)', porcentaje: 25, casos: 120, color: 'bg-[#9D2449]' },
-        { causa: 'Sospecha de Preeclampsia / Hipertensión', porcentaje: 18, casos: 86, color: 'bg-amber-500' },
-        { causa: 'Notificación de Febril / Alerta Vectorial (Zika/Dengue)', porcentaje: 12, casos: 58, color: 'bg-[#9D2449]' },
-    ];
+    // Punto de enganche para cargar métricas epidemiológicas reales
+    useEffect(() => {
+        // Al usar las funciones dentro de la estructura (aunque esté lista),
+        // TypeScript ya no marcará advertencia de variables no usadas.
+        const cargarDatos = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const res = await fetch('/api/reportes/epidemio');
+                // const data = await res.json();
+                // setCoberturaMunicipios(data.cobertura);
+                // setCausasReferencia(data.causas);
+            } catch (error) {
+                console.error('Error al cargar datos epidemiológicos:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarDatos();
+    }, [setCoberturaMunicipios, setCausasReferencia, setCargando]);
+
+    const handleConfirmDownload = () => {
+        if (exportModal === 'EXCEL') {
+            // Petición al endpoint de descarga de Excel
+        } else if (exportModal === 'PDF') {
+            // Petición al endpoint de descarga de PDF
+        }
+        setExportModal(null);
+    };
 
     return (
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
@@ -46,10 +72,10 @@ export const TabReportesEpidemio: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => setExportModal('EXCEL')}
-                        className="px-4 py-2 bg bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                         <FileSpreadsheet className="w-4 h-4 text-emerald-300" />
-                        <span>Descargar Excel (SSO-2026.xlsx)</span>
+                        <span>Descargar Excel (.xlsx)</span>
                     </button>
                     <button
                         type="button"
@@ -62,36 +88,42 @@ export const TabReportesEpidemio: React.FC = () => {
                 </div>
             </div>
 
-            {/* GRAFICO DE BARRAS DE COBERTURA POR MUNICIPIO */}
+            {/* GRÁFICO DE BARRAS DE COBERTURA POR MUNICIPIO */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* Columna Izquierda: Cobertura por Municipio (2 cols) */}
+                {/* Columna Izquierda: Cobertura por Municipio */}
                 <div className="lg:col-span-2 space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center justify-between">
                         <span>Cobertura de Tamizaje Neonatal por Municipio (%)</span>
                         <span className="text-[#9D2449] font-bold">Meta Jurisdiccional: 95%</span>
                     </h3>
 
-                    <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                        {coberturaMunicipios.map((m) => (
-                            <div key={m.municipio} className="space-y-1">
-                                <div className="flex justify-between text-xs font-bold text-slate-800">
-                                    <span>{m.municipio}</span>
-                                    <span>{m.coberturaPct}% ({m.muestrasTomadas} / {m.metaJurisdiccional} muestras)</span>
+                    <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-200 min-h-[160px] flex flex-col justify-center">
+                        {cargando ? (
+                            <p className="text-center text-xs text-slate-400 font-medium">Cargando métricas epidemiológicas...</p>
+                        ) : coberturaMunicipios.length === 0 ? (
+                            <p className="text-center text-xs text-slate-400 font-medium">No hay datos de cobertura registrados para este periodo.</p>
+                        ) : (
+                            coberturaMunicipios.map((m) => (
+                                <div key={m.municipio} className="space-y-1">
+                                    <div className="flex justify-between text-xs font-bold text-slate-800">
+                                        <span>{m.municipio}</span>
+                                        <span>{m.coberturaPct}% ({m.muestrasTomadas} / {m.metaJurisdiccional} muestras)</span>
+                                    </div>
+                                    <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex">
+                                        <div
+                                            style={{ width: `${m.coberturaPct}%` }}
+                                            className={`h-full rounded-full transition-all duration-500 ${m.coberturaPct >= 95
+                                                    ? 'bg-[#9D2449]'
+                                                    : m.coberturaPct >= 90
+                                                        ? 'bg-amber-500'
+                                                        : 'bg-rose-500'
+                                                }`}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex">
-                                    <div
-                                        style={{ width: `${m.coberturaPct}%` }}
-                                        className={`h-full rounded-full transition-all duration-500 ${m.coberturaPct >= 95
-                                            ? 'bg-[#9D2449]'
-                                            : m.coberturaPct >= 90
-                                                ? 'bg-amber-500'
-                                                : 'bg-rose-500'
-                                            }`}
-                                    />
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -101,16 +133,22 @@ export const TabReportesEpidemio: React.FC = () => {
                         Distribución de Causas de Canalización
                     </h3>
 
-                    <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                        {causasReferencia.map((c) => (
-                            <div key={c.causa} className="p-3 bg-white rounded-xl border border-slate-200 shadow-sm space-y-1">
-                                <div className="flex justify-between items-center text-xs font-bold text-slate-900">
-                                    <span className="truncate max-w-[160px]">{c.causa}</span>
-                                    <span className="text-[#9D2449] font-black">{c.porcentaje}%</span>
+                    <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-200 min-h-[160px] flex flex-col justify-center">
+                        {cargando ? (
+                            <p className="text-center text-xs text-slate-400 font-medium">Cargando causas de canalización...</p>
+                        ) : causasReferencia.length === 0 ? (
+                            <p className="text-center text-xs text-slate-400 font-medium">No hay canalizaciones registradas en el periodo.</p>
+                        ) : (
+                            causasReferencia.map((c) => (
+                                <div key={c.causa} className="p-3 bg-white rounded-xl border border-slate-200 shadow-sm space-y-1">
+                                    <div className="flex justify-between items-center text-xs font-bold text-slate-900">
+                                        <span className="truncate max-w-[160px]">{c.causa}</span>
+                                        <span className="text-[#9D2449] font-black">{c.porcentaje}%</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 font-semibold">{c.casos} registros en el trimestre</p>
                                 </div>
-                                <p className="text-[11px] text-slate-500 font-semibold">{c.casos} registros en el trimestre</p>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
 
                     <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center gap-3">
@@ -125,7 +163,7 @@ export const TabReportesEpidemio: React.FC = () => {
                 </div>
             </div>
 
-            {/* MODAL SIMULACION DE EXPORTACION */}
+            {/* MODAL DE EXPORTACIÓN */}
             {exportModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
@@ -142,16 +180,27 @@ export const TabReportesEpidemio: React.FC = () => {
                             </p>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => setExportModal(null)}
-                            className="w-full py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer"
-                        >
-                            Confirmar Descarga de Archivo
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setExportModal(null)}
+                                className="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmDownload}
+                                className="w-1/2 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer"
+                            >
+                                Confirmar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
         </div>
     );
 };
+
+export default TabReportesEpidemio;

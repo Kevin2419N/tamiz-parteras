@@ -6,7 +6,6 @@ import {
     CheckCircle2,
     Printer,
     RotateCcw,
-    Sparkles,
     Camera,
     FileText,
     FlaskConical,
@@ -38,34 +37,34 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
     const defaultForm: GuthrieFormData = {
         // Sección A: Encabezado y Muestra
-        folio: '5458349',
-        unidadMedica: 'OCIMB000683 - Centro de Salud Urbano Juchitán',
-        clues: 'OCIMB000683',
+        folio: '',
+        unidadMedica: '',
+        clues: '',
         jurisdiccion: '02 Istmo',
         estado: 'Oaxaca',
-        nombreResponsableToma: 'María del Carmen',
-        apellidoPaternoResponsableToma: 'Reyes',
-        apellidoMaternoResponsableToma: 'Alvarez',
-        responsableToma: 'Enf. María del Carmen Reyes Alvarez',
+        nombreResponsableToma: '',
+        apellidoPaternoResponsableToma: '',
+        apellidoMaternoResponsableToma: '',
+        responsableToma: '',
         tecnicaToma: '1A_MUESTRA',
         sospechosoEspecificar: '',
         calidadMuestraLab: 'ADECUADA',
-        responsableLaboratorio: 'Q.F.B. Javier Hernández López',
+        responsableLaboratorio: '',
 
         // Sección B: Datos del Recién Nacido
-        nombreRN: 'RN (Bebé de María)',
-        apellidoPaternoRN: 'Gómez',
-        apellidoMaternoRN: 'Santiz',
+        nombreRN: '',
+        apellidoPaternoRN: '',
+        apellidoMaternoRN: '',
         fechaNacimiento: new Date().toISOString().split('T')[0],
         horaNacimiento: '08:00',
         fechaToma: new Date().toISOString().split('T')[0],
-        horaToma: '10:30',
+        horaToma: '10:00',
         sexo: 'MASCULINO',
         edadGestacional: 'TERMINO_37_41',
         producto: 'UNICO',
         numeroGemelo: '',
-        pesoGramos: '3200',
-        tallaCm: '50',
+        pesoGramos: '',
+        tallaCm: '',
         malformaciones: 'NO',
         malformacionesDetalle: '',
         condicionesRN: 'SANO',
@@ -82,74 +81,19 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         coloniaLocalidad: '',
         municipioMadre: 'Juchitán de Zaragoza',
         estadoMadre: 'Oaxaca',
-        codigoPostalMadre: '70000',
+        codigoPostalMadre: '',
         telefonoFijo: '',
         telefonoCelular: '',
         emailMadre: '',
-        edadMadre: '26',
+        edadMadre: '',
         gestas: '1',
         enfermedadTiroideaMetabolica: 'NO',
         enfermedadTiroideaDetalle: '',
-        observacionesMuestra: 'Muestra tomada en talón izquierdo sin complicaciones.',
-    };
-
-    const sampleAIData: GuthrieFormData = {
-        folio: '5458347',
-        unidadMedica: 'OCIMB000683 - Centro de Salud Urbano Juchitán',
-        clues: 'OCIMB000683',
-        jurisdiccion: '02 Istmo',
-        estado: 'Oaxaca',
-        nombreResponsableToma: 'María del Carmen',
-        apellidoPaternoResponsableToma: 'Reyes',
-        apellidoMaternoResponsableToma: 'Alvarez',
-        responsableToma: 'Enf. María del Carmen Reyes Alvarez',
-        tecnicaToma: '1A_MUESTRA',
-        sospechosoEspecificar: '',
-        calidadMuestraLab: 'ADECUADA',
-        responsableLaboratorio: 'Q.F.B. Javier Hernández López',
-
-        nombreRN: 'Mateo',
-        apellidoPaternoRN: 'Gómez',
-        apellidoMaternoRN: 'Santiz',
-        fechaNacimiento: '2026-09-05',
-        horaNacimiento: '08:30',
-        fechaToma: '2026-09-08',
-        horaToma: '10:00',
-        sexo: 'MASCULINO',
-        edadGestacional: 'TERMINO_37_41',
-        producto: 'UNICO',
-        numeroGemelo: '',
-        pesoGramos: '3250',
-        tallaCm: '50',
-        malformaciones: 'NO',
-        malformacionesDetalle: '',
-        condicionesRN: 'SANO',
-        alimentacion: 'LECHE_MATERNA',
-
-        nombreMadre: 'María',
-        apellidoPaternoMadre: 'Gómez',
-        apellidoMaternoMadre: 'Santiz',
-        curpMadre: 'GOSM980412MOCMNN08',
-        calle: 'Av. Miguel Hidalgo',
-        numExterior: '45',
-        numInterior: 'A',
-        coloniaLocalidad: 'Centro',
-        municipioMadre: 'Juchitán de Zaragoza',
-        estadoMadre: 'Oaxaca',
-        codigoPostalMadre: '70000',
-        telefonoFijo: '9717120987',
-        telefonoCelular: '9711234567',
-        emailMadre: 'maria.gomez@gmail.com',
-        edadMadre: '28',
-        gestas: '2',
-        enfermedadTiroideaMetabolica: 'NO',
-        enfermedadTiroideaDetalle: '',
-        observacionesMuestra: 'Muestra tomada en talón izquierdo sin complicaciones. Impregnación de papel filtro uniforme.',
+        observacionesMuestra: '',
     };
 
     const [formData, setFormData] = useState<GuthrieFormData>(defaultForm);
     const [savedNotification, setSavedNotification] = useState(false);
-    const [aiToast, setAiToast] = useState<string | null>(null);
 
     useEffect(() => {
         if (initialData) {
@@ -159,12 +103,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
             }));
         }
     }, [initialData]);
-
-    const handlePopulateAIData = () => {
-        setFormData(sampleAIData);
-        setAiToast('¡100% de los campos de la tarjeta física Guthrie completados exitosamente por IA!');
-        setTimeout(() => setAiToast(null), 6000);
-    };
 
     const handleCluesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedVal = e.target.value;
@@ -178,11 +116,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 estado: found.estado
             }));
         }
-    };
-
-    const generateTestCurp = () => {
-        const curpTest = `GOSM${Math.floor(100000 + Math.random() * 900000)}MOCMNN0${Math.floor(1 + Math.random() * 8)}`;
-        setFormData(prev => ({ ...prev, curpMadre: curpTest }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -260,33 +193,18 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 </div>
 
                 <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
-                    <button
-                        type="button"
-                        onClick={onOpenAIScan || handlePopulateAIData}
-                        className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold border border-slate-300 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                    >
-                        <Camera className="w-4 h-4 text-[#9D2449]" />
-                        <span>Subir Foto de Tarjeta (OCR)</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={handlePopulateAIData}
-                        className="flex-1 sm:flex-none px-4 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white rounded-xl text-xs font-black shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
-                    >
-                        <Sparkles className="w-4 h-4 text-rose-200" />
-                        <span>Rellenar por IA (Datos Prueba)</span>
-                    </button>
+                    {onOpenAIScan && (
+                        <button
+                            type="button"
+                            onClick={onOpenAIScan}
+                            className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold border border-slate-300 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                            <Camera className="w-4 h-4 text-[#9D2449]" />
+                            <span>Subir Foto de Tarjeta (OCR)</span>
+                        </button>
+                    )}
                 </div>
             </div>
-
-            {/* TOAST DE IA */}
-            {aiToast && (
-                <div className="no-print bg-emerald-50 border-2 border-emerald-500 rounded-2xl p-4 flex items-center gap-3 text-xs font-bold text-emerald-900 shadow-md">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                    <p className="flex-1 font-extrabold">{aiToast}</p>
-                </div>
-            )}
 
             {/* TOAST AL GUARDAR */}
             {savedNotification && (
@@ -328,7 +246,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                     <div className="bg-rose-50 border-2 border-rose-300 px-4 py-2 rounded-2xl text-right">
                         <span className="text-[10px] font-black uppercase text-rose-700 block">FOLIO TARJETA GUTHRIE</span>
                         <span className="font-mono text-xl text-rose-600 font-black tracking-wider">
-                            {formData.folio || '5458347'}
+                            {formData.folio || 'PENDIENTE'}
                         </span>
                     </div>
                 </div>
@@ -352,6 +270,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     <input
                                         type="text"
                                         required
+                                        placeholder="Ej. 5458349"
                                         value={formData.folio}
                                         onChange={(e) => setFormData({ ...formData, folio: e.target.value })}
                                         className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl font-mono text-sm font-black text-rose-600 focus:outline-none focus:border-[#9D2449]"
@@ -368,6 +287,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         onChange={handleCluesChange}
                                         className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
                                     >
+                                        <option value="">Seleccione una unidad médica...</option>
                                         {catalogCLUES.map((u) => (
                                             <option key={u.clues} value={`${u.clues} - ${u.nombre}`}>
                                                 {u.clues} - {u.nombre}
@@ -387,7 +307,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </div>
                                 </div>
 
-                                {/* DATOS DEL RESPONSABLE DE LA TOMA (NOMBRE, AP. PATERNO, AP. MATERNO) */}
+                                {/* DATOS DEL RESPONSABLE DE LA TOMA */}
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-700 mb-1">Responsable de la Toma (Nombre y Apellidos) *</label>
                                     <div className="grid grid-cols-3 gap-1.5">
@@ -418,7 +338,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </div>
                                 </div>
 
-                                {/* TÉCNICA DE TOMA (RADIO/SELECT ESPECIFICATORIO) */}
+                                {/* TÉCNICA DE TOMA */}
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-700 mb-1">Técnica de Toma *</label>
                                     <select
@@ -496,6 +416,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         <input
                                             type="text"
                                             required
+                                            placeholder="Nombre(s)"
                                             value={formData.nombreRN}
                                             onChange={(e) => setFormData({ ...formData, nombreRN: e.target.value })}
                                             className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -506,6 +427,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         <input
                                             type="text"
                                             required
+                                            placeholder="Ap. Paterno"
                                             value={formData.apellidoPaternoRN}
                                             onChange={(e) => setFormData({ ...formData, apellidoPaternoRN: e.target.value })}
                                             className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -516,6 +438,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         <input
                                             type="text"
                                             required
+                                            placeholder="Ap. Materno"
                                             value={formData.apellidoMaternoRN}
                                             onChange={(e) => setFormData({ ...formData, apellidoMaternoRN: e.target.value })}
                                             className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -584,6 +507,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         <input
                                             type="number"
                                             required
+                                            placeholder="Ej. 3200"
                                             value={formData.pesoGramos}
                                             onChange={(e) => setFormData({ ...formData, pesoGramos: e.target.value })}
                                             className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -595,6 +519,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         <input
                                             type="number"
                                             required
+                                            placeholder="Ej. 50"
                                             value={formData.tallaCm}
                                             onChange={(e) => setFormData({ ...formData, tallaCm: e.target.value })}
                                             className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -626,7 +551,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
                                         >
                                             <option value="UNICO">1. Único</option>
-                                            <option value="GEMELAR">2. Multiple / Gemelar</option>
+                                            <option value="GEMELAR">2. Múltiple / Gemelar</option>
                                         </select>
                                     </div>
                                     {formData.producto === 'GEMELAR' && (
@@ -735,6 +660,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <input
                                                 type="text"
                                                 required
+                                                placeholder="Nombre(s)"
                                                 value={formData.nombreMadre}
                                                 onChange={(e) => setFormData({ ...formData, nombreMadre: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -745,6 +671,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <input
                                                 type="text"
                                                 required
+                                                placeholder="Ap. Paterno"
                                                 value={formData.apellidoPaternoMadre}
                                                 onChange={(e) => setFormData({ ...formData, apellidoPaternoMadre: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -755,6 +682,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <input
                                                 type="text"
                                                 required
+                                                placeholder="Ap. Materno"
                                                 value={formData.apellidoMaternoMadre}
                                                 onChange={(e) => setFormData({ ...formData, apellidoMaternoMadre: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -764,19 +692,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                                     {/* CURP MADRE */}
                                     <div>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-[10px] font-bold text-slate-700">CURP Madre (18 Caracteres)</label>
-                                            <button
-                                                type="button"
-                                                onClick={generateTestCurp}
-                                                className="text-[9px] font-bold text-[#9D2449] hover:underline no-print cursor-pointer"
-                                            >
-                                                + Generar CURP
-                                            </button>
-                                        </div>
+                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">CURP Madre (18 Caracteres)</label>
                                         <input
                                             type="text"
                                             maxLength={18}
+                                            placeholder="EJ. GOSM980412MOCMNN08"
                                             value={formData.curpMadre}
                                             onChange={(e) => setFormData({ ...formData, curpMadre: e.target.value.toUpperCase() })}
                                             className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg font-mono font-bold text-xs uppercase"
@@ -822,6 +742,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <input
                                                 type="text"
                                                 required
+                                                placeholder="Colonia"
                                                 value={formData.coloniaLocalidad}
                                                 onChange={(e) => setFormData({ ...formData, coloniaLocalidad: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
@@ -832,6 +753,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <input
                                                 type="text"
                                                 required
+                                                placeholder="Municipio"
                                                 value={formData.municipioMadre}
                                                 onChange={(e) => setFormData({ ...formData, municipioMadre: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -843,6 +765,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 type="text"
                                                 required
                                                 maxLength={5}
+                                                placeholder="70000"
                                                 value={formData.codigoPostalMadre}
                                                 onChange={(e) => setFormData({ ...formData, codigoPostalMadre: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-mono font-bold text-center"
@@ -856,6 +779,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <label className="block text-[9px] font-bold text-slate-700 mb-1">Tel. Fijo</label>
                                             <input
                                                 type="tel"
+                                                placeholder="971..."
                                                 value={formData.telefonoFijo}
                                                 onChange={(e) => setFormData({ ...formData, telefonoFijo: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
@@ -867,6 +791,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 type="tel"
                                                 required
                                                 maxLength={10}
+                                                placeholder="971..."
                                                 value={formData.telefonoCelular}
                                                 onChange={(e) => setFormData({ ...formData, telefonoCelular: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
@@ -876,6 +801,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <label className="block text-[9px] font-bold text-slate-700 mb-1">E-mail Madre</label>
                                             <input
                                                 type="email"
+                                                placeholder="correo@..."
                                                 value={formData.emailMadre}
                                                 onChange={(e) => setFormData({ ...formData, emailMadre: e.target.value })}
                                                 className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
@@ -890,6 +816,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <input
                                                 type="number"
                                                 required
+                                                placeholder="Ej. 26"
                                                 value={formData.edadMadre}
                                                 onChange={(e) => setFormData({ ...formData, edadMadre: e.target.value })}
                                                 className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-center"
@@ -900,7 +827,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             <input
                                                 type="text"
                                                 required
-                                                placeholder="Ej. II"
+                                                placeholder="Ej. I"
                                                 value={formData.gestas}
                                                 onChange={(e) => setFormData({ ...formData, gestas: e.target.value })}
                                                 className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-center"
@@ -962,7 +889,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </label>
                                     <textarea
                                         rows={2}
-                                        placeholder="Ej: Muestra tomada en talón izquierdo sin complicaciones. Impregnación de papel filtro uniforme."
+                                        placeholder="Escriba aquí cualquier observación sobre la muestra..."
                                         value={formData.observacionesMuestra || ''}
                                         onChange={(e) => setFormData({ ...formData, observacionesMuestra: e.target.value })}
                                         className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-medium focus:outline-none focus:border-[#9D2449] resize-none text-xs"
@@ -1023,3 +950,5 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         </div>
     );
 };
+
+export default TabCapturaGuthrie;

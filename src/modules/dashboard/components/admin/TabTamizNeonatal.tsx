@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Eye, X, Droplet, ShieldCheck, MapPin } from 'lucide-react';
 import type { MuestraGuthrie } from './types';
 
@@ -6,56 +6,28 @@ export const TabTamizNeonatal: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedMuestra, setSelectedMuestra] = useState<MuestraGuthrie | null>(null);
 
-    const [muestras] = useState<MuestraGuthrie[]>([
-        {
-            id: '1',
-            folio: 'GUTH-2026-0891',
-            nombreRecienNacido: 'Bebé de Mateo Cruz',
-            nombreMadre: 'Guadalupe Mateo Cruz',
-            fechaToma: '2026-09-24',
-            unidadMedica: 'Centro de Salud Juchitán',
-            municipio: 'Juchitán de Zaragoza',
-            numeroGotas: 4,
-            estatus: 'SOSPECHOSO',
-            observaciones: 'Muestra con elevación en prueba TSH. Requiere confirmación de laboratorio central.'
-        },
-        {
-            id: '2',
-            folio: 'GUTH-2026-0892',
-            nombreRecienNacido: 'Bebé de Morales Ruiz',
-            nombreMadre: 'Rosa Elena Morales Ruiz',
-            fechaToma: '2026-09-25',
-            unidadMedica: 'Centro de Salud Tehuantepec',
-            municipio: 'Santo Domingo Tehuantepec',
-            numeroGotas: 5,
-            estatus: 'NORMAL',
-            observaciones: 'Panel metabólico completo dentro de rangos normales.'
-        },
-        {
-            id: '3',
-            folio: 'GUTH-2026-0893',
-            nombreRecienNacido: 'Bebé de Jiménez Solís',
-            nombreMadre: 'Carmen Jiménez Solís',
-            fechaToma: '2026-09-26',
-            unidadMedica: 'Hospital General Salina Cruz',
-            municipio: 'Salina Cruz',
-            numeroGotas: 4,
-            estatus: 'EN_TRANSITO',
-            observaciones: 'Enviado con guía de rastreo RAST-8821 a laboratorio estatal de Oaxaca.'
-        },
-        {
-            id: '4',
-            folio: 'GUTH-2026-0894',
-            nombreRecienNacido: 'Bebé de Vázquez López',
-            nombreMadre: 'Juana Vázquez López',
-            fechaToma: '2026-09-27',
-            unidadMedica: 'Centro de Salud San Blas Atempa',
-            municipio: 'San Blas Atempa',
-            numeroGotas: 4,
-            estatus: 'REGISTRADO',
-            observaciones: 'Pendiente recolección por mensajería institucional.'
-        },
-    ]);
+    // Estado limpio en arreglo vacío, listo para recibir datos de PostgreSQL / API Node.js
+    const [muestras, setMuestras] = useState<MuestraGuthrie[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
+
+    // Punto de enganche para cargar las muestras Guthrie reales desde el back-end
+    useEffect(() => {
+        const cargarMuestras = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const res = await fetch('/api/tamiz/muestras');
+                // const data = await res.json();
+                // setMuestras(data);
+            } catch (error) {
+                console.error('Error al cargar muestras de tamiz neonatal:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarMuestras();
+    }, [setMuestras, setCargando]);
 
     const filteredMuestras = muestras.filter(
         (m) =>
@@ -82,7 +54,7 @@ export const TabTamizNeonatal: React.FC = () => {
 
     return (
         <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-            {/* ENCABEZADO Y BUSCADOR (SIN BOTÓN DE REGISTRO) */}
+            {/* ENCABEZADO Y BUSCADOR */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                 <div>
                     <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
@@ -108,45 +80,55 @@ export const TabTamizNeonatal: React.FC = () => {
 
             {/* VISTA MÓVIL (< md): TARJETAS COMPACTAS */}
             <div className="space-y-3 md:hidden">
-                {filteredMuestras.map((m) => (
-                    <div key={m.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <span className="text-[10px] font-black text-[#9D2449] tracking-wider uppercase block">{m.folio}</span>
-                                <h3 className="text-xs font-black text-slate-900">{m.nombreRecienNacido}</h3>
-                                <p className="text-[11px] text-slate-500 font-medium">Madre: {m.nombreMadre}</p>
-                            </div>
-                            <div>{getEstatusBadge(m.estatus)}</div>
-                        </div>
-
-                        <div className="text-xs space-y-1 text-slate-600 bg-white p-3 rounded-xl border border-slate-100">
-                            <div className="flex justify-between">
-                                <span className="font-bold text-slate-800">Fecha Toma:</span>
-                                <span>{m.fechaToma}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-slate-800 flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-[#9D2449]" />
-                                    {m.municipio}:
-                                </span>
-                                <span className="truncate max-w-[140px]">{m.unidadMedica}</span>
-                            </div>
-                            <div className="flex justify-between pt-1 border-t border-slate-100">
-                                <span className="font-bold text-slate-800">Gota talar:</span>
-                                <span className="font-black text-rose-700">{m.numeroGotas} / 5 Gotas</span>
-                            </div>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => setSelectedMuestra(m)}
-                            className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Auditar Expediente</span>
-                        </button>
+                {cargando ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                        Cargando muestras de tamiz neonatal...
                     </div>
-                ))}
+                ) : filteredMuestras.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                        No se encontraron registros de muestras Guthrie.
+                    </div>
+                ) : (
+                    filteredMuestras.map((m) => (
+                        <div key={m.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <span className="text-[10px] font-black text-[#9D2449] tracking-wider uppercase block">{m.folio}</span>
+                                    <h3 className="text-xs font-black text-slate-900">{m.nombreRecienNacido}</h3>
+                                    <p className="text-[11px] text-slate-500 font-medium">Madre: {m.nombreMadre}</p>
+                                </div>
+                                <div>{getEstatusBadge(m.estatus)}</div>
+                            </div>
+
+                            <div className="text-xs space-y-1 text-slate-600 bg-white p-3 rounded-xl border border-slate-100">
+                                <div className="flex justify-between">
+                                    <span className="font-bold text-slate-800">Fecha Toma:</span>
+                                    <span>{m.fechaToma}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="font-bold text-slate-800 flex items-center gap-1">
+                                        <MapPin className="w-3 h-3 text-[#9D2449]" />
+                                        {m.municipio}:
+                                    </span>
+                                    <span className="truncate max-w-[140px]">{m.unidadMedica}</span>
+                                </div>
+                                <div className="flex justify-between pt-1 border-t border-slate-100">
+                                    <span className="font-bold text-slate-800">Gota talar:</span>
+                                    <span className="font-black text-rose-700">{m.numeroGotas} / 5 Gotas</span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setSelectedMuestra(m)}
+                                className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Auditar Expediente</span>
+                            </button>
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* VISTA ESCRITORIO (>= md): TABLA DENSA */}
@@ -164,32 +146,46 @@ export const TabTamizNeonatal: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                        {filteredMuestras.map((m) => (
-                            <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
-                                <td className="py-3.5 px-4 font-black text-slate-900">{m.folio}</td>
-                                <td className="py-3.5 px-4">
-                                    <div className="font-bold text-slate-900">{m.nombreRecienNacido}</div>
-                                    <div className="text-[11px] text-slate-500 font-medium">Madre: {m.nombreMadre}</div>
-                                </td>
-                                <td className="py-3.5 px-4 text-slate-600">{m.fechaToma}</td>
-                                <td className="py-3.5 px-4">
-                                    <div className="font-bold text-slate-800">{m.unidadMedica}</div>
-                                    <div className="text-[11px] text-slate-500">{m.municipio}</div>
-                                </td>
-                                <td className="py-3.5 px-4 text-center font-black text-rose-700">{m.numeroGotas} / 5</td>
-                                <td className="py-3.5 px-4">{getEstatusBadge(m.estatus)}</td>
-                                <td className="py-3.5 px-4 text-right">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedMuestra(m)}
-                                        className="px-3 py-1.5 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-700 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
-                                    >
-                                        <Eye className="w-3.5 h-3.5" />
-                                        <span>Auditar</span>
-                                    </button>
+                        {cargando ? (
+                            <tr>
+                                <td colSpan={7} className="py-8 text-center text-slate-400 font-normal">
+                                    Cargando muestras de tamiz neonatal...
                                 </td>
                             </tr>
-                        ))}
+                        ) : filteredMuestras.length === 0 ? (
+                            <tr>
+                                <td colSpan={7} className="py-8 text-center text-slate-400 font-normal">
+                                    No se encontraron registros de muestras Guthrie.
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredMuestras.map((m) => (
+                                <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
+                                    <td className="py-3.5 px-4 font-black text-slate-900">{m.folio}</td>
+                                    <td className="py-3.5 px-4">
+                                        <div className="font-bold text-slate-900">{m.nombreRecienNacido}</div>
+                                        <div className="text-[11px] text-slate-500 font-medium">Madre: {m.nombreMadre}</div>
+                                    </td>
+                                    <td className="py-3.5 px-4 text-slate-600">{m.fechaToma}</td>
+                                    <td className="py-3.5 px-4">
+                                        <div className="font-bold text-slate-800">{m.unidadMedica}</div>
+                                        <div className="text-[11px] text-slate-500">{m.municipio}</div>
+                                    </td>
+                                    <td className="py-3.5 px-4 text-center font-black text-rose-700">{m.numeroGotas} / 5</td>
+                                    <td className="py-3.5 px-4">{getEstatusBadge(m.estatus)}</td>
+                                    <td className="py-3.5 px-4 text-right">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedMuestra(m)}
+                                            className="px-3 py-1.5 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-700 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
+                                        >
+                                            <Eye className="w-3.5 h-3.5" />
+                                            <span>Auditar</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -226,7 +222,7 @@ export const TabTamizNeonatal: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setSelectedMuestra(null)}
-                                className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all"
+                                className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
                             >
                                 <ShieldCheck className="w-4 h-4 inline mr-1" />
                                 Validar Dictamen Jurisdiccional
@@ -238,3 +234,5 @@ export const TabTamizNeonatal: React.FC = () => {
         </div>
     );
 };
+
+export default TabTamizNeonatal;

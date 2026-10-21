@@ -15,6 +15,8 @@ import { TabContrareferencias } from './TabContrareferencias';
 
 interface DashboardMedicoProps {
     userName?: string;
+    casosPendientesCount?: number;
+    contrareferenciasCount?: number;
 }
 
 type MedicoTabType = 'CASOS' | 'EXPEDIENTE' | 'CONTRAREFERENCIAS';
@@ -28,11 +30,17 @@ interface TabConfig {
 }
 
 export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
-    userName = 'Dr. Jorge Ruiz Pérez',
+    userName,
+    casosPendientesCount = 0,
+    contrareferenciasCount = 0,
 }) => {
     const [activeTab, setActiveTab] = useState<MedicoTabType>('CASOS');
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
+
+    // Obtener el nombre del usuario soportando 'nombre', 'nombreCompleto' o 'name' según AuthContext
+    const nombreUsuarioContexto = (user as any)?.nombre || (user as any)?.nombreCompleto || (user as any)?.name;
+    const nombreMedico = userName || nombreUsuarioContexto || 'Médico Adscrito';
 
     const handleLogout = () => {
         logout();
@@ -45,7 +53,7 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
             label: 'Casos Prioritarios y Tamiz Recall',
             shortLabel: 'Casos Prioritarios',
             icon: FlaskConical,
-            badge: 3,
+            badge: casosPendientesCount,
         },
         {
             id: 'EXPEDIENTE',
@@ -58,7 +66,7 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
             label: 'Contrareferencias y Red de Atención',
             shortLabel: 'Contrareferencias',
             icon: HeartHandshake,
-            badge: 1,
+            badge: contrareferenciasCount,
         },
     ];
 
@@ -97,21 +105,23 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
             <div className="no-print py-3 px-6 bg-[#9D2449] text-white rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3 text-center md:text-left">
                     <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
-                        Bienvenido, {userName}
+                        Bienvenido, {nombreMedico}
                     </h2>
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-100 bg-white/15 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md">
                         <Building2 className="w-3.5 h-3.5 text-rose-200" />
                         Médico de Unidad / Contrareferencias
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-100 bg-white/15 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
-                        3 Casos Pendientes de Atención
-                    </span>
+                    {casosPendientesCount > 0 && (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-100 bg-white/15 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md">
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
+                            {casosPendientesCount} Casos Pendientes de Atención
+                        </span>
+                    )}
                 </div>
                 <button
                     type="button"
                     onClick={handleLogout}
-                    className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl border border-white/30 text-xs font-bold transition-all flex items-center gap-2 backdrop-blur-md shadow-sm shrink-0"
+                    className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl border border-white/30 text-xs font-bold transition-all flex items-center gap-2 backdrop-blur-md shadow-sm shrink-0 cursor-pointer"
                 >
                     <LogOut className="w-4 h-4 text-rose-200" />
                     Cerrar Sesión
@@ -129,16 +139,16 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
                             type="button"
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 relative cursor-pointer ${isActive
-                                ? 'bg-[#9D2449] text-white shadow-md'
-                                : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+                                    ? 'bg-[#9D2449] text-white shadow-md'
+                                    : 'bg-transparent text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
                                 }`}
                         >
                             <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-rose-200' : 'text-slate-500'}`} />
                             <span>{idx + 1}. {tab.shortLabel}</span>
                             {tab.badge !== undefined && tab.badge > 0 && (
                                 <span className={`ml-1 text-[10px] px-2 py-0.5 rounded-full font-extrabold ${isActive
-                                    ? 'bg-white/25 text-white'
-                                    : 'bg-rose-500 text-white animate-pulse'
+                                        ? 'bg-white/25 text-white'
+                                        : 'bg-rose-500 text-white animate-pulse'
                                     }`}>
                                     {tab.badge}
                                 </span>
@@ -158,3 +168,5 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
         </div>
     );
 };
+
+export default DashboardMedico;

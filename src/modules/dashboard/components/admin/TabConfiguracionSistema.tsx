@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, Database, HardDrive, ShieldCheck, History, Download, AlertTriangle, Megaphone, Plus, Trash2, CheckCircle2, Lock, User } from 'lucide-react';
 import type { LogSistema, AvisoEpidemiologico } from './types';
 import { exportDatabaseAsJSON } from './cluesData';
@@ -6,77 +6,44 @@ import { exportDatabaseAsJSON } from './cluesData';
 export const TabConfiguracionSistema: React.FC = () => {
     const [backupMessage, setBackupMessage] = useState<string | null>(null);
 
-    // Initial Epidemiological Alerts State
-    const [avisos, setAvisos] = useState<AvisoEpidemiologico[]>([
-        {
-            id: 'av-1',
-            titulo: 'Alerta Prioritaria: Intensificación de Tamiz Neonatal por Vía Rápida',
-            contenido: 'Se requiere enviar por muestra prioritaria toda muestra Guthrie tomada entre las 48 y 72 horas de vida al laboratorio jurisdiccional.',
-            prioridad: 'ALTA',
-            fechaPublicacion: '2026-10-02 09:30 AM',
-            autor: 'Lic. Administrador Jurisdiccional',
-            estatus: 'ACTIVO',
-        },
-        {
-            id: 'av-2',
-            titulo: 'Aviso Parteras Tradicionales: Actualización de la Hoja de Referencia (F1)',
-            contenido: 'Se ha habilitado el dictado por voz y la captura de PIN de 4 dígitos para agilizar las referencias a centros CESSA del Istmo.',
-            prioridad: 'MEDIA',
-            fechaPublicacion: '2026-09-28 14:15 PM',
-            autor: 'Dra. María Elena Ramos (Gestión Parteras)',
-            estatus: 'ACTIVO',
-        },
-    ]);
+    // Estados limpios vacíos, listos para conectarse a la API de Node.js / PostgreSQL
+    const [avisos, setAvisos] = useState<AvisoEpidemiologico[]>([]);
+    const [bitacora, setBitacora] = useState<LogSistema[]>([]);
+    const [cargandoAvisos, setCargandoAvisos] = useState<boolean>(false);
+    const [cargandoBitacora, setCargandoBitacora] = useState<boolean>(false);
 
-    // Form state for new aviso
+    // Formulario de creación de avisos
     const [showAvisoModal, setShowAvisoModal] = useState(false);
     const [nuevoTitulo, setNuevoTitulo] = useState('');
     const [nuevoContenido, setNuevoContenido] = useState('');
     const [nuevaPrioridad, setNuevaPrioridad] = useState<AvisoEpidemiologico['prioridad']>('ALTA');
 
-    // Access Log & Audit State
-    const [bitacora] = useState<LogSistema[]>([
-        {
-            id: 'l1',
-            fechaHora: '2026-10-03 21:05:12',
-            usuario: 'Doña Rosa Santiz Gómez (Partera)',
-            accion: 'Inicio de Sesión por PIN Táctil (PIN: 4892)',
-            modulo: 'Login Parteras',
-            ip: '192.168.1.105'
-        },
-        {
-            id: 'l2',
-            fechaHora: '2026-10-03 20:42:00',
-            usuario: 'Lic. Administrador Jurisdiccional',
-            accion: 'Alta de Nueva Unidad CLUES (Centro de Salud Juchitán)',
-            modulo: 'Catálogo CLUES',
-            ip: '192.168.1.45'
-        },
-        {
-            id: 'l3',
-            fechaHora: '2026-10-03 19:15:33',
-            usuario: 'Dra. María Elena Ramos',
-            accion: 'Emisión y Descarga de Credencial QR de Partera Acreditada',
-            modulo: 'Padrón Parteras',
-            ip: '192.168.1.88'
-        },
-        {
-            id: 'l4',
-            fechaHora: '2026-10-03 18:02:11',
-            usuario: 'Enf. Juan Carlos Morales',
-            accion: 'Registro de Muestra Tamiz Neonatal (Folio GUTH-2026-0912)',
-            modulo: 'Tamiz Neonatal',
-            ip: '192.168.1.12'
-        },
-        {
-            id: 'l5',
-            fechaHora: '2026-10-03 16:20:45',
-            usuario: 'Dr. Roberto Mendoza Cruz',
-            accion: 'Aprobación de Contrareferencia Médica',
-            modulo: 'Referencias (F1)',
-            ip: '192.168.1.90'
-        },
-    ]);
+    // Punto de enganche para cargar avisos y bitácora desde el back-end
+    useEffect(() => {
+        const cargarDatosSistema = async () => {
+            setCargandoAvisos(true);
+            setCargandoBitacora(true);
+            try {
+                // Futura llamada a la API:
+                // const resAvisos = await fetch('/api/configuracion/avisos');
+                // const dataAvisos = await resAvisos.json();
+                // setAvisos(dataAvisos);
+
+                // const resBitacora = await fetch('/api/configuracion/bitacora');
+                // const dataBitacora = await resBitacora.json();
+                // setBitacora(dataBitacora);
+            } catch (error) {
+                console.error('Error al cargar datos del sistema:', error);
+                setAvisos([]);
+                setBitacora([]);
+            } finally {
+                setCargandoAvisos(false);
+                setCargandoBitacora(false);
+            }
+        };
+
+        cargarDatosSistema();
+    }, [setAvisos, setBitacora, setCargandoAvisos, setCargandoBitacora]);
 
     const handleGenerateJSONBackup = () => {
         exportDatabaseAsJSON();
@@ -97,6 +64,8 @@ export const TabConfiguracionSistema: React.FC = () => {
             autor: 'Lic. Administrador Jurisdiccional',
             estatus: 'ACTIVO',
         };
+
+        // Petición POST a la API
         setAvisos([nuevo, ...avisos]);
         setShowAvisoModal(false);
 
@@ -106,6 +75,7 @@ export const TabConfiguracionSistema: React.FC = () => {
     };
 
     const handleEliminarAviso = (id: string) => {
+        // Petición DELETE a la API
         setAvisos(avisos.filter((a) => a.id !== id));
     };
 
@@ -202,41 +172,51 @@ export const TabConfiguracionSistema: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {avisos.map((a) => (
-                        <div key={a.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 relative">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-2">
-                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${a.prioridad === 'ALTA'
-                                            ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                                            : a.prioridad === 'MEDIA'
-                                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                                : 'bg-blue-100 text-blue-900 border border-blue-300'
-                                        }`}>
-                                        {a.prioridad === 'ALTA' && <AlertTriangle className="w-3 h-3 inline mr-1 text-rose-700" />}
-                                        Prioridad {a.prioridad}
-                                    </span>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => handleEliminarAviso(a.id)}
-                                    className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                                    title="Eliminar Aviso"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <div className="space-y-1">
-                                <h4 className="text-xs font-black text-slate-900">{a.titulo}</h4>
-                                <p className="text-[11px] text-slate-700 font-medium leading-relaxed">{a.contenido}</p>
-                            </div>
-
-                            <div className="text-[10px] text-slate-400 pt-2 border-t border-slate-200/80 flex justify-between">
-                                <span>Publicado por: <strong>{a.autor}</strong></span>
-                                <span className="font-mono">{a.fechaPublicacion}</span>
-                            </div>
+                    {cargandoAvisos ? (
+                        <div className="col-span-full p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                            Cargando avisos epidemiológicos...
                         </div>
-                    ))}
+                    ) : avisos.length === 0 ? (
+                        <div className="col-span-full p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                            No hay avisos ni alertas epidemiológicas activas.
+                        </div>
+                    ) : (
+                        avisos.map((a) => (
+                            <div key={a.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 relative">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${a.prioridad === 'ALTA'
+                                                ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                                : a.prioridad === 'MEDIA'
+                                                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                                    : 'bg-blue-100 text-blue-900 border border-blue-300'
+                                            }`}>
+                                            {a.prioridad === 'ALTA' && <AlertTriangle className="w-3 h-3 inline mr-1 text-rose-700" />}
+                                            Prioridad {a.prioridad}
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleEliminarAviso(a.id)}
+                                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                        title="Eliminar Aviso"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <h4 className="text-xs font-black text-slate-900">{a.titulo}</h4>
+                                    <p className="text-[11px] text-slate-700 font-medium leading-relaxed">{a.contenido}</p>
+                                </div>
+
+                                <div className="text-[10px] text-slate-400 pt-2 border-t border-slate-200/80 flex justify-between">
+                                    <span>Publicado por: <strong>{a.autor}</strong></span>
+                                    <span className="font-mono">{a.fechaPublicacion}</span>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
@@ -261,24 +241,38 @@ export const TabConfiguracionSistema: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200/70 text-slate-700">
-                            {bitacora.map((b) => (
-                                <tr key={b.id} className="hover:bg-white transition-colors">
-                                    <td className="py-3 px-4 font-mono text-slate-500 text-[11px]">{b.fechaHora}</td>
-                                    <td className="py-3 px-4">
-                                        <div className="font-black text-slate-900 flex items-center gap-1.5">
-                                            <User className="w-3.5 h-3.5 text-slate-400" />
-                                            <span>{b.usuario}</span>
-                                        </div>
+                            {cargandoBitacora ? (
+                                <tr>
+                                    <td colSpan={5} className="py-8 text-center text-slate-400 font-normal">
+                                        Cargando bitácora de auditoría...
                                     </td>
-                                    <td className="py-3 px-4 text-slate-800 font-medium">{b.accion}</td>
-                                    <td className="py-3 px-4">
-                                        <span className="font-bold text-[#9D2449] bg-rose-50 px-2 py-0.5 rounded border border-rose-200 text-[10px]">
-                                            {b.modulo}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 px-4 text-right font-mono text-slate-500">{b.ip}</td>
                                 </tr>
-                            ))}
+                            ) : bitacora.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-8 text-center text-slate-400 font-normal">
+                                        No hay eventos registrados en la bitácora del sistema.
+                                    </td>
+                                </tr>
+                            ) : (
+                                bitacora.map((b) => (
+                                    <tr key={b.id} className="hover:bg-white transition-colors">
+                                        <td className="py-3 px-4 font-mono text-slate-500 text-[11px]">{b.fechaHora}</td>
+                                        <td className="py-3 px-4">
+                                            <div className="font-black text-slate-900 flex items-center gap-1.5">
+                                                <User className="w-3.5 h-3.5 text-slate-400" />
+                                                <span>{b.usuario}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 text-slate-800 font-medium">{b.accion}</td>
+                                        <td className="py-3 px-4">
+                                            <span className="font-bold text-[#9D2449] bg-rose-50 px-2 py-0.5 rounded border border-rose-200 text-[10px]">
+                                                {b.modulo}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4 text-right font-mono text-slate-500">{b.ip}</td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -342,13 +336,13 @@ export const TabConfiguracionSistema: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowAvisoModal(false)}
-                                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl"
+                                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md"
+                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md cursor-pointer"
                                 >
                                     Publicar Aviso
                                 </button>
@@ -360,3 +354,5 @@ export const TabConfiguracionSistema: React.FC = () => {
         </div>
     );
 };
+
+export default TabConfiguracionSistema;

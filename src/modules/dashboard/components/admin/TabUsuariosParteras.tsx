@@ -4,52 +4,11 @@ import type { ParteraCredencial, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 
 export const TabUsuariosParteras: React.FC = () => {
-    const [parteras, setParteras] = useState<ParteraCredencial[]>([
-        {
-            id: 'p1',
-            nombreCompleto: 'Doña María Elena Velasco Morales',
-            curp: 'VEMA650810MOCMNS09',
-            lenguaMaterna: 'Zapoteco del Istmo',
-            telefonoRecaudo: '9711234567',
-            municipio: 'Juchitán de Zaragoza',
-            comunidad: 'Sección Segunda',
-            centroSaludAdscripcion: 'Centro de Salud Urbano Juchitán',
-            cluesAdscripcion: 'OASSA000451',
-            pinCuatroDigitos: '4892',
-            estatusAcreditacion: 'ACREDITADA',
-            fechaAcreditacion: '2026-01-15'
-        },
-        {
-            id: 'p2',
-            nombreCompleto: 'Doña Rosa Santiz Gómez',
-            curp: 'SAGR720315MOCMNS02',
-            lenguaMaterna: 'Zapoteco del Istmo',
-            telefonoRecaudo: '9719876543',
-            municipio: 'Santo Domingo Tehuantepec',
-            comunidad: 'Barrio Lieza',
-            centroSaludAdscripcion: 'CESSA Tehuantepec',
-            cluesAdscripcion: 'OASSA002140',
-            pinCuatroDigitos: '1204',
-            estatusAcreditacion: 'ACREDITADA',
-            fechaAcreditacion: '2026-02-10'
-        },
-        {
-            id: 'p3',
-            nombreCompleto: 'Doña Esperanza Cruz Castillo',
-            curp: 'CRCE701120MOCMNS05',
-            lenguaMaterna: 'Ombeayiüts / Huave',
-            telefonoRecaudo: '9715554321',
-            municipio: 'Salina Cruz',
-            comunidad: 'Colonia Hidalgo',
-            centroSaludAdscripcion: 'Hospital General de Salina Cruz',
-            cluesAdscripcion: 'OASSA003450',
-            pinCuatroDigitos: '7731',
-            estatusAcreditacion: 'ACREDITADA',
-            fechaAcreditacion: '2026-03-01'
-        },
-    ]);
+    // Estado limpio en arreglo vacío, listo para conectarse a la API real
+    const [parteras, setParteras] = useState<ParteraCredencial[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
 
-    // Dynamic CLUES Catalog Store
+    // Catálogo dinámico de CLUES
     const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
 
     useEffect(() => {
@@ -59,7 +18,26 @@ export const TabUsuariosParteras: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Form states for new partera modal (Desglose en 3 campos de nombre)
+    // Punto de enganche para cargar el padrón de parteras desde PostgreSQL / Node.js
+    useEffect(() => {
+        const cargarParteras = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const res = await fetch('/api/parteras');
+                // const data = await res.json();
+                // setParteras(data);
+            } catch (error) {
+                console.error('Error al cargar padrón de parteras:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarParteras();
+    }, [setParteras, setCargando]);
+
+    // Estados para modal de registro de nueva partera
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [nombres, setNombres] = useState('');
     const [apellidoPaterno, setApellidoPaterno] = useState('');
@@ -105,6 +83,8 @@ export const TabUsuariosParteras: React.FC = () => {
             estatusAcreditacion: 'ACREDITADA',
             fechaAcreditacion: new Date().toISOString().split('T')[0]
         };
+
+        // Petición POST a la API
         setParteras([created, ...parteras]);
         setShowRegisterModal(false);
 
@@ -163,56 +143,66 @@ export const TabUsuariosParteras: React.FC = () => {
 
             {/* VISTA MÓVIL (< md) */}
             <div className="space-y-3 md:hidden">
-                {parteras.map((p) => (
-                    <div key={p.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
-                                    {getInitials(p.nombreCompleto)}
-                                </div>
-                                <div>
-                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-block mb-0.5">
-                                        {p.estatusAcreditacion}
-                                    </span>
-                                    <h3 className="text-xs font-black text-slate-900">{p.nombreCompleto}</h3>
-                                    <p className="text-[10px] text-slate-500 font-mono">CURP: {p.curp}</p>
-                                </div>
-                            </div>
-                            <div className="bg-amber-100 text-amber-900 font-mono font-black text-xs px-2.5 py-1 rounded-xl flex items-center gap-1 border border-amber-300 shrink-0">
-                                <Key className="w-3 h-3 text-amber-700" />
-                                <span>PIN: {p.pinCuatroDigitos}</span>
-                            </div>
-                        </div>
-
-                        <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
-                            <div className="flex items-center gap-1 text-slate-800 font-bold">
-                                <MapPin className="w-3.5 h-3.5 text-[#9D2449]" />
-                                <span>{p.municipio} - {p.comunidad}</span>
-                            </div>
-                            {p.lenguaMaterna && (
-                                <div className="text-[11px] text-slate-600 flex items-center gap-1 pt-1">
-                                    <Languages className="w-3 h-3 text-slate-400" />
-                                    <span>Lengua: <strong>{p.lenguaMaterna}</strong></span>
-                                </div>
-                            )}
-                            {p.centroSaludAdscripcion && (
-                                <div className="text-[11px] text-slate-600 pt-1 border-t border-slate-100 mt-1 flex justify-between">
-                                    <span>Adscripción CLUES:</span>
-                                    <span className="font-bold text-[#9D2449] truncate max-w-[150px]">{p.centroSaludAdscripcion}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => setSelectedParteraQR(p)}
-                            className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                        >
-                            <QrCode className="w-4 h-4 text-rose-200" />
-                            <span>Generar Credencial QR Oficial</span>
-                        </button>
+                {cargando ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                        Cargando padrón de parteras tradicionales...
                     </div>
-                ))}
+                ) : parteras.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                        No hay parteras registradas en el padrón.
+                    </div>
+                ) : (
+                    parteras.map((p) => (
+                        <div key={p.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
+                                        {getInitials(p.nombreCompleto)}
+                                    </div>
+                                    <div>
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-block mb-0.5">
+                                            {p.estatusAcreditacion}
+                                        </span>
+                                        <h3 className="text-xs font-black text-slate-900">{p.nombreCompleto}</h3>
+                                        <p className="text-[10px] text-slate-500 font-mono">CURP: {p.curp}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-amber-100 text-amber-900 font-mono font-black text-xs px-2.5 py-1 rounded-xl flex items-center gap-1 border border-amber-300 shrink-0">
+                                    <Key className="w-3 h-3 text-amber-700" />
+                                    <span>PIN: {p.pinCuatroDigitos}</span>
+                                </div>
+                            </div>
+
+                            <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
+                                <div className="flex items-center gap-1 text-slate-800 font-bold">
+                                    <MapPin className="w-3.5 h-3.5 text-[#9D2449]" />
+                                    <span>{p.municipio} - {p.comunidad}</span>
+                                </div>
+                                {p.lenguaMaterna && (
+                                    <div className="text-[11px] text-slate-600 flex items-center gap-1 pt-1">
+                                        <Languages className="w-3 h-3 text-slate-400" />
+                                        <span>Lengua: <strong>{p.lenguaMaterna}</strong></span>
+                                    </div>
+                                )}
+                                {p.centroSaludAdscripcion && (
+                                    <div className="text-[11px] text-slate-600 pt-1 border-t border-slate-100 mt-1 flex justify-between">
+                                        <span>Adscripción CLUES:</span>
+                                        <span className="font-bold text-[#9D2449] truncate max-w-[150px]">{p.centroSaludAdscripcion}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setSelectedParteraQR(p)}
+                                className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                            >
+                                <QrCode className="w-4 h-4 text-rose-200" />
+                                <span>Generar Credencial QR Oficial</span>
+                            </button>
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* TABLA PRO DE PADRÓN DE PARTERAS (ESCRITORIO >= md) */}
@@ -229,53 +219,67 @@ export const TabUsuariosParteras: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                        {parteras.map((p) => (
-                            <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                                <td className="py-3.5 px-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
-                                            {getInitials(p.nombreCompleto)}
-                                        </div>
-                                        <div>
-                                            <div className="font-black text-slate-900">{p.nombreCompleto}</div>
-                                            <div className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
-                                                <Languages className="w-3 h-3 text-[#9D2449]" />
-                                                <span>{p.lenguaMaterna || 'Español'}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="py-3.5 px-4 font-mono text-slate-600">{p.curp}</td>
-                                <td className="py-3.5 px-4">
-                                    <div className="font-bold text-slate-800">{p.municipio}</div>
-                                    <div className="text-[11px] text-slate-500">{p.comunidad}</div>
-                                </td>
-                                <td className="py-3.5 px-4">
-                                    <div className="font-bold text-slate-800 truncate max-w-[180px]">{p.centroSaludAdscripcion || 'Centro de Salud'}</div>
-                                    {p.cluesAdscripcion && (
-                                        <span className="text-[10px] font-mono text-[#9D2449] font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                                            {p.cluesAdscripcion}
-                                        </span>
-                                    )}
-                                </td>
-                                <td className="py-3.5 px-4 text-center">
-                                    <span className="bg-amber-100 text-amber-900 font-mono font-black text-xs px-2.5 py-1 rounded-xl inline-flex items-center gap-1 border border-amber-300 shadow-sm">
-                                        <Key className="w-3 h-3 text-amber-700" />
-                                        <span>{p.pinCuatroDigitos}</span>
-                                    </span>
-                                </td>
-                                <td className="py-3.5 px-4 text-right">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedParteraQR(p)}
-                                        className="px-3.5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
-                                    >
-                                        <QrCode className="w-4 h-4 text-rose-200" />
-                                        <span>Generar Credencial</span>
-                                    </button>
+                        {cargando ? (
+                            <tr>
+                                <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                    Cargando padrón de parteras tradicionales...
                                 </td>
                             </tr>
-                        ))}
+                        ) : parteras.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                    No hay parteras registradas en el padrón.
+                                </td>
+                            </tr>
+                        ) : (
+                            parteras.map((p) => (
+                                <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                                    <td className="py-3.5 px-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
+                                                {getInitials(p.nombreCompleto)}
+                                            </div>
+                                            <div>
+                                                <div className="font-black text-slate-900">{p.nombreCompleto}</div>
+                                                <div className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+                                                    <Languages className="w-3 h-3 text-[#9D2449]" />
+                                                    <span>{p.lenguaMaterna || 'Español'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="py-3.5 px-4 font-mono text-slate-600">{p.curp}</td>
+                                    <td className="py-3.5 px-4">
+                                        <div className="font-bold text-slate-800">{p.municipio}</div>
+                                        <div className="text-[11px] text-slate-500">{p.comunidad}</div>
+                                    </td>
+                                    <td className="py-3.5 px-4">
+                                        <div className="font-bold text-slate-800 truncate max-w-[180px]">{p.centroSaludAdscripcion || 'Centro de Salud'}</div>
+                                        {p.cluesAdscripcion && (
+                                            <span className="text-[10px] font-mono text-[#9D2449] font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                                {p.cluesAdscripcion}
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="py-3.5 px-4 text-center">
+                                        <span className="bg-amber-100 text-amber-900 font-mono font-black text-xs px-2.5 py-1 rounded-xl inline-flex items-center gap-1 border border-amber-300 shadow-sm">
+                                            <Key className="w-3 h-3 text-amber-700" />
+                                            <span>{p.pinCuatroDigitos}</span>
+                                        </span>
+                                    </td>
+                                    <td className="py-3.5 px-4 text-right">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedParteraQR(p)}
+                                            className="px-3.5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
+                                        >
+                                            <QrCode className="w-4 h-4 text-rose-200" />
+                                            <span>Generar Credencial</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -513,7 +517,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 </div>
             )}
 
-            {/* CREDENCIAL QR PARTERA (FORMATO HOMOLOGADO CON LOGOS INSTITUCIONALES) */}
+            {/* CREDENCIAL QR PARTERA */}
             {selectedParteraQR && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xl max-w-sm w-full space-y-4 text-center relative">
@@ -557,7 +561,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             </div>
                             <h4 className="text-base font-black text-[#9D2449] pt-1">{selectedParteraQR.nombreCompleto}</h4>
                             <p className="text-[11px] text-slate-500 font-mono">CURP: {selectedParteraQR.curp}</p>
-                            <p className="text-[11px] font-bold text-slate-700">{selectedParteraQR.municipio} • {selectedParteraQR.comunidad}</p>
+                            <p className="text-[11px] font-bold text-slate-700">{selectedParteraQR.municipio} - {selectedParteraQR.comunidad}</p>
                             {selectedParteraQR.lenguaMaterna && (
                                 <p className="text-[10px] text-slate-500 italic">Lengua: {selectedParteraQR.lenguaMaterna}</p>
                             )}
@@ -607,3 +611,5 @@ export const TabUsuariosParteras: React.FC = () => {
         </div>
     );
 };
+
+export default TabUsuariosParteras;

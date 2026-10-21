@@ -1,52 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HeartPulse, X, Stethoscope, MapPin, CheckCircle2, Clock } from 'lucide-react';
 import type { ReferenciaFormato1 } from './types';
 
 export const TabReferencias: React.FC = () => {
-    const [referencias, setReferencias] = useState<ReferenciaFormato1[]>([
-        {
-            id: 'ref1',
-            folio: 'REF-2026-0104',
-            nombrePaciente: 'María Isabel López Gómez',
-            edad: 24,
-            parteraNombre: 'Doña Rosa Santiz Gómez',
-            municipio: 'Juchitán de Zaragoza',
-            motivoReferencia: 'Control Prenatal - Sospecha de Preeclampsia Leve (T/A 135/85 mmHg, Cefalea)',
-            unidadDestino: 'Hospital General Dr. Macedonio Benítez Fuentes (Juchitán)',
-            fechaReferencia: '2026-09-26 09:30',
-            estatus: 'PENDIENTE',
-            respuestaContrareferencia: ''
-        },
-        {
-            id: 'ref2',
-            folio: 'REF-2026-0105',
-            nombrePaciente: 'Ana Sofía Ruiz Morales',
-            edad: 19,
-            parteraNombre: 'Doña Juana Martínez Velázquez',
-            municipio: 'Santo Domingo Tehuantepec',
-            motivoReferencia: 'Canalización para Tamiz Metabolico Neonatal Temprano (Día 3 del Recién Nacido)',
-            unidadDestino: 'Centro de Salud con Servicios Ampliados (Tehuantepec)',
-            fechaReferencia: '2026-09-25 14:15',
-            estatus: 'CONTRAREFERIDO',
-            respuestaContrareferencia: 'Paciente recibida y valorada por Ginecología. Se realizó toma de Tamiz metabólico con 5 gotas. Se regresa a control con Partera Tradicional.'
-        },
-        {
-            id: 'ref3',
-            folio: 'REF-2026-0106',
-            nombrePaciente: 'Elena Juana Solís Jiménez',
-            edad: 31,
-            parteraNombre: 'Doña Esperanza Cruz Castillo',
-            municipio: 'Salina Cruz',
-            motivoReferencia: 'Alerta Obstétrica - Sangrado Transvaginal Escaso (Semana 34 de Gestación)',
-            unidadDestino: 'Hospital General de Salina Cruz',
-            fechaReferencia: '2026-09-27 08:00',
-            estatus: 'PENDIENTE',
-            respuestaContrareferencia: ''
-        },
-    ]);
+    // Estado limpio en arreglo vacío, listo para recibir datos reales de la API
+    const [referencias, setReferencias] = useState<ReferenciaFormato1[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
 
     const [selectedReferencia, setSelectedReferencia] = useState<ReferenciaFormato1 | null>(null);
     const [respuestaTexto, setRespuestaTexto] = useState('');
+
+    // Punto de enganche para cargar las referencias comunitarias desde PostgreSQL
+    useEffect(() => {
+        const cargarReferencias = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const res = await fetch('/api/referencias');
+                // const data = await res.json();
+                // setReferencias(data);
+            } catch (error) {
+                console.error('Error al cargar referencias comunitarias:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarReferencias();
+    }, [setReferencias, setCargando]);
 
     const handleOpenModal = (ref: ReferenciaFormato1) => {
         setSelectedReferencia(ref);
@@ -57,6 +38,7 @@ export const TabReferencias: React.FC = () => {
         e.preventDefault();
         if (!selectedReferencia) return;
 
+        // Aquí irá la petición PATCH/POST al servidor
         setReferencias((prev) =>
             prev.map((r) =>
                 r.id === selectedReferencia.id
@@ -98,39 +80,49 @@ export const TabReferencias: React.FC = () => {
 
             {/* VISTA MÓVIL (< md): TARJETAS COMPACTAS */}
             <div className="space-y-3 md:hidden">
-                {referencias.map((r) => (
-                    <div key={r.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <span className="text-[10px] font-black text-[#9D2449] tracking-wider uppercase block">{r.folio}</span>
-                                <h3 className="text-xs font-black text-slate-900">{r.nombrePaciente} ({r.edad} años)</h3>
-                                <p className="text-[11px] text-slate-500 font-medium">Partera: {r.parteraNombre}</p>
-                            </div>
-                            <div>{getEstatusBadge(r.estatus)}</div>
-                        </div>
-
-                        <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
-                            <div className="font-bold text-[#9D2449] mb-1">Motivo de Canalización:</div>
-                            <p className="text-slate-600 font-medium">{r.motivoReferencia}</p>
-                            <div className="flex items-center gap-1 text-[11px] text-slate-500 pt-2 border-t border-slate-100 mt-2">
-                                <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                                <span>{r.unidadDestino} ({r.municipio})</span>
-                            </div>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => handleOpenModal(r)}
-                            className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                            <Stethoscope className="w-3.5 h-3.5" />
-                            <span>{r.estatus === 'PENDIENTE' ? 'Responder Contrareferencia' : 'Ver Dictamen Médico'}</span>
-                        </button>
+                {cargando ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                        Cargando referencias comunitarias...
                     </div>
-                ))}
+                ) : referencias.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                        No hay solicitudes de referencias comunitarias registradas.
+                    </div>
+                ) : (
+                    referencias.map((r) => (
+                        <div key={r.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <span className="text-[10px] font-black text-[#9D2449] tracking-wider uppercase block">{r.folio}</span>
+                                    <h3 className="text-xs font-black text-slate-900">{r.nombrePaciente} ({r.edad} años)</h3>
+                                    <p className="text-[11px] text-slate-500 font-medium">Partera: {r.parteraNombre}</p>
+                                </div>
+                                <div>{getEstatusBadge(r.estatus)}</div>
+                            </div>
+
+                            <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
+                                <div className="font-bold text-[#9D2449] mb-1">Motivo de Canalización:</div>
+                                <p className="text-slate-600 font-medium">{r.motivoReferencia}</p>
+                                <div className="flex items-center gap-1 text-[11px] text-slate-500 pt-2 border-t border-slate-100 mt-2">
+                                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>{r.unidadDestino} ({r.municipio})</span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => handleOpenModal(r)}
+                                className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                                <Stethoscope className="w-3.5 h-3.5" />
+                                <span>{r.estatus === 'PENDIENTE' ? 'Responder Contrareferencia' : 'Ver Dictamen Médico'}</span>
+                            </button>
+                        </div>
+                    ))
+                )}
             </div>
 
-            {/* VISTA ESCRITORIO (>= md): TABLA CLINICA */}
+            {/* VISTA ESCRITORIO (>= md): TABLA CLÍNICA */}
             <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -144,33 +136,47 @@ export const TabReferencias: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                        {referencias.map((r) => (
-                            <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                                <td className="py-3.5 px-4 font-black text-slate-900">{r.folio}</td>
-                                <td className="py-3.5 px-4">
-                                    <div className="font-bold text-slate-900">{r.nombrePaciente} ({r.edad} a)</div>
-                                    <div className="text-[11px] text-slate-500 font-medium">{r.parteraNombre}</div>
-                                </td>
-                                <td className="py-3.5 px-4 max-w-xs">
-                                    <p className="line-clamp-2 text-slate-800 font-medium">{r.motivoReferencia}</p>
-                                </td>
-                                <td className="py-3.5 px-4">
-                                    <div className="font-bold text-slate-800">{r.unidadDestino}</div>
-                                    <div className="text-[11px] text-slate-500">{r.municipio}</div>
-                                </td>
-                                <td className="py-3.5 px-4">{getEstatusBadge(r.estatus)}</td>
-                                <td className="py-3.5 px-4 text-right">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleOpenModal(r)}
-                                        className="px-3.5 py-2 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-800 font-extrabold text-xs rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
-                                    >
-                                        <Stethoscope className="w-3.5 h-3.5" />
-                                        <span>{r.estatus === 'PENDIENTE' ? 'Responder' : 'Ver Dictamen'}</span>
-                                    </button>
+                        {cargando ? (
+                            <tr>
+                                <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                    Cargando referencias comunitarias...
                                 </td>
                             </tr>
-                        ))}
+                        ) : referencias.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                    No hay solicitudes de referencias comunitarias registradas.
+                                </td>
+                            </tr>
+                        ) : (
+                            referencias.map((r) => (
+                                <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                                    <td className="py-3.5 px-4 font-black text-slate-900">{r.folio}</td>
+                                    <td className="py-3.5 px-4">
+                                        <div className="font-bold text-slate-900">{r.nombrePaciente} ({r.edad} a)</div>
+                                        <div className="text-[11px] text-slate-500 font-medium">{r.parteraNombre}</div>
+                                    </td>
+                                    <td className="py-3.5 px-4 max-w-xs">
+                                        <p className="line-clamp-2 text-slate-800 font-medium">{r.motivoReferencia}</p>
+                                    </td>
+                                    <td className="py-3.5 px-4">
+                                        <div className="font-bold text-slate-800">{r.unidadDestino}</div>
+                                        <div className="text-[11px] text-slate-500">{r.municipio}</div>
+                                    </td>
+                                    <td className="py-3.5 px-4">{getEstatusBadge(r.estatus)}</td>
+                                    <td className="py-3.5 px-4 text-right">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenModal(r)}
+                                            className="px-3.5 py-2 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-800 font-extrabold text-xs rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
+                                        >
+                                            <Stethoscope className="w-3.5 h-3.5" />
+                                            <span>{r.estatus === 'PENDIENTE' ? 'Responder' : 'Ver Dictamen'}</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -214,7 +220,7 @@ export const TabReferencias: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setSelectedReferencia(null)}
-                                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl"
+                                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
@@ -232,3 +238,5 @@ export const TabReferencias: React.FC = () => {
         </div>
     );
 };
+
+export default TabReferencias;

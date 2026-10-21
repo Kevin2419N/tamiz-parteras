@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     AlertTriangle, TrendingUp, Baby, Activity, ShieldAlert,
     Plus, Trash2, Info, Printer, Calculator, ChevronDown, User,
@@ -7,7 +7,6 @@ import {
 import type { ExpedientePerinatal, ConsultaAntenatal, RiesgoARO, LabSerologiaForm, PartoDatosRegistro } from './types';
 
 // ─── Datos CLAP/OPS: Percentiles Altura Uterina (cm) por semana ──────────────
-// Fuente: CLAP/OPS-OMS Publication 1562, Tabla IV
 const AU_WEEKS = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
 const AU_P10 = [8, 9, 11, 13, 16, 18, 20, 22, 24, 26, 28, 30, 31, 32, 33];
 const AU_P50 = [10, 11, 14, 16, 19, 21, 23, 25, 27, 29, 31, 33, 34, 35, 36];
@@ -19,7 +18,6 @@ const PW_P10 = [0, 0.5, 1, 1.5, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const PW_P50 = [0, 1, 2, 3, 4.5, 5.5, 7, 8.5, 10, 11, 12, 13, 14, 15, 16];
 const PW_P90 = [0, 1.5, 3, 5, 7, 8.5, 10, 12, 14, 15.5, 17, 18, 19, 20, 21];
 
-// ─── Demos de pacientes ───────────────────────────────────────────────────────
 const CRITERIOS_ARO = [
     'Edad < 15 o > 35 años', 'Paridad ≥ 5', 'Período intergenésico < 2 años',
     'Antecedente de mortinato o muerte neonatal', 'Antecedente de cesárea anterior',
@@ -28,32 +26,8 @@ const CRITERIOS_ARO = [
     'VIH / Sífilis positivo', 'Gestas previas con RN < 2,500 g', 'Embarazo múltiple',
 ];
 
-const EXPEDIENTE_DEMO: ExpedientePerinatal = {
-    id: 'EXP-001', nombrePaciente: 'María del Carmen López Ruiz', curp: 'LORC920315MOCRPN02',
-    fechaNacimiento: '1992-03-15', edad: 34, escolaridad: 'Secundaria completa', ocupacion: 'Hogar',
-    domicilio: 'Calle Morelos #42', municipio: 'Juchitán de Zaragoza', comunidad: 'Centro',
-    telefono: '9711234567', fumFecha: '2026-04-01', edadGestacionalInicioControl: 10,
-    fppFecha: '2027-01-06', grupoSanguineo: 'O+', factorRh: 'POSITIVO', vihSerologia: 'NEGATIVO',
-    vdrlSerologia: 'NON_REACTIVE', vacunaTetanos: true, vacunaDosis2: false,
-    antecedentesFamiliares: { diabetesFamiliar: true, hipertensionFamiliar: false, gemelaridadFamiliar: false, malformacionesFamiliar: false, otros: '' },
-    antecedentesPersonales: { diabetes: false, hipertension: false, cardiopatia: false, nefropatia: false, epilepsia: false, enfermadadesTiroideas: false, otros: '' },
-    antecedentesObstetricos: { gestasAnteriores: 2, paritosAnteriores: 1, cesareasAnteriores: 1, abortosAnteriores: 0, mortinatos: 0, rpMenorA2500g: 0 },
-    consultas: [
-        { id: 'CONS-001', numeroConsulta: 1, fecha: '2026-06-10', edadGestacional: 10, pesoMadreKg: 62.5, tallaMadreM: 1.58, imcCalculado: 25.0, presionArterialSistolica: 110, presionArterialDiastolica: 70, alturaUterinaFr: 10, frecuenciaCardiacaFetal: 148, presentacion: 'Cefálica', edema: 'NO', observaciones: 'Paciente en buen estado general.', medicoFirma: 'Dr. Jorge Ruiz Pérez' },
-        { id: 'CONS-002', numeroConsulta: 2, fecha: '2026-08-05', edadGestacional: 18, pesoMadreKg: 65.0, tallaMadreM: 1.58, imcCalculado: 26.1, presionArterialSistolica: 115, presionArterialDiastolica: 75, alturaUterinaFr: 18, frecuenciaCardiacaFetal: 145, presentacion: 'Cefálica', edema: 'NO', observaciones: 'VDRL negativo. VIH negativo.', medicoFirma: 'Dr. Jorge Ruiz Pérez' },
-        { id: 'CONS-003', numeroConsulta: 3, fecha: '2026-09-30', edadGestacional: 26, pesoMadreKg: 68.0, tallaMadreM: 1.58, imcCalculado: 27.2, presionArterialSistolica: 118, presionArterialDiastolica: 78, alturaUterinaFr: 26, frecuenciaCardiacaFetal: 142, presentacion: 'Cefálica', edema: '+', observaciones: 'Edema leve. Vigilar.', medicoFirma: 'Dr. Jorge Ruiz Pérez' },
-    ],
-    riesgoARO: 'MEDIO', criteriosARO: ['Antecedente de cesárea anterior', 'IMC Pregestacional > 30'],
-};
-
-const PACIENTES_DEMO = [
-    EXPEDIENTE_DEMO,
-    { ...EXPEDIENTE_DEMO, id: 'EXP-002', nombrePaciente: 'Sara Hernández Cruz', curp: 'HECS040210MOCRPN01', fumFecha: '2026-06-01', fppFecha: '2027-03-08', edad: 22, consultas: [], riesgoARO: 'BAJO' as RiesgoARO, criteriosARO: [], edadGestacionalInicioControl: 8 },
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// ─── Helper: relabel keys legibly ────────────────────────────────────────────
 function humanKey(key: string) {
     return key
         .replace(/([A-Z])/g, ' $1')
@@ -62,7 +36,6 @@ function humanKey(key: string) {
         .trim();
 }
 
-// ─── ARO recalculation helper ─────────────────────────────────────────────────
 function recalcARO(
     prev: ExpedientePerinatal,
     obs: ExpedientePerinatal['antecedentesObstetricos']
@@ -120,7 +93,7 @@ const ModalEditAntecedentes: React.FC<ModalEditAntecedentesProps> = ({ expedient
                         <h3 className="text-sm font-black text-[#9D2449]">Editar Antecedentes — Bloque A</h3>
                         <p className="text-[10px] text-slate-400 mt-0.5">Los criterios ARO se recalcularán automáticamente al guardar.</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500"><X className="w-4 h-4" /></button>
+                    <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer"><X className="w-4 h-4" /></button>
                 </div>
                 <div className="p-5 space-y-5">
                     {boolSections.map(({ title, state, setter }) => (
@@ -146,10 +119,10 @@ const ModalEditAntecedentes: React.FC<ModalEditAntecedentesProps> = ({ expedient
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</label>
                                     <div className="flex items-center border border-slate-300 rounded-xl overflow-hidden">
                                         <button type="button" onClick={() => setObs(p => ({ ...p, [key]: Math.max(0, p[key] - 1) }))}
-                                            className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-sm transition-colors">−</button>
+                                            className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-sm transition-colors cursor-pointer">−</button>
                                         <span className="flex-1 text-center text-sm font-black text-slate-900">{obs[key]}</span>
                                         <button type="button" onClick={() => setObs(p => ({ ...p, [key]: p[key] + 1 }))}
-                                            className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-sm transition-colors">+</button>
+                                            className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-sm transition-colors cursor-pointer">+</button>
                                     </div>
                                 </div>
                             ))}
@@ -157,8 +130,8 @@ const ModalEditAntecedentes: React.FC<ModalEditAntecedentesProps> = ({ expedient
                     </div>
                 </div>
                 <div className="flex justify-end gap-2 p-5 border-t border-slate-100">
-                    <button onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Cancelar</button>
-                    <button onClick={handleSave} className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95">
+                    <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">Cancelar</button>
+                    <button type="button" onClick={handleSave} className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer">
                         <Save className="w-3.5 h-3.5" />Guardar Antecedentes
                     </button>
                 </div>
@@ -209,10 +182,9 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
                         <h3 className="text-sm font-black text-[#9D2449]">Actualizar Examen / Serología — Bloque B</h3>
                         <p className="text-[10px] text-slate-400 mt-0.5">Gestación actual · {expediente.nombrePaciente}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500"><X className="w-4 h-4" /></button>
+                    <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer"><X className="w-4 h-4" /></button>
                 </div>
                 <div className="p-5 space-y-4">
-                    {/* Critical alerts */}
                     {alertaRhNeg && (
                         <div className="flex items-start gap-3 bg-amber-50 border border-amber-300 rounded-2xl p-3">
                             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
@@ -230,7 +202,7 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
                             <div className="flex flex-wrap gap-1.5">
                                 {grupoOpts.map(g => (
                                     <button key={g} type="button" onClick={() => setForm(p => ({ ...p, grupoSanguineo: g }))}
-                                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-black transition-all ${form.grupoSanguineo === g ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'
+                                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${form.grupoSanguineo === g ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'
                                             }`}>{g}</button>
                                 ))}
                             </div>
@@ -239,7 +211,7 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
                             <div className="flex gap-2">
                                 {(['POSITIVO', 'NEGATIVO'] as const).map(rh => (
                                     <button key={rh} type="button" onClick={() => setForm(p => ({ ...p, factorRh: rh }))}
-                                        className={`flex-1 py-2 rounded-xl border text-[10px] font-black transition-all ${form.factorRh === rh
+                                        className={`flex-1 py-2 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${form.factorRh === rh
                                             ? rh === 'NEGATIVO' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-emerald-600 border-emerald-600 text-white'
                                             : 'bg-slate-50 border-slate-300 text-slate-700'
                                             }`}>{rh}</button>
@@ -297,9 +269,9 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
                     </div>
                 </div>
                 <div className="flex justify-end gap-2 p-5 border-t border-slate-100">
-                    <button onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Cancelar</button>
-                    <button onClick={() => { onSave(form); onClose(); }}
-                        className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95">
+                    <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">Cancelar</button>
+                    <button type="button" onClick={() => { onSave(form); onClose(); }}
+                        className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer">
                         <FlaskConical className="w-3.5 h-3.5" />Guardar Serología
                     </button>
                 </div>
@@ -342,7 +314,7 @@ const ModalRegistroParto: React.FC<ModalRegistroPartoProps> = ({ onClose, onSave
                         <h3 className="text-sm font-black text-[#9D2449]">Registrar Evento de Parto — Bloque D</h3>
                         <p className="text-[10px] text-slate-400 mt-0.5">Parto, Puerperio y Recién Nacido</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500"><X className="w-4 h-4" /></button>
+                    <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer"><X className="w-4 h-4" /></button>
                 </div>
                 <div className="p-5 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -361,7 +333,7 @@ const ModalRegistroParto: React.FC<ModalRegistroPartoProps> = ({ onClose, onSave
                         <div className="flex gap-2">
                             {(['EUTOCICO', 'DISTOCICO', 'CESAREA'] as const).map(t => (
                                 <button key={t} type="button" onClick={() => setData(p => ({ ...p, tipoPartoParto: t }))}
-                                    className={`flex-1 py-2 rounded-xl border text-[10px] font-black transition-all ${data.tipoPartoParto === t ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'
+                                    className={`flex-1 py-2 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${data.tipoPartoParto === t ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'
                                         }`}>{t}</button>
                             ))}
                         </div>
@@ -406,9 +378,9 @@ const ModalRegistroParto: React.FC<ModalRegistroPartoProps> = ({ onClose, onSave
                     )}
                 </div>
                 <div className="flex justify-end gap-2 p-5 border-t border-slate-100">
-                    <button onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Cancelar</button>
-                    <button disabled={!valid} onClick={() => { if (valid) { onSave(data); onClose(); } }}
-                        className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">Cancelar</button>
+                    <button type="button" disabled={!valid} onClick={() => { if (valid) { onSave(data); onClose(); } }}
+                        className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
                         <BabyIcon className="w-3.5 h-3.5" />Registrar Parto y RN
                     </button>
                 </div>
@@ -416,20 +388,21 @@ const ModalRegistroParto: React.FC<ModalRegistroPartoProps> = ({ onClose, onSave
         </div>
     );
 };
+
 function getAROBadge(riesgo: RiesgoARO): React.ReactNode {
     const map: Record<RiesgoARO, { label: string; cls: string }> = {
         BAJO: { label: 'Bajo Riesgo Obstétrico', cls: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
         MEDIO: { label: 'Riesgo Obstétrico Moderado', cls: 'bg-amber-100 text-amber-800 border-amber-300' },
         ALTO: { label: 'ALTO RIESGO OBSTÉTRICO (ARO)', cls: 'bg-rose-100 text-rose-900 border-rose-400 font-black' },
     };
-    const { label, cls } = map[riesgo];
+    const { label, cls } = map[riesgo] || map.BAJO;
     return <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs border ${cls}`}><ShieldAlert className="w-3.5 h-3.5" />{label}</span>;
 }
 
 function calcObstetrics(fumStr: string) {
     if (!fumStr) return null;
     const fum = new Date(fumStr);
-    const hoy = new Date('2026-10-12');
+    const hoy = new Date();
     const diffMs = hoy.getTime() - fum.getTime();
     if (diffMs < 0) return null;
     const diffDays = Math.floor(diffMs / 86400000);
@@ -442,7 +415,7 @@ function calcObstetrics(fumStr: string) {
     };
 }
 
-// ─── SVG Curva Percentil (Alta Precisión Clínica) ────────────────────────────
+// ─── SVG Curva Percentil ──────────────────────────────────────────────────
 interface SVGCurvaProps {
     title: string;
     subtitle?: string;
@@ -482,7 +455,6 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
     const pathOf = (vals: number[]) =>
         weeksData.map((w, i) => `${i === 0 ? 'M' : 'L'}${scX(w).toFixed(1)},${scY(vals[i]).toFixed(1)}`).join(' ');
 
-    // Area sombreada P10–P90
     const areaPath = [
         ...weeksData.map((w, i) => `${i === 0 ? 'M' : 'L'}${scX(w).toFixed(1)},${scY(p90[i]).toFixed(1)}`),
         ...[...weeksData].reverse().map((w, i, arr) => `L${scX(w).toFixed(1)},${scY(p10[arr.length - 1 - i]).toFixed(1)}`),
@@ -495,7 +467,6 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
     const yTicks: number[] = [];
     for (let v = Math.ceil(ylo / yStep) * yStep; v <= yhi; v += yStep) yTicks.push(v);
 
-    // Línea de tendencia
     const sortedPuntos = [...puntos].sort((a, b) => a.semana - b.semana);
     const trendPath = sortedPuntos.length > 1
         ? sortedPuntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${scX(p.semana).toFixed(1)},${scY(p.valor).toFixed(1)}`).join(' ')
@@ -503,7 +474,6 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
 
     const [hovered, setHovered] = useState<number | null>(null);
 
-    // Centro X del área para "Zona Normal"
     const midX = (scX(xMin) + scX(xMax)) / 2;
     const midP50Y = scY(p50[Math.floor(p50.length / 2)]);
 
@@ -514,16 +484,11 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
                 {subtitle && <p className="text-[10px] text-slate-400 font-medium">{subtitle}</p>}
             </div>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ fontFamily: 'inherit' }}>
-                {/* Fondo de la zona de plot */}
                 <rect x={ML} y={MT} width={plotW} height={plotH} fill="#f8fafc" rx="2" />
-
-                {/* Área sombreada zona normal P10–P90 */}
                 <path d={areaPath} fill={color} fillOpacity="0.10" stroke="none" />
-                {/* Borde superior e inferior del área */}
                 <path d={pathOf(p90)} fill="none" stroke={color} strokeWidth="0.75" strokeDasharray="5 3" opacity="0.55" />
                 <path d={pathOf(p10)} fill="none" stroke={color} strokeWidth="0.75" strokeDasharray="5 3" opacity="0.55" />
 
-                {/* Grid lines */}
                 {yTicks.map(v => (
                     <line key={v} x1={ML} x2={W - MR} y1={scY(v)} y2={scY(v)} stroke="#e2e8f0" strokeWidth="0.6" />
                 ))}
@@ -531,17 +496,14 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
                     <line key={w} x1={scX(w)} x2={scX(w)} y1={MT} y2={H - MB} stroke="#e2e8f0" strokeWidth="0.6" />
                 ))}
 
-                {/* Etiqueta "Zona Normal" en el área */}
                 {puntos.length === 0 && (
                     <text x={midX} y={midP50Y} textAnchor="middle" fontSize="9" fill={color} opacity="0.35" fontWeight="800">
                         ZONA NORMAL
                     </text>
                 )}
 
-                {/* Curva P50 (mediana) más prominente */}
                 <path d={pathOf(p50)} fill="none" stroke={color} strokeWidth="2" opacity="0.65" strokeLinecap="round" strokeLinejoin="round" />
 
-                {/* Labels P10/P50/P90 al final de las curvas */}
                 {(['P10', 'P50', 'P90'] as const).map((lbl, idx) => {
                     const arr = [p10, p50, p90][idx];
                     const lastW = weeksData[weeksData.length - 1];
@@ -554,15 +516,12 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
                     );
                 })}
 
-                {/* Línea de tendencia clínica de la paciente */}
                 {trendPath && (
                     <path d={trendPath} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
                 )}
 
-                {/* Puntos reales */}
                 {sortedPuntos.map((p, i) => (
                     <g key={i} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)} style={{ cursor: 'pointer' }}>
-                        {/* Sombra punto */}
                         <circle cx={scX(p.semana)} cy={scY(p.valor)} r="7" fill={lineColor} opacity="0.15" />
                         <circle cx={scX(p.semana)} cy={scY(p.valor)} r="5" fill={lineColor} stroke="white" strokeWidth="2" />
                         <circle cx={scX(p.semana)} cy={scY(p.valor)} r="2" fill="white" />
@@ -577,11 +536,9 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
                     </g>
                 ))}
 
-                {/* Ejes */}
                 <line x1={ML} y1={MT} x2={ML} y2={H - MB} stroke="#94a3b8" strokeWidth="1.5" />
                 <line x1={ML} y1={H - MB} x2={W - MR} y2={H - MB} stroke="#94a3b8" strokeWidth="1.5" />
 
-                {/* X ticks */}
                 {xTicks.map(w => (
                     <g key={w}>
                         <line x1={scX(w)} x2={scX(w)} y1={H - MB} y2={H - MB + 4} stroke="#94a3b8" strokeWidth="1" />
@@ -589,7 +546,6 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
                     </g>
                 ))}
 
-                {/* Y ticks */}
                 {yTicks.map(v => (
                     <g key={v}>
                         <line x1={ML - 4} x2={ML} y1={scY(v)} y2={scY(v)} stroke="#94a3b8" strokeWidth="1" />
@@ -597,12 +553,10 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
                     </g>
                 ))}
 
-                {/* Axis labels */}
                 <text x={W / 2} y={H - 4} textAnchor="middle" fontSize="9.5" fill="#475569" fontWeight="800">{xLabel}</text>
                 <text x={11} y={H / 2} textAnchor="middle" fontSize="9.5" fill="#475569" fontWeight="800" transform={`rotate(-90,11,${H / 2})`}>{yLabel}</text>
             </svg>
 
-            {/* Leyenda */}
             <div className="flex items-center justify-between flex-wrap gap-x-4 gap-y-1 mt-2 px-1">
                 <div className="flex items-center gap-3 flex-wrap">
                     <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500">
@@ -664,7 +618,10 @@ const CalculadoraObstetrica: React.FC<{ fum: string; pesoInicial: number; talla:
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 export const TabExpedientePerinatal: React.FC = () => {
-    const [expediente, setExpediente] = useState<ExpedientePerinatal>(EXPEDIENTE_DEMO);
+    const [pacientes, setPacientes] = useState<ExpedientePerinatal[]>([]);
+    const [expediente, setExpediente] = useState<ExpedientePerinatal | null>(null);
+    const [cargando, setCargando] = useState<boolean>(false);
+
     const [nuevaConsulta, setNuevaConsulta] = useState<Partial<ConsultaAntenatal>>({});
     const [mostrarFormConsulta, setMostrarFormConsulta] = useState(false);
     const [pxOpen, setPxOpen] = useState(false);
@@ -672,8 +629,30 @@ export const TabExpedientePerinatal: React.FC = () => {
     const [modalLabSerologia, setModalLabSerologia] = useState(false);
     const [modalRegistroParto, setModalRegistroParto] = useState(false);
 
+    // Carga de expedientes desde el Backend
+    useEffect(() => {
+        const cargarExpedientes = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const res = await fetch('/api/medico/expedientes-perinatales');
+                // const data: ExpedientePerinatal[] = await res.json();
+                // setPacientes(data);
+                // if (data.length > 0) setExpediente(data[0]);
+
+                setPacientes([]); // Se usa la función para evitar el aviso de TypeScript
+            } catch (error) {
+                console.error('Error al cargar expedientes perinatales:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarExpedientes();
+    }, []);
+
     const agregarConsulta = () => {
-        if (!nuevaConsulta.fecha || !nuevaConsulta.edadGestacional) return;
+        if (!expediente || !nuevaConsulta.fecha || !nuevaConsulta.edadGestacional) return;
         const talla = Number(nuevaConsulta.tallaMadreM ?? expediente.consultas[0]?.tallaMadreM ?? 1);
         const peso = Number(nuevaConsulta.pesoMadreKg ?? 0);
         const cons: ConsultaAntenatal = {
@@ -691,15 +670,35 @@ export const TabExpedientePerinatal: React.FC = () => {
             presentacion: nuevaConsulta.presentacion ?? 'Cefálica',
             edema: (nuevaConsulta.edema as ConsultaAntenatal['edema']) ?? 'NO',
             observaciones: nuevaConsulta.observaciones ?? '',
-            medicoFirma: nuevaConsulta.medicoFirma ?? 'Dr. Jorge Ruiz Pérez',
+            medicoFirma: nuevaConsulta.medicoFirma ?? 'Médico Adscrito',
         };
-        setExpediente(prev => ({ ...prev, consultas: [...prev.consultas, cons] }));
+        setExpediente(prev => prev ? ({ ...prev, consultas: [...prev.consultas, cons] }) : null);
         setNuevaConsulta({});
         setMostrarFormConsulta(false);
     };
 
     const eliminarConsulta = (id: string) =>
-        setExpediente(prev => ({ ...prev, consultas: prev.consultas.filter(c => c.id !== id) }));
+        setExpediente(prev => prev ? ({ ...prev, consultas: prev.consultas.filter(c => c.id !== id) }) : null);
+
+    if (cargando) {
+        return <div className="text-center py-16 text-slate-400 font-semibold text-sm">Cargando expediente perinatal...</div>;
+    }
+
+    if (!expediente) {
+        return (
+            <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center space-y-4 my-4">
+                <div className="p-4 bg-rose-50 text-[#9D2449] w-12 h-12 rounded-2xl mx-auto flex items-center justify-center">
+                    <Baby className="w-6 h-6" />
+                </div>
+                <div>
+                    <h3 className="text-base font-black text-slate-900">No hay expediente perinatal activo</h3>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+                        Selecciona una paciente o registra un nuevo carné perinatal (CLAP/OPS-OMS) para comenzar el control antenatal.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     const pesoInicial = expediente.consultas[0]?.pesoMadreKg ?? 0;
     const talla = expediente.consultas[0]?.tallaMadreM ?? 0;
@@ -766,24 +765,24 @@ export const TabExpedientePerinatal: React.FC = () => {
                 <div className="flex-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">PACIENTE ACTIVA</p>
                     <div className="relative inline-block mt-1">
-                        <button onClick={() => setPxOpen(o => !o)}
-                            className="flex items-center gap-2 text-base font-black text-slate-900 hover:text-[#9D2449] transition-colors">
+                        <button type="button" onClick={() => setPxOpen(o => !o)}
+                            className="flex items-center gap-2 text-base font-black text-slate-900 hover:text-[#9D2449] transition-colors cursor-pointer">
                             <User className="w-4 h-4 text-[#9D2449]" />
                             {expediente.nombrePaciente}
                             <ChevronDown className={`w-4 h-4 transition-transform ${pxOpen ? 'rotate-180' : ''}`} />
                         </button>
                         {pxOpen && (
                             <div className="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 min-w-[280px]">
-                                {PACIENTES_DEMO.map(px => (
-                                    <button key={px.id} onClick={() => { setExpediente(px); setPxOpen(false); }}
-                                        className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-rose-50 transition-colors ${px.id === expediente.id ? 'text-[#9D2449] bg-rose-50' : 'text-slate-700'}`}>
+                                {pacientes.map(px => (
+                                    <button key={px.id} type="button" onClick={() => { setExpediente(px); setPxOpen(false); }}
+                                        className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-rose-50 transition-colors cursor-pointer ${px.id === expediente.id ? 'text-[#9D2449] bg-rose-50' : 'text-slate-700'}`}>
                                         {px.nombrePaciente}
                                         <span className="block text-[10px] text-slate-400 font-medium">FUM: {px.fumFecha} · FPP: {px.fppFecha}</span>
                                     </button>
                                 ))}
                                 <div className="border-t border-slate-100">
-                                    <button onClick={() => setPxOpen(false)}
-                                        className="w-full text-left px-4 py-3 text-xs font-bold text-[#9D2449] hover:bg-rose-50 flex items-center gap-2">
+                                    <button type="button" onClick={() => setPxOpen(false)}
+                                        className="w-full text-left px-4 py-3 text-xs font-bold text-[#9D2449] hover:bg-rose-50 flex items-center gap-2 cursor-pointer">
                                         <Plus className="w-3.5 h-3.5" />+ Registrar Nueva Gestante
                                     </button>
                                 </div>
@@ -794,8 +793,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 shrink-0 flex-wrap">
                     {getAROBadge(expediente.riesgoARO)}
-                    <button onClick={() => window.print()}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95">
+                    <button type="button" onClick={() => window.print()}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer">
                         <Printer className="w-3.5 h-3.5" />Imprimir Carné CLAP (2 Páginas)
                     </button>
                 </div>
@@ -825,8 +824,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                     <div className="flex items-center gap-2">
                         <Info className="w-4 h-4 text-rose-200" /><h3 className="text-sm font-black text-white">Bloque A — Antecedentes</h3>
                     </div>
-                    <button onClick={() => setModalAntecedentes(true)}
-                        className="no-print flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-xl text-[10px] font-bold transition-all">
+                    <button type="button" onClick={() => setModalAntecedentes(true)}
+                        className="no-print flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-xl text-[10px] font-bold transition-all cursor-pointer">
                         <Edit3 className="w-3.5 h-3.5" />Editar Antecedentes
                     </button>
                 </div>
@@ -867,8 +866,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                     <div className="flex items-center gap-2">
                         <Baby className="w-4 h-4 text-rose-200" /><h3 className="text-sm font-black text-white">Bloque B — Gestación Actual</h3>
                     </div>
-                    <button onClick={() => setModalLabSerologia(true)}
-                        className="no-print flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-xl text-[10px] font-bold transition-all">
+                    <button type="button" onClick={() => setModalLabSerologia(true)}
+                        className="no-print flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-xl text-[10px] font-bold transition-all cursor-pointer">
                         <FlaskConical className="w-3.5 h-3.5" />Actualizar Lab / Serología
                     </button>
                 </div>
@@ -889,8 +888,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                         <Activity className="w-4 h-4 text-rose-200" />
                         <h3 className="text-sm font-black text-white">Bloque C — Control Antenatal y Gráficas Percentiladas</h3>
                     </div>
-                    <button onClick={() => setMostrarFormConsulta(!mostrarFormConsulta)}
-                        className="no-print flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-xl text-[10px] font-bold transition-all">
+                    <button type="button" onClick={() => setMostrarFormConsulta(!mostrarFormConsulta)}
+                        className="no-print flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-xl text-[10px] font-bold transition-all cursor-pointer">
                         <Plus className="w-3.5 h-3.5" />Nueva Consulta
                     </button>
                 </div>
@@ -949,12 +948,12 @@ export const TabExpedientePerinatal: React.FC = () => {
                                 className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449] resize-none" />
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={agregarConsulta}
-                                className="px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl flex items-center gap-2">
+                            <button type="button" onClick={agregarConsulta}
+                                className="px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer">
                                 <Plus className="w-3.5 h-3.5" />Agregar Consulta
                             </button>
-                            <button onClick={() => setMostrarFormConsulta(false)}
-                                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl">
+                            <button type="button" onClick={() => setMostrarFormConsulta(false)}
+                                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">
                                 Cancelar
                             </button>
                         </div>
@@ -986,8 +985,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                                     </td>
                                     <td className="px-4 py-3 text-slate-600 max-w-[180px] truncate">{c.observaciones}</td>
                                     <td className="px-4 py-3 no-print">
-                                        <button onClick={() => eliminarConsulta(c.id)}
-                                            className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                                        <button type="button" onClick={() => eliminarConsulta(c.id)}
+                                            className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </td>
@@ -1009,8 +1008,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                         <h3 className="text-sm font-black text-white">Bloque D — Parto, Puerperio y Recién Nacido</h3>
                     </div>
                     {!expediente.fechaParto && (
-                        <button onClick={() => setModalRegistroParto(true)}
-                            className="no-print flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-xl text-[10px] font-bold transition-all">
+                        <button type="button" onClick={() => setModalRegistroParto(true)}
+                            className="no-print flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 rounded-xl text-[10px] font-bold transition-all cursor-pointer">
                             <Syringe className="w-3.5 h-3.5" />Registrar Evento de Parto
                         </button>
                     )}
@@ -1045,15 +1044,16 @@ export const TabExpedientePerinatal: React.FC = () => {
                     {CRITERIOS_ARO.map(crit => {
                         const activo = expediente.criteriosARO.includes(crit);
                         return (
-                            <button key={crit} onClick={() => {
+                            <button key={crit} type="button" onClick={() => {
                                 setExpediente(prev => {
+                                    if (!prev) return null;
                                     const criterios = activo
                                         ? prev.criteriosARO.filter(c => c !== crit)
                                         : [...prev.criteriosARO, crit];
                                     const riesgoARO: RiesgoARO = criterios.length === 0 ? 'BAJO' : criterios.length <= 2 ? 'MEDIO' : 'ALTO';
                                     return { ...prev, criteriosARO: criterios, riesgoARO };
                                 });
-                            }} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${activo ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-slate-50 text-slate-600 border-slate-300 hover:bg-slate-100'}`}>
+                            }} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${activo ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-slate-50 text-slate-600 border-slate-300 hover:bg-slate-100'}`}>
                                 {crit}
                             </button>
                         );
@@ -1066,14 +1066,14 @@ export const TabExpedientePerinatal: React.FC = () => {
                 <ModalEditAntecedentes
                     expediente={expediente}
                     onClose={() => setModalAntecedentes(false)}
-                    onSave={updated => setExpediente(prev => ({ ...prev, ...updated }))}
+                    onSave={updated => setExpediente(prev => prev ? ({ ...prev, ...updated }) : null)}
                 />
             )}
             {modalLabSerologia && (
                 <ModalLabSerologia
                     expediente={expediente}
                     onClose={() => setModalLabSerologia(false)}
-                    onSave={data => setExpediente(prev => ({
+                    onSave={data => setExpediente(prev => prev ? ({
                         ...prev,
                         grupoSanguineo: data.grupoSanguineo,
                         factorRh: data.factorRh,
@@ -1081,13 +1081,13 @@ export const TabExpedientePerinatal: React.FC = () => {
                         vdrlSerologia: data.vdrlSerologia,
                         vacunaTetanos: data.vacunaTetanos,
                         vacunaDosis2: data.vacunaDosis2,
-                    }))}
+                    }) : null)}
                 />
             )}
             {modalRegistroParto && (
                 <ModalRegistroParto
                     onClose={() => setModalRegistroParto(false)}
-                    onSave={data => setExpediente(prev => ({
+                    onSave={data => setExpediente(prev => prev ? ({
                         ...prev,
                         fechaParto: data.fechaHoraNacimiento.split('T')[0],
                         tipoPartoParto: data.tipoPartoParto,
@@ -1099,9 +1099,11 @@ export const TabExpedientePerinatal: React.FC = () => {
                         perimetroCefalicoRNCm: data.perimetroCefalicoRNCm,
                         folioGuthrie: data.folioGuthrie,
                         tamizRNRealizado: Boolean(data.folioGuthrie),
-                    }))}
+                    }) : null)}
                 />
             )}
         </div>
     );
 };
+
+export default TabExpedientePerinatal;

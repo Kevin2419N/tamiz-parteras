@@ -1,43 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Truck, Plus, Package, MapPin, X, CheckSquare, Square, FileSpreadsheet, Send } from 'lucide-react';
 import type { LoteEnvioLESP } from './types';
 
+interface MuestraPendiente {
+    folio: string;
+    rn: string;
+    fecha: string;
+    unidad: string;
+}
+
 export const TabControlLotes: React.FC = () => {
-    const [lotes, setLotes] = useState<LoteEnvioLESP[]>([
-        {
-            id: 'LOT-2026-089',
-            numeroGuia: 'GUIA-LESP-2026-981',
-            fechaSalida: '2026-09-08 17:00',
-            transportista: 'Vehículo Oficial Jurisdicción No. 2',
-            cantidadMuestras: 4,
-            destino: 'Laboratorio Estatal de Salud Pública (LESP Oaxaca)',
-            estatus: 'EN_TRANSITO_LESP',
-            foliosIncluidos: ['5458300', '5458301', '5458302', '5458303']
-        },
-        {
-            id: 'LOT-2026-088',
-            numeroGuia: 'ESTAFETA-MX-889102',
-            fechaSalida: '2026-09-05 11:30',
-            transportista: 'Mensajería Estafeta Express SSO',
-            cantidadMuestras: 3,
-            destino: 'Laboratorio Estatal de Salud Pública (LESP Oaxaca)',
-            estatus: 'ENTREGADO_LAB',
-            foliosIncluidos: ['5458210', '5458211', '5458212']
-        }
-    ]);
+    // Estados limpios iniciados en arreglos vacíos
+    const [lotes, setLotes] = useState<LoteEnvioLESP[]>([]);
+    const [pendientes, setPendientes] = useState<MuestraPendiente[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
 
-    // Muestras pendientes para el Modal Interactivo
-    const [pendientes, setPendientes] = useState([
-        { folio: '5458345', rn: 'RN Bebé de Ana', fecha: '2026-09-08', unidad: 'CSU Juchitán' },
-        { folio: '5458346', rn: 'RN Bebé de Laura', fecha: '2026-09-08', unidad: 'HG Tehuantepec' },
-        { folio: '5458347', rn: 'RN Bebé de María', fecha: '2026-09-08', unidad: 'CSU Juchitán' },
-        { folio: '5458348', rn: 'RN Bebé de Sofía', fecha: '2026-09-08', unidad: 'CS Salina Cruz' },
-    ]);
-
-    const [selectedFolios, setSelectedFolios] = useState<string[]>(['5458347', '5458348']);
+    const [selectedFolios, setSelectedFolios] = useState<string[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [guia, setGuia] = useState('');
     const [transportista, setTransportista] = useState('Vehículo Oficial Jurisdicción No. 2');
+
+    // Carga de lotes y muestras pendientes desde el Backend
+    useEffect(() => {
+        const cargarDatosLogistica = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const [resLotes, resPendientes] = await Promise.all([
+                //     fetch('/api/tamiz/lotes'),
+                //     fetch('/api/tamiz/muestras-pendientes-lote')
+                // ]);
+                // const dataLotes = await resLotes.json();
+                // const dataPendientes = await resPendientes.json();
+                // setLotes(dataLotes);
+                // setPendientes(dataPendientes);
+            } catch (error) {
+                console.error('Error al cargar datos logísticos:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarDatosLogistica();
+    }, [setLotes, setPendientes]);
 
     const toggleSelectFolio = (folio: string) => {
         setSelectedFolios(prev =>
@@ -45,36 +50,50 @@ export const TabControlLotes: React.FC = () => {
         );
     };
 
-    const handleCreateLote = (e: React.FormEvent) => {
+    const handleCreateLote = async (e: React.FormEvent) => {
         e.preventDefault();
         if (selectedFolios.length === 0) {
             alert('Por favor seleccione al menos 1 muestra para el lote.');
             return;
         }
 
-        const nuevo: LoteEnvioLESP = {
-            id: `LOT-2026-0${Math.floor(90 + Math.random() * 10)}`,
-            numeroGuia: guia || `GUIA-LESP-2026-${Math.floor(100 + Math.random() * 900)}`,
-            fechaSalida: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        const nuevoLotePayload = {
+            numeroGuia: guia,
             transportista,
-            cantidadMuestras: selectedFolios.length,
-            destino: 'Laboratorio Estatal de Salud Pública (LESP Oaxaca)',
-            estatus: 'EN_PREPARACION',
-            foliosIncluidos: selectedFolios
+            foliosIncluidos: selectedFolios,
+            destino: 'Laboratorio Estatal de Salud Pública (LESP Oaxaca)'
         };
 
-        setLotes([nuevo, ...lotes]);
-        // Remover de pendientes
-        setPendientes(prev => prev.filter(p => !selectedFolios.includes(p.folio)));
-        setShowModal(false);
-        setGuia('');
-        setSelectedFolios([]);
+        try {
+            console.log('Payload listo para envío a la API:', nuevoLotePayload);
+
+            // Futuro envío al Backend:
+            // const res = await fetch('/api/tamiz/lotes', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(nuevoLotePayload)
+            // });
+            // const loteGuardado = await res.json();
+            // setLotes(prev => [loteGuardado, ...prev]);
+
+            // Actualizar estado local provisionalmente
+            setPendientes(prev => prev.filter(p => !selectedFolios.includes(p.folio)));
+            setShowModal(false);
+            setGuia('');
+            setSelectedFolios([]);
+        } catch (error) {
+            console.error('Error al crear el lote:', error);
+        }
     };
+
+    // Cálculos dinámicos de KPIs basados en el estado real
+    const lotesEnTransito = lotes.filter(l => l.estatus === 'EN_TRANSITO_LESP').length;
+    const totalMuestrasEnviadas = lotes.reduce((acc, l) => acc + l.cantidadMuestras, 0);
 
     return (
         <div className="space-y-6">
 
-            {/* ENCABEZADO Y BOTÓN GUINDA OAXACA */}
+            {/* ENCABEZADO Y BOTÓN PRINCIPAL */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-amber-50 text-amber-800 rounded-2xl border border-amber-300">
@@ -91,6 +110,7 @@ export const TabControlLotes: React.FC = () => {
                 </div>
 
                 <button
+                    type="button"
                     onClick={() => setShowModal(true)}
                     className="px-5 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-2xl shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-95"
                 >
@@ -99,12 +119,12 @@ export const TabControlLotes: React.FC = () => {
                 </button>
             </div>
 
-            {/* TARJETAS KPI LOGÍSTICO REFINADAS */}
+            {/* TARJETAS KPI LOGÍSTICO */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
                         <span className="text-xs font-bold text-slate-500">Lotes en Tránsito a LESP</span>
-                        <p className="text-3xl font-black text-amber-600 mt-1">1</p>
+                        <p className="text-3xl font-black text-amber-600 mt-1">{lotesEnTransito}</p>
                     </div>
                     <div className="p-3 bg-amber-50 rounded-2xl text-amber-700 border border-amber-200">
                         <Truck className="w-6 h-6" />
@@ -113,8 +133,8 @@ export const TabControlLotes: React.FC = () => {
 
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <span className="text-xs font-bold text-slate-500">Muestras Enviadas este Mes</span>
-                        <p className="text-3xl font-black text-slate-900 mt-1">107</p>
+                        <span className="text-xs font-bold text-slate-500">Muestras Enviadas</span>
+                        <p className="text-3xl font-black text-slate-900 mt-1">{totalMuestrasEnviadas}</p>
                     </div>
                     <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-700 border border-emerald-200">
                         <Package className="w-6 h-6" />
@@ -157,36 +177,50 @@ export const TabControlLotes: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {lotes.map((lote) => (
-                                <tr key={lote.id} className="hover:bg-slate-50">
-                                    <td className="py-3.5 px-3 font-mono font-bold text-slate-900">{lote.id}</td>
-                                    <td className="py-3.5 px-3 font-mono font-bold text-[#9D2449]">{lote.numeroGuia}</td>
-                                    <td className="py-3.5 px-3 font-semibold text-slate-700">{lote.transportista}</td>
-                                    <td className="py-3.5 px-3 font-black text-slate-900">{lote.cantidadMuestras} tarjetas</td>
-                                    <td className="py-3.5 px-3 text-slate-500">{lote.fechaSalida}</td>
-                                    <td className="py-3.5 px-3 text-center">
-                                        {lote.estatus === 'ENTREGADO_LAB' ? (
-                                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black border border-emerald-300">
-                                                Entregado en LESP
-                                            </span>
-                                        ) : lote.estatus === 'EN_TRANSITO_LESP' ? (
-                                            <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-black border border-amber-300">
-                                                En Tránsito a LESP
-                                            </span>
-                                        ) : (
-                                            <span className="px-3 py-1 bg-rose-100 text-[#9D2449] rounded-full text-[10px] font-black border border-rose-300">
-                                                En Preparación
-                                            </span>
-                                        )}
+                            {cargando ? (
+                                <tr>
+                                    <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                        Cargando historial de lotes de remisión...
                                     </td>
                                 </tr>
-                            ))}
+                            ) : lotes.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                        No hay lotes de envío registrados en el sistema.
+                                    </td>
+                                </tr>
+                            ) : (
+                                lotes.map((lote) => (
+                                    <tr key={lote.id} className="hover:bg-slate-50">
+                                        <td className="py-3.5 px-3 font-mono font-bold text-slate-900">{lote.id}</td>
+                                        <td className="py-3.5 px-3 font-mono font-bold text-[#9D2449]">{lote.numeroGuia}</td>
+                                        <td className="py-3.5 px-3 font-semibold text-slate-700">{lote.transportista}</td>
+                                        <td className="py-3.5 px-3 font-black text-slate-900">{lote.cantidadMuestras} tarjetas</td>
+                                        <td className="py-3.5 px-3 text-slate-500">{lote.fechaSalida}</td>
+                                        <td className="py-3.5 px-3 text-center">
+                                            {lote.estatus === 'ENTREGADO_LAB' ? (
+                                                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black border border-emerald-300">
+                                                    Entregado en LESP
+                                                </span>
+                                            ) : lote.estatus === 'EN_TRANSITO_LESP' ? (
+                                                <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-black border border-amber-300">
+                                                    En Tránsito a LESP
+                                                </span>
+                                            ) : (
+                                                <span className="px-3 py-1 bg-rose-100 text-[#9D2449] rounded-full text-[10px] font-black border border-rose-300">
+                                                    En Preparación
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* MODAL CREAR LOTE INTERACTIVO CON SELECCIÓN DE MUESTRAS PENDIENTES */}
+            {/* MODAL CREAR LOTE INTERACTIVO */}
             {showModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border-2 border-[#9D2449] rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
@@ -195,7 +229,11 @@ export const TabControlLotes: React.FC = () => {
                                 <Send className="w-5 h-5" />
                                 <h3 className="text-base font-black text-slate-900">Crear Nuevo Lote de Envío a LESP</h3>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer">
+                            <button
+                                type="button"
+                                onClick={() => setShowModal(false)}
+                                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                            >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -206,7 +244,7 @@ export const TabControlLotes: React.FC = () => {
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Ej. GUIA-LESP-2026-982"
+                                    placeholder="Ej. GUIA-LESP-2026-001"
                                     value={guia}
                                     onChange={(e) => setGuia(e.target.value)}
                                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono font-bold uppercase focus:outline-none focus:border-[#9D2449]"
@@ -236,7 +274,7 @@ export const TabControlLotes: React.FC = () => {
                                 </label>
                                 <div className="space-y-2 max-h-40 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-2xl">
                                     {pendientes.length === 0 ? (
-                                        <p className="text-slate-400 text-center py-2">No hay más muestras pendientes.</p>
+                                        <p className="text-slate-400 text-center py-2">No hay muestras pendientes de envío registradas.</p>
                                     ) : (
                                         pendientes.map((p) => {
                                             const isSelected = selectedFolios.includes(p.folio);
@@ -280,3 +318,5 @@ export const TabControlLotes: React.FC = () => {
         </div>
     );
 };
+
+export default TabControlLotes;

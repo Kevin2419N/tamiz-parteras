@@ -4,10 +4,12 @@ import type { UnidadCLUES } from './types';
 import { getCluesCatalog, addCluesUnit, subscribeCluesCatalog } from './cluesData';
 
 export const TabUnidadesCLUES: React.FC = () => {
+    // Estado limpio conectado con el catálogo global (inicia en [] hasta cargar de la API)
     const [cluesCatalog, setCluesCatalog] = useState<UnidadCLUES[]>(getCluesCatalog());
     const [showModal, setShowModal] = useState(false);
+    const [cargando, setCargando] = useState<boolean>(false);
 
-    // Modal Form State
+    // Formulario de alta de unidad
     const [claveClues, setClaveClues] = useState('');
     const [nombreUnidad, setNombreUnidad] = useState('');
     const [municipio, setMunicipio] = useState('');
@@ -21,8 +23,29 @@ export const TabUnidadesCLUES: React.FC = () => {
         return unsubscribe;
     }, []);
 
+    // Punto de enganche para cargar unidades CLUES desde el back-end (Node.js / PostgreSQL)
+    useEffect(() => {
+        const cargarClues = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const res = await fetch('/api/clues');
+                // const data = await res.json();
+                // setCluesCatalog(data);
+            } catch (error) {
+                console.error('Error al cargar catálogo de unidades CLUES:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarClues();
+    }, [setCargando]);
+
     const handleCreateClues = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Registro local y despacho hacia API
         addCluesUnit({
             clues: claveClues.toUpperCase().trim(),
             nombre: nombreUnidad.trim(),
@@ -83,33 +106,43 @@ export const TabUnidadesCLUES: React.FC = () => {
 
             {/* VISTA MÓVIL (< md) */}
             <div className="space-y-3 md:hidden">
-                {cluesCatalog.map((u) => (
-                    <div key={u.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <h3 className="text-xs font-black text-slate-900">{u.nombre}</h3>
-                                <p className="text-[11px] text-slate-600 font-medium">Municipio: <strong>{u.municipio}</strong></p>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${u.estatus === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
-                                }`}>
-                                {u.estatus}
-                            </span>
-                        </div>
-
-                        <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between">
-                            <div>
-                                <span className="text-[10px] text-slate-400 block font-bold uppercase">Clave CLUES</span>
-                                <span className="font-mono bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-lg px-2 py-0.5 text-xs">
-                                    {u.clues}
+                {cargando ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                        Cargando catálogo de unidades médicas...
+                    </div>
+                ) : cluesCatalog.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                        No hay unidades médicas registradas en el catálogo.
+                    </div>
+                ) : (
+                    cluesCatalog.map((u) => (
+                        <div key={u.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <h3 className="text-xs font-black text-slate-900">{u.nombre}</h3>
+                                    <p className="text-[11px] text-slate-600 font-medium">Municipio: <strong>{u.municipio}</strong></p>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${u.estatus === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                    }`}>
+                                    {u.estatus}
                                 </span>
                             </div>
-                            <div className="text-right">
-                                <span className="text-[10px] text-slate-400 block font-bold uppercase">Tipo</span>
-                                <span className="font-bold text-[#9D2449] text-[11px]">{u.tipoUnidad}</span>
+
+                            <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Clave CLUES</span>
+                                    <span className="font-mono bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-lg px-2 py-0.5 text-xs">
+                                        {u.clues}
+                                    </span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Tipo</span>
+                                    <span className="font-bold text-[#9D2449] text-[11px]">{u.tipoUnidad}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {/* TABLA OFICIAL DE UNIDADES REGISTRADAS (ESCRITORIO >= md) */}
@@ -125,26 +158,40 @@ export const TabUnidadesCLUES: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                        {cluesCatalog.map((u) => (
-                            <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
-                                <td className="py-3.5 px-4 font-black text-slate-900">{u.nombre}</td>
-                                <td className="py-3.5 px-4">
-                                    <span className="font-mono bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-lg px-2.5 py-1 text-xs inline-block shadow-sm">
-                                        {u.clues}
-                                    </span>
-                                </td>
-                                <td className="py-3.5 px-4 font-bold text-slate-800">{u.municipio}</td>
-                                <td className="py-3.5 px-4 text-slate-700 font-medium">{u.tipoUnidad}</td>
-                                <td className="py-3.5 px-4 text-center">
-                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${u.estatus === 'ACTIVO'
-                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                            : 'bg-amber-100 text-amber-800 border border-amber-300'
-                                        }`}>
-                                        {u.estatus}
-                                    </span>
+                        {cargando ? (
+                            <tr>
+                                <td colSpan={5} className="py-8 text-center text-slate-400 font-normal">
+                                    Cargando catálogo de unidades médicas...
                                 </td>
                             </tr>
-                        ))}
+                        ) : cluesCatalog.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="py-8 text-center text-slate-400 font-normal">
+                                    No hay unidades médicas registradas en el catálogo.
+                                </td>
+                            </tr>
+                        ) : (
+                            cluesCatalog.map((u) => (
+                                <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                                    <td className="py-3.5 px-4 font-black text-slate-900">{u.nombre}</td>
+                                    <td className="py-3.5 px-4">
+                                        <span className="font-mono bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-lg px-2.5 py-1 text-xs inline-block shadow-sm">
+                                            {u.clues}
+                                        </span>
+                                    </td>
+                                    <td className="py-3.5 px-4 font-bold text-slate-800">{u.municipio}</td>
+                                    <td className="py-3.5 px-4 text-slate-700 font-medium">{u.tipoUnidad}</td>
+                                    <td className="py-3.5 px-4 text-center">
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${u.estatus === 'ACTIVO'
+                                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                                : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                            }`}>
+                                            {u.estatus}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -277,3 +324,5 @@ export const TabUnidadesCLUES: React.FC = () => {
         </div>
     );
 };
+
+export default TabUnidadesCLUES;

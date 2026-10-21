@@ -6,7 +6,7 @@ interface TabHistorialBusquedaProps {
     registros: RegistroTamizHistorial[];
 }
 
-export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ registros }) => {
+export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ registros = [] }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('TODOS');
     const [startDate, setStartDate] = useState<string>('');
@@ -106,6 +106,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                         />
                         {(startDate || endDate) && (
                             <button
+                                type="button"
                                 onClick={() => { setStartDate(''); setEndDate(''); }}
                                 className="text-[10px] font-bold text-rose-700 hover:underline px-1 cursor-pointer"
                             >
@@ -129,6 +130,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                     ].map((f) => (
                         <button
                             key={f.id}
+                            type="button"
                             onClick={() => setStatusFilter(f.id)}
                             className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${statusFilter === f.id
                                 ? 'bg-[#9D2449] text-white shadow-sm'
@@ -142,7 +144,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
 
             </div>
 
-            {/* TABLA DENSA DE REGISTROS HISTÓRICOS */}
+            {/* TABLA DE REGISTROS HISTÓRICOS */}
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
@@ -168,33 +170,42 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-xs font-medium">
-                            {filtrados.map((item) => (
-                                <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                                    <td className="py-3.5 px-3 font-mono font-bold text-[#9D2449] bg-rose-50/40 rounded-lg">
-                                        {item.folio}
-                                    </td>
-                                    <td className="py-3.5 px-3 font-extrabold text-slate-900">{item.rn}</td>
-                                    <td className="py-3.5 px-3 text-slate-700">
-                                        <div>{item.madre}</div>
-                                        <div className="text-[10px] text-slate-400 font-mono">{item.curpMadre}</div>
-                                    </td>
-                                    <td className="py-3.5 px-3 text-slate-600">
-                                        <div className="font-bold text-slate-800">{item.unidadMedica}</div>
-                                        <div className="text-[10px] font-mono text-emerald-700">{item.clues}</div>
-                                    </td>
-                                    <td className="py-3.5 px-3 text-slate-500 font-mono">{item.fechaToma}</td>
-                                    <td className="py-3.5 px-3">{getEstatusBadge(item.estatus)}</td>
-                                    <td className="py-3.5 px-3 text-right">
-                                        <button
-                                            onClick={() => setSelectedRegistro(item)}
-                                            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-[#9D2449] font-bold rounded-xl text-xs flex items-center gap-1 ml-auto border border-rose-200 transition-colors cursor-pointer"
-                                        >
-                                            <Eye className="w-3.5 h-3.5" />
-                                            <span>Ver Ficha</span>
-                                        </button>
+                            {filtrados.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="py-8 text-center text-slate-400 font-normal">
+                                        No se encontraron registros de tarjetas Guthrie que coincidan con la búsqueda.
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                filtrados.map((item) => (
+                                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="py-3.5 px-3 font-mono font-bold text-[#9D2449] bg-rose-50/40 rounded-lg">
+                                            {item.folio}
+                                        </td>
+                                        <td className="py-3.5 px-3 font-extrabold text-slate-900">{item.rn}</td>
+                                        <td className="py-3.5 px-3 text-slate-700">
+                                            <div>{item.madre}</div>
+                                            <div className="text-[10px] text-slate-400 font-mono">{item.curpMadre}</div>
+                                        </td>
+                                        <td className="py-3.5 px-3 text-slate-600">
+                                            <div className="font-bold text-slate-800">{item.unidadMedica}</div>
+                                            <div className="text-[10px] font-mono text-emerald-700">{item.clues}</div>
+                                        </td>
+                                        <td className="py-3.5 px-3 text-slate-500 font-mono">{item.fechaToma}</td>
+                                        <td className="py-3.5 px-3">{getEstatusBadge(item.estatus)}</td>
+                                        <td className="py-3.5 px-3 text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedRegistro(item)}
+                                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-[#9D2449] font-bold rounded-xl text-xs flex items-center gap-1 ml-auto border border-rose-200 transition-colors cursor-pointer"
+                                            >
+                                                <Eye className="w-3.5 h-3.5" />
+                                                <span>Ver Ficha</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -219,6 +230,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                                 </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => setSelectedRegistro(null)}
                                 className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl"
                             >
@@ -255,6 +267,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
 
                         <div className="flex gap-3 pt-2">
                             <button
+                                type="button"
                                 onClick={() => window.print()}
                                 className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer"
                             >
@@ -269,3 +282,5 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
         </div>
     );
 };
+
+export default TabHistorialBusqueda;

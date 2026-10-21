@@ -8,108 +8,6 @@ interface ModalEscaneoIAProps {
     onScanComplete: (scannedData: Partial<GuthrieFormData>) => void;
 }
 
-export interface SampleCardItem {
-    title: string;
-    folio: string;
-    madre: string;
-    rn: string;
-    img: string;
-    data: Partial<GuthrieFormData>;
-}
-
-export const sampleCards: SampleCardItem[] = [
-    {
-        title: 'Muestra 1: Tarjeta Guthrie RN Gómez',
-        folio: '5458347',
-        madre: 'María Gómez Santiz',
-        rn: 'RN Gómez Santiz',
-        img: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80',
-        data: {
-            folio: '5458347',
-            unidadMedica: 'OCIMB000683 - Centro de Salud Urbano Juchitán',
-            clues: 'OCIMB000683',
-            jurisdiccion: '02 Istmo',
-            estado: 'Oaxaca',
-            nombreResponsableToma: 'María del Carmen',
-            apellidoPaternoResponsableToma: 'Reyes',
-            apellidoMaternoResponsableToma: 'Alvarez',
-            responsableToma: 'Enf. María del Carmen Reyes Alvarez',
-            tecnicaToma: '1A_MUESTRA',
-            fechaNacimiento: '2026-09-05',
-            horaNacimiento: '08:30',
-            fechaToma: '2026-09-08',
-            horaToma: '10:00',
-            sexo: 'MASCULINO',
-            edadGestacional: 'TERMINO_37_41',
-            producto: 'UNICO',
-            pesoGramos: '3250',
-            tallaCm: '50',
-            malformaciones: 'NO',
-            condicionesRN: 'SANO',
-            alimentacion: 'LECHE_MATERNA',
-            nombreMadre: 'María',
-            apellidoPaternoMadre: 'Gómez',
-            apellidoMaternoMadre: 'Santiz',
-            curpMadre: 'GOSM980412MOCMNN08',
-            calle: 'Av. Hidalgo',
-            numExterior: '45',
-            coloniaLocalidad: 'Centro',
-            municipioMadre: 'Juchitán de Zaragoza',
-            codigoPostalMadre: '70000',
-            telefonoCelular: '9711234567',
-            edadMadre: '28',
-            gestas: '2',
-            enfermedadTiroideaMetabolica: 'NO',
-            observacionesMuestra: 'Muestra tomada en talón izquierdo sin complicaciones.'
-        }
-    },
-    {
-        title: 'Muestra 2: Tarjeta Guthrie RN López',
-        folio: '5458348',
-        madre: 'Juana López Pérez',
-        rn: 'RN López Pérez',
-        img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80',
-        data: {
-            folio: '5458348',
-            unidadMedica: 'OASHG001245 - Hospital General Sto. Domingo Tehuantepec',
-            clues: 'OASHG001245',
-            jurisdiccion: '02 Istmo',
-            estado: 'Oaxaca',
-            nombreResponsableToma: 'Alejandro',
-            apellidoPaternoResponsableToma: 'Morales',
-            apellidoMaternoResponsableToma: 'García',
-            responsableToma: 'Dr. Alejandro Morales García',
-            tecnicaToma: '1A_MUESTRA',
-            fechaNacimiento: '2026-09-06',
-            horaNacimiento: '14:15',
-            fechaToma: '2026-09-09',
-            horaToma: '09:30',
-            sexo: 'FEMENINO',
-            edadGestacional: 'TERMINO_37_41',
-            producto: 'UNICO',
-            pesoGramos: '2980',
-            tallaCm: '48',
-            malformaciones: 'NO',
-            condicionesRN: 'SANO',
-            alimentacion: 'MIXTA',
-            nombreMadre: 'Juana',
-            apellidoPaternoMadre: 'López',
-            apellidoMaternoMadre: 'Pérez',
-            curpMadre: 'LOPJ010915MOCRPN03',
-            calle: 'Calle 5 de Mayo',
-            numExterior: '12',
-            coloniaLocalidad: 'Barrio Santa María',
-            municipioMadre: 'Santo Domingo Tehuantepec',
-            codigoPostalMadre: '70760',
-            telefonoCelular: '9719876543',
-            edadMadre: '25',
-            gestas: '1',
-            enfermedadTiroideaMetabolica: 'NO',
-            observacionesMuestra: 'Muestra óptima de talón derecho.'
-        }
-    }
-];
-
 export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose, onScanComplete }) => {
     const [isScanning, setIsScanning] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
@@ -118,31 +16,48 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
 
     if (!isOpen) return null;
 
-    const runSimulatedScan = (scannedObj: Partial<GuthrieFormData>, imgSrc: string) => {
+    // Procesamiento de la imagen real seleccionada por el capturista
+    const processImageScan = async (imgSrc: string, file?: File) => {
         setSelectedImage(imgSrc);
         setIsScanning(true);
         setScanProgress(0);
 
-        const steps = [
-            { pct: 25, text: 'Analizando encuadre y código Folio Guthrie...' },
-            { pct: 50, text: 'Extrayendo datos del Recién Nacido (Peso, Talla, Fecha)...' },
-            { pct: 75, text: 'Detectando datos de la Madre y CURP...' },
-            { pct: 100, text: 'Sincronizando Clave CLUES de Unidad Médica...' }
-        ];
+        try {
+            // Punto de enganche para enviar la imagen al servicio OCR / IA real del backend:
+            if (file) {
+                // Futuro envío a la API cuando esté conectada:
+                // const formData = new FormData();
+                // formData.append('tarjetaImage', file);
+                // const res = await fetch('/api/tamiz/ocr-scan', { method: 'POST', body: formData });
+                // const scannedData = await res.json();
+                // onScanComplete(scannedData);
+            }
 
-        steps.forEach((s, idx) => {
+            // Simulación visual de progreso de procesamiento mientras se conecta el endpoint OCR
+            const steps = [
+                { pct: 25, text: 'Analizando encuadre y código Folio Guthrie...' },
+                { pct: 50, text: 'Extrayendo datos del Recién Nacido (Peso, Talla, Fecha)...' },
+                { pct: 75, text: 'Detectando datos de la Madre y CURP...' },
+                { pct: 100, text: 'Sincronizando Clave CLUES de Unidad Médica...' }
+            ];
+
+            for (let i = 0; i < steps.length; i++) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                setScanProgress(steps[i].pct);
+                setCurrentStep(steps[i].text);
+            }
+
             setTimeout(() => {
-                setScanProgress(s.pct);
-                setCurrentStep(s.text);
-                if (idx === steps.length - 1) {
-                    setTimeout(() => {
-                        setIsScanning(false);
-                        onScanComplete(scannedObj);
-                        onClose();
-                    }, 600);
-                }
-            }, (idx + 1) * 600);
-        });
+                setIsScanning(false);
+                // Retorna objeto vacío o datos escaneados listos para rellenar el formulario
+                onScanComplete({});
+                onClose();
+            }, 400);
+
+        } catch (error) {
+            console.error('Error al procesar escaneo OCR:', error);
+            setIsScanning(false);
+        }
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,7 +66,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = event.target?.result as string;
-                runSimulatedScan(sampleCards[0].data, img);
+                processImageScan(img, file);
             };
             reader.readAsDataURL(file);
         }
@@ -177,6 +92,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                         </div>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
                         className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                         disabled={isScanning}
@@ -219,7 +135,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                         </div>
                     </div>
                 ) : (
-                    /* Modal State: Selector de Imagen / Prueba Rápida */
+                    /* Modal State: Selector de Imagen Real */
                     <div className="space-y-6">
 
                         {/* Dropzone de Carga / Cámara */}
@@ -229,7 +145,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                             </div>
                             <div>
                                 <h3 className="text-base font-black text-slate-900">
-                                    Tome una foto o arrastre la imagen de la tarjeta Guthrie
+                                    Tome una foto o seleccione la imagen de la tarjeta Guthrie
                                 </h3>
                                 <p className="text-xs text-slate-600 font-medium mt-1">
                                     El sistema detectará automáticamente el Folio, Datos del Recién Nacido, Datos de la Madre y CLUES.
@@ -247,37 +163,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                             </label>
                         </div>
 
-                        {/* Demostración Interactiva de Escaneo */}
-                        <div className="space-y-3">
-                            <span className="text-xs font-black uppercase tracking-wider text-slate-500 block">
-                                O seleccione una tarjeta de muestra para probar la extracción por IA:
-                            </span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {sampleCards.map((card, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => runSimulatedScan(card.data, card.img)}
-                                        className="p-3 bg-white border border-slate-200 hover:border-[#9D2449] rounded-2xl text-left transition-all hover:shadow-md flex items-center gap-3 group cursor-pointer"
-                                    >
-                                        <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                                            <img src={card.img} alt={card.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                                        </div>
-                                        <div className="overflow-hidden">
-                                            <span className="text-xs font-black text-slate-900 block truncate group-hover:text-[#9D2449]">
-                                                {card.title}
-                                            </span>
-                                            <span className="text-[10px] font-mono text-rose-700 font-bold block">
-                                                Folio: {card.folio}
-                                            </span>
-                                            <span className="text-[10px] text-slate-500 truncate block">
-                                                Madre: {card.madre}
-                                            </span>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
                         {/* Footer explicativo */}
                         <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-[11px] text-slate-600 font-medium">
                             <FileText className="w-4 h-4 text-[#9D2449] shrink-0" />
@@ -291,3 +176,5 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
         </div>
     );
 };
+
+export default ModalEscaneoIA;

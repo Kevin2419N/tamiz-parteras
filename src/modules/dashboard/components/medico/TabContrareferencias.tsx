@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     HeartHandshake,
     Search,
@@ -16,6 +16,7 @@ import {
     Pill,
     Navigation,
 } from 'lucide-react';
+import { useAuth } from '../../../../context/AuthContext';
 import type { ReferenciaComunidad, FormularioContraRef, EstatusContraRef } from './types';
 
 // ─── Catálogo CIE-10 Obstétrico/Ginecológico (resumen clínico frecuente) ──────
@@ -59,59 +60,6 @@ const UNIDADES_DESTINO = [
     'Otro (especificar en conducta médica)',
 ];
 
-// ─── Datos de demostración ────────────────────────────────────────────────────
-
-const REFERENCIAS_DEMO: ReferenciaComunidad[] = [
-    {
-        id: 'REF-001',
-        folioReferencia: 'REF-JS2-2026-1041',
-        nombrePartera: 'Doña Rosa Santiz Gómez',
-        comunidadOrigen: 'San Blas Atempa',
-        municipio: 'San Blas Atempa',
-        nombrePaciente: 'Concepción Ruiz Atempa',
-        edadPaciente: 26,
-        motivoReferencia: 'Tensión arterial elevada: 150/100 mmHg. Edema de miembros inferiores ++.',
-        nivelRiesgo: 'ALTO',
-        fechaReferencia: '2026-10-05',
-        fechaRecepcion: '2026-10-06',
-        estatusContraRef: 'PENDIENTE_ATENCION',
-    },
-    {
-        id: 'REF-002',
-        folioReferencia: 'REF-JS2-2026-1038',
-        nombrePartera: 'Doña Juana López Pérez',
-        comunidadOrigen: 'Asunción Ixtaltepec',
-        municipio: 'Asunción Ixtaltepec',
-        nombrePaciente: 'Sara Hernández Cruz',
-        edadPaciente: 19,
-        motivoReferencia: 'Sangrado transvaginal escaso. Dolor pélvico intermitente. EG: 12 semanas.',
-        nivelRiesgo: 'MEDIO',
-        fechaReferencia: '2026-10-03',
-        fechaRecepcion: '2026-10-04',
-        estatusContraRef: 'EN_VALORACION',
-        diagnosticoMedico: 'Amenaza de aborto. Útero gestante 12 semanas.',
-        planManejo: 'Reposo absoluto, progesterona vaginal 200 mg/día. Control en 7 días.',
-    },
-    {
-        id: 'REF-003',
-        folioReferencia: 'REF-JS2-2026-1030',
-        nombrePartera: 'Doña Antonia García Toledo',
-        comunidadOrigen: 'Santo Domingo Chihuitán',
-        municipio: 'Santo Domingo Chihuitán',
-        nombrePaciente: 'Lucía Morales Vásquez',
-        edadPaciente: 31,
-        motivoReferencia: 'Sospecha de diabetes gestacional. Resultado de glucosa ayuno: 128 mg/dL.',
-        nivelRiesgo: 'MEDIO',
-        fechaReferencia: '2026-09-28',
-        fechaRecepcion: '2026-09-29',
-        estatusContraRef: 'ATENDIDA',
-        diagnosticoMedico: 'Diabetes gestacional confirmada por CTOG 75g.',
-        planManejo: 'Dieta ADA. Monitoreo domiciliario de glucosa. Valoración nutricional.',
-        folioContraRef: 'CREF-JS2-2026-0822',
-        medicoResponsable: 'Dr. Jorge Ruiz Pérez',
-    },
-];
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getEstatusContaRefBadge(estatus: EstatusContraRef): React.ReactNode {
@@ -121,7 +69,7 @@ function getEstatusContaRefBadge(estatus: EstatusContraRef): React.ReactNode {
         ATENDIDA: { label: 'Atendida', cls: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: <CheckCircle2 className="w-3 h-3" /> },
         DERIVADA_HOSPITAL: { label: 'Derivada a Hospital', cls: 'bg-blue-100 text-blue-800 border-blue-300', icon: <Building2 className="w-3 h-3" /> },
     };
-    const { label, cls, icon } = map[estatus];
+    const { label, cls, icon } = map[estatus] || { label: estatus, cls: 'bg-slate-100 text-slate-800 border-slate-300', icon: null };
     return (
         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${cls}`}>
             {icon}{label}
@@ -136,7 +84,7 @@ function getRiesgoBadge(nivel: ReferenciaComunidad['nivelRiesgo']): React.ReactN
         ALTO: 'bg-rose-100 text-rose-900 border-rose-400',
         CRITICO: 'bg-red-100 text-red-900 border-red-500 font-black',
     };
-    return <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${map[nivel]}`}>{nivel}</span>;
+    return <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${map[nivel] || map.BAJO}`}>{nivel}</span>;
 }
 
 // ─── Selector CIE-10 ────────────────────────────────────────────────────────
@@ -156,7 +104,7 @@ const Cie10Selector: React.FC<Cie10SelectorProps> = ({ value, onChange }) => {
         <div className="relative">
             <button type="button"
                 onClick={() => setOpen(v => !v)}
-                className={`w-full flex items-center justify-between bg-slate-50 border rounded-xl px-3 py-2 text-xs text-left transition-colors ${open ? 'border-[#9D2449]' : 'border-slate-300 hover:border-slate-400'}`}>
+                className={`w-full flex items-center justify-between bg-slate-50 border rounded-xl px-3 py-2 text-xs text-left transition-colors cursor-pointer ${open ? 'border-[#9D2449]' : 'border-slate-300 hover:border-slate-400'}`}>
                 <span className={value ? 'font-bold text-slate-900' : 'text-slate-400'}>
                     {value || 'Seleccionar código CIE-10…'}
                 </span>
@@ -173,7 +121,7 @@ const Cie10Selector: React.FC<Cie10SelectorProps> = ({ value, onChange }) => {
                         {filtrados.map(item => (
                             <button key={item.codigo} type="button"
                                 onClick={() => { onChange(`${item.codigo} — ${item.desc}`); setOpen(false); setQuery(''); }}
-                                className="w-full text-left px-3 py-2 text-xs hover:bg-rose-50 transition-colors flex items-start gap-2">
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-rose-50 transition-colors flex items-start gap-2 cursor-pointer">
                                 <span className="font-black text-[#9D2449] shrink-0 mt-0.5">{item.codigo}</span>
                                 <span className="text-slate-700">{item.desc}</span>
                             </button>
@@ -198,6 +146,11 @@ interface ModalContraRefProps {
 
 const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose, onEmitir }) => {
     const printRef = useRef<HTMLDivElement>(null);
+    const { user } = useAuth();
+
+    const nombreMedicoContexto = (user as any)?.nombre || (user as any)?.nombreCompleto || (user as any)?.name || 'Dr. Médico Adscrito';
+    const cedulaContexto = (user as any)?.cedula || '';
+
     const [form, setForm] = useState<FormularioContraRef>({
         referenciaId: referencia.id,
         folioContraRef: `CREF-JS2-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -212,8 +165,8 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
         derivadaA: '',
         unidadDestino: '',
         nivelDerivacion: 'SIN_DERIVACION',
-        medicoFirma: 'Dr. Jorge Ruiz Pérez',
-        cedulaProfesional: '8923456',
+        medicoFirma: nombreMedicoContexto,
+        cedulaProfesional: cedulaContexto,
         cluesUnidadEmisora: 'OCIMB000683',
     });
 
@@ -253,7 +206,7 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
                                 Folio: <span className="font-black text-slate-700">{form.folioContraRef}</span> · Jurisdicción Sanitaria No. 2 Istmo
                             </p>
                         </div>
-                        <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">
+                        <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer">
                             <X className="w-4 h-4" />
                         </button>
                     </div>
@@ -368,7 +321,7 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
                                 {(Object.entries(niveles) as [NonNullable<FormularioContraRef['nivelDerivacion']>, string][]).map(([key, label]) => (
                                     <button key={key} type="button"
                                         onClick={() => setForm(prev => ({ ...prev, nivelDerivacion: key }))}
-                                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all ${form.nivelDerivacion === key
+                                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer ${form.nivelDerivacion === key
                                             ? 'bg-[#9D2449] border-[#9D2449] text-white'
                                             : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'}`}>
                                         {label}
@@ -437,21 +390,23 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
 
                     {/* Acciones */}
                     <div className="flex justify-between items-center p-5 border-t border-slate-100 no-print gap-3 flex-wrap">
-                        <button onClick={onClose}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">
+                        <button type="button" onClick={onClose}
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">
                             Cancelar
                         </button>
                         <div className="flex gap-2">
                             <button
+                                type="button"
                                 onClick={() => window.print()}
-                                className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all"
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
                             >
                                 <Printer className="w-3.5 h-3.5" />
                                 Imprimir / PDF Oficial SSO
                             </button>
                             <button
+                                type="button"
                                 onClick={() => { onEmitir(form); onClose(); }}
-                                className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95"
+                                className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
                             >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 Emitir Contrareferencia
@@ -468,8 +423,28 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
 
 export const TabContrareferencias: React.FC = () => {
     const [busqueda, setBusqueda] = useState('');
-    const [referencias, setReferencias] = useState<ReferenciaComunidad[]>(REFERENCIAS_DEMO);
+    const [referencias, setReferencias] = useState<ReferenciaComunidad[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
     const [referenciaSeleccionada, setReferenciaSeleccionada] = useState<ReferenciaComunidad | null>(null);
+
+    // Carga de referencias comunitarias desde el Backend
+    useEffect(() => {
+        const cargarReferencias = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const res = await fetch('/api/medico/referencias-comunidad');
+                // const data = await res.json();
+                // setReferencias(data);
+            } catch (error) {
+                console.error('Error al cargar referencias comunitarias:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarReferencias();
+    }, [setReferencias]);
 
     const refFiltradas = referencias.filter(r => {
         const q = busqueda.toLowerCase();
@@ -479,19 +454,30 @@ export const TabContrareferencias: React.FC = () => {
             r.municipio.toLowerCase().includes(q);
     });
 
-    const handleEmitir = (data: FormularioContraRef) => {
-        setReferencias(prev => prev.map(r =>
-            r.id === data.referenciaId
-                ? {
-                    ...r,
-                    estatusContraRef: 'ATENDIDA' as EstatusContraRef,
-                    diagnosticoMedico: data.diagnosticoImpresion,
-                    planManejo: data.planManejo,
-                    folioContraRef: data.folioContraRef,
-                    medicoResponsable: data.medicoFirma,
-                }
-                : r
-        ));
+    const handleEmitir = async (data: FormularioContraRef) => {
+        try {
+            // Futuro envío de la contrareferencia al backend:
+            // await fetch('/api/medico/emitir-contrareferencia', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(data)
+            // });
+
+            setReferencias(prev => prev.map(r =>
+                r.id === data.referenciaId
+                    ? {
+                        ...r,
+                        estatusContraRef: 'ATENDIDA' as EstatusContraRef,
+                        diagnosticoMedico: data.diagnosticoImpresion,
+                        planManejo: data.planManejo,
+                        folioContraRef: data.folioContraRef,
+                        medicoResponsable: data.medicoFirma,
+                    }
+                    : r
+            ));
+        } catch (error) {
+            console.error('Error al emitir contrareferencia:', error);
+        }
     };
 
     const pendientes = referencias.filter(r => r.estatusContraRef === 'PENDIENTE_ATENCION').length;
@@ -532,8 +518,10 @@ export const TabContrareferencias: React.FC = () => {
 
             {/* Bandeja de referencias */}
             <div className="space-y-3">
-                {refFiltradas.length === 0 ? (
-                    <div className="text-center py-12 text-slate-400 font-semibold text-sm">Sin referencias que coincidan con la búsqueda.</div>
+                {cargando ? (
+                    <div className="text-center py-12 text-slate-400 font-semibold text-sm">Cargando referencias comunitarias...</div>
+                ) : refFiltradas.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400 font-semibold text-sm">No hay referencias comunitarias registradas.</div>
                 ) : (
                     refFiltradas.map(ref => (
                         <div key={ref.id} className={`border rounded-2xl p-4 transition-all hover:shadow-md ${ref.estatusContraRef === 'PENDIENTE_ATENCION'
@@ -571,8 +559,9 @@ export const TabContrareferencias: React.FC = () => {
                                 <div className="flex flex-col gap-2 shrink-0">
                                     {ref.estatusContraRef !== 'ATENDIDA' && (
                                         <button
+                                            type="button"
                                             onClick={() => setReferenciaSeleccionada(ref)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95"
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
                                         >
                                             <FileText className="w-3.5 h-3.5" />
                                             Emitir Contrareferencia
@@ -616,3 +605,5 @@ export const TabContrareferencias: React.FC = () => {
         </div>
     );
 };
+
+export default TabContrareferencias;

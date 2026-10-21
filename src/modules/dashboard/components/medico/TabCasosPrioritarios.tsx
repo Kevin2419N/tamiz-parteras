@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Search,
     AlertTriangle,
@@ -19,73 +19,6 @@ import {
 } from 'lucide-react';
 import type { CasoPrioritario, RegistroSegundaMuestra, EstatusResultado } from './types';
 
-// ─── Datos de demostración ───────────────────────────────────────────────────
-
-const CASOS_DEMO: CasoPrioritario[] = [
-    {
-        id: 'CPR-001',
-        folio: '5458347',
-        nombreRN: 'RN Gómez Santiz',
-        nombreMadre: 'María Gómez Santiz',
-        clues: 'OCIMB000683',
-        unidadMedica: 'Centro de Salud Urbano Juchitán',
-        municipio: 'Juchitán de Zaragoza',
-        fechaToma: '2026-10-01',
-        tipoPrueba: 'TSH',
-        estatusResultado: 'RESULTADO_SOSPECHOSO',
-        valorObtenido: '25.4 mU/L',
-        valorReferencia: '< 10 mU/L',
-        observaciones: 'Resultado fuera de rango. Requiere confirmación venosa.',
-        telefonoContacto: '9711234567',
-    },
-    {
-        id: 'CPR-002',
-        folio: '5458342',
-        nombreRN: 'RN Vásquez Mendoza',
-        nombreMadre: 'Diana Vásquez Mendoza',
-        clues: 'OASIX003411',
-        unidadMedica: 'Hospital General Ixtaltepec',
-        municipio: 'Asunción Ixtaltepec',
-        fechaToma: '2026-10-02',
-        tipoPrueba: 'PKU',
-        estatusResultado: 'MUESTRA_INADECUADA',
-        observaciones: 'Muestra insuficiente de sangre en círculo Guthrie.',
-        telefonoContacto: '9719876543',
-    },
-    {
-        id: 'CPR-003',
-        folio: '5458351',
-        nombreRN: 'RN Ramírez López',
-        nombreMadre: 'Carmen Ramírez López',
-        clues: 'OASHG001245',
-        unidadMedica: 'Hospital General Sto. Domingo Tehuantepec',
-        municipio: 'Santo Domingo Tehuantepec',
-        fechaToma: '2026-10-03',
-        tipoPrueba: '17-OHP',
-        estatusResultado: 'RETOMA_REQUERIDA',
-        valorObtenido: '—',
-        observaciones: 'Muestra rechazada por laboratorio: coagulación.',
-        telefonoContacto: '9714561234',
-    },
-    {
-        id: 'CPR-004',
-        folio: '5458360',
-        nombreRN: 'RN Hernández Cruz',
-        nombreMadre: 'Laura Hernández Cruz',
-        clues: 'OASCS002190',
-        unidadMedica: 'Centro de Salud Salina Cruz',
-        municipio: 'Salina Cruz',
-        fechaToma: '2026-10-05',
-        tipoPrueba: 'PANEL_COMPLETO',
-        estatusResultado: 'EN_CONFIRMACION',
-        valorObtenido: 'TSH: 18.2 mU/L',
-        valorReferencia: '< 10 mU/L',
-        observaciones: 'Muestra venosa enviada. Aguarda resultado confirmatorio.',
-        telefonoContacto: '9718765432',
-        tratamientoIniciado: false,
-    },
-];
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getEstatusBadge(estatus: EstatusResultado): React.ReactNode {
@@ -98,7 +31,7 @@ function getEstatusBadge(estatus: EstatusResultado): React.ReactNode {
         CONFIRMADO_POSITIVO: { label: 'Confirmado Positivo', cls: 'bg-red-100 text-red-900 border border-red-400 font-black' },
         NORMAL: { label: 'Normal', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-300' },
     };
-    const { label, cls } = map[estatus];
+    const { label, cls } = map[estatus] || { label: estatus, cls: 'bg-slate-100 text-slate-800 border border-slate-300' };
     return <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${cls}`}>{label}</span>;
 }
 
@@ -157,7 +90,7 @@ const CedulaLaboratorio: React.FC<CedulaLabProps> = ({ caso, datos }) => (
                 <div><span className="text-slate-500 font-bold">CLUES: </span><span className="font-bold text-slate-800">{caso.clues}</span></div>
                 <div><span className="text-slate-500 font-bold">Unidad: </span><span className="font-medium text-slate-700">{caso.unidadMedica}</span></div>
                 <div><span className="text-slate-500 font-bold">Municipio: </span><span className="font-medium text-slate-700">{caso.municipio}</span></div>
-                <div><span className="text-slate-500 font-bold">Tel: </span><span className="font-medium text-slate-700">{caso.telefonoContacto}</span></div>
+                <div><span className="text-slate-500 font-bold">Tel: </span><span className="font-medium text-slate-700">{caso.telefonoContacto || 'Sin teléfono'}</span></div>
             </div>
         </div>
 
@@ -176,9 +109,9 @@ const CedulaLaboratorio: React.FC<CedulaLabProps> = ({ caso, datos }) => (
         {/* Indicaciones */}
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-[9px] text-amber-900">
             <p className="font-black mb-1">INDICACIONES DE MANEJO DE MUESTRA:</p>
-            <p>• Tubo con EDTA (lila) 1–2 mL. Mantener en frío 2–8°C. Enviar dentro de 24h de obtención.</p>
-            <p>• No centrifugar. No congelar. Identificar con folio, CLUES y fecha de obtención.</p>
-            {datos.tratamiento && <p className="mt-1 font-bold">• Tratamiento empírico: {datos.tratamiento}</p>}
+            <p>Tubo con EDTA (lila) 1–2 mL. Mantener en frío 2–8°C. Enviar dentro de 24h de obtención.</p>
+            <p>No centrifugar. No congelar. Identificar con folio, CLUES y fecha de obtención.</p>
+            {datos.tratamiento && <p className="mt-1 font-bold">Tratamiento empírico: {datos.tratamiento}</p>}
         </div>
 
         {/* Firma */}
@@ -271,7 +204,7 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                                 Folio <span className="font-black text-slate-700">{caso.folio}</span> · {caso.nombreRN} · {caso.tipoPrueba}
                             </p>
                         </div>
-                        <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">
+                        <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer">
                             <X className="w-4 h-4" />
                         </button>
                     </div>
@@ -343,7 +276,7 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                                 {(Object.entries(labOpciones) as [NonNullable<RegistroSegundaMuestra['laboratorioId']>, string][]).map(([id, label]) => (
                                     <button key={id} type="button"
                                         onClick={() => handleLabChange(id)}
-                                        className={`text-left px-3 py-2 rounded-xl border text-[10px] font-bold transition-all ${laboratorioId === id
+                                        className={`text-left px-3 py-2 rounded-xl border text-[10px] font-bold transition-all cursor-pointer ${laboratorioId === id
                                             ? 'bg-[#9D2449] border-[#9D2449] text-white'
                                             : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'}`}>
                                         {label}
@@ -370,7 +303,7 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                         <div className="border border-slate-200 rounded-2xl overflow-hidden">
                             <button type="button"
                                 onClick={() => setMostrarCedula(v => !v)}
-                                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-xs font-black text-slate-700">
+                                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-xs font-black text-slate-700 cursor-pointer">
                                 <span className="flex items-center gap-2">
                                     <FileText className="w-4 h-4 text-[#9D2449]" />
                                     Vista previa: Cédula de Orden de Laboratorio Confirmatoria
@@ -384,7 +317,7 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                                     <CedulaLaboratorio caso={caso} datos={cedulaData} />
                                     <button type="button"
                                         onClick={() => window.print()}
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-700 text-white text-[10px] font-black rounded-xl transition-all">
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-700 text-white text-[10px] font-black rounded-xl transition-all cursor-pointer">
                                         <Printer className="w-3.5 h-3.5" />
                                         Imprimir Cédula de Laboratorio (A5)
                                     </button>
@@ -395,11 +328,11 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                         {/* Acciones del formulario */}
                         <div className="flex justify-end gap-2 pt-1">
                             <button type="button" onClick={onClose}
-                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">
                                 Cancelar
                             </button>
                             <button type="submit"
-                                className="px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm transition-all active:scale-95">
+                                className="px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer">
                                 <Syringe className="w-3.5 h-3.5" />
                                 Registrar y Enviar a Lab.
                             </button>
@@ -416,7 +349,27 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
 export const TabCasosPrioritarios: React.FC = () => {
     const [busqueda, setBusqueda] = useState('');
     const [casoSeleccionado, setCasoSeleccionado] = useState<CasoPrioritario | null>(null);
-    const [casos, setCasos] = useState<CasoPrioritario[]>(CASOS_DEMO);
+    const [casos, setCasos] = useState<CasoPrioritario[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
+
+    // Carga de casos prioritarios desde la API del backend
+    useEffect(() => {
+        const cargarCasosPrioritarios = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const res = await fetch('/api/tamiz/casos-prioritarios');
+                // const data = await res.json();
+                // setCasos(data);
+            } catch (error) {
+                console.error('Error al cargar casos prioritarios:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarCasosPrioritarios();
+    }, [setCasos]);
 
     const casosFiltrados = useMemo(() => {
         if (!busqueda.trim()) return casos;
@@ -433,12 +386,23 @@ export const TabCasosPrioritarios: React.FC = () => {
     const inadecuadas = casos.filter(c => c.estatusResultado === 'MUESTRA_INADECUADA' || c.estatusResultado === 'RETOMA_REQUERIDA').length;
     const enConfirmacion = casos.filter(c => c.estatusResultado === 'EN_CONFIRMACION').length;
 
-    const handleSave2Muestra = (data: RegistroSegundaMuestra) => {
-        setCasos(prev => prev.map(c =>
-            c.id === data.casoId
-                ? { ...c, estatusResultado: 'EN_CONFIRMACION' as EstatusResultado }
-                : c
-        ));
+    const handleSave2Muestra = async (data: RegistroSegundaMuestra) => {
+        try {
+            // Futuro envío al backend:
+            // await fetch('/api/tamiz/segunda-muestra', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(data)
+            // });
+
+            setCasos(prev => prev.map(c =>
+                c.id === data.casoId
+                    ? { ...c, estatusResultado: 'EN_CONFIRMACION' as EstatusResultado }
+                    : c
+            ));
+        } catch (error) {
+            console.error('Error al registrar segunda muestra:', error);
+        }
     };
 
     return (
@@ -488,10 +452,16 @@ export const TabCasosPrioritarios: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                        {casosFiltrados.length === 0 ? (
+                        {cargando ? (
                             <tr>
                                 <td colSpan={6} className="text-center py-10 text-slate-400 font-semibold">
-                                    No se encontraron casos con los criterios de búsqueda.
+                                    Cargando casos prioritarios de atención médica...
+                                </td>
+                            </tr>
+                        ) : casosFiltrados.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="text-center py-10 text-slate-400 font-semibold">
+                                    No se encontraron casos prioritarios registrados.
                                 </td>
                             </tr>
                         ) : (
@@ -523,8 +493,9 @@ export const TabCasosPrioritarios: React.FC = () => {
                                     <td className="px-4 py-3 text-center">
                                         {caso.estatusResultado !== 'NORMAL' && caso.estatusResultado !== 'EN_CONFIRMACION' && (
                                             <button
+                                                type="button"
                                                 onClick={() => setCasoSeleccionado(caso)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white rounded-xl text-[10px] font-bold shadow-sm transition-all active:scale-95"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white rounded-xl text-[10px] font-bold shadow-sm transition-all active:scale-95 cursor-pointer"
                                             >
                                                 <FlaskConical className="w-3 h-3" />
                                                 2ª Muestra / Venosa
@@ -574,3 +545,5 @@ export const TabCasosPrioritarios: React.FC = () => {
         </div>
     );
 };
+
+export default TabCasosPrioritarios;

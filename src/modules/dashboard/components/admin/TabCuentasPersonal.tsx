@@ -4,62 +4,10 @@ import type { UsuarioSSO, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 
 export const TabCuentasPersonal: React.FC = () => {
-    const [usuarios, setUsuarios] = useState<UsuarioSSO[]>([
-        {
-            id: 'u1',
-            nombre: 'Lic. Alejandro Gómez Ruiz',
-            curp: 'ADMJ800101HOCMNS01',
-            email: 'alejandro.gomez@salud.oaxaca.gob.mx',
-            telefono: '9711234567',
-            municipio: 'Juchitán de Zaragoza',
-            rol: 'ADMIN_JURISDICCIONAL',
-            unidadAsignada: 'Jurisdicción Sanitaria No. 2 - Istmo',
-            clues: 'OASSA000001',
-            pinTemporal: '9842',
-            estatus: 'ACTIVO'
-        },
-        {
-            id: 'u2',
-            nombre: 'Dra. María Elena Ramos',
-            curp: 'RAME820512MOCMNS03',
-            email: 'maria.ramos@salud.oaxaca.gob.mx',
-            telefono: '9712345678',
-            municipio: 'Santo Domingo Tehuantepec',
-            rol: 'GESTOR_PARTERAS',
-            unidadAsignada: 'Programa Parteras Tradicionales',
-            clues: 'OASSA000002',
-            pinTemporal: '1245',
-            estatus: 'ACTIVO'
-        },
-        {
-            id: 'u3',
-            nombre: 'Enf. Juan Carlos Morales',
-            curp: 'MOJU850920HOCMNS04',
-            email: 'juan.morales@salud.oaxaca.gob.mx',
-            telefono: '9713456789',
-            municipio: 'Juchitán de Zaragoza',
-            rol: 'CAPTURISTA_TAMIZ',
-            unidadAsignada: 'Centro de Salud Urbano Juchitán',
-            clues: 'OASSA000451',
-            pinTemporal: '4432',
-            estatus: 'ACTIVO'
-        },
-        {
-            id: 'u4',
-            nombre: 'Dr. Roberto Mendoza Cruz',
-            curp: 'MECR781105HOCMNS08',
-            email: 'roberto.mendoza@salud.oaxaca.gob.mx',
-            telefono: '9714567890',
-            municipio: 'Juchitán de Zaragoza',
-            rol: 'MEDICO_UNIDAD',
-            unidadAsignada: 'Hospital General de Juchitán Dr. Maceonio Benítez',
-            clues: 'OASSA001230',
-            pinTemporal: '7789',
-            estatus: 'ACTIVO'
-        }
-    ]);
+    // El estado inicia completamente vacío, listo para conectarse a PostgreSQL / API real
+    const [usuarios, setUsuarios] = useState<UsuarioSSO[]>([]);
 
-    // Dynamic CLUES Catalog Store
+    // Catálogo dinámico de CLUES
     const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
 
     useEffect(() => {
@@ -67,6 +15,12 @@ export const TabCuentasPersonal: React.FC = () => {
             setCluesList(updatedList);
         });
         return unsubscribe;
+    }, []);
+
+    // Punto de enganche para cargar usuarios desde la API real (Node.js / PostgreSQL)
+    useEffect(() => {
+        // Ejemplo de futura integración:
+        // fetch('/api/usuarios').then(res => res.json()).then(data => setUsuarios(data));
     }, []);
 
     // Form modal state (Desglose en 3 campos)
@@ -143,6 +97,8 @@ export const TabCuentasPersonal: React.FC = () => {
             pinTemporal: pinTemporal || '123456',
             estatus: 'ACTIVO'
         };
+
+        // Aquí irá la petición POST a la API de Node.js/PostgreSQL
         setUsuarios([newUser, ...usuarios]);
         setShowModal(false);
 
@@ -213,45 +169,51 @@ export const TabCuentasPersonal: React.FC = () => {
 
             {/* VISTA MÓVIL (< md) */}
             <div className="space-y-3 md:hidden">
-                {usuarios.map((u) => (
-                    <div key={u.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
-                                    {getInitials(u.nombre)}
-                                </div>
-                                <div>
-                                    <h3 className="text-xs font-black text-slate-900">{u.nombre}</h3>
-                                    {u.curp && <p className="text-[10px] text-slate-500 font-mono">CURP: {u.curp}</p>}
-                                    <p className="text-[11px] text-slate-600 font-mono flex items-center gap-1 mt-0.5">
-                                        <Mail className="w-3 h-3 text-slate-400" />
-                                        {u.email}
-                                    </p>
-                                </div>
-                            </div>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
-                                {u.estatus}
-                            </span>
-                        </div>
-
-                        <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
-                            <div className="flex justify-between">
-                                <span className="font-bold text-slate-800">Rol Asignado:</span>
-                                <span className="font-black text-[#9D2449]">{getRoleBadgeLabel(u.rol)}</span>
-                            </div>
-                            <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                                <span className="font-bold text-slate-800">Adscripción / CLUES:</span>
-                                <span className="truncate max-w-[170px] text-right font-medium">{u.unidadAsignada}</span>
-                            </div>
-                            {u.clues && (
-                                <div className="flex justify-between items-center pt-1 text-[11px]">
-                                    <span className="text-slate-500 font-semibold">Código CLUES:</span>
-                                    <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{u.clues}</span>
-                                </div>
-                            )}
-                        </div>
+                {usuarios.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
+                        No hay cuentas de personal registradas.
                     </div>
-                ))}
+                ) : (
+                    usuarios.map((u) => (
+                        <div key={u.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
+                                        {getInitials(u.nombre)}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xs font-black text-slate-900">{u.nombre}</h3>
+                                        {u.curp && <p className="text-[10px] text-slate-500 font-mono">CURP: {u.curp}</p>}
+                                        <p className="text-[11px] text-slate-600 font-mono flex items-center gap-1 mt-0.5">
+                                            <Mail className="w-3 h-3 text-slate-400" />
+                                            {u.email}
+                                        </p>
+                                    </div>
+                                </div>
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
+                                    {u.estatus}
+                                </span>
+                            </div>
+
+                            <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
+                                <div className="flex justify-between">
+                                    <span className="font-bold text-slate-800">Rol Asignado:</span>
+                                    <span className="font-black text-[#9D2449]">{getRoleBadgeLabel(u.rol)}</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1 border-t border-slate-100">
+                                    <span className="font-bold text-slate-800">Adscripción / CLUES:</span>
+                                    <span className="truncate max-w-[170px] text-right font-medium">{u.unidadAsignada}</span>
+                                </div>
+                                {u.clues && (
+                                    <div className="flex justify-between items-center pt-1 text-[11px]">
+                                        <span className="text-slate-500 font-semibold">Código CLUES:</span>
+                                        <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{u.clues}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* TABLA PRO DE CUENTAS SSO (ESCRITORIO >= md) */}
@@ -268,41 +230,49 @@ export const TabCuentasPersonal: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                        {usuarios.map((u) => (
-                            <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
-                                <td className="py-3.5 px-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
-                                            {getInitials(u.nombre)}
-                                        </div>
-                                        <div>
-                                            <div className="font-black text-slate-900">{u.nombre}</div>
-                                            {u.curp && <div className="text-[10px] font-mono text-slate-500">CURP: {u.curp}</div>}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">{u.email}</td>
-                                <td className="py-3.5 px-4">
-                                    <span className="bg-rose-50 text-[#9D2449] font-black px-2.5 py-1 rounded-full border border-rose-200 text-[10px] inline-block">
-                                        {getRoleBadgeLabel(u.rol)}
-                                    </span>
-                                </td>
-                                <td className="py-3.5 px-4">
-                                    <div className="font-bold text-slate-800">{u.unidadAsignada}</div>
-                                    {u.clues && <div className="text-[10px] font-mono text-slate-500">CLUES: {u.clues}</div>}
-                                </td>
-                                <td className="py-3.5 px-4 text-center">
-                                    <span className="bg-slate-100 text-slate-800 font-mono font-bold text-xs px-2.5 py-1 rounded-xl border border-slate-300 shadow-xs">
-                                        {u.pinTemporal || '******'}
-                                    </span>
-                                </td>
-                                <td className="py-3.5 px-4 text-center">
-                                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                        {u.estatus}
-                                    </span>
+                        {usuarios.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                    No hay cuentas de personal registradas.
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            usuarios.map((u) => (
+                                <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                                    <td className="py-3.5 px-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
+                                                {getInitials(u.nombre)}
+                                            </div>
+                                            <div>
+                                                <div className="font-black text-slate-900">{u.nombre}</div>
+                                                {u.curp && <div className="text-[10px] font-mono text-slate-500">CURP: {u.curp}</div>}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">{u.email}</td>
+                                    <td className="py-3.5 px-4">
+                                        <span className="bg-rose-50 text-[#9D2449] font-black px-2.5 py-1 rounded-full border border-rose-200 text-[10px] inline-block">
+                                            {getRoleBadgeLabel(u.rol)}
+                                        </span>
+                                    </td>
+                                    <td className="py-3.5 px-4">
+                                        <div className="font-bold text-slate-800">{u.unidadAsignada}</div>
+                                        {u.clues && <div className="text-[10px] font-mono text-slate-500">CLUES: {u.clues}</div>}
+                                    </td>
+                                    <td className="py-3.5 px-4 text-center">
+                                        <span className="bg-slate-100 text-slate-800 font-mono font-bold text-xs px-2.5 py-1 rounded-xl border border-slate-300 shadow-xs">
+                                            {u.pinTemporal || '******'}
+                                        </span>
+                                    </td>
+                                    <td className="py-3.5 px-4 text-center">
+                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            {u.estatus}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -574,3 +544,5 @@ export const TabCuentasPersonal: React.FC = () => {
         </div>
     );
 };
+
+export default TabCuentasPersonal;

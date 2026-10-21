@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, User, Baby, Eye, X, MapPin } from 'lucide-react';
 
 interface RegistroMujer {
@@ -30,68 +30,32 @@ export const TabCalendarios: React.FC = () => {
     const [subTab, setSubTab] = useState<'FORMATO_2' | 'FORMATO_3'>('FORMATO_2');
     const [selectedExpediente, setSelectedExpediente] = useState<{ titulo: string; detalle: string } | null>(null);
 
-    const expedientesMujer: RegistroMujer[] = [
-        {
-            id: 'm1',
-            folio: 'F2-2026-0041',
-            nombreMujer: 'Sofía Isabel Morales Cruz',
-            partera: 'Doña Rosa Santiz Gómez',
-            municipio: 'Juchitán de Zaragoza',
-            semanaGestacion: 28,
-            nutricionMUAC: 'VERDE',
-            controlesRealizados: 4,
-            alertas: 'Evolución normal de gestación'
-        },
-        {
-            id: 'm2',
-            folio: 'F2-2026-0042',
-            nombreMujer: 'Juana Carmen López Solís',
-            partera: 'Doña Juana Martínez Velázquez',
-            municipio: 'Santo Domingo Tehuantepec',
-            semanaGestacion: 34,
-            nutricionMUAC: 'AMARILLO',
-            controlesRealizados: 5,
-            alertas: 'Riesgo Nutricional Moderado (Cinta MUAC 22cm)'
-        },
-        {
-            id: 'm3',
-            folio: 'F2-2026-0043',
-            nombreMujer: 'Lilia Ana Ruiz Vázquez',
-            partera: 'Doña Esperanza Cruz Castillo',
-            municipio: 'Salina Cruz',
-            semanaGestacion: 38,
-            nutricionMUAC: 'ROJO',
-            controlesRealizados: 6,
-            alertas: 'ALERTA: Desnutrición Severa. Remitida a hospital.'
-        },
-    ];
+    // Estados limpios en arreglos vacíos, listos para recibir datos de la API
+    const [expedientesMujer, setExpedientesMujer] = useState<RegistroMujer[]>([]);
+    const [expedientesNino, setExpedientesNino] = useState<RegistroNino[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
 
-    const expedientesNino: RegistroNino[] = [
-        {
-            id: 'n1',
-            folio: 'F3-2026-0091',
-            nombreNino: 'Bebé Mateo Morales',
-            nombreMadre: 'Sofía Isabel Morales Cruz',
-            partera: 'Doña Rosa Santiz Gómez',
-            municipio: 'Juchitán de Zaragoza',
-            edadMeses: 2,
-            tamizTomado: true,
-            vacunasCompletas: true,
-            alertas: 'Crecimiento y desarrollo óptimo'
-        },
-        {
-            id: 'n2',
-            folio: 'F3-2026-0092',
-            nombreNino: 'Bebé López Solís',
-            nombreMadre: 'Juana Carmen López Solís',
-            partera: 'Doña Juana Martínez Velázquez',
-            municipio: 'Santo Domingo Tehuantepec',
-            edadMeses: 4,
-            tamizTomado: true,
-            vacunasCompletas: false,
-            alertas: 'Pendiente refuerzo Pentavalente (Semana 16)'
-        },
-    ];
+    // Punto de enganche para cargar expedientes desde PostgreSQL
+    useEffect(() => {
+        const cargarCalendarios = async () => {
+            setCargando(true);
+            try {
+                // Futura llamada API:
+                // const [resMujeres, resNinos] = await Promise.all([
+                //     fetch('/api/calendarios/salud-materna'),
+                //     fetch('/api/calendarios/desarrollo-infantil')
+                // ]);
+                // setExpedientesMujer(await resMujeres.json());
+                // setExpedientesNino(await resNinos.json());
+            } catch (error) {
+                console.error('Error al cargar expedientes de calendarios:', error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarCalendarios();
+    }, [setExpedientesMujer, setExpedientesNino, setCargando]);
 
     return (
         <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
@@ -139,49 +103,59 @@ export const TabCalendarios: React.FC = () => {
                 <div className="space-y-4">
                     {/* VISTA MÓVIL (< md) */}
                     <div className="space-y-3 md:hidden">
-                        {expedientesMujer.map((m) => (
-                            <div key={m.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <span className="text-[10px] font-black text-[#9D2449] uppercase tracking-wider block">{m.folio}</span>
-                                        <h3 className="text-xs font-black text-slate-900">{m.nombreMujer}</h3>
-                                        <p className="text-[11px] text-slate-500 font-medium">Partera: {m.partera}</p>
-                                    </div>
-                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${m.nutricionMUAC === 'VERDE'
-                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                            : m.nutricionMUAC === 'AMARILLO'
-                                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                                : 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
-                                        }`}>
-                                        MUAC {m.nutricionMUAC}
-                                    </span>
-                                </div>
-
-                                <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
-                                    <div className="flex justify-between">
-                                        <span className="font-bold text-slate-800">Sem. Gestación:</span>
-                                        <span>{m.semanaGestacion} SDG</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="font-bold text-slate-800">Controles Prenatales:</span>
-                                        <span className="font-black text-[#9D2449]">{m.controlesRealizados} Visitas</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 text-[11px] text-slate-500 pt-2 border-t border-slate-100 mt-2">
-                                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                                        <span>{m.municipio}</span>
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedExpediente({ titulo: `${m.folio} - ${m.nombreMujer}`, detalle: m.alertas })}
-                                    className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5"
-                                >
-                                    <Eye className="w-3.5 h-3.5" />
-                                    <span>Auditar Expediente Mujer</span>
-                                </button>
+                        {cargando ? (
+                            <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                                Cargando expediente de salud materna...
                             </div>
-                        ))}
+                        ) : expedientesMujer.length === 0 ? (
+                            <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                                No hay expedientes de mujeres registrados en Formato 2.
+                            </div>
+                        ) : (
+                            expedientesMujer.map((m) => (
+                                <div key={m.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-black text-[#9D2449] uppercase tracking-wider block">{m.folio}</span>
+                                            <h3 className="text-xs font-black text-slate-900">{m.nombreMujer}</h3>
+                                            <p className="text-[11px] text-slate-500 font-medium">Partera: {m.partera}</p>
+                                        </div>
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${m.nutricionMUAC === 'VERDE'
+                                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                                : m.nutricionMUAC === 'AMARILLO'
+                                                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                                    : 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
+                                            }`}>
+                                            MUAC {m.nutricionMUAC}
+                                        </span>
+                                    </div>
+
+                                    <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
+                                        <div className="flex justify-between">
+                                            <span className="font-bold text-slate-800">Sem. Gestación:</span>
+                                            <span>{m.semanaGestacion} SDG</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="font-bold text-slate-800">Controles Prenatales:</span>
+                                            <span className="font-black text-[#9D2449]">{m.controlesRealizados} Visitas</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-[11px] text-slate-500 pt-2 border-t border-slate-100 mt-2">
+                                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                            <span>{m.municipio}</span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedExpediente({ titulo: `${m.folio} - ${m.nombreMujer}`, detalle: m.alertas })}
+                                        className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span>Auditar Expediente Mujer</span>
+                                    </button>
+                                </div>
+                            ))
+                        )}
                     </div>
 
                     {/* VISTA ESCRITORIO (>= md) */}
@@ -198,37 +172,51 @@ export const TabCalendarios: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                                {expedientesMujer.map((m) => (
-                                    <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
-                                        <td className="py-3.5 px-4 font-black text-slate-900">{m.folio}</td>
-                                        <td className="py-3.5 px-4">
-                                            <div className="font-bold text-slate-900">{m.nombreMujer}</div>
-                                            <div className="text-[11px] text-slate-500">{m.partera} ({m.municipio})</div>
-                                        </td>
-                                        <td className="py-3.5 px-4 font-black text-slate-900">{m.semanaGestacion} SDG</td>
-                                        <td className="py-3.5 px-4">
-                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${m.nutricionMUAC === 'VERDE'
-                                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                                    : m.nutricionMUAC === 'AMARILLO'
-                                                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                                        : 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
-                                                }`}>
-                                                MUAC {m.nutricionMUAC}
-                                            </span>
-                                        </td>
-                                        <td className="py-3.5 px-4 font-black text-[#9D2449]">{m.controlesRealizados} visitas</td>
-                                        <td className="py-3.5 px-4 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedExpediente({ titulo: `${m.folio} - ${m.nombreMujer}`, detalle: m.alertas })}
-                                                className="px-3 py-1.5 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-800 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
-                                            >
-                                                <Eye className="w-3.5 h-3.5" />
-                                                <span>Auditar</span>
-                                            </button>
+                                {cargando ? (
+                                    <tr>
+                                        <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                            Cargando expedientes de salud materna...
                                         </td>
                                     </tr>
-                                ))}
+                                ) : expedientesMujer.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                            No hay expedientes de mujeres registrados en Formato 2.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    expedientesMujer.map((m) => (
+                                        <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
+                                            <td className="py-3.5 px-4 font-black text-slate-900">{m.folio}</td>
+                                            <td className="py-3.5 px-4">
+                                                <div className="font-bold text-slate-900">{m.nombreMujer}</div>
+                                                <div className="text-[11px] text-slate-500">{m.partera} ({m.municipio})</div>
+                                            </td>
+                                            <td className="py-3.5 px-4 font-black text-slate-900">{m.semanaGestacion} SDG</td>
+                                            <td className="py-3.5 px-4">
+                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${m.nutricionMUAC === 'VERDE'
+                                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                                        : m.nutricionMUAC === 'AMARILLO'
+                                                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                                            : 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
+                                                    }`}>
+                                                    MUAC {m.nutricionMUAC}
+                                                </span>
+                                            </td>
+                                            <td className="py-3.5 px-4 font-black text-[#9D2449]">{m.controlesRealizados} visitas</td>
+                                            <td className="py-3.5 px-4 text-right">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedExpediente({ titulo: `${m.folio} - ${m.nombreMujer}`, detalle: m.alertas })}
+                                                    className="px-3 py-1.5 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-800 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    <span>Auditar</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -240,43 +228,53 @@ export const TabCalendarios: React.FC = () => {
                 <div className="space-y-4">
                     {/* VISTA MÓVIL (< md) */}
                     <div className="space-y-3 md:hidden">
-                        {expedientesNino.map((n) => (
-                            <div key={n.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <span className="text-[10px] font-black text-[#9D2449] uppercase tracking-wider block">{n.folio}</span>
-                                        <h3 className="text-xs font-black text-slate-900">{n.nombreNino}</h3>
-                                        <p className="text-[11px] text-slate-500 font-medium">Madre: {n.nombreMadre}</p>
-                                    </div>
-                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${n.vacunasCompletas
-                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                            : 'bg-amber-100 text-amber-800 border border-amber-300'
-                                        }`}>
-                                        {n.vacunasCompletas ? 'Esquema Completo' : 'Vacuna Pendiente'}
-                                    </span>
-                                </div>
-
-                                <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
-                                    <div className="flex justify-between">
-                                        <span className="font-bold text-slate-800">Edad:</span>
-                                        <span>{n.edadMeses} Meses</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="font-bold text-slate-800">Tamiz Neonatal:</span>
-                                        <span className="font-black text-emerald-700">{n.tamizTomado ? 'Realizado' : 'Pendiente'}</span>
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedExpediente({ titulo: `${n.folio} - ${n.nombreNino}`, detalle: n.alertas })}
-                                    className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5"
-                                >
-                                    <Eye className="w-3.5 h-3.5" />
-                                    <span>Auditar Expediente Niño</span>
-                                </button>
+                        {cargando ? (
+                            <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                                Cargando expedientes de desarrollo infantil...
                             </div>
-                        ))}
+                        ) : expedientesNino.length === 0 ? (
+                            <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                                No hay expedientes de niños registrados en Formato 3.
+                            </div>
+                        ) : (
+                            expedientesNino.map((n) => (
+                                <div key={n.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-black text-[#9D2449] uppercase tracking-wider block">{n.folio}</span>
+                                            <h3 className="text-xs font-black text-slate-900">{n.nombreNino}</h3>
+                                            <p className="text-[11px] text-slate-500 font-medium">Madre: {n.nombreMadre}</p>
+                                        </div>
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${n.vacunasCompletas
+                                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                                : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                            }`}>
+                                            {n.vacunasCompletas ? 'Esquema Completo' : 'Vacuna Pendiente'}
+                                        </span>
+                                    </div>
+
+                                    <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
+                                        <div className="flex justify-between">
+                                            <span className="font-bold text-slate-800">Edad:</span>
+                                            <span>{n.edadMeses} Meses</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="font-bold text-slate-800">Tamiz Neonatal:</span>
+                                            <span className="font-black text-emerald-700">{n.tamizTomado ? 'Realizado' : 'Pendiente'}</span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedExpediente({ titulo: `${n.folio} - ${n.nombreNino}`, detalle: n.alertas })}
+                                        className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span>Auditar Expediente Niño</span>
+                                    </button>
+                                </div>
+                            ))
+                        )}
                     </div>
 
                     {/* VISTA ESCRITORIO (>= md) */}
@@ -293,37 +291,51 @@ export const TabCalendarios: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                                {expedientesNino.map((n) => (
-                                    <tr key={n.id} className="hover:bg-slate-50/80 transition-colors">
-                                        <td className="py-3.5 px-4 font-black text-slate-900">{n.folio}</td>
-                                        <td className="py-3.5 px-4">
-                                            <div className="font-bold text-slate-900">{n.nombreNino}</div>
-                                            <div className="text-[11px] text-slate-500">Madre: {n.nombreMadre}</div>
-                                        </td>
-                                        <td className="py-3.5 px-4 font-black text-slate-900">{n.edadMeses} Meses</td>
-                                        <td className="py-3.5 px-4">
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                GUTHRIE OK
-                                            </span>
-                                        </td>
-                                        <td className="py-3.5 px-4">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black ${n.vacunasCompletas ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                                                }`}>
-                                                {n.vacunasCompletas ? 'COMPLETO' : 'PENDIENTE'}
-                                            </span>
-                                        </td>
-                                        <td className="py-3.5 px-4 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedExpediente({ titulo: `${n.folio} - ${n.nombreNino}`, detalle: n.alertas })}
-                                                className="px-3 py-1.5 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-800 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
-                                            >
-                                                <Eye className="w-3.5 h-3.5" />
-                                                <span>Auditar</span>
-                                            </button>
+                                {cargando ? (
+                                    <tr>
+                                        <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                            Cargando expedientes de desarrollo infantil...
                                         </td>
                                     </tr>
-                                ))}
+                                ) : expedientesNino.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                            No hay expedientes de niños registrados en Formato 3.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    expedientesNino.map((n) => (
+                                        <tr key={n.id} className="hover:bg-slate-50/80 transition-colors">
+                                            <td className="py-3.5 px-4 font-black text-slate-900">{n.folio}</td>
+                                            <td className="py-3.5 px-4">
+                                                <div className="font-bold text-slate-900">{n.nombreNino}</div>
+                                                <div className="text-[11px] text-slate-500">Madre: {n.nombreMadre}</div>
+                                            </td>
+                                            <td className="py-3.5 px-4 font-black text-slate-900">{n.edadMeses} Meses</td>
+                                            <td className="py-3.5 px-4">
+                                                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                    {n.tamizTomado ? 'GUTHRIE OK' : 'PENDIENTE'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3.5 px-4">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-black ${n.vacunasCompletas ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                                    }`}>
+                                                    {n.vacunasCompletas ? 'COMPLETO' : 'PENDIENTE'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3.5 px-4 text-right">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedExpediente({ titulo: `${n.folio} - ${n.nombreNino}`, detalle: n.alertas })}
+                                                    className="px-3 py-1.5 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-800 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    <span>Auditar</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -349,7 +361,7 @@ export const TabCalendarios: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setSelectedExpediente(null)}
-                            className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm"
+                            className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm cursor-pointer"
                         >
                             Cerrar Auditoría
                         </button>
@@ -359,3 +371,5 @@ export const TabCalendarios: React.FC = () => {
         </div>
     );
 };
+
+export default TabCalendarios;
