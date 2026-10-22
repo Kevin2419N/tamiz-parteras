@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -14,7 +14,6 @@ import {
     Loader2,
     Delete,
     RotateCcw,
-    Camera,
     X,
     CheckCircle2,
     HelpCircle,
@@ -38,6 +37,10 @@ export const Login: React.FC = () => {
     const [showQRScannerModal, setShowQRScannerModal] = useState(false);
     const [isScanningQR, setIsScanningQR] = useState(false);
     const [qrScanSuccess, setQrScanSuccess] = useState(false);
+
+    // Webcam / Video Ref for QR Scanner
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
 
     // Voice Assistance State (Web Speech API)
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -73,8 +76,16 @@ export const Login: React.FC = () => {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
             }
+            stopCameraStream();
         };
     }, []);
+
+    const stopCameraStream = () => {
+        if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach(track => track.stop());
+            mediaStreamRef.current = null;
+        }
+    };
 
     const handleKeypadPress = async (digit: string) => {
         if (pinDigits.length < 4) {
@@ -112,17 +123,34 @@ export const Login: React.FC = () => {
         setPinDigits([]);
     };
 
-    const handleStartQRScan = () => {
+    const handleStartQRScan = async () => {
         setShowQRScannerModal(true);
         setIsScanningQR(true);
         setQrScanSuccess(false);
+        setErrorMessage(null);
 
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            mediaStreamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.play();
+            }
+        } catch (err) {
+            console.error('No se pudo acceder a la cámara:', err);
+            setErrorMessage('No se pudo acceder a la cámara del dispositivo. Verifique permisos.');
+        }
+
+        // Verificación con backend tras unos segundos de escaneo
         setTimeout(async () => {
             try {
                 const qrMockValue = 'QR-PARTERA-JUM-001';
                 const response = await http.post('/auth/login-partera-qr', { codigo_qr: qrMockValue });
                 const { token, user } = response.data;
 
+                stopCameraStream();
                 setIsScanningQR(false);
                 setQrScanSuccess(true);
 
@@ -135,13 +163,20 @@ export const Login: React.FC = () => {
                 }, 1000);
             } catch (error: any) {
                 console.error('Error en autenticación por QR:', error);
+                stopCameraStream();
                 setIsScanningQR(false);
                 setErrorMessage(error.response?.data?.message || 'Código QR no reconocido en el sistema.');
                 setTimeout(() => {
                     setShowQRScannerModal(false);
                 }, 1500);
             }
-        }, 2000);
+        }, 3000);
+    };
+
+    const handleCloseModal = () => {
+        stopCameraStream();
+        setShowQRScannerModal(false);
+        setIsScanningQR(false);
     };
 
     const handleInstitutionalSubmit = async (e: React.FormEvent) => {
@@ -240,8 +275,8 @@ export const Login: React.FC = () => {
                             <button
                                 onClick={() => { setActiveTab('INSTITUCIONAL'); setErrorMessage(null); }}
                                 className={`py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'INSTITUCIONAL'
-                                        ? 'bg-[#9D2449] text-white shadow-md'
-                                        : 'text-slate-600 hover:bg-white/80'
+                                    ? 'bg-[#9D2449] text-white shadow-md'
+                                    : 'text-slate-600 hover:bg-white/80'
                                     }`}
                             >
                                 <Building2 className="w-4 h-4 shrink-0" />
@@ -251,8 +286,8 @@ export const Login: React.FC = () => {
                             <button
                                 onClick={() => { setActiveTab('PARTERA'); setErrorMessage(null); }}
                                 className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'PARTERA'
-                                        ? 'bg-[#9D2449] text-white shadow-md ring-2 ring-[#9D2449]'
-                                        : 'text-slate-700 hover:bg-white/80'
+                                    ? 'bg-[#9D2449] text-white shadow-md ring-2 ring-[#9D2449]'
+                                    : 'text-slate-700 hover:bg-white/80'
                                     }`}
                             >
                                 <HeartHandshake className="w-4 h-4 shrink-0" />
@@ -434,29 +469,39 @@ export const Login: React.FC = () => {
                 </div>
             </main>
 
-            {/* Modal QR Scanner con uso explícito de Camera */}
+            {/* Modal QR Scanner with active webcam stream */}
             {showQRScannerModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative text-center">
                         <div className="flex justify-between items-center">
                             <h3 className="text-lg font-black text-slate-900">Verificando Credencial QR...</h3>
-                            <button onClick={() => setShowQRScannerModal(false)} className="p-1 rounded-full bg-slate-100 hover:bg-slate-200">
+                            <button onClick={handleCloseModal} className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 cursor-pointer">
                                 <X className="w-5 h-5 text-slate-600" />
                             </button>
                         </div>
-                        <div className="w-full h-48 bg-slate-950 rounded-2xl flex items-center justify-center relative overflow-hidden border-2 border-[#9D2449]">
-                            {qrScanSuccess ? (
-                                <CheckCircle2 className="w-16 h-16 text-rose-400 animate-bounce" />
-                            ) : (
-                                <div className="flex flex-col items-center gap-2">
-                                    <Camera className="w-12 h-12 text-rose-400 animate-pulse" />
-                                    {isScanningQR && <span className="text-xs text-rose-200 font-bold">Escaneando...</span>}
+                        <div className="w-full h-56 bg-slate-950 rounded-2xl flex items-center justify-center relative overflow-hidden border-2 border-[#9D2449]">
+                            <video
+                                ref={videoRef}
+                                className="w-full h-full object-cover"
+                                playsInline
+                                muted
+                                autoPlay
+                            />
+                            {qrScanSuccess && (
+                                <div className="absolute inset-0 bg-emerald-900/80 backdrop-blur-sm flex items-center justify-center">
+                                    <CheckCircle2 className="w-16 h-16 text-emerald-400 animate-bounce" />
+                                </div>
+                            )}
+                            {!qrScanSuccess && isScanningQR && (
+                                <div className="absolute bottom-2 left-0 right-0 bg-slate-950/70 backdrop-blur-sm py-1.5 flex items-center justify-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                                    <span className="text-xs text-rose-200 font-bold">Escaneando credencial...</span>
                                 </div>
                             )}
                         </div>
                         <div className="flex justify-center">
                             <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
-                                <HelpCircle className="w-4 h-4 text-[#9D2449]" /> Coloque el código frente al dispositivo
+                                <HelpCircle className="w-4 h-4 text-[#9D2449]" /> Coloque el código frente a la cámara
                             </span>
                         </div>
                     </div>
@@ -465,3 +510,5 @@ export const Login: React.FC = () => {
         </div>
     );
 };
+
+export default Login;
