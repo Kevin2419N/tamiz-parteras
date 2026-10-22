@@ -21,7 +21,7 @@ import {
 import { handleVoiceInput } from '../../../utils/voiceUtils';
 
 interface FormatoCalendarioNinoProps {
-    onBack: () => void;
+    onBack?: () => void;
     onSuccess: () => void;
     hablarTexto?: (texto: string) => void;
     isListening?: boolean;
@@ -36,7 +36,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     // 1. Alternancia entre Vista Partera vs Duplicado Centro de Salud
     const [modoDuplicado, setModoDuplicado] = useState(false);
 
-    // 2. Datos de Identificación (Inician VACÍOS)
+    // 2. Datos de Identificación (Inician VACÍOS para captura/API)
     const [nombreNino, setNombreNino] = useState('');
     const [edadNino, setEdadNino] = useState('');
     const [nombreMadre, setNombreMadre] = useState('');
@@ -66,13 +66,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     const [auditivoRef, setAuditivoRef] = useState('');
     const [auditivoApli, setAuditivoApli] = useState('');
 
-    // 6. Cierre Administrativo
-    const [nombrePartera, setNombrePartera] = useState('Rosa Santiz Gómez');
-    const [cierreLocalidad, setCierreLocalidad] = useState('La Ventosa');
-    const [noMunicipio, setNoMunicipio] = useState('043');
-    const [mesInformado, setMesInformado] = useState('Septiembre 2026');
-    const [nombreSupervisor, setNombreSupervisor] = useState('Lic. Enf. María de la Luz V.');
-    const [centroSalud, setCentroSalud] = useState('Centro de Salud La Ventosa / Jurisdicción Sanitaria No. 2 Istmo');
+    // 6. Cierre Administrativo (Campos limpios sin datos estáticos)
+    const [nombrePartera, setNombrePartera] = useState('');
+    const [cierreLocalidad, setCierreLocalidad] = useState('');
+    const [noMunicipio, setNoMunicipio] = useState('');
+    const [mesInformado, setMesInformado] = useState('');
+    const [nombreSupervisor, setNombreSupervisor] = useState('');
+    const [centroSalud, setCentroSalud] = useState('');
     const [huellaRegistrada, setHuellaRegistrada] = useState(false);
 
     // Manejador universal de voz usando SpeechRecognition (es-MX)
@@ -96,7 +96,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
             {/* MARCO EXTERIOR DE HOJA OFICIAL EN GUINDA OAXACA */}
             <div className="border-4 border-[#9D2449] bg-white rounded-3xl shadow-xl p-4 md:p-8 space-y-6 my-4">
 
-                {/* A) FILA SUPERIOR DE LOGOS Y TÍTULO TIPO HOJA OFICIAL (ESTÁNDAR FORMULARIOS 1, 2 Y 3) */}
+                {/* A) FILA SUPERIOR DE LOGOS Y TÍTULO TIPO HOJA OFICIAL */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6">
                     <img
                         src="/logo-jurisdiccion.png"
@@ -117,7 +117,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     />
                 </div>
 
-                {/* B) BANNER PRINCIPAL GUINDA REDONDEADO (OBLIGATORIO ABAJO DE LOS LOGOS) */}
+                {/* B) BANNER PRINCIPAL GUINDA REDONDEADO */}
                 <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex flex-col md:flex-row items-center justify-center gap-2 my-4">
                     <div className="flex items-center gap-2">
                         <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
@@ -138,7 +138,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 setModoDuplicado(false);
                                 if (hablarTexto) hablarTexto("Vista Partera activa");
                             }}
-                            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all ${!modoDuplicado
+                            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${!modoDuplicado
                                 ? 'bg-[#9D2449] text-white shadow-md'
                                 : 'bg-transparent text-slate-700 hover:text-slate-900'
                                 }`}
@@ -153,7 +153,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 setModoDuplicado(true);
                                 if (hablarTexto) hablarTexto("Mostrando copia oficial para el Centro de Salud");
                             }}
-                            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all ${modoDuplicado
+                            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${modoDuplicado
                                 ? 'bg-[#9D2449] text-white shadow-md'
                                 : 'bg-transparent text-slate-700 hover:text-slate-900'
                                 }`}
@@ -216,12 +216,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     type="text"
                                     value={nombreNino}
                                     onChange={(e) => setNombreNino(e.target.value)}
+                                    placeholder="Nombre(s) y Apellidos"
                                     className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base font-semibold text-slate-900 focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setNombreNino, 'nombreNino')}
-                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'nombreNino' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'nombreNino' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar por voz Nombre del Niño"
                                     aria-label="Dictar por voz Nombre del Niño"
@@ -241,12 +242,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     type="text"
                                     value={edadNino}
                                     onChange={(e) => setEdadNino(e.target.value)}
+                                    placeholder="Ej. 3 meses"
                                     className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base font-semibold text-slate-900 focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setEdadNino, 'edadNino')}
-                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'edadNino' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'edadNino' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar por voz Edad del Niño"
                                     aria-label="Dictar por voz Edad del Niño"
@@ -266,12 +268,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     type="text"
                                     value={nombreMadre}
                                     onChange={(e) => setNombreMadre(e.target.value)}
+                                    placeholder="Nombre completo de la madre"
                                     className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base font-semibold text-slate-900 focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setNombreMadre, 'nombreMadre')}
-                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'nombreMadre' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'nombreMadre' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar por voz Nombre de la Madre"
                                     aria-label="Dictar por voz Nombre de la Madre"
@@ -291,12 +294,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     type="text"
                                     value={localidad}
                                     onChange={(e) => setLocalidad(e.target.value)}
+                                    placeholder="Comunidad / Localidad"
                                     className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base font-semibold text-slate-900 focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setLocalidad, 'localidad')}
-                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'localidad' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'localidad' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar por voz Localidad"
                                     aria-label="Dictar por voz Localidad"
@@ -316,12 +320,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     type="text"
                                     value={municipio}
                                     onChange={(e) => setMunicipio(e.target.value)}
+                                    placeholder="Municipio"
                                     className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base font-semibold text-slate-900 focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setMunicipio, 'municipio')}
-                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'municipio' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'municipio' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar por voz Municipio"
                                     aria-label="Dictar por voz Municipio"
@@ -346,7 +351,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setFecha, 'fecha')}
-                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'fecha' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] text-white p-3 rounded-xl hover:bg-[#7A1B38] transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'fecha' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar por voz Fecha"
                                     aria-label="Dictar por voz Fecha"
@@ -358,7 +363,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </div>
 
-                {/* 3. ESTADO NUTRICIONAL DEL RECIÉN NACIDO (PULIDO DE CINTA TRICOLOR TÁCTIL) */}
+                {/* 3. ESTADO NUTRICIONAL DEL RECIÉN NACIDO */}
                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-md">
                     <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                         <div className="p-2.5 bg-slate-100 text-slate-800 rounded-xl">
@@ -449,7 +454,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </div>
 
-                {/* 4. SECCIÓN DE LACTANCIA MATERNA (VINCULACIÓN EXACTA DE IMÁGENES PNG) */}
+                {/* 4. SECCIÓN DE LACTANCIA MATERNA */}
                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-md">
                     <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                         <div className="p-2.5 bg-rose-50 text-[#9D2449] rounded-xl border border-rose-100">
@@ -532,7 +537,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </div>
 
-                {/* 5. TABLA DE CANALIZACIONES (REUTILIZACIÓN EXACTA DE IMÁGENES PUBLIC CON INPUTS PILL) */}
+                {/* 5. TABLA DE CANALIZACIONES */}
                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-200 space-y-4 shadow-md">
                     <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                         <div className="p-2.5 bg-sky-50 text-sky-800 rounded-xl border border-sky-100">
@@ -764,6 +769,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 type="text"
                                 value={nombrePartera}
                                 onChange={(e) => setNombrePartera(e.target.value)}
+                                placeholder="Nombre de la Partera"
                                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                             />
                         </div>
@@ -775,6 +781,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 type="text"
                                 value={cierreLocalidad}
                                 onChange={(e) => setCierreLocalidad(e.target.value)}
+                                placeholder="Localidad"
                                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                             />
                         </div>
@@ -786,6 +793,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 type="text"
                                 value={noMunicipio}
                                 onChange={(e) => setNoMunicipio(e.target.value)}
+                                placeholder="Clave municipio"
                                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                             />
                         </div>
@@ -800,6 +808,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 type="text"
                                 value={mesInformado}
                                 onChange={(e) => setMesInformado(e.target.value)}
+                                placeholder="Ej. Octubre 2026"
                                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                             />
                         </div>
@@ -811,6 +820,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 type="text"
                                 value={nombreSupervisor}
                                 onChange={(e) => setNombreSupervisor(e.target.value)}
+                                placeholder="Nombre del supervisor SSO"
                                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                             />
                         </div>
@@ -822,12 +832,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 type="text"
                                 value={centroSalud}
                                 onChange={(e) => setCentroSalud(e.target.value)}
+                                placeholder="Centro de Salud / Jurisdicción"
                                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-amber-400"
                             />
                         </div>
                     </div>
 
-                    {/* BOTÓN DE CAPTURA DE HUELLA TÁCTIL SIMULADO (AMARILLO VIBRANTE) */}
+                    {/* BOTÓN DE CAPTURA DE HUELLA TÁCTIL */}
                     <div className="p-4 bg-slate-800/90 rounded-2xl border border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl border transition-all ${huellaRegistrada
@@ -873,3 +884,5 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
         </form>
     );
 };
+
+export default FormatoCalendarioNino;

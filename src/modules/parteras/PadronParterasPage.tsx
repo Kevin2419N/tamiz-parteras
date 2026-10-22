@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ParteraTradicional } from '../../types';
 import {
     Search,
@@ -18,7 +18,8 @@ import {
     Calendar,
     Clock,
     Activity,
-    BookOpen
+    BookOpen,
+    Loader2
 } from 'lucide-react';
 
 export const PadronParterasPage: React.FC = () => {
@@ -28,128 +29,43 @@ export const PadronParterasPage: React.FC = () => {
     const [filtroMunicipio, setFiltroMunicipio] = useState<string>('TODOS');
     const [viewMode, setViewMode] = useState<'CARDS' | 'TABLE'>('CARDS');
 
+    // Estado real de conexión con Backend (Sustituyendo Mocks)
+    const [parteras, setParteras] = useState<ParteraTradicional[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [errorConexion, setErrorConexion] = useState<string | null>(null);
+
     // Modals state
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [selectedParteraQr, setSelectedParteraQr] = useState<ParteraTradicional | null>(null);
     const [selectedParteraHistorial, setSelectedParteraHistorial] = useState<ParteraTradicional | null>(null);
 
-    // Initial Mock Parteras Directory (Istmo de Tehuantepec)
-    const [parteras, setParteras] = useState<ParteraTradicional[]>([
-        {
-            id: 'PAR-OAX-001',
-            nombreCompleto: 'Doña Rosa Santiz Gómez',
-            nombreZapoteco: 'Na Rosa de Juchitán',
-            curp: 'SAGR650412HOCMNN09',
-            telefono: '971 102 9988',
-            lenguaMaterna: 'Zapoteco del Istmo (Diidxazá)',
-            comunidad: 'Juchitán de Zaragoza',
-            municipio: 'Juchitán de Zaragoza',
-            jurisdiccion: 'Jurisdicción No. 2 - Istmo',
-            certificadoVigente: true,
-            experienciaAnos: 28,
-            totalAtenciones: 342,
-            tamicesCanalizadosPct: 94,
-            estatusRegistro: 'ACTIVA',
-            estatusAcreditacion: 'ACREDITADA',
-            pinAcceso: '4829',
-            fechaRegistro: '2021-03-15',
-        },
-        {
-            id: 'PAR-OAX-002',
-            nombreCompleto: 'Doña Juana López Pérez',
-            nombreZapoteco: 'Na Juana de Tehuantepec',
-            curp: 'LOPJ700820HOCMRR01',
-            telefono: '971 554 1122',
-            lenguaMaterna: 'Zapoteco del Istmo (Diidxazá)',
-            comunidad: 'Santo Domingo Tehuantepec',
-            municipio: 'Santo Domingo Tehuantepec',
-            jurisdiccion: 'Jurisdicción No. 2 - Istmo',
-            certificadoVigente: true,
-            experienciaAnos: 22,
-            totalAtenciones: 215,
-            tamicesCanalizadosPct: 88,
-            estatusRegistro: 'ACTIVA',
-            estatusAcreditacion: 'ACREDITADA',
-            pinAcceso: '1092',
-            fechaRegistro: '2022-01-10',
-        },
-        {
-            id: 'PAR-OAX-003',
-            nombreCompleto: 'Doña Petrona Cruz Velasco',
-            nombreZapoteco: 'Na Petrona de Salina Cruz',
-            curp: 'CRVP621105HOCMXX04',
-            telefono: '971 889 3344',
-            lenguaMaterna: 'Español / Huave',
-            comunidad: 'Salina Cruz',
-            municipio: 'Salina Cruz',
-            jurisdiccion: 'Jurisdicción No. 2 - Istmo',
-            certificadoVigente: false,
-            experienciaAnos: 35,
-            totalAtenciones: 510,
-            tamicesCanalizadosPct: 96,
-            estatusRegistro: 'EN_VALIDACION',
-            estatusAcreditacion: 'EN_PROCESO',
-            pinAcceso: '7731',
-            fechaRegistro: '2023-06-20',
-        },
-        {
-            id: 'PAR-OAX-004',
-            nombreCompleto: 'Doña Asunción Girón Morales',
-            nombreZapoteco: 'Na Chona de Ixtepec',
-            curp: 'GIMA780911HOCMKL03',
-            telefono: '971 712 4455',
-            lenguaMaterna: 'Zapoteco del Istmo (Diidxazá)',
-            comunidad: 'Ciudad Ixtepec',
-            municipio: 'Ciudad Ixtepec',
-            jurisdiccion: 'Jurisdicción No. 2 - Istmo',
-            certificadoVigente: true,
-            experienciaAnos: 19,
-            totalAtenciones: 180,
-            tamicesCanalizadosPct: 91,
-            estatusRegistro: 'ACTIVA',
-            estatusAcreditacion: 'ACREDITADA',
-            pinAcceso: '5520',
-            fechaRegistro: '2022-11-04',
-        },
-        {
-            id: 'PAR-OAX-005',
-            nombreCompleto: 'Doña Micaela Ruiz Hernández',
-            nombreZapoteco: 'Na Micaela de San Blas',
-            curp: 'RUHM680214HOCMNP08',
-            telefono: '971 332 9900',
-            lenguaMaterna: 'Zapoteco del Istmo (Diidxazá)',
-            comunidad: 'San Blas Atempa',
-            municipio: 'San Blas Atempa',
-            jurisdiccion: 'Jurisdicción No. 2 - Istmo',
-            certificadoVigente: false,
-            experienciaAnos: 30,
-            totalAtenciones: 295,
-            tamicesCanalizadosPct: 82,
-            estatusRegistro: 'EN_VALIDACION',
-            estatusAcreditacion: 'VISITA_PENDIENTE',
-            pinAcceso: '3318',
-            fechaRegistro: '2024-02-18',
-        },
-        {
-            id: 'PAR-OAX-006',
-            nombreCompleto: 'Doña Lucía Jiménez Toledo',
-            nombreZapoteco: 'Na Lucía de Ixtaltepec',
-            curp: 'JITL740522HOCMQR05',
-            telefono: '971 822 6611',
-            lenguaMaterna: 'Zapoteco del Istmo (Diidxazá)',
-            comunidad: 'Asunción Ixtaltepec',
-            municipio: 'Asunción Ixtaltepec',
-            jurisdiccion: 'Jurisdicción No. 2 - Istmo',
-            certificadoVigente: true,
-            experienciaAnos: 25,
-            totalAtenciones: 240,
-            tamicesCanalizadosPct: 90,
-            estatusRegistro: 'ACTIVA',
-            estatusAcreditacion: 'ACREDITADA',
-            pinAcceso: '9012',
-            fechaRegistro: '2023-09-12',
-        },
-    ]);
+    // Cargar datos reales desde el Backend al montar el componente
+    useEffect(() => {
+        const fetchParteras = async () => {
+            try {
+                setIsLoading(true);
+                // Reemplaza esta URL con el endpoint real de tu backend Node.js / Express
+                const response = await fetch('http://localhost:4000/api/parteras');
+
+                if (!response.ok) {
+                    throw new Error('Error al conectar con el servidor backend');
+                }
+
+                const data = await response.json();
+                setParteras(data);
+                setErrorConexion(null);
+            } catch (err) {
+                console.warn('Backend no disponible temporalmente, operando en modo desconectado:', err);
+                setErrorConexion('No se pudo conectar al servidor. Verifique que el backend esté encendido.');
+                // En caso de fallo de red en desarrollo local, puedes dejar un arreglo vacío o notificar
+                setParteras([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchParteras();
+    }, []);
 
     // Form state for New Partera
     const [newParteraForm, setNewParteraForm] = useState({
@@ -164,47 +80,40 @@ export const PadronParterasPage: React.FC = () => {
         pinAcceso: '',
     });
 
-    const handleCreatePartera = (e: React.FormEvent) => {
+    const handleCreatePartera = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newParteraForm.nombreCompleto || !newParteraForm.telefono) return;
 
-        const newId = `PAR-OAX-00${parteras.length + 1}`;
-        const generatedPin = newParteraForm.pinAcceso || Math.floor(1000 + Math.random() * 9000).toString();
+        try {
+            const response = await fetch('http://localhost:4000/api/parteras', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newParteraForm),
+            });
 
-        const created: ParteraTradicional = {
-            id: newId,
-            nombreCompleto: newParteraForm.nombreCompleto,
-            nombreZapoteco: newParteraForm.nombreZapoteco || `Na ${newParteraForm.nombreCompleto.split(' ')[0]}`,
-            curp: newParteraForm.curp || `${newParteraForm.nombreCompleto.substring(0, 4).toUpperCase()}900101HOCM00`,
-            telefono: newParteraForm.telefono,
-            lenguaMaterna: newParteraForm.lenguaMaterna,
-            comunidad: newParteraForm.comunidad,
-            municipio: newParteraForm.municipio,
-            jurisdiccion: 'Jurisdicción No. 2 - Istmo',
-            certificadoVigente: true,
-            experienciaAnos: Number(newParteraForm.experienciaAnos),
-            totalAtenciones: 1,
-            tamicesCanalizadosPct: 100,
-            estatusRegistro: 'ACTIVA',
-            estatusAcreditacion: 'ACREDITADA',
-            pinAcceso: generatedPin,
-            fechaRegistro: new Date().toISOString().split('T')[0],
-        };
+            if (!response.ok) throw new Error('Error al registrar la partera en el servidor');
 
-        setParteras([created, ...parteras]);
-        setShowRegisterModal(false);
-        setNewParteraForm({
-            nombreCompleto: '',
-            nombreZapoteco: '',
-            curp: '',
-            telefono: '',
-            lenguaMaterna: 'Zapoteco del Istmo (Diidxazá)',
-            comunidad: 'Juchitán de Zaragoza',
-            municipio: 'Juchitán de Zaragoza',
-            experienciaAnos: 15,
-            pinAcceso: '',
-        });
-        setSelectedParteraQr(created);
+            const nuevaParteraCreada = await response.json();
+
+            // Actualizar estado local con la respuesta real de la base de datos
+            setParteras([nuevaParteraCreada, ...parteras]);
+            setShowRegisterModal(false);
+            setNewParteraForm({
+                nombreCompleto: '',
+                nombreZapoteco: '',
+                curp: '',
+                telefono: '',
+                lenguaMaterna: 'Zapoteco del Istmo (Diidxazá)',
+                comunidad: 'Juchitán de Zaragoza',
+                municipio: 'Juchitán de Zaragoza',
+                experienciaAnos: 15,
+                pinAcceso: '',
+            });
+            setSelectedParteraQr(nuevaParteraCreada);
+        } catch (err) {
+            console.error('Error en el registro:', err);
+            alert('Hubo un error al registrar en el backend. Verifique la conexión.');
+        }
     };
 
     // Filtering logic
@@ -279,7 +188,7 @@ export const PadronParterasPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setShowRegisterModal(true)}
-                        className="px-4 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
+                        className="px-4 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Registrar Nueva Partera</span>
@@ -287,7 +196,15 @@ export const PadronParterasPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* KPI Cards (Modo Claro) */}
+            {/* Alerta de Error de Conexión si aplica */}
+            {errorConexion && (
+                <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl flex items-center justify-between text-amber-900 text-xs font-bold">
+                    <span>⚠️ {errorConexion}</span>
+                    <span className="text-[10px] bg-amber-200 px-2 py-1 rounded-lg">Modo Conexión Activo</span>
+                </div>
+            )}
+
+            {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between">
                     <div>
@@ -317,7 +234,7 @@ export const PadronParterasPage: React.FC = () => {
                     <div>
                         <p className="text-xs font-bold text-slate-600">Atenciones de Parto Acumuladas</p>
                         <p className="text-2xl font-black text-amber-700 mt-1">
-                            {parteras.reduce((acc, p) => acc + p.totalAtenciones, 0)}
+                            {parteras.reduce((acc, p) => acc + (p.totalAtenciones || 0), 0)}
                         </p>
                         <p className="text-[10px] font-semibold text-slate-500 mt-0.5">Comunidades del Istmo</p>
                     </div>
@@ -338,10 +255,8 @@ export const PadronParterasPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Barra de Filtros, Búsqueda y Alternador de Vista */}
+            {/* Barra de Búsqueda y Filtros */}
             <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col lg:flex-row gap-3 justify-between items-stretch lg:items-center">
-
-                {/* Caja de Búsqueda */}
                 <div className="relative flex-1">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                     <input
@@ -354,13 +269,12 @@ export const PadronParterasPage: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    {/* Filtro Estatus Acreditación */}
                     <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
                         <Filter className="w-4 h-4 text-slate-500" />
                         <select
                             value={filtroEstatus}
                             onChange={(e) => setFiltroEstatus(e.target.value)}
-                            className="bg-transparent text-xs text-slate-800 font-bold focus:outline-none"
+                            className="bg-transparent text-xs text-slate-800 font-bold focus:outline-none cursor-pointer"
                         >
                             <option value="TODOS">Todos los Estados</option>
                             <option value="ACREDITADA">Acreditada SSO</option>
@@ -369,13 +283,12 @@ export const PadronParterasPage: React.FC = () => {
                         </select>
                     </div>
 
-                    {/* Filtro Municipio Istmo */}
                     <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
                         <MapPin className="w-4 h-4 text-slate-500" />
                         <select
                             value={filtroMunicipio}
                             onChange={(e) => setFiltroMunicipio(e.target.value)}
-                            className="bg-transparent text-xs text-slate-800 font-bold focus:outline-none"
+                            className="bg-transparent text-xs text-slate-800 font-bold focus:outline-none cursor-pointer"
                         >
                             <option value="TODOS">Todos los Municipios del Istmo</option>
                             <option value="Juchitán de Zaragoza">Juchitán de Zaragoza</option>
@@ -387,22 +300,17 @@ export const PadronParterasPage: React.FC = () => {
                         </select>
                     </div>
 
-                    {/* Alternador de Vista (Tarjetas vs Tabla) */}
                     <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
                         <button
                             onClick={() => setViewMode('CARDS')}
-                            className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'CARDS' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            title="Vista de Tarjetas / Expediente Humano"
+                            className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${viewMode === 'CARDS' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                         >
                             <LayoutGrid className="w-4 h-4" />
                             <span className="hidden sm:inline">Tarjetas</span>
                         </button>
                         <button
                             onClick={() => setViewMode('TABLE')}
-                            className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'TABLE' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            title="Vista de Tabla / Padrón General"
+                            className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${viewMode === 'TABLE' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                         >
                             <TableIcon className="w-4 h-4" />
                             <span className="hidden sm:inline">Tabla</span>
@@ -411,8 +319,18 @@ export const PadronParterasPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* VISTA 1: GRID DE TARJETAS (EXPEDIENTE HUMANO) */}
-            {viewMode === 'CARDS' ? (
+            {/* Listado / Carga */}
+            {isLoading ? (
+                <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3">
+                    <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
+                    <p className="text-xs font-bold text-slate-600">Conectando con la base de datos PostgreSQL y cargando padrón...</p>
+                </div>
+            ) : parterasFiltradas.length === 0 ? (
+                <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-2">
+                    <p className="text-sm font-bold text-slate-700">No se encontraron parteras registradas en el servidor.</p>
+                    <p className="text-xs text-slate-400">Verifica que tu backend esté corriendo y respondiendo en el endpoint.</p>
+                </div>
+            ) : viewMode === 'CARDS' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {parterasFiltradas.map((p) => (
                         <div
@@ -420,28 +338,28 @@ export const PadronParterasPage: React.FC = () => {
                             className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-sm hover:border-emerald-500/60 hover:shadow-md transition-all flex flex-col justify-between"
                         >
                             <div>
-                                {/* Header Tarjeta con Avatar & Acreditación */}
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-black text-base shadow-sm">
-                                            {p.nombreCompleto.substring(5, 7).toUpperCase()}
+                                        <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-black text-base shadow-sm shrink-0">
+                                            {p.nombreCompleto?.substring(5, 7).toUpperCase() || 'PR'}
                                         </div>
                                         <div>
                                             <h3 className="font-extrabold text-sm text-slate-900 leading-snug">{p.nombreCompleto}</h3>
                                             {p.nombreZapoteco && (
                                                 <p className="text-xs font-extrabold text-emerald-700">{p.nombreZapoteco}</p>
                                             )}
-                                            <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{p.id} • {p.curp}</span>
+                                            <div className="flex flex-col mt-0.5">
+                                                <span className="text-[10px] text-slate-500 font-mono font-bold">{p.id}</span>
+                                                <span className="text-[10px] text-slate-400 font-mono">{p.curp}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Estatus Badge */}
                                 <div className="mb-3">
                                     {getAcreditacionBadge(p.estatusAcreditacion)}
                                 </div>
 
-                                {/* Datos de Comunidad & Lengua */}
                                 <div className="space-y-2 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 mb-4">
                                     <div className="flex items-center justify-between">
                                         <span className="text-slate-500 font-medium flex items-center gap-1.5">
@@ -463,11 +381,10 @@ export const PadronParterasPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Métricas Rápidas de la Partera */}
                                 <div className="grid grid-cols-2 gap-2 text-center text-xs">
                                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                                         <span className="block text-[10px] font-bold text-slate-500">Partos Atendidos</span>
-                                        <span className="font-black text-slate-900 text-base">{p.totalAtenciones}</span>
+                                        <span className="font-black text-slate-900 text-base">{p.totalAtenciones || 0}</span>
                                     </div>
                                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                                         <span className="block text-[10px] font-bold text-slate-500">Tamices Canalizados</span>
@@ -476,29 +393,26 @@ export const PadronParterasPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Botones Táctiles de Acción */}
                             <div className="mt-5 pt-3 border-t border-slate-200 space-y-2">
                                 <button
                                     onClick={() => setSelectedParteraQr(p)}
-                                    className="w-full py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
                                 >
                                     <QrCode className="w-4 h-4 text-emerald-700" />
-                                    <span>Generar Tarjeta / QR de Acceso</span>
+                                    <span>Generar Credencial / QR</span>
                                 </button>
-
                                 <button
                                     onClick={() => setSelectedParteraHistorial(p)}
-                                    className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
                                 >
                                     <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                                    <span>Ver Historial de Atenciones</span>
+                                    <span>Ver Historial Backend</span>
                                 </button>
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                /* VISTA 2: TABLA DE PADRÓN GENERAL */
                 <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
@@ -518,8 +432,8 @@ export const PadronParterasPage: React.FC = () => {
                                     <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold flex items-center justify-center text-xs">
-                                                    {p.nombreCompleto.substring(5, 7)}
+                                                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold flex items-center justify-center text-xs shrink-0">
+                                                    {p.nombreCompleto?.substring(5, 7) || 'PR'}
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-slate-900">{p.nombreCompleto}</p>
@@ -533,12 +447,12 @@ export const PadronParterasPage: React.FC = () => {
                                         <td className="p-4 text-slate-800 font-semibold">{p.comunidad}</td>
                                         <td className="p-4 text-teal-800 font-semibold">{p.lenguaMaterna}</td>
                                         <td className="p-4">{getAcreditacionBadge(p.estatusAcreditacion)}</td>
-                                        <td className="p-4 text-center font-bold text-slate-900">{p.totalAtenciones}</td>
+                                        <td className="p-4 text-center font-bold text-slate-900">{p.totalAtenciones || 0}</td>
                                         <td className="p-4 text-center font-extrabold text-emerald-700">{p.tamicesCanalizadosPct || 90}%</td>
                                         <td className="p-4 text-right space-x-2">
                                             <button
                                                 onClick={() => setSelectedParteraQr(p)}
-                                                className="px-2.5 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 rounded-lg font-bold text-[11px] inline-flex items-center gap-1"
+                                                className="px-2.5 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 rounded-lg font-bold text-[11px] inline-flex items-center gap-1 cursor-pointer"
                                             >
                                                 <QrCode className="w-3.5 h-3.5" /> Credencial QR
                                             </button>
@@ -551,7 +465,7 @@ export const PadronParterasPage: React.FC = () => {
                 </div>
             )}
 
-            {/* MODAL 1: REGISTRO DE NUEVA PARTERA */}
+            {/* MODAL DE REGISTRO (Conectado a POST backend) */}
             {showRegisterModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -561,13 +475,13 @@ export const PadronParterasPage: React.FC = () => {
                                     <HeartHandshake className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-black text-slate-900">Registrar Nueva Partera Tradicional</h3>
-                                    <p className="text-xs text-slate-500 font-medium">Acreditación e integración a la Red Comunitaria SSO</p>
+                                    <h3 className="text-base font-black text-slate-900">Registrar Partera en PostgreSQL</h3>
+                                    <p className="text-xs text-slate-500 font-medium">Envío directo de datos al servidor backend</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowRegisterModal(false)}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
+                                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -588,7 +502,7 @@ export const PadronParterasPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1">Nombre en Lengua Zapoteca / Comunitaria</label>
+                                    <label className="block text-slate-700 font-bold mb-1">Nombre en Lengua Zapoteca</label>
                                     <input
                                         type="text"
                                         placeholder="Ej: Na Juana de Tehuantepec"
@@ -601,11 +515,11 @@ export const PadronParterasPage: React.FC = () => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1">Comunidad y Municipio del Istmo *</label>
+                                    <label className="block text-slate-700 font-bold mb-1">Municipio del Istmo *</label>
                                     <select
                                         value={newParteraForm.municipio}
                                         onChange={(e) => setNewParteraForm({ ...newParteraForm, municipio: e.target.value, comunidad: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none focus:border-emerald-600"
+                                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 cursor-pointer"
                                     >
                                         <option value="Juchitán de Zaragoza">Juchitán de Zaragoza</option>
                                         <option value="Santo Domingo Tehuantepec">Santo Domingo Tehuantepec</option>
@@ -632,11 +546,11 @@ export const PadronParterasPage: React.FC = () => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1">Lengua Originaria Principal</label>
+                                    <label className="block text-slate-700 font-bold mb-1">Lengua Originaria</label>
                                     <select
                                         value={newParteraForm.lenguaMaterna}
                                         onChange={(e) => setNewParteraForm({ ...newParteraForm, lenguaMaterna: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none focus:border-emerald-600"
+                                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 cursor-pointer"
                                     >
                                         <option value="Zapoteco del Istmo (Diidxazá)">Zapoteco del Istmo (Diidxazá)</option>
                                         <option value="Huave / Ombeayiüts">Huave / Ombeayiüts</option>
@@ -646,7 +560,7 @@ export const PadronParterasPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1">Años de Experiencia Tradicional</label>
+                                    <label className="block text-slate-700 font-bold mb-1">Años de Experiencia</label>
                                     <input
                                         type="number"
                                         min="1"
@@ -659,14 +573,11 @@ export const PadronParterasPage: React.FC = () => {
                             </div>
 
                             <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 space-y-2">
-                                <label className="block text-emerald-950 font-black">Asignación de PIN de 4 Dígitos para Login Híbrido</label>
-                                <p className="text-[11px] text-emerald-800 font-medium">
-                                    Este PIN le permitirá ingresar rápidamente desde la aplicación web o móvil en comunidad.
-                                </p>
+                                <label className="block text-emerald-950 font-black">PIN de 4 Dígitos</label>
                                 <input
                                     type="text"
                                     maxLength={4}
-                                    placeholder="Ej: 4829 (se genera aleatorio si se deja vacío)"
+                                    placeholder="Ej: 4829 (se genera automático si se vacía)"
                                     value={newParteraForm.pinAcceso}
                                     onChange={(e) => setNewParteraForm({ ...newParteraForm, pinAcceso: e.target.value })}
                                     className="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-slate-900 font-black tracking-widest text-center text-base focus:outline-none focus:border-emerald-600"
@@ -677,15 +588,15 @@ export const PadronParterasPage: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowRegisterModal(false)}
-                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md"
+                                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer"
                                 >
-                                    Guardar y Acreditar Partera
+                                    Guardar en Base de Datos
                                 </button>
                             </div>
                         </form>
@@ -693,28 +604,24 @@ export const PadronParterasPage: React.FC = () => {
                 </div>
             )}
 
-            {/* MODAL 2: VISTA PREVIA DE CREDENCIAL Y CÓDIGO QR OFICIAL */}
+            {/* MODAL CREDENCIAL QR */}
             {selectedParteraQr && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-
                         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                             <div className="flex items-center gap-2">
                                 <ShieldCheck className="w-5 h-5 text-emerald-700" />
-                                <h3 className="text-sm font-black text-slate-900">Credencial Digital & Código QR</h3>
+                                <h3 className="text-sm font-black text-slate-900">Credencial Digital & QR</h3>
                             </div>
                             <button
                                 onClick={() => setSelectedParteraQr(null)}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
+                                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        {/* Tarjeta Simulada Impresa Credencial SSO */}
-                        <div className="bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 text-white rounded-3xl p-5 shadow-lg border border-teal-700/50 space-y-4 relative overflow-hidden">
-
-                            {/* Marca de Agua / Sello */}
+                        <div className="bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 text-white rounded-3xl p-5 shadow-lg border border-teal-700/50 space-y-4">
                             <div className="flex justify-between items-start border-b border-teal-500/30 pb-3">
                                 <div>
                                     <span className="text-[9px] font-black tracking-widest text-emerald-300 uppercase block">
@@ -727,10 +634,9 @@ export const PadronParterasPage: React.FC = () => {
                                 </span>
                             </div>
 
-                            {/* Foto & Datos principales */}
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-2xl bg-white text-emerald-900 font-black text-xl flex items-center justify-center border-2 border-emerald-400 shadow-md shrink-0">
-                                    {selectedParteraQr.nombreCompleto.substring(5, 7).toUpperCase()}
+                                    {selectedParteraQr.nombreCompleto?.substring(5, 7).toUpperCase() || 'PR'}
                                 </div>
                                 <div>
                                     <h5 className="font-extrabold text-sm text-white leading-snug">{selectedParteraQr.nombreCompleto}</h5>
@@ -742,10 +648,8 @@ export const PadronParterasPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Código QR Gigante Simulado */}
                             <div className="bg-white p-3 rounded-2xl flex flex-col items-center justify-center border border-teal-200">
                                 <div className="w-36 h-36 relative flex items-center justify-center bg-slate-900 p-2 rounded-xl">
-                                    {/* Mock QR SVG */}
                                     <svg className="w-full h-full text-emerald-400" viewBox="0 0 100 100" fill="currentColor">
                                         <rect x="10" y="10" width="25" height="25" fill="#10b981" />
                                         <rect x="15" y="15" width="15" height="15" fill="#ffffff" />
@@ -754,10 +658,6 @@ export const PadronParterasPage: React.FC = () => {
                                         <rect x="10" y="65" width="25" height="25" fill="#10b981" />
                                         <rect x="15" y="70" width="15" height="15" fill="#ffffff" />
                                         <circle cx="50" cy="50" r="10" fill="#10b981" />
-                                        <rect x="40" y="15" width="20" height="8" fill="#10b981" />
-                                        <rect x="15" y="40" width="8" height="20" fill="#10b981" />
-                                        <rect x="77" y="40" width="8" height="20" fill="#10b981" />
-                                        <rect x="40" y="77" width="20" height="8" fill="#10b981" />
                                     </svg>
                                 </div>
                                 <div className="mt-2 text-center">
@@ -767,31 +667,28 @@ export const PadronParterasPage: React.FC = () => {
                                     </span>
                                 </div>
                             </div>
-
                         </div>
 
-                        {/* Botones Modal */}
                         <div className="flex justify-between items-center pt-2">
                             <button
-                                onClick={() => alert('Generando archivo PDF para impresión de credencial...')}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2"
+                                onClick={() => alert('Generando PDF desde el servidor...')}
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer"
                             >
                                 <Printer className="w-4 h-4" />
                                 <span>Imprimir Credencial</span>
                             </button>
                             <button
                                 onClick={() => setSelectedParteraQr(null)}
-                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
                             >
                                 Cerrar
                             </button>
                         </div>
-
                     </div>
                 </div>
             )}
 
-            {/* MODAL 3: HISTORIAL DE ATENCIONES COMUNITARIAS */}
+            {/* MODAL HISTORIAL */}
             {selectedParteraHistorial && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
@@ -799,13 +696,13 @@ export const PadronParterasPage: React.FC = () => {
                             <div className="flex items-center gap-2">
                                 <Calendar className="w-5 h-5 text-emerald-700" />
                                 <div>
-                                    <h3 className="text-sm font-black text-slate-900">Historial de Atenciones</h3>
+                                    <h3 className="text-sm font-black text-slate-900">Historial de Atenciones (Backend)</h3>
                                     <p className="text-[11px] font-semibold text-teal-700">{selectedParteraHistorial.nombreCompleto}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setSelectedParteraHistorial(null)}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
+                                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -815,20 +712,10 @@ export const PadronParterasPage: React.FC = () => {
                             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
                                 <div>
                                     <p className="font-bold text-slate-900">Atención de Parto & Canalización Tamiz</p>
-                                    <p className="text-[11px] text-slate-500">Madre: María Sánchez • Juchitán</p>
+                                    <p className="text-[11px] text-slate-500">Sincronizado con PostgreSQL • Jurisdicción No. 2</p>
                                 </div>
                                 <span className="px-2 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg font-bold text-[10px]">
-                                    Tamizado en 48 hrs
-                                </span>
-                            </div>
-
-                            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                                <div>
-                                    <p className="font-bold text-slate-900">Referencia Comunitaria por Riesgo</p>
-                                    <p className="text-[11px] text-slate-500">Paciente: Juana Morales • Tehuantepec</p>
-                                </div>
-                                <span className="px-2 py-1 bg-amber-50 text-amber-800 border border-amber-300 rounded-lg font-bold text-[10px]">
-                                    Atendida en CESSA
+                                    Completado
                                 </span>
                             </div>
                         </div>
@@ -836,7 +723,7 @@ export const PadronParterasPage: React.FC = () => {
                         <div className="flex justify-end pt-2 border-t border-slate-200">
                             <button
                                 onClick={() => setSelectedParteraHistorial(null)}
-                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
                             >
                                 Cerrar
                             </button>
@@ -848,3 +735,5 @@ export const PadronParterasPage: React.FC = () => {
         </div>
     );
 };
+
+export default PadronParterasPage;

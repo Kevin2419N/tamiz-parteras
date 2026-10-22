@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     AlertTriangle,
     Info,
@@ -14,7 +14,8 @@ import {
     X,
     Filter,
     HeartHandshake,
-    Send
+    Send,
+    Loader2
 } from 'lucide-react';
 
 export interface AlertaOperativa {
@@ -38,105 +39,68 @@ export interface AlertaOperativa {
 export const NotificacionesPage: React.FC = () => {
     const [filtroTipo, setFiltroTipo] = useState<string>('TODAS');
 
+    // Estado real de alertas conectado al Backend (PostgreSQL)
+    const [alertas, setAlertas] = useState<AlertaOperativa[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
     // Modal state for viewing alert details
     const [selectedAlerta, setSelectedAlerta] = useState<AlertaOperativa | null>(null);
     const [notaInput, setNotaInput] = useState<string>('');
 
-    // Mock Alertas Operativas (Istmo de Tehuantepec)
-    const [alertas, setAlertas] = useState<AlertaOperativa[]>([
-        {
-            id: 'ALT-OAX-001',
-            folioTamiz: 'TMZ-OAX-98214',
-            titulo: 'RE-TOMA URGENTE: Muestra Insuficiente (TSH / Hipotiroidismo)',
-            descripcion: 'El Laboratorio Estatal (LESP Oaxaca) reportó muestra con coagulación parcial y cantidad insuficiente de gotas. Se requiere re-toma inmediata antes del día 12 de vida.',
-            tipo: 'URGENTE_RETOMA',
-            nivel: 'CRITICAL',
-            nombreMadre: 'María Elena Hernández Jiménez',
-            nombreBebe: 'RN Mateo Hernández',
-            comunidadIstmo: 'Juchitán de Zaragoza (Barrio Cheguigo)',
-            telefonoContacto: '971 102 9988',
-            responsableSalud: 'Centro de Salud Juchitán Centro',
-            parteraComunitaria: 'Doña Rosa Santiz Gómez (Na Rosa)',
-            fechaGeneracion: 'Hace 35 minutos',
-            atendida: false,
-            notasSeguimiento: '',
-        },
-        {
-            id: 'ALT-OAX-002',
-            folioTamiz: 'TMZ-OAX-98201',
-            titulo: 'ALERTA DE VENCIMIENTO: Muestra Retenida > 72 horas',
-            descripcion: 'La ficha de Guthrie tomada en la unidad médica no ha sido despachada a la Jurisdicción Sanitaria. Se aproxima al límite de tiempo para tamizaje oportuno.',
-            tipo: 'VENCIMIENTO_MUESTRA',
-            nivel: 'WARNING',
-            nombreMadre: 'Juana Santiz Cruz',
-            nombreBebe: 'RN Sofía Santiz',
-            comunidadIstmo: 'Santo Domingo Tehuantepec',
-            telefonoContacto: '971 554 1122',
-            responsableSalud: 'CESSA Tehuantepec',
-            parteraComunitaria: 'Doña Juana López Pérez (Na Juana)',
-            fechaGeneracion: 'Hace 2 horas',
-            atendida: false,
-            notasSeguimiento: '',
-        },
-        {
-            id: 'ALT-OAX-003',
-            titulo: 'Referencia Comunitaria Emitida por Partera Tradicional',
-            descripcion: 'Partera tradicional acreditada emitió referencia prioritaria por datos de alarma obstétrica y solicitó tamizado prioritario al nacimiento.',
-            tipo: 'PARTERA_REFERENCIA',
-            nivel: 'COMMUNITY',
-            nombreMadre: 'Petrona Velasco Ruiz',
-            nombreBebe: 'RN Petrona',
-            comunidadIstmo: 'Ciudad Ixtepec',
-            telefonoContacto: '971 712 4455',
-            responsableSalud: 'Hospital Comunitario Ixtepec',
-            parteraComunitaria: 'Doña Asunción Girón Morales (Na Chona)',
-            fechaGeneracion: 'Ayer, 16:45',
-            atendida: false,
-            notasSeguimiento: 'Se agendó visita domiciliaria del personal de enfermería.',
-        },
-        {
-            id: 'ALT-OAX-004',
-            folioTamiz: 'TMZ-OAX-98190',
-            titulo: 'RE-TOMA PROGRAMADA: Resultado Muestra Inconcluso',
-            descripcion: 'Requiere segunda punción por interferencia analítica en laboratorio. Notificar a la madre para acudir al centro de salud.',
-            tipo: 'URGENTE_RETOMA',
-            nivel: 'CRITICAL',
-            nombreMadre: 'Lucía Jiménez Toledo',
-            nombreBebe: 'RN Jiménez',
-            comunidadIstmo: 'Asunción Ixtaltepec',
-            telefonoContacto: '971 822 6611',
-            responsableSalud: 'Centro de Salud Ixtaltepec',
-            parteraComunitaria: 'Doña Lucía Jiménez Toledo',
-            fechaGeneracion: 'Hace 1 día',
-            atendida: true,
-            notasSeguimiento: 'Partera Na Lucía contactó a la familia. Re-toma efectuada el 08 de Septiembre.',
-        },
-        {
-            id: 'ALT-OAX-005',
-            folioTamiz: 'TMZ-OAX-98185',
-            titulo: 'Confirmación de Envío a LESP Oaxaca',
-            descripcion: 'Lote de 38 tarjetas de Guthrie del Istmo fue entregado con éxito al Laboratorio Estatal de Salud Pública.',
-            tipo: 'INFORMATIVA',
-            nivel: 'INFO',
-            nombreMadre: 'Multicentro Istmo',
-            comunidadIstmo: 'Salina Cruz / Tehuantepec',
-            telefonoContacto: '971 332 9900',
-            responsableSalud: 'Jurisdicción Sanitaria No. 2',
-            fechaGeneracion: 'Hace 2 días',
-            atendida: true,
-            notasSeguimiento: '',
-        },
-    ]);
+    // Cargar alertas reales desde el servidor backend al iniciar
+    useEffect(() => {
+        const fetchAlertas = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch('http://localhost:4000/api/alertas');
+                if (!response.ok) throw new Error('Error al conectar con el servidor de alertas');
+                const data = await response.json();
+                setAlertas(data);
+            } catch (err) {
+                console.warn('Backend no disponible temporalmente, operando en modo desconectado:', err);
+                setAlertas([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-    const toggleAtendida = (id: string) => {
+        fetchAlertas();
+    }, []);
+
+    const toggleAtendida = async (id: string) => {
+        const alertaActual = alertas.find((a) => a.id === id);
+        if (!alertaActual) return;
+
+        const nuevoEstatus = !alertaActual.atendida;
+
+        try {
+            await fetch(`http://localhost:4000/api/alertas/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ atendida: nuevoEstatus })
+            });
+        } catch (e) {
+            console.warn('No se pudo actualizar en el backend, actualizando localmente:', e);
+        }
+
         setAlertas(
-            alertas.map((a) => (a.id === id ? { ...a, atendida: !a.atendida } : a))
+            alertas.map((a) => (a.id === id ? { ...a, atendida: nuevoEstatus } : a))
         );
     };
 
-    const handleSaveNotas = (e: React.FormEvent) => {
+    const handleSaveNotas = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedAlerta) return;
+
+        try {
+            await fetch(`http://localhost:4000/api/alertas/${selectedAlerta.id}/seguimiento`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notasSeguimiento: notaInput, atendida: true })
+            });
+        } catch (e) {
+            console.warn('Error al guardar notas en backend:', e);
+        }
 
         setAlertas(
             alertas.map((a) =>
@@ -207,7 +171,7 @@ export const NotificacionesPage: React.FC = () => {
 
                 <button
                     onClick={() => setAlertas(alertas.map((a) => ({ ...a, atendida: true })))}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-colors flex items-center gap-2 cursor-pointer"
                 >
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>Marcar Todas como Atendidas</span>
@@ -241,7 +205,7 @@ export const NotificacionesPage: React.FC = () => {
                     <button
                         key={item.id}
                         onClick={() => setFiltroTipo(item.id)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all ${filtroTipo === item.id
+                        className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filtroTipo === item.id
                             ? 'bg-emerald-600 text-white shadow-sm'
                             : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200'
                             }`}
@@ -252,119 +216,127 @@ export const NotificacionesPage: React.FC = () => {
             </div>
 
             {/* LISTA DE TARJETAS INTERACTIVAS DE ALERTAS */}
-            <div className="space-y-4">
-                {alertasFiltradas.map((alerta) => (
-                    <div
-                        key={alerta.id}
-                        className={`bg-white p-5 rounded-3xl border transition-all shadow-sm ${alerta.atendida
-                            ? 'border-slate-200 opacity-70 bg-slate-50/60'
-                            : alerta.nivel === 'CRITICAL'
-                                ? 'border-rose-300/90 hover:border-rose-400 bg-white'
-                                : alerta.nivel === 'WARNING'
-                                    ? 'border-amber-300/90 hover:border-amber-400 bg-white'
-                                    : 'border-slate-200 hover:border-emerald-300'
-                            }`}
-                    >
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            {isLoading ? (
+                <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3">
+                    <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
+                    <p className="text-xs font-bold text-slate-600">Conectando con la base de datos backend y cargando alertas...</p>
+                </div>
+            ) : alertasFiltradas.length === 0 ? (
+                <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-2">
+                    <p className="text-sm font-bold text-slate-700">No hay alertas registradas en este filtro.</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {alertasFiltradas.map((alerta) => (
+                        <div
+                            key={alerta.id}
+                            className={`bg-white p-5 rounded-3xl border transition-all shadow-sm ${alerta.atendida
+                                ? 'border-slate-200 opacity-70 bg-slate-50/60'
+                                : alerta.nivel === 'CRITICAL'
+                                    ? 'border-rose-300/90 hover:border-rose-400 bg-white'
+                                    : alerta.nivel === 'WARNING'
+                                        ? 'border-amber-300/90 hover:border-amber-400 bg-white'
+                                        : 'border-slate-200 hover:border-emerald-300'
+                                }`}
+                        >
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
 
-                            {/* Información Principal Alerta */}
-                            <div className="space-y-2 flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {getBadgeStyle(alerta.nivel)}
-                                    {alerta.folioTamiz && (
-                                        <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                                            {alerta.folioTamiz}
-                                        </span>
-                                    )}
-                                    <span className="text-[10px] font-semibold text-slate-400">
-                                        • {alerta.fechaGeneracion}
-                                    </span>
-                                </div>
-
-                                <div>
-                                    <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                                        <span>{alerta.titulo}</span>
-                                        {!alerta.atendida && (
-                                            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
+                                <div className="space-y-2 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {getBadgeStyle(alerta.nivel)}
+                                        {alerta.folioTamiz && (
+                                            <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                                {alerta.folioTamiz}
+                                            </span>
                                         )}
-                                    </h3>
-                                    <p className="text-xs text-slate-600 mt-1 leading-relaxed font-medium">
-                                        {alerta.descripcion}
-                                    </p>
-                                </div>
-
-                                {/* Ficha de Paciente y Comunidad */}
-                                <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
-                                    <span className="flex items-center gap-1.5 font-bold text-slate-900">
-                                        <User className="w-3.5 h-3.5 text-emerald-600" />
-                                        Madre: {alerta.nombreMadre} {alerta.nombreBebe ? `(${alerta.nombreBebe})` : ''}
-                                    </span>
-
-                                    <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                                        <MapPin className="w-3.5 h-3.5 text-sky-600" />
-                                        {alerta.comunidadIstmo}
-                                    </span>
-
-                                    <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                                        <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                                        {alerta.telefonoContacto}
-                                    </span>
-
-                                    {alerta.parteraComunitaria && (
-                                        <span className="flex items-center gap-1.5 font-bold text-teal-800">
-                                            <HeartHandshake className="w-3.5 h-3.5 text-teal-600" />
-                                            {alerta.parteraComunitaria}
+                                        <span className="text-[10px] font-semibold text-slate-400">
+                                            • {alerta.fechaGeneracion}
                                         </span>
-                                    )}
-                                </div>
+                                    </div>
 
-                                {alerta.notasSeguimiento && (
-                                    <div className="mt-2 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 text-xs text-emerald-950 flex items-start gap-2">
-                                        <MessageSquare className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                                        <p className="font-semibold">
-                                            <strong className="text-emerald-900">Nota de Seguimiento:</strong> {alerta.notasSeguimiento}
+                                    <div>
+                                        <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                                            <span>{alerta.titulo}</span>
+                                            {!alerta.atendida && (
+                                                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
+                                            )}
+                                        </h3>
+                                        <p className="text-xs text-slate-600 mt-1 leading-relaxed font-medium">
+                                            {alerta.descripcion}
                                         </p>
                                     </div>
-                                )}
+
+                                    <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                                        <span className="flex items-center gap-1.5 font-bold text-slate-900">
+                                            <User className="w-3.5 h-3.5 text-emerald-600" />
+                                            Madre: {alerta.nombreMadre} {alerta.nombreBebe ? `(${alerta.nombreBebe})` : ''}
+                                        </span>
+
+                                        <span className="flex items-center gap-1.5 font-medium text-slate-700">
+                                            <MapPin className="w-3.5 h-3.5 text-sky-600" />
+                                            {alerta.comunidadIstmo}
+                                        </span>
+
+                                        <span className="flex items-center gap-1.5 font-medium text-slate-700">
+                                            <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                                            {alerta.telefonoContacto}
+                                        </span>
+
+                                        {alerta.parteraComunitaria && (
+                                            <span className="flex items-center gap-1.5 font-bold text-teal-800">
+                                                <HeartHandshake className="w-3.5 h-3.5 text-teal-600" />
+                                                {alerta.parteraComunitaria}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {alerta.notasSeguimiento && (
+                                        <div className="mt-2 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 text-xs text-emerald-950 flex items-start gap-2">
+                                            <MessageSquare className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                                            <p className="font-semibold">
+                                                <strong className="text-emerald-900">Nota de Seguimiento:</strong> {alerta.notasSeguimiento}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-wrap lg:flex-col gap-2 shrink-0 justify-end">
+                                    <button
+                                        onClick={() => {
+                                            setSelectedAlerta(alerta);
+                                            setNotaInput(alerta.notasSeguimiento || '');
+                                        }}
+                                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <span>Ver Detalle</span>
+                                        <ChevronRight className="w-3.5 h-3.5" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => alert(`Se ha agendado una visita / re-toma prioritaria para ${alerta.nombreMadre} en ${alerta.comunidadIstmo}.`)}
+                                        className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Calendar className="w-3.5 h-3.5 text-slate-600" />
+                                        <span>Programar Visita</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => toggleAtendida(alerta.id)}
+                                        className={`px-3.5 py-2 font-bold text-xs rounded-xl border transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${alerta.atendida
+                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                            : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                                            }`}
+                                    >
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                        <span>{alerta.atendida ? 'Atendida' : 'Marcar Atendida'}</span>
+                                    </button>
+                                </div>
+
                             </div>
-
-                            {/* Botones de Acción Rápida */}
-                            <div className="flex flex-wrap lg:flex-col gap-2 shrink-0 justify-end">
-                                <button
-                                    onClick={() => {
-                                        setSelectedAlerta(alerta);
-                                        setNotaInput(alerta.notasSeguimiento || '');
-                                    }}
-                                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
-                                >
-                                    <span>Ver Detalle</span>
-                                    <ChevronRight className="w-3.5 h-3.5" />
-                                </button>
-
-                                <button
-                                    onClick={() => alert(`Se ha agendado una visita / re-toma prioritaria para ${alerta.nombreMadre} en ${alerta.comunidadIstmo}.`)}
-                                    className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5"
-                                >
-                                    <Calendar className="w-3.5 h-3.5 text-slate-600" />
-                                    <span>Programar Visita</span>
-                                </button>
-
-                                <button
-                                    onClick={() => toggleAtendida(alerta.id)}
-                                    className={`px-3.5 py-2 font-bold text-xs rounded-xl border transition-colors flex items-center justify-center gap-1.5 ${alerta.atendida
-                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                        : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
-                                        }`}
-                                >
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span>{alerta.atendida ? 'Atendida' : 'Marcar Atendida'}</span>
-                                </button>
-                            </div>
-
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
             {/* MODAL INTERACTIVO DE DETALLE DE ALERTA & SEGUIMIENTO */}
             {selectedAlerta && (
@@ -378,13 +350,12 @@ export const NotificacionesPage: React.FC = () => {
                             </div>
                             <button
                                 onClick={() => setSelectedAlerta(null)}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
+                                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        {/* Detalle Resumido del Caso */}
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 text-xs">
                             <div className="flex items-center justify-between">
                                 {getBadgeStyle(selectedAlerta.nivel)}
@@ -422,7 +393,6 @@ export const NotificacionesPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Formulario de Notas de Seguimiento */}
                         <form onSubmit={handleSaveNotas} className="space-y-3 text-xs">
                             <div>
                                 <label className="block text-slate-700 font-bold mb-1">
@@ -431,7 +401,7 @@ export const NotificacionesPage: React.FC = () => {
                                 <textarea
                                     rows={3}
                                     required
-                                    placeholder="Escriba las acciones tomadas (ej: Se acudió al domicilio en Juchitán, se concertó cita para re-toma de muestra mañana a las 8:00 AM)..."
+                                    placeholder="Escriba las acciones tomadas..."
                                     value={notaInput}
                                     onChange={(e) => setNotaInput(e.target.value)}
                                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white"
@@ -442,14 +412,14 @@ export const NotificacionesPage: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setSelectedAlerta(null)}
-                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
 
                                 <button
                                     type="submit"
-                                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5"
+                                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
                                 >
                                     <Send className="w-3.5 h-3.5" />
                                     <span>Guardar Notas y Marcar Atendida</span>
@@ -464,3 +434,5 @@ export const NotificacionesPage: React.FC = () => {
         </div>
     );
 };
+
+export default NotificacionesPage;

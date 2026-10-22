@@ -130,7 +130,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
             {/* 1. ENCUADRE INSTITUCIONAL Y MARCO DE HOJA FÍSICA */}
             <div className="border-4 border-[#9D2449] bg-white rounded-3xl shadow-xl p-4 md:p-8 space-y-8 my-4">
 
-                {/* A) FILA SUPERIOR DE LOGOS Y TÍTULO TIPO HOJA OFICIAL (ESTÁNDAR FORMULARIOS 1, 2 Y 3) */}
+                {/* A) FILA SUPERIOR DE LOGOS Y TÍTULO TIPO HOJA OFICIAL */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6">
                     <img
                         src="/logo-jurisdiccion.png"
@@ -151,7 +151,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     />
                 </div>
 
-                {/* B) BANNER PRINCIPAL GUINDA REDONDEADO (OBLIGATORIO ABAJO DE LOS LOGOS) */}
+                {/* B) BANNER PRINCIPAL GUINDA REDONDEADO */}
                 <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex flex-col md:flex-row items-center justify-center gap-2 my-4">
                     <div className="flex items-center gap-2">
                         <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
@@ -490,7 +490,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             </div>
                         </div>
 
-                        {/* Estado Nutricional Madre - Cinta MUAC Tricolor (Brazalete) */}
+                        {/* Estado Nutricional Madre - Cinta MUAC Tricolor */}
                         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
                             <div className="flex items-center gap-2">
                                 <Ruler className="w-4 h-4 text-slate-700" />
@@ -499,7 +499,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 </label>
                             </div>
 
-                            {/* Selector Táctil Tricolor Estilo Brazalete */}
                             <div className="bg-slate-200 p-1.5 rounded-2xl border border-slate-300 grid grid-cols-3 gap-1.5 shadow-inner">
                                 <button
                                     type="button"
@@ -596,7 +595,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
 
                     {/* CONTENEDOR CENTRAL RADIAL CON CONECTORES SVG */}
                     <div className="relative bg-rose-50/50 border-2 border-rose-200 rounded-3xl p-6 md:p-8 space-y-6 overflow-hidden">
-                        {/* Conectores Visuales SVG Radiales */}
                         <svg className="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style={{ zIndex: 0 }}>
                             <line x1="50%" y1="50%" x2="16%" y2="20%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
                             <line x1="50%" y1="50%" x2="50%" y2="20%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
@@ -607,7 +605,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <line x1="50%" y1="50%" x2="67%" y2="82%" stroke="#f43f5e" strokeWidth="2" strokeDasharray="6 4" opacity="0.4" />
                         </svg>
 
-                        {/* Layout Radial Simétrico: Fila Superior, Fila Central (Con Tarjeta Principal), Fila Inferior */}
                         <div className="relative z-10 space-y-6">
                             {/* Fila 1: Top 3 Síntomas */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -640,7 +637,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
 
                             {/* Fila 2: Síntoma Izquierdo - TARJETA CENTRAL PRINCIPAL - Síntoma Derecho */}
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                                {/* Síntoma Izquierda */}
                                 <div className="md:col-span-1">
                                     {(() => {
                                         const item = { id: 'ORINA_DIFICULTAD', img: '/DificultadesDeOrinar.png', label: 'Dificultad al orinar o con sangre' };
@@ -683,7 +679,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     </p>
                                 </div>
 
-                                {/* Síntoma Derecha */}
                                 <div className="md:col-span-1">
                                     {(() => {
                                         const item = { id: 'VOMITO_FRECUENTE', img: '/VomitoFrecuente.png', label: 'Vómito frecuente después de los 3 meses' };
@@ -757,7 +752,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             </div>
                         </div>
 
-                        {/* Switch táctil Ref. SI / NO */}
                         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-300">
                             <span className="text-xs font-black px-2 text-slate-700">Ref. SI / NO:</span>
                             <button
@@ -965,7 +959,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             </div>
                         </div>
 
-                        {/* Switch táctil Referido: SI / NO */}
                         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-300">
                             <span className="text-xs font-black px-2 text-slate-700">Referido:</span>
                             <button
@@ -1041,7 +1034,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Puerperio Normal: Cinta MUAC Tricolor (Brazalete) */}
+                        {/* Puerperio Normal: Cinta MUAC Tricolor */}
                         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
                             <div className="flex items-center gap-2">
                                 <Ruler className="w-4 h-4 text-slate-700" />
@@ -1154,7 +1147,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </div>
 
-                {/* 9. SECCIÓN MUERTE MATERNA (BLOQUE DE ALERTA LIMPIA) */}
+                {/* 9. SECCIÓN MUERTE MATERNA */}
                 <div className="bg-rose-50/30 p-6 rounded-3xl border-2 border-rose-200 space-y-4 shadow-sm">
                     <div className="flex items-center gap-3 border-b border-rose-200 pb-3">
                         <div className="p-2.5 bg-rose-100 text-[#9D2449] rounded-xl border border-rose-200">
@@ -1181,7 +1174,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     key={item.id}
-                                    onClick={() => setMuerteMaternaEtapa(activo ? null : (item.id as any))}
+                                    onClick={() => setMuerteMaternaEtapa(activo ? null : (item.id as 'EMBARAZO' | 'PARTO' | 'PUERPERIO'))}
                                     className={`p-5 rounded-2xl border-4 text-center flex flex-col items-center justify-between gap-3 transition-all cursor-pointer ${activo
                                         ? 'bg-rose-100 border-[#9D2449] text-[#9D2449] shadow-lg scale-[1.02] ring-2 ring-rose-300'
                                         : 'bg-white border-slate-200 text-slate-800 hover:border-rose-300 hover:bg-rose-50/50'
@@ -1212,7 +1205,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </div>
 
-                {/* 10. CIERRE ADMINISTRATIVO Y BOTÓN FINAL EN GUINDA OAXACA */}
+                {/* 10. CIERRE ADMINISTRATIVO Y BOTÓN FINAL */}
                 <div className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
                     <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                         <div className="p-2.5 bg-amber-400/20 text-amber-400 rounded-xl border border-amber-400/30">
@@ -1285,7 +1278,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         </div>
                     </div>
 
-                    {/* Botón de Huella Digital en Dorado/Vibrante */}
                     <div className="pt-2">
                         <button
                             type="button"
@@ -1304,7 +1296,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         </button>
                     </div>
 
-                    {/* Botón Gigante Final en Guinda Oaxaca */}
                     <button
                         type="submit"
                         className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xl py-4 rounded-2xl w-full font-bold shadow-lg flex items-center justify-center gap-3 transition-transform active:scale-95 border-2 border-rose-300 cursor-pointer"

@@ -70,10 +70,11 @@ export const CalendarioAtencionPage: React.FC = () => {
                 </div>
 
                 <button
+                    type="button"
                     onClick={() => setModoAltoContraste(!modoAltoContraste)}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${modoAltoContraste
-                            ? 'bg-yellow-400 text-black border-yellow-300'
-                            : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
+                    className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all cursor-pointer ${modoAltoContraste
+                        ? 'bg-yellow-400 text-black border-yellow-300'
+                        : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
                         }`}
                 >
                     <Eye className="w-4 h-4" />
@@ -86,9 +87,9 @@ export const CalendarioAtencionPage: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => setEtapaActiva('EMBARAZO')}
-                    className={`p-5 rounded-2xl border text-left transition-all ${etapaActiva === 'EMBARAZO'
-                            ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/10'
-                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                    className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${etapaActiva === 'EMBARAZO'
+                        ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/10'
+                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
                         }`}
                 >
                     <div className="flex items-center justify-between mb-2">
@@ -102,9 +103,9 @@ export const CalendarioAtencionPage: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => setEtapaActiva('PARTO')}
-                    className={`p-5 rounded-2xl border text-left transition-all ${etapaActiva === 'PARTO'
-                            ? 'bg-teal-500/20 border-teal-500 text-white shadow-lg shadow-teal-500/10'
-                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                    className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${etapaActiva === 'PARTO'
+                        ? 'bg-teal-500/20 border-teal-500 text-white shadow-lg shadow-teal-500/10'
+                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
                         }`}
                 >
                     <div className="flex items-center justify-between mb-2">
@@ -118,9 +119,9 @@ export const CalendarioAtencionPage: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => setEtapaActiva('MENOR_2_ANOS')}
-                    className={`p-5 rounded-2xl border text-left transition-all ${etapaActiva === 'MENOR_2_ANOS'
-                            ? 'bg-emerald-500/20 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
-                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                    className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${etapaActiva === 'MENOR_2_ANOS'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
+                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
                         }`}
                 >
                     <div className="flex items-center justify-between mb-2">
@@ -137,7 +138,7 @@ export const CalendarioAtencionPage: React.FC = () => {
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                     <h3 className="font-bold text-base text-white flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-amber-400" />
-                        <span>Acciones Programadas: {etapaActiva.replace('_', ' ')}</span>
+                        <span>Acciones Programadas: {etapaActiva.replace(/_/g, ' ')}</span>
                     </h3>
                     <span className="text-xs text-slate-400">{tareasFiltradas.length} atenciones agendadas</span>
                 </div>
@@ -147,16 +148,17 @@ export const CalendarioAtencionPage: React.FC = () => {
                         <div
                             key={tarea.id}
                             className={`p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all ${tarea.completada
-                                    ? 'bg-slate-900/40 border-slate-800/60 opacity-65'
-                                    : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                                ? 'bg-slate-900/40 border-slate-800/60 opacity-65'
+                                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
                                 }`}
                         >
                             <div className="flex items-start gap-3">
                                 <button
+                                    type="button"
                                     onClick={() => toggleTarea(tarea.id)}
-                                    className={`mt-1 p-1 rounded-lg border transition-colors ${tarea.completada
-                                            ? 'bg-emerald-500 text-white border-emerald-400'
-                                            : 'border-slate-600 hover:border-emerald-400 text-transparent'
+                                    className={`mt-1 p-1 rounded-lg border transition-colors cursor-pointer ${tarea.completada
+                                        ? 'bg-emerald-500 text-white border-emerald-400'
+                                        : 'border-slate-600 hover:border-emerald-400 text-transparent'
                                         }`}
                                 >
                                     <CheckCircle2 className="w-4 h-4" />
@@ -178,16 +180,24 @@ export const CalendarioAtencionPage: React.FC = () => {
                                 <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
                                     {tarea.fechaProgramada}
                                 </span>
-                                <button className="px-3 py-1.5 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 rounded-lg text-xs font-bold border border-teal-500/30 flex items-center gap-1">
+                                <button type="button" className="px-3 py-1.5 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 rounded-lg text-xs font-bold border border-teal-500/30 flex items-center gap-1 cursor-pointer">
                                     <span>Detalle</span>
                                     <ChevronRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
                         </div>
                     ))}
+
+                    {tareasFiltradas.length === 0 && (
+                        <div className="text-center py-8 text-slate-500 text-xs font-semibold">
+                            No hay tareas programadas para esta etapa.
+                        </div>
+                    )}
                 </div>
             </div>
 
         </div>
     );
 };
+
+export default CalendarioAtencionPage;
