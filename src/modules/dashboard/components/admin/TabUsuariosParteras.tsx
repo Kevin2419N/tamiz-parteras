@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Phone, Key, QrCode, UserCheck, Printer, CheckCircle2 } from 'lucide-react';
+import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Phone, Key, QrCode, UserCheck, Printer, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import type { ParteraCredencial, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
+import { http } from '../../../../services/http';
 
 export const TabUsuariosParteras: React.FC = () => {
-    // Estado limpio en arreglo vacío, listo para conectarse a la API real
+    // Estado del padrón de parteras
     const [parteras, setParteras] = useState<ParteraCredencial[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Catálogo dinámico de CLUES
     const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
@@ -18,24 +20,26 @@ export const TabUsuariosParteras: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Punto de enganche para cargar el padrón de parteras desde PostgreSQL / Node.js
+    // Carga oficial del padrón de parteras desde PostgreSQL (Render)
     useEffect(() => {
         const cargarParteras = async () => {
             setCargando(true);
+            setErrorMessage(null);
             try {
-                // Futura llamada API:
-                // const res = await fetch('/api/parteras');
-                // const data = await res.json();
-                // setParteras(data);
-            } catch (error) {
+                const response = await http.get('/admin/parteras');
+                if (response.data) {
+                    setParteras(response.data);
+                }
+            } catch (error: any) {
                 console.error('Error al cargar padrón de parteras:', error);
+                setErrorMessage('No se pudo conectar con el servidor para obtener el padrón de parteras.');
             } finally {
                 setCargando(false);
             }
         };
 
         cargarParteras();
-    }, [setParteras, setCargando]);
+    }, []);
 
     // Estados para modal de registro de nueva partera
     const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -49,6 +53,7 @@ export const TabUsuariosParteras: React.FC = () => {
     const [newComunidad, setNewComunidad] = useState('');
     const [selectedCluesId, setSelectedCluesId] = useState('');
     const [newPin, setNewPin] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Modal para Ver y Generar Credencial QR
     const [selectedParteraQR, setSelectedParteraQR] = useState<ParteraCredencial | null>(null);
@@ -64,13 +69,15 @@ export const TabUsuariosParteras: React.FC = () => {
         setNewPin(pin);
     };
 
-    const handleRegisterPartera = (e: React.FormEvent) => {
+    const handleRegisterPartera = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setErrorMessage(null);
+
         const unit = cluesList.find((u) => u.id === selectedCluesId) || cluesList[0];
         const nombreCompletoCompuesto = `${nombres.trim()} ${apellidoPaterno.trim()} ${apellidoMaterno.trim()}`.trim();
 
-        const created: ParteraCredencial = {
-            id: `p-${Date.now()}`,
+        const payload = {
             nombreCompleto: nombreCompletoCompuesto,
             curp: newCurp.toUpperCase(),
             lenguaMaterna: newLengua,
@@ -80,22 +87,30 @@ export const TabUsuariosParteras: React.FC = () => {
             centroSaludAdscripcion: unit ? unit.nombre : 'Centro de Salud',
             cluesAdscripcion: unit ? unit.clues : 'OASSA000000',
             pinCuatroDigitos: newPin || Math.floor(1000 + Math.random() * 9000).toString(),
-            estatusAcreditacion: 'ACREDITADA',
-            fechaAcreditacion: new Date().toISOString().split('T')[0]
+            estatusAcreditacion: 'ACREDITADA'
         };
 
-        // Petición POST a la API
-        setParteras([created, ...parteras]);
-        setShowRegisterModal(false);
+        try {
+            const response = await http.post('/admin/parteras', payload);
+            const creada: ParteraCredencial = response.data.partera || response.data;
 
-        // Reset form
-        setNombres('');
-        setApellidoPaterno('');
-        setApellidoMaterno('');
-        setNewCurp('');
-        setNewTelefono('');
-        setNewComunidad('');
-        setNewPin('');
+            setParteras([creada, ...parteras]);
+            setShowRegisterModal(false);
+
+            // Reset form
+            setNombres('');
+            setApellidoPaterno('');
+            setApellidoMaterno('');
+            setNewCurp('');
+            setNewTelefono('');
+            setNewComunidad('');
+            setNewPin('');
+        } catch (error: any) {
+            console.error('Error al registrar partera:', error);
+            alert(error.response?.data?.message || 'Error al guardar la partera en la base de datos.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const getInitials = (name: string) => {
@@ -141,11 +156,20 @@ export const TabUsuariosParteras: React.FC = () => {
                 </button>
             </div>
 
+            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             {/* VISTA MÓVIL (< md) */}
             <div className="space-y-3 md:hidden">
                 {cargando ? (
-                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
-                        Cargando padrón de parteras tradicionales...
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                        <span>Cargando padrón desde PostgreSQL (Render)...</span>
                     </div>
                 ) : parteras.length === 0 ? (
                     <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
@@ -176,7 +200,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             <div className="text-xs space-y-1 text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
                                 <div className="flex items-center gap-1 text-slate-800 font-bold">
                                     <MapPin className="w-3.5 h-3.5 text-[#9D2449]" />
-                                    <span>{p.municipio} - {p.comunidad}</span>
+                                    <span>{p.municipio} {p.comunidad ? `(${p.comunidad})` : ''}</span>
                                 </div>
                                 {p.lenguaMaterna && (
                                     <div className="text-[11px] text-slate-600 flex items-center gap-1 pt-1">
@@ -221,8 +245,11 @@ export const TabUsuariosParteras: React.FC = () => {
                     <tbody className="divide-y divide-slate-100 text-slate-700">
                         {cargando ? (
                             <tr>
-                                <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
-                                    Cargando padrón de parteras tradicionales...
+                                <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                        <span>Cargando padrón desde PostgreSQL (Render)...</span>
+                                    </div>
                                 </td>
                             </tr>
                         ) : parteras.length === 0 ? (
@@ -284,7 +311,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 </table>
             </div>
 
-            {/* MODAL REGISTRAR PARTERA ACREDITADA (3 CAMPOS DE NOMBRE) */}
+            {/* MODAL REGISTRAR PARTERA ACREDITADA */}
             {showRegisterModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -426,7 +453,7 @@ export const TabUsuariosParteras: React.FC = () => {
 
                                 {/* COLUMNA 2 */}
                                 <div className="space-y-3.5">
-                                    {/* Municipio (TEXTO LIBRE) */}
+                                    {/* Municipio */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1">Municipio / Localidad * (Texto Libre)</label>
                                         <input
@@ -506,10 +533,20 @@ export const TabUsuariosParteras: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                    disabled={isSubmitting}
+                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60"
                                 >
-                                    <UserCheck className="w-4 h-4 text-rose-200" />
-                                    <span>Guardar y Acreditar Partera</span>
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                                            <span>Guardando en PostgreSQL...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UserCheck className="w-4 h-4 text-rose-200" />
+                                            <span>Guardar y Acreditar Partera</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>
@@ -561,7 +598,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             </div>
                             <h4 className="text-base font-black text-[#9D2449] pt-1">{selectedParteraQR.nombreCompleto}</h4>
                             <p className="text-[11px] text-slate-500 font-mono">CURP: {selectedParteraQR.curp}</p>
-                            <p className="text-[11px] font-bold text-slate-700">{selectedParteraQR.municipio} - {selectedParteraQR.comunidad}</p>
+                            <p className="text-[11px] font-bold text-slate-700">{selectedParteraQR.municipio} {selectedParteraQR.comunidad ? `(${selectedParteraQR.comunidad})` : ''}</p>
                             {selectedParteraQR.lenguaMaterna && (
                                 <p className="text-[10px] text-slate-500 italic">Lengua: {selectedParteraQR.lenguaMaterna}</p>
                             )}

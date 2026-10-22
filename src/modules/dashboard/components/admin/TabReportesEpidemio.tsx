@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, FileSpreadsheet, FileText, ShieldCheck } from 'lucide-react';
+import { BarChart3, FileSpreadsheet, FileText, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
+import { http } from '../../../../services/http';
 
 export interface MunicipalCoverage {
     municipio: string;
@@ -19,40 +20,64 @@ export interface CausaReferencia {
 export const TabReportesEpidemio: React.FC = () => {
     const [exportModal, setExportModal] = useState<'EXCEL' | 'PDF' | null>(null);
 
-    // Estados limpios vacíos, listos para conectarse a la API de Node.js / PostgreSQL
+    // Estados de métricas, carga y errores
     const [coberturaMunicipios, setCoberturaMunicipios] = useState<MunicipalCoverage[]>([]);
     const [causasReferencia, setCausasReferencia] = useState<CausaReferencia[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [isExporting, setIsExporting] = useState<boolean>(false);
 
-    // Punto de enganche para cargar métricas epidemiológicas reales
+    // Carga oficial de métricas epidemiológicas desde PostgreSQL (Render)
     useEffect(() => {
-        // Al usar las funciones dentro de la estructura (aunque esté lista),
-        // TypeScript ya no marcará advertencia de variables no usadas.
         const cargarDatos = async () => {
             setCargando(true);
+            setErrorMessage(null);
             try {
-                // Futura llamada API:
-                // const res = await fetch('/api/reportes/epidemio');
-                // const data = await res.json();
-                // setCoberturaMunicipios(data.cobertura);
-                // setCausasReferencia(data.causas);
-            } catch (error) {
+                const response = await http.get('/admin/reportes/epidemio');
+                if (response.data) {
+                    setCoberturaMunicipios(response.data.cobertura || []);
+                    setCausasReferencia(response.data.causas || []);
+                }
+            } catch (error: any) {
                 console.error('Error al cargar datos epidemiológicos:', error);
+                setErrorMessage('No se pudo conectar con el servidor para obtener los reportes epidemiológicos.');
             } finally {
                 setCargando(false);
             }
         };
 
         cargarDatos();
-    }, [setCoberturaMunicipios, setCausasReferencia, setCargando]);
+    }, []);
 
-    const handleConfirmDownload = () => {
-        if (exportModal === 'EXCEL') {
-            // Petición al endpoint de descarga de Excel
-        } else if (exportModal === 'PDF') {
-            // Petición al endpoint de descarga de PDF
+    const handleConfirmDownload = async () => {
+        setIsExporting(true);
+        try {
+            if (exportModal === 'EXCEL') {
+                const response = await http.get('/admin/reportes/excel', { responseType: 'blob' });
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `Reporte_Epidemiologico_SSO_${new Date().toISOString().split('T')[0]}.xlsx`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            } else if (exportModal === 'PDF') {
+                const response = await http.get('/admin/reportes/pdf', { responseType: 'blob' });
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `Reporte_Jurisdiccional_SSO_${new Date().toISOString().split('T')[0]}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+        } catch (error: any) {
+            console.error('Error al descargar reporte:', error);
+            alert('Error al generar el archivo en el servidor.');
+        } finally {
+            setIsExporting(false);
+            setExportModal(null);
         }
-        setExportModal(null);
     };
 
     return (
@@ -88,6 +113,14 @@ export const TabReportesEpidemio: React.FC = () => {
                 </div>
             </div>
 
+            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             {/* GRÁFICO DE BARRAS DE COBERTURA POR MUNICIPIO */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -100,7 +133,10 @@ export const TabReportesEpidemio: React.FC = () => {
 
                     <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-200 min-h-[160px] flex flex-col justify-center">
                         {cargando ? (
-                            <p className="text-center text-xs text-slate-400 font-medium">Cargando métricas epidemiológicas...</p>
+                            <div className="py-8 text-center text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                                <span>Cargando métricas desde PostgreSQL (Render)...</span>
+                            </div>
                         ) : coberturaMunicipios.length === 0 ? (
                             <p className="text-center text-xs text-slate-400 font-medium">No hay datos de cobertura registrados para este periodo.</p>
                         ) : (
@@ -114,10 +150,10 @@ export const TabReportesEpidemio: React.FC = () => {
                                         <div
                                             style={{ width: `${m.coberturaPct}%` }}
                                             className={`h-full rounded-full transition-all duration-500 ${m.coberturaPct >= 95
-                                                    ? 'bg-[#9D2449]'
-                                                    : m.coberturaPct >= 90
-                                                        ? 'bg-amber-500'
-                                                        : 'bg-rose-500'
+                                                ? 'bg-[#9D2449]'
+                                                : m.coberturaPct >= 90
+                                                    ? 'bg-amber-500'
+                                                    : 'bg-rose-500'
                                                 }`}
                                         />
                                     </div>
@@ -135,7 +171,7 @@ export const TabReportesEpidemio: React.FC = () => {
 
                     <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-200 min-h-[160px] flex flex-col justify-center">
                         {cargando ? (
-                            <p className="text-center text-xs text-slate-400 font-medium">Cargando causas de canalización...</p>
+                            <p className="text-center text-xs text-slate-400 font-medium">Cargando causas...</p>
                         ) : causasReferencia.length === 0 ? (
                             <p className="text-center text-xs text-slate-400 font-medium">No hay canalizaciones registradas en el periodo.</p>
                         ) : (
@@ -184,6 +220,7 @@ export const TabReportesEpidemio: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setExportModal(null)}
+                                disabled={isExporting}
                                 className="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
                             >
                                 Cancelar
@@ -191,9 +228,17 @@ export const TabReportesEpidemio: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={handleConfirmDownload}
-                                className="w-1/2 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer"
+                                disabled={isExporting}
+                                className="w-1/2 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer disabled:opacity-60 flex items-center justify-center gap-1.5"
                             >
-                                Confirmar
+                                {isExporting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                                        <span>Generando...</span>
+                                    </>
+                                ) : (
+                                    <span>Confirmar</span>
+                                )}
                             </button>
                         </div>
                     </div>

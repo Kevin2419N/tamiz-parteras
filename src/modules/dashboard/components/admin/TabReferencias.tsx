@@ -1,52 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { HeartPulse, X, Stethoscope, MapPin, CheckCircle2, Clock } from 'lucide-react';
+import { HeartPulse, X, Stethoscope, MapPin, CheckCircle2, Clock, Loader2, AlertCircle } from 'lucide-react';
 import type { ReferenciaFormato1 } from './types';
+import { http } from '../../../../services/http';
 
 export const TabReferencias: React.FC = () => {
-    // Estado limpio en arreglo vacío, listo para recibir datos reales de la API
+    // Estados de referencias, carga y errores
     const [referencias, setReferencias] = useState<ReferenciaFormato1[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const [selectedReferencia, setSelectedReferencia] = useState<ReferenciaFormato1 | null>(null);
     const [respuestaTexto, setRespuestaTexto] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Punto de enganche para cargar las referencias comunitarias desde PostgreSQL
+    // Carga oficial de referencias desde PostgreSQL (Render)
     useEffect(() => {
         const cargarReferencias = async () => {
             setCargando(true);
+            setErrorMessage(null);
             try {
-                // Futura llamada API:
-                // const res = await fetch('/api/referencias');
-                // const data = await res.json();
-                // setReferencias(data);
-            } catch (error) {
+                const response = await http.get('/admin/referencias');
+                if (response.data) {
+                    setReferencias(response.data);
+                }
+            } catch (error: any) {
                 console.error('Error al cargar referencias comunitarias:', error);
+                setErrorMessage('No se pudo conectar con el servidor para obtener las referencias comunitarias.');
             } finally {
                 setCargando(false);
             }
         };
 
         cargarReferencias();
-    }, [setReferencias, setCargando]);
+    }, []);
 
     const handleOpenModal = (ref: ReferenciaFormato1) => {
         setSelectedReferencia(ref);
         setRespuestaTexto(ref.respuestaContrareferencia || '');
     };
 
-    const handleSaveContrareferencia = (e: React.FormEvent) => {
+    const handleSaveContrareferencia = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedReferencia) return;
 
-        // Aquí irá la petición PATCH/POST al servidor
-        setReferencias((prev) =>
-            prev.map((r) =>
-                r.id === selectedReferencia.id
-                    ? { ...r, estatus: 'CONTRAREFERIDO', respuestaContrareferencia: respuestaTexto }
-                    : r
-            )
-        );
-        setSelectedReferencia(null);
+        setIsSubmitting(true);
+        setErrorMessage(null);
+
+        try {
+            await http.patch(`/admin/referencias/${selectedReferencia.id}/contrareferencia`, {
+                respuestaContrareferencia: respuestaTexto,
+                estatus: 'CONTRAREFERIDO'
+            });
+
+            // Actualizar estado local
+            setReferencias((prev) =>
+                prev.map((r) =>
+                    r.id === selectedReferencia.id
+                        ? { ...r, estatus: 'CONTRAREFERIDO', respuestaContrareferencia: respuestaTexto }
+                        : r
+                )
+            );
+            setSelectedReferencia(null);
+        } catch (error: any) {
+            console.error('Error al guardar contrareferencia:', error);
+            alert(error.response?.data?.message || 'Error al emitir la contrareferencia en el servidor.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const getEstatusBadge = (estatus: ReferenciaFormato1['estatus']) => {
@@ -78,11 +98,20 @@ export const TabReferencias: React.FC = () => {
                 </p>
             </div>
 
+            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             {/* VISTA MÓVIL (< md): TARJETAS COMPACTAS */}
             <div className="space-y-3 md:hidden">
                 {cargando ? (
-                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
-                        Cargando referencias comunitarias...
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                        <span>Cargando referencias desde PostgreSQL (Render)...</span>
                     </div>
                 ) : referencias.length === 0 ? (
                     <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
@@ -138,8 +167,11 @@ export const TabReferencias: React.FC = () => {
                     <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                         {cargando ? (
                             <tr>
-                                <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
-                                    Cargando referencias comunitarias...
+                                <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                        <span>Cargando referencias desde PostgreSQL (Render)...</span>
+                                    </div>
                                 </td>
                             </tr>
                         ) : referencias.length === 0 ? (
@@ -226,9 +258,17 @@ export const TabReferencias: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md cursor-pointer"
+                                    disabled={isSubmitting}
+                                    className="flex-1 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
                                 >
-                                    Emitir Contrareferencia Oficial
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                                            <span>Guardando en PostgreSQL...</span>
+                                        </>
+                                    ) : (
+                                        <span>Emitir Contrareferencia Oficial</span>
+                                    )}
                                 </button>
                             </div>
                         </form>

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, X, Info, CheckCircle2 } from 'lucide-react';
+import { Building2, Plus, X, Info, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import type { UnidadCLUES } from './types';
-import { getCluesCatalog, addCluesUnit, subscribeCluesCatalog } from './cluesData';
+import { getCluesCatalog, addCluesUnit, subscribeCluesCatalog, fetchCluesCatalogFromBackend } from './cluesData';
 
 export const TabUnidadesCLUES: React.FC = () => {
-    // Estado limpio conectado con el catálogo global (inicia en [] hasta cargar de la API)
+    // Estado limpio conectado con el catálogo global
     const [cluesCatalog, setCluesCatalog] = useState<UnidadCLUES[]>(getCluesCatalog());
     const [showModal, setShowModal] = useState(false);
     const [cargando, setCargando] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     // Formulario de alta de unidad
     const [claveClues, setClaveClues] = useState('');
@@ -23,42 +25,52 @@ export const TabUnidadesCLUES: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Punto de enganche para cargar unidades CLUES desde el back-end (Node.js / PostgreSQL)
+    // Carga oficial de unidades CLUES desde PostgreSQL (Render)
     useEffect(() => {
         const cargarClues = async () => {
             setCargando(true);
+            setErrorMessage(null);
             try {
-                // Futura llamada API:
-                // const res = await fetch('/api/clues');
-                // const data = await res.json();
-                // setCluesCatalog(data);
-            } catch (error) {
+                const unidades = await fetchCluesCatalogFromBackend();
+                setCluesCatalog(unidades);
+            } catch (error: any) {
                 console.error('Error al cargar catálogo de unidades CLUES:', error);
+                setErrorMessage('No se pudo conectar con el servidor para obtener el catálogo CLUES.');
             } finally {
                 setCargando(false);
             }
         };
 
         cargarClues();
-    }, [setCargando]);
+    }, []);
 
-    const handleCreateClues = (e: React.FormEvent) => {
+    const handleCreateClues = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setErrorMessage(null);
 
-        // Registro local y despacho hacia API
-        addCluesUnit({
-            clues: claveClues.toUpperCase().trim(),
-            nombre: nombreUnidad.trim(),
-            municipio: municipio.trim() || 'Juchitán de Zaragoza',
-            tipoUnidad,
-            estatus,
-        });
-        setShowModal(false);
+        try {
+            const nuevaUnidad = await addCluesUnit({
+                clues: claveClues.toUpperCase().trim(),
+                nombre: nombreUnidad.trim(),
+                municipio: municipio.trim() || 'Juchitán de Zaragoza',
+                tipoUnidad,
+                estatus,
+            });
 
-        // Reset Form
-        setClaveClues('');
-        setNombreUnidad('');
-        setMunicipio('');
+            if (nuevaUnidad) {
+                setShowModal(false);
+                // Reset Form
+                setClaveClues('');
+                setNombreUnidad('');
+                setMunicipio('');
+            }
+        } catch (error: any) {
+            console.error('Error al registrar CLUES:', error);
+            alert('Error al guardar la unidad médica en la base de datos.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -91,6 +103,14 @@ export const TabUnidadesCLUES: React.FC = () => {
                 </button>
             </div>
 
+            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             {/* BANNER EXPLICATIVO INSTITUCIONAL */}
             <div className="p-4 bg-rose-50/70 border border-rose-200 rounded-2xl flex items-start gap-3.5 text-xs text-[#9D2449]">
                 <Info className="w-5 h-5 shrink-0 text-[#9D2449] mt-0.5" />
@@ -107,8 +127,9 @@ export const TabUnidadesCLUES: React.FC = () => {
             {/* VISTA MÓVIL (< md) */}
             <div className="space-y-3 md:hidden">
                 {cargando ? (
-                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
-                        Cargando catálogo de unidades médicas...
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                        <span>Cargando unidades desde PostgreSQL (Render)...</span>
                     </div>
                 ) : cluesCatalog.length === 0 ? (
                     <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
@@ -160,8 +181,11 @@ export const TabUnidadesCLUES: React.FC = () => {
                     <tbody className="divide-y divide-slate-100 text-slate-700">
                         {cargando ? (
                             <tr>
-                                <td colSpan={5} className="py-8 text-center text-slate-400 font-normal">
-                                    Cargando catálogo de unidades médicas...
+                                <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                        <span>Cargando unidades desde PostgreSQL (Render)...</span>
+                                    </div>
                                 </td>
                             </tr>
                         ) : cluesCatalog.length === 0 ? (
@@ -183,8 +207,8 @@ export const TabUnidadesCLUES: React.FC = () => {
                                     <td className="py-3.5 px-4 text-slate-700 font-medium">{u.tipoUnidad}</td>
                                     <td className="py-3.5 px-4 text-center">
                                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${u.estatus === 'ACTIVO'
-                                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                                : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                            : 'bg-amber-100 text-amber-800 border border-amber-300'
                                             }`}>
                                             {u.estatus}
                                         </span>
@@ -256,7 +280,7 @@ export const TabUnidadesCLUES: React.FC = () => {
                                 />
                             </div>
 
-                            {/* Municipio / Localidad (TEXTO LIBRE) */}
+                            {/* Municipio / Localidad */}
                             <div>
                                 <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
                                     <span>Municipio / Localidad * (Texto Libre)</span>
@@ -311,10 +335,20 @@ export const TabUnidadesCLUES: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                    disabled={isSubmitting}
+                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60"
                                 >
-                                    <CheckCircle2 className="w-4 h-4 text-rose-200" />
-                                    <span>Guardar Unidad CLUES</span>
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                                            <span>Guardando en PostgreSQL...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 className="w-4 h-4 text-rose-200" />
+                                            <span>Guardar Unidad CLUES</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>

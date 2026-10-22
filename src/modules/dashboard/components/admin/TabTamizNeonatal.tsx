@@ -1,33 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, X, Droplet, ShieldCheck, MapPin } from 'lucide-react';
+import { Search, Eye, X, Droplet, ShieldCheck, MapPin, Loader2, AlertCircle } from 'lucide-react';
 import type { MuestraGuthrie } from './types';
+import { http } from '../../../../services/http';
 
 export const TabTamizNeonatal: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedMuestra, setSelectedMuestra] = useState<MuestraGuthrie | null>(null);
 
-    // Estado limpio en arreglo vacío, listo para recibir datos de PostgreSQL / API Node.js
+    // Estados de muestras, carga y errores
     const [muestras, setMuestras] = useState<MuestraGuthrie[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Punto de enganche para cargar las muestras Guthrie reales desde el back-end
+    // Carga oficial de muestras Guthrie desde PostgreSQL (Render)
     useEffect(() => {
         const cargarMuestras = async () => {
             setCargando(true);
+            setErrorMessage(null);
             try {
-                // Futura llamada API:
-                // const res = await fetch('/api/tamiz/muestras');
-                // const data = await res.json();
-                // setMuestras(data);
-            } catch (error) {
+                const response = await http.get('/admin/tamiz/muestras');
+                if (response.data) {
+                    setMuestras(response.data);
+                }
+            } catch (error: any) {
                 console.error('Error al cargar muestras de tamiz neonatal:', error);
+                setErrorMessage('No se pudo conectar con el servidor para obtener las muestras de tamiz.');
             } finally {
                 setCargando(false);
             }
         };
 
         cargarMuestras();
-    }, [setMuestras, setCargando]);
+    }, []);
 
     const filteredMuestras = muestras.filter(
         (m) =>
@@ -78,11 +82,20 @@ export const TabTamizNeonatal: React.FC = () => {
                 </div>
             </div>
 
+            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             {/* VISTA MÓVIL (< md): TARJETAS COMPACTAS */}
             <div className="space-y-3 md:hidden">
                 {cargando ? (
-                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
-                        Cargando muestras de tamiz neonatal...
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                        <span>Cargando muestras desde PostgreSQL (Render)...</span>
                     </div>
                 ) : filteredMuestras.length === 0 ? (
                     <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
@@ -148,8 +161,11 @@ export const TabTamizNeonatal: React.FC = () => {
                     <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                         {cargando ? (
                             <tr>
-                                <td colSpan={7} className="py-8 text-center text-slate-400 font-normal">
-                                    Cargando muestras de tamiz neonatal...
+                                <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                        <span>Cargando muestras desde PostgreSQL (Render)...</span>
+                                    </div>
                                 </td>
                             </tr>
                         ) : filteredMuestras.length === 0 ? (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, Baby, Eye, X, MapPin } from 'lucide-react';
+import { Calendar, User, Baby, Eye, X, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { http } from '../../../../services/http';
 
 interface RegistroMujer {
     id: string;
@@ -30,32 +31,35 @@ export const TabCalendarios: React.FC = () => {
     const [subTab, setSubTab] = useState<'FORMATO_2' | 'FORMATO_3'>('FORMATO_2');
     const [selectedExpediente, setSelectedExpediente] = useState<{ titulo: string; detalle: string } | null>(null);
 
-    // Estados limpios en arreglos vacíos, listos para recibir datos de la API
+    // Estados de expedientes y carga
     const [expedientesMujer, setExpedientesMujer] = useState<RegistroMujer[]>([]);
     const [expedientesNino, setExpedientesNino] = useState<RegistroNino[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Punto de enganche para cargar expedientes desde PostgreSQL
+    // Carga oficial de calendarios comunitarios desde PostgreSQL (Render)
     useEffect(() => {
         const cargarCalendarios = async () => {
             setCargando(true);
+            setErrorMessage(null);
             try {
-                // Futura llamada API:
-                // const [resMujeres, resNinos] = await Promise.all([
-                //     fetch('/api/calendarios/salud-materna'),
-                //     fetch('/api/calendarios/desarrollo-infantil')
-                // ]);
-                // setExpedientesMujer(await resMujeres.json());
-                // setExpedientesNino(await resNinos.json());
-            } catch (error) {
+                const [resMujeres, resNinos] = await Promise.all([
+                    http.get('/admin/calendarios/salud-materna'),
+                    http.get('/admin/calendarios/desarrollo-infantil')
+                ]);
+
+                if (resMujeres.data) setExpedientesMujer(resMujeres.data);
+                if (resNinos.data) setExpedientesNino(resNinos.data);
+            } catch (error: any) {
                 console.error('Error al cargar expedientes de calendarios:', error);
+                setErrorMessage('No se pudo conectar con el servidor para obtener los calendarios comunitarios.');
             } finally {
                 setCargando(false);
             }
         };
 
         cargarCalendarios();
-    }, [setExpedientesMujer, setExpedientesNino, setCargando]);
+    }, []);
 
     return (
         <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
@@ -76,8 +80,8 @@ export const TabCalendarios: React.FC = () => {
                         type="button"
                         onClick={() => setSubTab('FORMATO_2')}
                         className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${subTab === 'FORMATO_2'
-                                ? 'bg-[#9D2449] text-white shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900'
+                            ? 'bg-[#9D2449] text-white shadow-sm'
+                            : 'text-slate-600 hover:text-slate-900'
                             }`}
                     >
                         <User className="w-3.5 h-3.5" />
@@ -88,8 +92,8 @@ export const TabCalendarios: React.FC = () => {
                         type="button"
                         onClick={() => setSubTab('FORMATO_3')}
                         className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${subTab === 'FORMATO_3'
-                                ? 'bg-[#9D2449] text-white shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900'
+                            ? 'bg-[#9D2449] text-white shadow-sm'
+                            : 'text-slate-600 hover:text-slate-900'
                             }`}
                     >
                         <Baby className="w-3.5 h-3.5" />
@@ -98,14 +102,23 @@ export const TabCalendarios: React.FC = () => {
                 </div>
             </div>
 
+            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             {/* SECCIÓN FORMATO 2: CALENDARIO DE LA MUJER */}
             {subTab === 'FORMATO_2' && (
                 <div className="space-y-4">
                     {/* VISTA MÓVIL (< md) */}
                     <div className="space-y-3 md:hidden">
                         {cargando ? (
-                            <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
-                                Cargando expediente de salud materna...
+                            <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                                <span>Cargando expedientes de salud materna desde PostgreSQL...</span>
                             </div>
                         ) : expedientesMujer.length === 0 ? (
                             <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
@@ -121,10 +134,10 @@ export const TabCalendarios: React.FC = () => {
                                             <p className="text-[11px] text-slate-500 font-medium">Partera: {m.partera}</p>
                                         </div>
                                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${m.nutricionMUAC === 'VERDE'
-                                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                                : m.nutricionMUAC === 'AMARILLO'
-                                                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                                    : 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
+                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                            : m.nutricionMUAC === 'AMARILLO'
+                                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                                : 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
                                             }`}>
                                             MUAC {m.nutricionMUAC}
                                         </span>
@@ -174,8 +187,11 @@ export const TabCalendarios: React.FC = () => {
                             <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                                 {cargando ? (
                                     <tr>
-                                        <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
-                                            Cargando expedientes de salud materna...
+                                        <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                                <span>Cargando expedientes de salud materna desde PostgreSQL...</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : expedientesMujer.length === 0 ? (
@@ -195,10 +211,10 @@ export const TabCalendarios: React.FC = () => {
                                             <td className="py-3.5 px-4 font-black text-slate-900">{m.semanaGestacion} SDG</td>
                                             <td className="py-3.5 px-4">
                                                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${m.nutricionMUAC === 'VERDE'
-                                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                                        : m.nutricionMUAC === 'AMARILLO'
-                                                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                                            : 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
+                                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                                    : m.nutricionMUAC === 'AMARILLO'
+                                                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                                        : 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
                                                     }`}>
                                                     MUAC {m.nutricionMUAC}
                                                 </span>
@@ -229,8 +245,9 @@ export const TabCalendarios: React.FC = () => {
                     {/* VISTA MÓVIL (< md) */}
                     <div className="space-y-3 md:hidden">
                         {cargando ? (
-                            <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
-                                Cargando expedientes de desarrollo infantil...
+                            <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                                <span>Cargando expedientes de desarrollo infantil...</span>
                             </div>
                         ) : expedientesNino.length === 0 ? (
                             <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
@@ -246,8 +263,8 @@ export const TabCalendarios: React.FC = () => {
                                             <p className="text-[11px] text-slate-500 font-medium">Madre: {n.nombreMadre}</p>
                                         </div>
                                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${n.vacunasCompletas
-                                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                                : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                            : 'bg-amber-100 text-amber-800 border border-amber-300'
                                             }`}>
                                             {n.vacunasCompletas ? 'Esquema Completo' : 'Vacuna Pendiente'}
                                         </span>
@@ -293,8 +310,11 @@ export const TabCalendarios: React.FC = () => {
                             <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                                 {cargando ? (
                                     <tr>
-                                        <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
-                                            Cargando expedientes de desarrollo infantil...
+                                        <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                                <span>Cargando expedientes de desarrollo infantil...</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : expedientesNino.length === 0 ? (

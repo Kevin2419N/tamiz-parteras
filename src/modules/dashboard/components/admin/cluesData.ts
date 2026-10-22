@@ -1,7 +1,7 @@
 import type { UnidadCLUES } from './types';
+import { http } from '../../../../services/http';
 
-// Catálogo en memoria con suscriptores. Inicia vacío: se hidrata con setCluesCatalog()
-// desde la API real (o desde MOCK_CLUES_LIST en src/data/mocks.ts durante desarrollo).
+// Catálogo en memoria con suscriptores. Inicia vacío: se hidrata desde la API real (Render)
 let catalogStore: UnidadCLUES[] = [];
 type Listener = (units: UnidadCLUES[]) => void;
 const listeners = new Set<Listener>();
@@ -11,22 +11,43 @@ export const getCluesCatalog = (): UnidadCLUES[] => {
 };
 
 /**
- * Reemplaza el catálogo completo (p. ej. con la respuesta de GET /clues del back-end)
- * y notifica a todos los componentes suscritos.
+ * Reemplaza el catálogo completo y notifica a todos los componentes suscritos.
  */
 export const setCluesCatalog = (units: UnidadCLUES[]): void => {
     catalogStore = units;
     listeners.forEach((l) => l(catalogStore));
 };
 
-export const addCluesUnit = (unit: Omit<UnidadCLUES, 'id'>): UnidadCLUES => {
-    const newUnit: UnidadCLUES = {
-        ...unit,
-        id: `clues-${Date.now()}`,
-    };
-    catalogStore = [newUnit, ...catalogStore];
-    listeners.forEach((l) => l(catalogStore));
-    return newUnit;
+/**
+ * Carga oficial del catálogo de CLUES directamente desde el backend en Render (PostgreSQL).
+ */
+export const fetchCluesCatalogFromBackend = async (): Promise<UnidadCLUES[]> => {
+    try {
+        const response = await http.get('/admin/clues');
+        if (response.data) {
+            setCluesCatalog(response.data);
+            return response.data;
+        }
+    } catch (error) {
+        console.error('Error al obtener el catálogo de CLUES desde el servidor:', error);
+    }
+    return catalogStore;
+};
+
+export const addCluesUnit = async (unit: Omit<UnidadCLUES, 'id'>): Promise<UnidadCLUES | null> => {
+    try {
+        // Petición real al backend para persistir en PostgreSQL
+        const response = await http.post('/admin/clues', unit);
+        const createdUnit: UnidadCLUES = response.data.unidad || response.data;
+
+        catalogStore = [createdUnit, ...catalogStore];
+        listeners.forEach((l) => l(catalogStore));
+        return createdUnit;
+    } catch (error) {
+        console.error('Error al registrar la unidad CLUES en el servidor:', error);
+        alert('No se pudo guardar la unidad médica en la base de datos.');
+        return null;
+    }
 };
 
 export const subscribeCluesCatalog = (listener: Listener) => {
@@ -41,7 +62,7 @@ export const exportDatabaseAsJSON = () => {
         sistema: 'Servicios de Salud de Oaxaca - Jurisdicción Sanitaria No. 2 Istmo',
         version: '2026.4.0-PROD',
         fechaExportacion: new Date().toISOString(),
-        servidor: 'BD-LOCAL-JURISDICCION-02',
+        servidor: 'BD-RENDER-POSTGRESQL-JURISDICCION-02',
         catálogoCLUES: catalogStore,
         totalUnidades: catalogStore.length,
         politicaSeguridad: 'Cifrado AES-256 Institucional SSO Oaxaca',
@@ -50,7 +71,7 @@ export const exportDatabaseAsJSON = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `SSO_Oaxaca_Respaldo_BD_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute('download', `SSO_Oaxaca_Respaldo_CLUES_${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();

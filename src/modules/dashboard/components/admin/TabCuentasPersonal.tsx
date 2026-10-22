@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, Phone, Lock, Building2 } from 'lucide-react';
+import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, Phone, Lock, Building2, Loader2, AlertCircle } from 'lucide-react';
 import type { UsuarioSSO, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
+import { http } from '../../../../services/http';
 
 export const TabCuentasPersonal: React.FC = () => {
-    // El estado inicia completamente vacío, listo para conectarse a PostgreSQL / API real
+    // Estado de los usuarios institucionales
     const [usuarios, setUsuarios] = useState<UsuarioSSO[]>([]);
+    const [cargando, setCargando] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Catálogo dinámico de CLUES
     const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
@@ -17,10 +20,25 @@ export const TabCuentasPersonal: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Punto de enganche para cargar usuarios desde la API real (Node.js / PostgreSQL)
+    // Carga oficial de usuarios desde PostgreSQL (Render)
     useEffect(() => {
-        // Ejemplo de futura integración:
-        // fetch('/api/usuarios').then(res => res.json()).then(data => setUsuarios(data));
+        const cargarUsuarios = async () => {
+            setCargando(true);
+            setErrorMessage(null);
+            try {
+                const response = await http.get('/admin/usuarios');
+                if (response.data) {
+                    setUsuarios(response.data);
+                }
+            } catch (error: any) {
+                console.error('Error al cargar cuentas de personal:', error);
+                setErrorMessage('No se pudo conectar con el servidor para obtener las cuentas de personal.');
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarUsuarios();
     }, []);
 
     // Form modal state (Desglose en 3 campos)
@@ -36,6 +54,7 @@ export const TabCuentasPersonal: React.FC = () => {
     const [selectedCluesId, setSelectedCluesId] = useState<string>('');
     const [pinTemporal, setPinTemporal] = useState('');
     const [showPinText, setShowPinText] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Initialize selected CLUES when modal opens or cluesList updates
     useEffect(() => {
@@ -79,13 +98,15 @@ export const TabCuentasPersonal: React.FC = () => {
         setPinTemporal(pin);
     };
 
-    const handleCreateUser = (e: React.FormEvent) => {
+    const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setErrorMessage(null);
+
         const foundUnit = cluesList.find((u) => u.id === selectedCluesId) || cluesList[0];
         const nombreCompleto = `${nombres.trim()} ${apellidoPaterno.trim()} ${apellidoMaterno.trim()}`.trim();
 
-        const newUser: UsuarioSSO = {
-            id: `u-${Date.now()}`,
+        const payload = {
             nombre: nombreCompleto,
             curp: curp.toUpperCase(),
             email: email.toLowerCase(),
@@ -98,19 +119,28 @@ export const TabCuentasPersonal: React.FC = () => {
             estatus: 'ACTIVO'
         };
 
-        // Aquí irá la petición POST a la API de Node.js/PostgreSQL
-        setUsuarios([newUser, ...usuarios]);
-        setShowModal(false);
+        try {
+            const response = await http.post('/admin/usuarios', payload);
+            const newUser: UsuarioSSO = response.data.usuario || response.data;
 
-        // Reset form
-        setNombres('');
-        setApellidoPaterno('');
-        setApellidoMaterno('');
-        setCurp('');
-        setEmail('');
-        setTelefono('');
-        setMunicipio('');
-        setPinTemporal('');
+            setUsuarios([newUser, ...usuarios]);
+            setShowModal(false);
+
+            // Reset form
+            setNombres('');
+            setApellidoPaterno('');
+            setApellidoMaterno('');
+            setCurp('');
+            setEmail('');
+            setTelefono('');
+            setMunicipio('');
+            setPinTemporal('');
+        } catch (error: any) {
+            console.error('Error al crear usuario institucional:', error);
+            alert(error.response?.data?.message || 'Error al guardar el usuario en la base de datos.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const getRoleBadgeLabel = (r: UsuarioSSO['rol']) => {
@@ -167,9 +197,22 @@ export const TabCuentasPersonal: React.FC = () => {
                 </button>
             </div>
 
+            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             {/* VISTA MÓVIL (< md) */}
             <div className="space-y-3 md:hidden">
-                {usuarios.length === 0 ? (
+                {cargando ? (
+                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                        <span>Cargando cuentas desde PostgreSQL (Render)...</span>
+                    </div>
+                ) : usuarios.length === 0 ? (
                     <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
                         No hay cuentas de personal registradas.
                     </div>
@@ -230,7 +273,16 @@ export const TabCuentasPersonal: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                        {usuarios.length === 0 ? (
+                        {cargando ? (
+                            <tr>
+                                <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                        <span>Cargando cuentas desde PostgreSQL (Render)...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : usuarios.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
                                     No hay cuentas de personal registradas.
@@ -277,7 +329,7 @@ export const TabCuentasPersonal: React.FC = () => {
                 </table>
             </div>
 
-            {/* MODAL CREAR USUARIO INSTITUTIONAL SSO EN 2 COLUMNAS CON AUTOGENERACIÓN DE CORREO */}
+            {/* MODAL CREAR USUARIO INSTITUTIONAL SSO */}
             {showModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -416,7 +468,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Municipio / Localidad (TEXTO LIBRE) */}
+                                    {/* Municipio / Localidad */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1">Municipio / Localidad * (Texto Libre)</label>
                                         <input
@@ -447,7 +499,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    {/* Unidad Médica / CLUES (Select dinámico) */}
+                                    {/* Unidad Médica / CLUES */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
                                             <span>Unidad Médica de Adscripción / CLUES *</span>
@@ -531,10 +583,20 @@ export const TabCuentasPersonal: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                    disabled={isSubmitting}
+                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60"
                                 >
-                                    <UserCheck className="w-4 h-4 text-rose-200" />
-                                    <span>Dar de Alta Usuario SSO</span>
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                                            <span>Guardando en PostgreSQL...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UserCheck className="w-4 h-4 text-rose-200" />
+                                            <span>Dar de Alta Usuario SSO</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>

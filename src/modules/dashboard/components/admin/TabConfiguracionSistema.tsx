@@ -1,41 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Database, HardDrive, ShieldCheck, History, Download, AlertTriangle, Megaphone, Plus, Trash2, CheckCircle2, Lock, User } from 'lucide-react';
+import { Settings, Database, HardDrive, ShieldCheck, History, Download, AlertTriangle, Megaphone, Plus, Trash2, CheckCircle2, Lock, User, Loader2, AlertCircle } from 'lucide-react';
 import type { LogSistema, AvisoEpidemiologico } from './types';
 import { exportDatabaseAsJSON } from './cluesData';
+import { http } from '../../../../services/http';
 
 export const TabConfiguracionSistema: React.FC = () => {
     const [backupMessage, setBackupMessage] = useState<string | null>(null);
 
-    // Estados limpios vacíos, listos para conectarse a la API de Node.js / PostgreSQL
+    // Estados de avisos y bitácora
     const [avisos, setAvisos] = useState<AvisoEpidemiologico[]>([]);
     const [bitacora, setBitacora] = useState<LogSistema[]>([]);
     const [cargandoAvisos, setCargandoAvisos] = useState<boolean>(false);
     const [cargandoBitacora, setCargandoBitacora] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Formulario de creación de avisos
     const [showAvisoModal, setShowAvisoModal] = useState(false);
     const [nuevoTitulo, setNuevoTitulo] = useState('');
     const [nuevoContenido, setNuevoContenido] = useState('');
     const [nuevaPrioridad, setNuevaPrioridad] = useState<AvisoEpidemiologico['prioridad']>('ALTA');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Punto de enganche para cargar avisos y bitácora desde el back-end
+    // Carga oficial de avisos y bitácora desde PostgreSQL (Render)
     useEffect(() => {
         const cargarDatosSistema = async () => {
             setCargandoAvisos(true);
             setCargandoBitacora(true);
+            setErrorMessage(null);
             try {
-                // Futura llamada a la API:
-                // const resAvisos = await fetch('/api/configuracion/avisos');
-                // const dataAvisos = await resAvisos.json();
-                // setAvisos(dataAvisos);
+                const [resAvisos, resBitacora] = await Promise.all([
+                    http.get('/admin/avisos'),
+                    http.get('/admin/bitacora')
+                ]);
 
-                // const resBitacora = await fetch('/api/configuracion/bitacora');
-                // const dataBitacora = await resBitacora.json();
-                // setBitacora(dataBitacora);
-            } catch (error) {
+                if (resAvisos.data) setAvisos(resAvisos.data);
+                if (resBitacora.data) setBitacora(resBitacora.data);
+            } catch (error: any) {
                 console.error('Error al cargar datos del sistema:', error);
-                setAvisos([]);
-                setBitacora([]);
+                setErrorMessage('No se pudo conectar con el servidor para obtener los avisos y la bitácora de auditoría.');
             } finally {
                 setCargandoAvisos(false);
                 setCargandoBitacora(false);
@@ -43,7 +45,7 @@ export const TabConfiguracionSistema: React.FC = () => {
         };
 
         cargarDatosSistema();
-    }, [setAvisos, setBitacora, setCargandoAvisos, setCargandoBitacora]);
+    }, []);
 
     const handleGenerateJSONBackup = () => {
         exportDatabaseAsJSON();
@@ -53,30 +55,46 @@ export const TabConfiguracionSistema: React.FC = () => {
         }, 4000);
     };
 
-    const handlePublicarAviso = (e: React.FormEvent) => {
+    const handlePublicarAviso = async (e: React.FormEvent) => {
         e.preventDefault();
-        const nuevo: AvisoEpidemiologico = {
-            id: `av-${Date.now()}`,
+        setIsSubmitting(true);
+        setErrorMessage(null);
+
+        const payload = {
             titulo: nuevoTitulo,
             contenido: nuevoContenido,
             prioridad: nuevaPrioridad,
-            fechaPublicacion: new Date().toLocaleString(),
             autor: 'Lic. Administrador Jurisdiccional',
             estatus: 'ACTIVO',
         };
 
-        // Petición POST a la API
-        setAvisos([nuevo, ...avisos]);
-        setShowAvisoModal(false);
+        try {
+            const response = await http.post('/admin/avisos', payload);
+            const nuevo: AvisoEpidemiologico = response.data.aviso || response.data;
 
-        // Reset
-        setNuevoTitulo('');
-        setNuevoContenido('');
+            setAvisos([nuevo, ...avisos]);
+            setShowAvisoModal(false);
+
+            // Reset
+            setNuevoTitulo('');
+            setNuevoContenido('');
+        } catch (error: any) {
+            console.error('Error al publicar aviso:', error);
+            alert(error.response?.data?.message || 'Error al guardar el aviso en la base de datos.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    const handleEliminarAviso = (id: string) => {
-        // Petición DELETE a la API
-        setAvisos(avisos.filter((a) => a.id !== id));
+    const handleEliminarAviso = async (id: string) => {
+        if (!window.confirm('¿Está seguro de eliminar este aviso epidemiológico?')) return;
+        try {
+            await http.delete(`/admin/avisos/${id}`);
+            setAvisos(avisos.filter((a) => a.id !== id));
+        } catch (error: any) {
+            console.error('Error al eliminar aviso:', error);
+            alert('No se pudo eliminar el aviso del servidor.');
+        }
     };
 
     return (
@@ -92,6 +110,14 @@ export const TabConfiguracionSistema: React.FC = () => {
                     Funciones exclusivas para la administración jurisdiccional de los Servicios de Salud de Oaxaca.
                 </p>
             </div>
+
+            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
 
             {/* MÓDULO 1: RESPALDO DE BASE DE DATOS (.JSON) */}
             <div className="p-6 bg-slate-50 rounded-3xl border border-slate-200 space-y-4">
@@ -111,7 +137,7 @@ export const TabConfiguracionSistema: React.FC = () => {
                             <HardDrive className="w-4 h-4 text-emerald-600" />
                             <span>Servidor BD:</span>
                         </div>
-                        <span className="font-mono text-slate-900 font-extrabold text-xs block">BD-LOCAL-JURISDICCION-02</span>
+                        <span className="font-mono text-slate-900 font-extrabold text-xs block">BD-RENDER-POSTGRESQL-02</span>
                     </div>
 
                     <div className="p-3.5 bg-white rounded-2xl border border-slate-200 space-y-1">
@@ -173,8 +199,11 @@ export const TabConfiguracionSistema: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {cargandoAvisos ? (
-                        <div className="col-span-full p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
-                            Cargando avisos epidemiológicos...
+                        <div className="col-span-full p-12 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                            <div className="flex items-center justify-center gap-2">
+                                <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                <span>Cargando avisos desde PostgreSQL (Render)...</span>
+                            </div>
                         </div>
                     ) : avisos.length === 0 ? (
                         <div className="col-span-full p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
@@ -186,10 +215,10 @@ export const TabConfiguracionSistema: React.FC = () => {
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-2">
                                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${a.prioridad === 'ALTA'
-                                                ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                                                : a.prioridad === 'MEDIA'
-                                                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                                    : 'bg-blue-100 text-blue-900 border border-blue-300'
+                                            ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                            : a.prioridad === 'MEDIA'
+                                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                                : 'bg-blue-100 text-blue-900 border border-blue-300'
                                             }`}>
                                             {a.prioridad === 'ALTA' && <AlertTriangle className="w-3 h-3 inline mr-1 text-rose-700" />}
                                             Prioridad {a.prioridad}
@@ -243,8 +272,11 @@ export const TabConfiguracionSistema: React.FC = () => {
                         <tbody className="divide-y divide-slate-200/70 text-slate-700">
                             {cargandoBitacora ? (
                                 <tr>
-                                    <td colSpan={5} className="py-8 text-center text-slate-400 font-normal">
-                                        Cargando bitácora de auditoría...
+                                    <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                            <span>Cargando bitácora desde PostgreSQL (Render)...</span>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : bitacora.length === 0 ? (
@@ -342,9 +374,17 @@ export const TabConfiguracionSistema: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md cursor-pointer"
+                                    disabled={isSubmitting}
+                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
                                 >
-                                    Publicar Aviso
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                                            <span>Guardando...</span>
+                                        </>
+                                    ) : (
+                                        <span>Publicar Aviso</span>
+                                    )}
                                 </button>
                             </div>
                         </form>
