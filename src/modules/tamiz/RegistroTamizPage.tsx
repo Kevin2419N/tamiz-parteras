@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { http } from '../../services/http';
 import {
     Baby,
     User,
@@ -26,28 +27,26 @@ export const RegistroTamizPage: React.FC = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [createdFolio, setCreatedFolio] = useState<string>('');
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Lista dinámica de parteras obtenida del backend
+    // Lista dinámica de parteras obtenida del backend real
     const [parterasIstmo, setParterasIstmo] = useState<Array<{ id: string; nombre: string }>>([
         { id: 'PAR-OAX-001', nombre: 'Doña Rosa Santiz Gómez (Na Rosa - Juchitán)' }
     ]);
 
-    // Cargar parteras reales para el selector desde el backend
+    // Cargar parteras reales para el selector desde el backend (Render)
     useEffect(() => {
         const fetchParterasList = async () => {
             try {
-                const res = await fetch('http://localhost:4000/api/parteras');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.length > 0) {
-                        setParterasIstmo(data.map((p: any) => ({
-                            id: p.id,
-                            nombre: `${p.nombreCompleto} (${p.nombreZapoteco || p.comunidad})`
-                        })));
-                    }
+                const res = await http.get('/parteras');
+                if (res.data && res.data.length > 0) {
+                    setParterasIstmo(res.data.map((p: any) => ({
+                        id: p.id,
+                        nombre: `${p.nombreCompleto} (${p.nombreZapoteco || p.comunidad})`
+                    })));
                 }
             } catch (e) {
-                console.warn('Usando partera por defecto debido a desconexión del backend:', e);
+                console.error('Error al cargar parteras del backend:', e);
             }
         };
         fetchParterasList();
@@ -72,7 +71,7 @@ export const RegistroTamizPage: React.FC = () => {
         municipio: 'Juchitán de Zaragoza',
         comunidad: 'Juchitán de Zaragoza',
 
-        folioGuthrie: `TMZ-OAX-${Math.floor(10000 + Math.random() * 90000)}`,
+        folioGuthrie: '', // El backend o PostgreSQL genera el folio oficial
         fechaHoraToma: new Date().toISOString().slice(0, 16),
         tipoMuestra: 'Sangre Talar (Tarjeta Guthrie S&S 903)',
         responsableToma: 'Personal de Jurisdicción Sanitaria No. 2',
@@ -101,34 +100,28 @@ export const RegistroTamizPage: React.FC = () => {
         if (currentStep > 1) setCurrentStep(currentStep - 1);
     };
 
-    // Envío real al Backend y PostgreSQL
+    // Envío real al Backend y PostgreSQL vía Axios
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setErrorMessage(null);
 
         try {
-            const response = await fetch('http://localhost:4000/api/tamiz', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    prioridadAlta: esPrioridadAltaLab,
-                    horasPostParto
-                })
+            const response = await http.post('/tamiz', {
+                ...formData,
+                prioridadAlta: esPrioridadAltaLab,
+                horasPostParto
             });
 
-            if (!response.ok) {
-                throw new Error('Error al guardar la muestra de tamiz en el servidor.');
-            }
-
-            const resultado = await response.json();
-            setCreatedFolio(resultado.folioGuthrie || formData.folioGuthrie);
+            const resultado = response.data;
+            setCreatedFolio(resultado.folioGuthrie || 'TMZ-OAX-REGISTRADO');
             setShowSuccessModal(true);
-        } catch (err) {
-            console.warn('Error de red al registrar tamiz (simulando éxito para demo si el servidor está apagado):', err);
-            // Fallback para no bloquear la presentación si el backend local no está levantado
-            setCreatedFolio(formData.folioGuthrie);
-            setShowSuccessModal(true);
+        } catch (err: any) {
+            console.error('Error al registrar tamiz:', err);
+            setErrorMessage(
+                err.response?.data?.message ||
+                'Error al conectar con el servidor para guardar la muestra de tamiz.'
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -149,7 +142,7 @@ export const RegistroTamizPage: React.FC = () => {
                     </div>
                     <h1 className="text-2xl font-black text-slate-900 mt-1">Registro de Muestra de Tamiz Neonatal</h1>
                     <p className="text-xs font-medium text-slate-600 mt-1">
-                        Jurisdicción Sanitaria No. 2 • Istmo de Tehuantepec (Conexión Backend Activa).
+                        Jurisdicción Sanitaria No. 2 • Istmo de Tehuantepec (Conexión Backend Render).
                     </p>
                 </div>
 
@@ -161,6 +154,14 @@ export const RegistroTamizPage: React.FC = () => {
                     <span>Volver al Dashboard</span>
                 </button>
             </div>
+
+            {/* Mensaje de Error si falla la API */}
+            {errorMessage && (
+                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
+                    <AlertTriangle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
 
             {/* Stepper Wizard Indicator */}
             <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm">
@@ -175,12 +176,14 @@ export const RegistroTamizPage: React.FC = () => {
                             key={step.num}
                             onClick={() => setCurrentStep(step.num)}
                             className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center gap-3 ${currentStep === step.num
-                                ? 'bg-rose-50 border-[#9D2449] shadow-sm'
-                                : currentStep > step.num
-                                    ? 'bg-slate-50 border-slate-200 text-[#9D2449]'
-                                    : 'bg-slate-50/60 border-slate-200 opacity-60'}`}
+                                    ? 'bg-rose-50 border-[#9D2449] shadow-sm'
+                                    : currentStep > step.num
+                                        ? 'bg-slate-50 border-slate-200 text-[#9D2449]'
+                                        : 'bg-slate-50/60 border-slate-200 opacity-60'
+                                }`}
                         >
-                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === step.num ? 'bg-[#9D2449] text-white' : currentStep > step.num ? 'bg-rose-100 text-[#9D2449]' : 'bg-slate-200 text-slate-600'}`}>
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${currentStep === step.num ? 'bg-[#9D2449] text-white' : currentStep > step.num ? 'bg-rose-100 text-[#9D2449]' : 'bg-slate-200 text-slate-600'
+                                }`}>
                                 {currentStep > step.num ? <Check className="w-4 h-4" /> : step.num}
                             </div>
                             <div className="hidden md:block overflow-hidden">
@@ -197,7 +200,7 @@ export const RegistroTamizPage: React.FC = () => {
 
                 {/* PASO 1 */}
                 {currentStep === 1 && (
-                    <div className="space-y-5 animate-fadeIn">
+                    <div className="space-y-5">
                         <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
                             <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
                                 <Baby className="w-5 h-5" />
@@ -249,7 +252,7 @@ export const RegistroTamizPage: React.FC = () => {
                                 <select
                                     value={formData.sexo}
                                     onChange={(e) => setFormData({ ...formData, sexo: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600 cursor-pointer"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none"
                                 >
                                     <option value="MASCULINO">Masculino</option>
                                     <option value="FEMENINO">Femenino</option>
@@ -264,7 +267,7 @@ export const RegistroTamizPage: React.FC = () => {
                                     max="44"
                                     value={formData.semanasGestacion}
                                     onChange={(e) => setFormData({ ...formData, semanasGestacion: Number(e.target.value) })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -279,7 +282,7 @@ export const RegistroTamizPage: React.FC = () => {
                                     max="6000"
                                     value={formData.pesoGramos}
                                     onChange={(e) => setFormData({ ...formData, pesoGramos: Number(e.target.value) })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none"
                                 />
                             </div>
                             <div>
@@ -290,7 +293,7 @@ export const RegistroTamizPage: React.FC = () => {
                                     max="65"
                                     value={formData.tallaCm}
                                     onChange={(e) => setFormData({ ...formData, tallaCm: Number(e.target.value) })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -317,7 +320,7 @@ export const RegistroTamizPage: React.FC = () => {
                                     <select
                                         value={formData.parteraId}
                                         onChange={(e) => setFormData({ ...formData, parteraId: e.target.value })}
-                                        className="w-full bg-white border border-emerald-300 rounded-xl px-3.5 py-2 text-slate-900 font-semibold focus:outline-none focus:border-emerald-600 cursor-pointer"
+                                        className="w-full bg-white border border-emerald-300 rounded-xl px-3.5 py-2 text-slate-900 font-semibold focus:outline-none"
                                     >
                                         {parterasIstmo.map((p) => (
                                             <option key={p.id} value={p.id}>{p.nombre}</option>
@@ -331,7 +334,7 @@ export const RegistroTamizPage: React.FC = () => {
 
                 {/* PASO 2 */}
                 {currentStep === 2 && (
-                    <div className="space-y-5 animate-fadeIn">
+                    <div className="space-y-5">
                         <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
                             <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
                                 <User className="w-5 h-5" />
@@ -350,7 +353,7 @@ export const RegistroTamizPage: React.FC = () => {
                                     required
                                     value={formData.nombreMadre}
                                     onChange={(e) => setFormData({ ...formData, nombreMadre: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none"
                                 />
                             </div>
                             <div>
@@ -359,7 +362,7 @@ export const RegistroTamizPage: React.FC = () => {
                                     type="text"
                                     value={formData.curpMadre}
                                     onChange={(e) => setFormData({ ...formData, curpMadre: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono focus:outline-none focus:border-emerald-600"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -372,7 +375,7 @@ export const RegistroTamizPage: React.FC = () => {
                                     required
                                     value={formData.telefonoContacto}
                                     onChange={(e) => setFormData({ ...formData, telefonoContacto: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none"
                                 />
                             </div>
                             <div>
@@ -380,7 +383,7 @@ export const RegistroTamizPage: React.FC = () => {
                                 <select
                                     value={formData.municipio}
                                     onChange={(e) => setFormData({ ...formData, municipio: e.target.value, comunidad: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-semibold focus:outline-none focus:border-emerald-600 cursor-pointer"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-semibold focus:outline-none"
                                 >
                                     <option value="Juchitán de Zaragoza">Juchitán de Zaragoza</option>
                                     <option value="Santo Domingo Tehuantepec">Santo Domingo Tehuantepec</option>
@@ -395,7 +398,7 @@ export const RegistroTamizPage: React.FC = () => {
 
                 {/* PASO 3 */}
                 {currentStep === 3 && (
-                    <div className="space-y-5 animate-fadeIn">
+                    <div className="space-y-5">
                         <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
                             <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
                                 <FileText className="w-5 h-5" />
@@ -422,9 +425,10 @@ export const RegistroTamizPage: React.FC = () => {
                                 <input
                                     type="text"
                                     required
+                                    placeholder="Ej: TMZ-OAX-98421"
                                     value={formData.folioGuthrie}
                                     onChange={(e) => setFormData({ ...formData, folioGuthrie: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:outline-none focus:border-emerald-600"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:outline-none"
                                 />
                             </div>
                             <div>
@@ -434,7 +438,7 @@ export const RegistroTamizPage: React.FC = () => {
                                     required
                                     value={formData.fechaHoraToma}
                                     onChange={(e) => setFormData({ ...formData, fechaHoraToma: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-600"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -443,20 +447,20 @@ export const RegistroTamizPage: React.FC = () => {
 
                 {/* PASO 4 */}
                 {currentStep === 4 && (
-                    <div className="space-y-5 animate-fadeIn">
+                    <div className="space-y-5">
                         <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
                             <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
                                 <ShieldCheck className="w-5 h-5" />
                             </div>
                             <div>
                                 <h3 className="text-base font-black text-slate-900">Paso 4: Confirmación</h3>
-                                <p className="text-xs text-slate-500 font-medium">Listos para enviar al servidor backend.</p>
+                                <p className="text-xs text-slate-500 font-medium">Listos para enviar al servidor backend en Render.</p>
                             </div>
                         </div>
 
                         <div className="bg-slate-50 p-5 rounded-3xl border border-slate-200 space-y-4 text-xs">
                             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                                <span className="font-mono font-bold text-emerald-800 text-sm">{formData.folioGuthrie}</span>
+                                <span className="font-mono font-bold text-emerald-800 text-sm">{formData.folioGuthrie || 'Folio Automático'}</span>
                                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
                                     LISTO PARA API BACKEND
                                 </span>
@@ -466,7 +470,7 @@ export const RegistroTamizPage: React.FC = () => {
                                 <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Recién Nacido</span>
                                     <p className="font-extrabold text-slate-900">{formData.nombresRN} {formData.apellidosRN}</p>
-                                    <p className="text-slate-600"><span className="font-semibold">{formData.sexo}</span> • <span className="font-semibold">{formData.semanasGestacion} SDG</span></p>
+                                    <p className="text-slate-600 font-semibold">{formData.sexo} • {formData.semanasGestacion} SDG</p>
                                 </div>
                                 <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Madre</span>
@@ -514,7 +518,7 @@ export const RegistroTamizPage: React.FC = () => {
                             {isSubmitting ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>Guardando en Servidor...</span>
+                                    <span>Guardando en PostgreSQL (Render)...</span>
                                 </>
                             ) : (
                                 <>
