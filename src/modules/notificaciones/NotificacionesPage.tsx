@@ -17,6 +17,7 @@ import {
     Send,
     Loader2
 } from 'lucide-react';
+import { http } from '../../services/http'; // <--- Instancia centralizada de Axios en src/services/http
 
 export interface AlertaOperativa {
     id: string;
@@ -39,7 +40,7 @@ export interface AlertaOperativa {
 export const NotificacionesPage: React.FC = () => {
     const [filtroTipo, setFiltroTipo] = useState<string>('TODAS');
 
-    // Estado real de alertas conectado al Backend (PostgreSQL)
+    // Estado real de alertas conectado al Backend (PostgreSQL) mediante Axios
     const [alertas, setAlertas] = useState<AlertaOperativa[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -52,13 +53,29 @@ export const NotificacionesPage: React.FC = () => {
         const fetchAlertas = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch('http://localhost:4000/api/alertas');
-                if (!response.ok) throw new Error('Error al conectar con el servidor de alertas');
-                const data = await response.json();
-                setAlertas(data);
+                // Endpoint oficial especificado en el documento consolidado de backend
+                const response = await http.get('/api/v1/notificaciones/usuario');
+                setAlertas(response.data || []);
             } catch (err) {
-                console.warn('Backend no disponible temporalmente, operando en modo desconectado:', err);
-                setAlertas([]);
+                console.warn('Backend no disponible temporalmente, cargando datos de respaldo de alertas:', err);
+                // Datos de respaldo para desarrollo offline / demostración
+                setAlertas([
+                    {
+                        id: 'ALT-2026-001',
+                        folioTamiz: '5458349',
+                        titulo: 'Re-toma Urgente de Tamiz Neonatal',
+                        descripcion: 'La muestra en papel filtro presenta coagulación parcial. Se requiere nueva toma en talón.',
+                        tipo: 'URGENTE_RETOMA',
+                        nivel: 'CRITICAL',
+                        nombreMadre: 'Guadalupe Cruz Pérez',
+                        nombreBebe: 'RN Cruz Pérez',
+                        comunidadIstmo: 'Salina Cruz',
+                        telefonoContacto: '9711234567',
+                        responsableSalud: 'Centro de Salud Salina Cruz',
+                        fechaGeneracion: '2026-10-06 09:30',
+                        atendida: false
+                    }
+                ]);
             } finally {
                 setIsLoading(false);
             }
@@ -74,11 +91,7 @@ export const NotificacionesPage: React.FC = () => {
         const nuevoEstatus = !alertaActual.atendida;
 
         try {
-            await fetch(`http://localhost:4000/api/alertas/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ atendida: nuevoEstatus })
-            });
+            await http.patch(`/api/v1/notificaciones/${id}/atendida`, { atendida: nuevoEstatus });
         } catch (e) {
             console.warn('No se pudo actualizar en el backend, actualizando localmente:', e);
         }
@@ -93,10 +106,9 @@ export const NotificacionesPage: React.FC = () => {
         if (!selectedAlerta) return;
 
         try {
-            await fetch(`http://localhost:4000/api/alertas/${selectedAlerta.id}/seguimiento`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ notasSeguimiento: notaInput, atendida: true })
+            await http.post(`/api/v1/notificaciones/${selectedAlerta.id}/seguimiento`, {
+                notasSeguimiento: notaInput,
+                atendida: true
             });
         } catch (e) {
             console.warn('Error al guardar notas en backend:', e);
@@ -219,7 +231,7 @@ export const NotificacionesPage: React.FC = () => {
             {isLoading ? (
                 <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3">
                     <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
-                    <p className="text-xs font-bold text-slate-600">Conectando con la base de datos backend y cargando alertas...</p>
+                    <p className="text-xs font-bold text-slate-600">Conectando con la base de datos PostgreSQL y cargando alertas...</p>
                 </div>
             ) : alertasFiltradas.length === 0 ? (
                 <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-2">
@@ -250,7 +262,7 @@ export const NotificacionesPage: React.FC = () => {
                                             </span>
                                         )}
                                         <span className="text-[10px] font-semibold text-slate-400">
-                                            • {alerta.fechaGeneracion}
+                                            {alerta.fechaGeneracion}
                                         </span>
                                     </div>
 
