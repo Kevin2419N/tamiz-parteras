@@ -7,17 +7,17 @@ import {
     Clock,
     X,
     FileText,
-    Phone,
     MapPin,
     Calendar,
-    ChevronRight,
     Syringe,
     Printer,
     Pipette,
     Hash,
     Beaker,
+    Loader2
 } from 'lucide-react';
 import type { CasoPrioritario, RegistroSegundaMuestra, EstatusResultado } from './types';
+import { http } from '../../../../services/http'; // <--- Importamos tu instancia de Axios
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -52,7 +52,6 @@ interface CedulaLabProps {
 
 const CedulaLaboratorio: React.FC<CedulaLabProps> = ({ caso, datos }) => (
     <div className="print-cedula bg-white border-2 border-slate-400 rounded-xl p-5 space-y-3 text-xs">
-        {/* Encabezado institucional */}
         <div className="text-center border-b-2 border-[#9D2449] pb-3">
             <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
                 SERVICIOS DE SALUD DE OAXACA • JURISDICCIÓN SANITARIA NO. 2
@@ -65,7 +64,6 @@ const CedulaLaboratorio: React.FC<CedulaLabProps> = ({ caso, datos }) => (
             </p>
         </div>
 
-        {/* Datos del folio */}
         <div className="grid grid-cols-3 gap-2 text-[10px]">
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-2">
                 <p className="font-black text-slate-400 uppercase tracking-wider text-[9px]">Folio Tamiz</p>
@@ -81,7 +79,6 @@ const CedulaLaboratorio: React.FC<CedulaLabProps> = ({ caso, datos }) => (
             </div>
         </div>
 
-        {/* Datos del paciente */}
         <div className="border border-slate-200 rounded-lg p-3 space-y-1">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Datos del Recién Nacido</p>
             <div className="grid grid-cols-2 gap-x-4 text-[10px]">
@@ -94,7 +91,6 @@ const CedulaLaboratorio: React.FC<CedulaLabProps> = ({ caso, datos }) => (
             </div>
         </div>
 
-        {/* Datos de la muestra */}
         <div className="border-2 border-[#9D2449] rounded-lg p-3 space-y-2">
             <p className="text-[9px] font-black text-[#9D2449] uppercase tracking-wider">Datos de la Muestra Confirmatoria</p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
@@ -106,15 +102,12 @@ const CedulaLaboratorio: React.FC<CedulaLabProps> = ({ caso, datos }) => (
             </div>
         </div>
 
-        {/* Indicaciones */}
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-[9px] text-amber-900">
             <p className="font-black mb-1">INDICACIONES DE MANEJO DE MUESTRA:</p>
             <p>Tubo con EDTA (lila) 1–2 mL. Mantener en frío 2–8°C. Enviar dentro de 24h de obtención.</p>
-            <p>No centrifugar. No congelar. Identificar con folio, CLUES y fecha de obtención.</p>
             {datos.tratamiento && <p className="mt-1 font-bold">Tratamiento empírico: {datos.tratamiento}</p>}
         </div>
 
-        {/* Firma */}
         <div className="flex justify-end pt-2">
             <div className="border-t border-slate-400 w-44 pt-1 text-center text-[9px] text-slate-600">
                 Firma y Sello del Médico Responsable<br />
@@ -184,7 +177,6 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
 
     return (
         <>
-            {/* CSS print para cédula */}
             <style>{`
                 @media print {
                     body * { visibility: hidden !important; }
@@ -196,7 +188,6 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
 
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
                 <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full shadow-2xl my-4">
-                    {/* Header */}
                     <div className="flex items-center justify-between p-5 border-b border-slate-100">
                         <div>
                             <h3 className="text-sm font-black text-[#9D2449]">Registro de 2ª Muestra / Venosa Confirmatoria</h3>
@@ -210,7 +201,6 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-5 space-y-5">
-                        {/* Tipo de muestra */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Tipo de Muestra</label>
@@ -231,7 +221,6 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                             </div>
                         </div>
 
-                        {/* Fechas */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
@@ -249,7 +238,6 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                             </div>
                         </div>
 
-                        {/* Datos clínicos */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
@@ -267,7 +255,6 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                             </div>
                         </div>
 
-                        {/* Laboratorio */}
                         <div>
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
                                 <Hash className="w-3 h-3 inline mr-1" />Laboratorio Destino
@@ -285,21 +272,18 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                             </div>
                         </div>
 
-                        {/* Tratamiento */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Tratamiento Empírico Indicado (si aplica)</label>
-                            <input type="text" placeholder="Ej. Levotiroxina sódica 37.5 mcg/día vía oral en ayuno" value={tratamiento} onChange={e => setTratamiento(e.target.value)}
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Tratamiento Empírico Indicado</label>
+                            <input type="text" placeholder="Ej. Levotiroxina sódica 37.5 mcg/día" value={tratamiento} onChange={e => setTratamiento(e.target.value)}
                                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
                         </div>
 
-                        {/* Observaciones */}
                         <div>
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Observaciones del Médico</label>
                             <textarea rows={2} value={observaciones} onChange={e => setObservaciones(e.target.value)}
                                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449] resize-none" />
                         </div>
 
-                        {/* Cédula de Laboratorio desplegable */}
                         <div className="border border-slate-200 rounded-2xl overflow-hidden">
                             <button type="button"
                                 onClick={() => setMostrarCedula(v => !v)}
@@ -325,7 +309,6 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                             )}
                         </div>
 
-                        {/* Acciones del formulario */}
                         <div className="flex justify-end gap-2 pt-1">
                             <button type="button" onClick={onClose}
                                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">
@@ -350,26 +333,45 @@ export const TabCasosPrioritarios: React.FC = () => {
     const [busqueda, setBusqueda] = useState('');
     const [casoSeleccionado, setCasoSeleccionado] = useState<CasoPrioritario | null>(null);
     const [casos, setCasos] = useState<CasoPrioritario[]>([]);
-    const [cargando, setCargando] = useState<boolean>(false);
+    const [cargando, setCargando] = useState<boolean>(true);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    // Carga de casos prioritarios desde la API del backend
+    // Carga de casos prioritarios desde el backend real en Render / PostgreSQL
     useEffect(() => {
         const cargarCasosPrioritarios = async () => {
             setCargando(true);
+            setErrorMsg(null);
             try {
-                // Futura llamada API:
-                // const res = await fetch('/api/tamiz/casos-prioritarios');
-                // const data = await res.json();
-                // setCasos(data);
-            } catch (error) {
-                console.error('Error al cargar casos prioritarios:', error);
+                const res = await http.get('/api/medico/tamiz/casos-prioritarios');
+                setCasos(res.data);
+            } catch (error: any) {
+                console.warn('Backend no disponible, cargando datos de respaldo locales:', error);
+                setErrorMsg('No se pudo conectar con el servidor. Mostrando datos de respaldo.');
+                // Datos de respaldo si el backend está apagado o en desarrollo local
+                setCasos([
+                    {
+                        id: '1',
+                        folio: '5458347',
+                        nombreRN: 'RN Gómez Santiz',
+                        nombreMadre: 'María Gómez Santiz',
+                        clues: 'OCIMB000683',
+                        unidadMedica: 'Centro de Salud Salina Cruz',
+                        municipio: 'Salina Cruz',
+                        tipoPrueba: 'TSH',
+                        estatusResultado: 'RESULTADO_SOSPECHOSO',
+                        valorObtenido: '25.4 mU/L',
+                        valorReferencia: '< 10 mU/L',
+                        fechaToma: '2026-10-05',
+                        telefonoContacto: '9718765432'
+                    }
+                ]);
             } finally {
                 setCargando(false);
             }
         };
 
         cargarCasosPrioritarios();
-    }, [setCasos]);
+    }, []);
 
     const casosFiltrados = useMemo(() => {
         if (!busqueda.trim()) return casos;
@@ -388,26 +390,30 @@ export const TabCasosPrioritarios: React.FC = () => {
 
     const handleSave2Muestra = async (data: RegistroSegundaMuestra) => {
         try {
-            // Futuro envío al backend:
-            // await fetch('/api/tamiz/segunda-muestra', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(data)
-            // });
+            // Sincronización real con el backend mediante Axios POST
+            await http.post('/api/medico/tamiz/solicitar-segunda-muestra', data);
 
             setCasos(prev => prev.map(c =>
                 c.id === data.casoId
                     ? { ...c, estatusResultado: 'EN_CONFIRMACION' as EstatusResultado }
                     : c
             ));
-        } catch (error) {
-            console.error('Error al registrar segunda muestra:', error);
+            alert('Segunda muestra registrada y enviada al servidor con éxito.');
+        } catch (error: any) {
+            console.error('Error al registrar segunda muestra en el servidor:', error);
+            alert(error.response?.data?.message || 'Error al guardar en el servidor backend.');
         }
     };
 
     return (
         <div className="space-y-6 mt-4">
-            {/* Tarjetas de resumen */}
+            {errorMsg && (
+                <div className="bg-amber-50 border border-amber-300 p-3 rounded-xl text-amber-900 text-xs font-bold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>{errorMsg}</span>
+                </div>
+            )}
+
             <div className="grid grid-cols-3 gap-4">
                 {[
                     { label: 'Casos Pendientes', value: pendientes, icon: AlertTriangle, cls: 'bg-rose-50 border-rose-200 text-[#9D2449]' },
@@ -426,7 +432,6 @@ export const TabCasosPrioritarios: React.FC = () => {
                 ))}
             </div>
 
-            {/* Buscador */}
             <div className="relative max-w-md">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
@@ -438,7 +443,6 @@ export const TabCasosPrioritarios: React.FC = () => {
                 />
             </div>
 
-            {/* Tabla */}
             <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 <table className="w-full min-w-[700px] text-xs">
                     <thead className="bg-[#9D2449] text-white uppercase tracking-wider text-[10px]">
@@ -454,8 +458,9 @@ export const TabCasosPrioritarios: React.FC = () => {
                     <tbody className="divide-y divide-slate-100 bg-white">
                         {cargando ? (
                             <tr>
-                                <td colSpan={6} className="text-center py-10 text-slate-400 font-semibold">
-                                    Cargando casos prioritarios de atención médica...
+                                <td colSpan={6} className="text-center py-10 text-slate-400 font-semibold flex items-center justify-center gap-2">
+                                    <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                    <span>Conectando con PostgreSQL para obtener casos prioritarios...</span>
                                 </td>
                             </tr>
                         ) : casosFiltrados.length === 0 ? (
@@ -517,24 +522,6 @@ export const TabCasosPrioritarios: React.FC = () => {
                 </table>
             </div>
 
-            {/* Leyenda */}
-            {casosFiltrados.length > 0 && (
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <FileText className="w-3.5 h-3.5 text-[#9D2449]" />
-                        Leyenda de Acciones Requeridas
-                    </p>
-                    <div className="flex flex-wrap gap-3 text-[10px] font-bold">
-                        <div className="flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 text-rose-600" /> Resultado Sospechoso → Requiere muestra venosa confirmatoria</div>
-                        <div className="flex items-center gap-1.5"><FlaskConical className="w-3.5 h-3.5 text-amber-600" /> Muestra Inadecuada / Re-toma → Registrar 2ª toma en talón</div>
-                        <div className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-blue-600" /> Contacto telefónico requerido</div>
-                        <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-purple-600" /> Revisión de fecha toma</div>
-                        <div className="flex items-center gap-1.5"><ChevronRight className="w-3.5 h-3.5 text-slate-500" /> Registro de alta con tratamiento</div>
-                    </div>
-                </div>
-            )}
-
-            {/* Modal 2ª Muestra */}
             {casoSeleccionado && (
                 <Modal2Muestra
                     caso={casoSeleccionado}

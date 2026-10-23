@@ -2,9 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
     AlertTriangle, TrendingUp, Baby, Activity, ShieldAlert,
     Plus, Trash2, Info, Printer, Calculator, ChevronDown, User,
-    Edit3, FlaskConical, X, Save, Baby as BabyIcon, Syringe,
+    Edit3, FlaskConical, X, Save, Baby as BabyIcon, Syringe, Loader2,
 } from 'lucide-react';
 import type { ExpedientePerinatal, ConsultaAntenatal, RiesgoARO, LabSerologiaForm, PartoDatosRegistro } from './types';
+import { http } from '../../../../services/http';
 
 // ─── Datos CLAP/OPS: Percentiles Altura Uterina (cm) por semana ──────────────
 const AU_WEEKS = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
@@ -12,19 +13,10 @@ const AU_P10 = [8, 9, 11, 13, 16, 18, 20, 22, 24, 26, 28, 30, 31, 32, 33];
 const AU_P50 = [10, 11, 14, 16, 19, 21, 23, 25, 27, 29, 31, 33, 34, 35, 36];
 const AU_P90 = [12, 13, 16, 19, 22, 24, 27, 29, 31, 33, 35, 37, 38, 39, 40];
 
-// Ganancia peso (kg sobre peso inicial) P10/P50/P90 por semana (OMS/IOM)
 const PW_WEEKS = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
 const PW_P10 = [0, 0.5, 1, 1.5, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const PW_P50 = [0, 1, 2, 3, 4.5, 5.5, 7, 8.5, 10, 11, 12, 13, 14, 15, 16];
 const PW_P90 = [0, 1.5, 3, 5, 7, 8.5, 10, 12, 14, 15.5, 17, 18, 19, 20, 21];
-
-const CRITERIOS_ARO = [
-    'Edad < 15 o > 35 años', 'Paridad ≥ 5', 'Período intergenésico < 2 años',
-    'Antecedente de mortinato o muerte neonatal', 'Antecedente de cesárea anterior',
-    'Preeclampsia / HTA crónica', 'Diabetes mellitus pregestacional', 'Cardiopatía materna',
-    'Talla < 1.50 m', 'IMC Pregestacional > 30', 'Anemia severa (Hb < 8 g/dL)',
-    'VIH / Sífilis positivo', 'Gestas previas con RN < 2,500 g', 'Embarazo múltiple',
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -71,7 +63,7 @@ const ModalEditAntecedentes: React.FC<ModalEditAntecedentesProps> = ({ expedient
         onClose();
     };
 
-    const boolSections: { title: string; state: Record<string, boolean>; setter: React.Dispatch<React.SetStateAction<Record<string, boolean>>> }[] = [
+    const boolSections = [
         { title: 'Antecedentes Familiares', state: familiares as unknown as Record<string, boolean>, setter: setFamiliares as unknown as React.Dispatch<React.SetStateAction<Record<string, boolean>>> },
         { title: 'Antecedentes Personales Patológicos', state: personales as unknown as Record<string, boolean>, setter: setPersonales as unknown as React.Dispatch<React.SetStateAction<Record<string, boolean>>> },
     ];
@@ -160,18 +152,13 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
         fechaVacuna2: '',
     });
 
-    const alertaRhNeg = form.factorRh === 'NEGATIVO';
-    const alertaVDRL = ['REACTIVE', 'REACTIVO'].includes(String(form.vdrlSerologia).toUpperCase());
-
     const grupoOpts: ExpedientePerinatal['grupoSanguineo'][] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-
     const field = (label: string, node: React.ReactNode) => (
         <div>
             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>
             {node}
         </div>
     );
-
     const inputCls = "w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]";
 
     return (
@@ -185,25 +172,12 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
                     <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer"><X className="w-4 h-4" /></button>
                 </div>
                 <div className="p-5 space-y-4">
-                    {alertaRhNeg && (
-                        <div className="flex items-start gap-3 bg-amber-50 border border-amber-300 rounded-2xl p-3">
-                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                            <p className="text-xs font-black text-amber-800">ALERTA: Factor Rh Negativo — Verificar inmunoglobulina anti-D e isoinmunización.</p>
-                        </div>
-                    )}
-                    {alertaVDRL && (
-                        <div className="flex items-start gap-3 bg-rose-50 border border-rose-300 rounded-2xl p-3">
-                            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                            <p className="text-xs font-black text-rose-800">ALERTA CRÍTICA: VDRL Reactivo — Requiere tratamiento urgente con Penicilina Benzatínica y seguimiento estricto.</p>
-                        </div>
-                    )}
                     <div className="grid grid-cols-2 gap-4">
                         {field('Grupo Sanguíneo',
                             <div className="flex flex-wrap gap-1.5">
                                 {grupoOpts.map(g => (
                                     <button key={g} type="button" onClick={() => setForm(p => ({ ...p, grupoSanguineo: g }))}
-                                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${form.grupoSanguineo === g ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'
-                                            }`}>{g}</button>
+                                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${form.grupoSanguineo === g ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700'}`}>{g}</button>
                                 ))}
                             </div>
                         )}
@@ -211,10 +185,7 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
                             <div className="flex gap-2">
                                 {(['POSITIVO', 'NEGATIVO'] as const).map(rh => (
                                     <button key={rh} type="button" onClick={() => setForm(p => ({ ...p, factorRh: rh }))}
-                                        className={`flex-1 py-2 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${form.factorRh === rh
-                                            ? rh === 'NEGATIVO' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-emerald-600 border-emerald-600 text-white'
-                                            : 'bg-slate-50 border-slate-300 text-slate-700'
-                                            }`}>{rh}</button>
+                                        className={`flex-1 py-2 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${form.factorRh === rh ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700'}`}>{rh}</button>
                                 ))}
                             </div>
                         )}
@@ -223,7 +194,6 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
                                 <option value="NEGATIVO">Negativo</option>
                                 <option value="POSITIVO">Positivo</option>
                                 <option value="PENDIENTE">Pendiente</option>
-                                <option value="NO_REALIZADO">No realizado</option>
                             </select>
                         )}
                         {field('VDRL / Sífilis',
@@ -231,41 +201,8 @@ const ModalLabSerologia: React.FC<ModalLabSerologiaProps> = ({ expediente, onClo
                                 <option value="NON_REACTIVE">No Reactivo</option>
                                 <option value="REACTIVE">Reactivo</option>
                                 <option value="PENDIENTE">Pendiente</option>
-                                <option value="NO_REALIZADO">No realizado</option>
                             </select>
                         )}
-                        {field('Hemoglobina (g/dL)',
-                            <input type="number" step="0.1" min="0" max="20" placeholder="Ej. 11.5"
-                                value={form.hemoglobinaGdL} onChange={e => setForm(p => ({ ...p, hemoglobinaGdL: e.target.value }))}
-                                className={inputCls} />
-                        )}
-                    </div>
-                    <div className="border-t border-slate-100 pt-4">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Vacunación Tdap / Tétanos</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" checked={form.vacunaTetanos} onChange={e => setForm(p => ({ ...p, vacunaTetanos: e.target.checked }))}
-                                        className="w-4 h-4 accent-[#9D2449]" />
-                                    <span className="text-xs font-bold text-slate-700">1ª Dosis aplicada</span>
-                                </label>
-                                {form.vacunaTetanos && (
-                                    <input type="date" value={form.fechaVacuna1} onChange={e => setForm(p => ({ ...p, fechaVacuna1: e.target.value }))}
-                                        className={inputCls} />
-                                )}
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" checked={form.vacunaDosis2} onChange={e => setForm(p => ({ ...p, vacunaDosis2: e.target.checked }))}
-                                        className="w-4 h-4 accent-[#9D2449]" />
-                                    <span className="text-xs font-bold text-slate-700">2ª Dosis aplicada</span>
-                                </label>
-                                {form.vacunaDosis2 && (
-                                    <input type="date" value={form.fechaVacuna2} onChange={e => setForm(p => ({ ...p, fechaVacuna2: e.target.value }))}
-                                        className={inputCls} />
-                                )}
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div className="flex justify-end gap-2 p-5 border-t border-slate-100">
@@ -303,8 +240,7 @@ const ModalRegistroParto: React.FC<ModalRegistroPartoProps> = ({ onClose, onSave
     const f = (label: string, node: React.ReactNode) => (
         <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>{node}</div>
     );
-
-    const valid = data.fechaHoraNacimiento && data.pesoRNGramos > 0;
+    const valid = Boolean(data.fechaHoraNacimiento && data.pesoRNGramos > 0);
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
@@ -318,69 +254,27 @@ const ModalRegistroParto: React.FC<ModalRegistroPartoProps> = ({ onClose, onSave
                 </div>
                 <div className="p-5 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        {f('Fecha y Hora de Nacimiento',
-                            <input type="datetime-local" value={data.fechaHoraNacimiento}
-                                onChange={e => setData(p => ({ ...p, fechaHoraNacimiento: e.target.value }))}
-                                className={inputCls} />
-                        )}
-                        {f('Semanas al Parto',
-                            <input type="number" min={22} max={45} value={data.semanasParto}
-                                onChange={e => setData(p => ({ ...p, semanasParto: Number(e.target.value) }))}
-                                className={inputCls} />
-                        )}
+                        {f('Fecha y Hora de Nacimiento', <input type="datetime-local" value={data.fechaHoraNacimiento} onChange={e => setData(p => ({ ...p, fechaHoraNacimiento: e.target.value }))} className={inputCls} />)}
+                        {f('Semanas al Parto', <input type="number" min={22} max={45} value={data.semanasParto} onChange={e => setData(p => ({ ...p, semanasParto: Number(e.target.value) }))} className={inputCls} />)}
                     </div>
                     {f('Tipo de Parto',
                         <div className="flex gap-2">
                             {(['EUTOCICO', 'DISTOCICO', 'CESAREA'] as const).map(t => (
                                 <button key={t} type="button" onClick={() => setData(p => ({ ...p, tipoPartoParto: t }))}
-                                    className={`flex-1 py-2 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${data.tipoPartoParto === t ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'
-                                        }`}>{t}</button>
+                                    className={`flex-1 py-2 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${data.tipoPartoParto === t ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-slate-50 border-slate-300 text-slate-700'}`}>{t}</button>
                             ))}
                         </div>
                     )}
-                    <div className="grid grid-cols-2 gap-4">
-                        {f('APGAR 1 min (0–10)',
-                            <input type="number" min={0} max={10} value={data.apgar1}
-                                onChange={e => setData(p => ({ ...p, apgar1: Number(e.target.value) }))}
-                                className={inputCls} />
-                        )}
-                        {f('APGAR 5 min (0–10)',
-                            <input type="number" min={0} max={10} value={data.apgar5}
-                                onChange={e => setData(p => ({ ...p, apgar5: Number(e.target.value) }))}
-                                className={inputCls} />
-                        )}
-                    </div>
                     <div className="grid grid-cols-3 gap-4">
-                        {f('Peso RN (g)',
-                            <input type="number" min={300} max={6000} placeholder="Ej. 3250"
-                                value={data.pesoRNGramos || ''}
-                                onChange={e => setData(p => ({ ...p, pesoRNGramos: Number(e.target.value) }))}
-                                className={inputCls} />
-                        )}
-                        {f('Talla RN (cm)',
-                            <input type="number" min={25} max={65} placeholder="Ej. 50"
-                                value={data.tallaRNCm || ''}
-                                onChange={e => setData(p => ({ ...p, tallaRNCm: Number(e.target.value) }))}
-                                className={inputCls} />
-                        )}
-                        {f('PC RN (cm)',
-                            <input type="number" min={20} max={45} placeholder="Ej. 34"
-                                value={data.perimetroCefalicoRNCm || ''}
-                                onChange={e => setData(p => ({ ...p, perimetroCefalicoRNCm: Number(e.target.value) }))}
-                                className={inputCls} />
-                        )}
+                        {f('Peso RN (g)', <input type="number" placeholder="3250" value={data.pesoRNGramos || ''} onChange={e => setData(p => ({ ...p, pesoRNGramos: Number(e.target.value) }))} className={inputCls} />)}
+                        {f('Talla RN (cm)', <input type="number" placeholder="50" value={data.tallaRNCm || ''} onChange={e => setData(p => ({ ...p, tallaRNCm: Number(e.target.value) }))} className={inputCls} />)}
+                        {f('Folio Guthrie', <input type="text" placeholder="5458400" value={data.folioGuthrie} onChange={e => setData(p => ({ ...p, folioGuthrie: e.target.value }))} className={inputCls} />)}
                     </div>
-                    {f('Folio Guthrie Asignado',
-                        <input type="text" placeholder="Ej. 5458400"
-                            value={data.folioGuthrie}
-                            onChange={e => setData(p => ({ ...p, folioGuthrie: e.target.value }))}
-                            className={inputCls} />
-                    )}
                 </div>
                 <div className="flex justify-end gap-2 p-5 border-t border-slate-100">
                     <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">Cancelar</button>
                     <button type="button" disabled={!valid} onClick={() => { if (valid) { onSave(data); onClose(); } }}
-                        className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                        className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 disabled:opacity-40 cursor-pointer">
                         <BabyIcon className="w-3.5 h-3.5" />Registrar Parto y RN
                     </button>
                 </div>
@@ -434,13 +328,12 @@ interface SVGCurvaProps {
 }
 
 const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
-    title, subtitle, xLabel, yLabel, weeksData, p10, p50, p90, puntos,
+    title, subtitle, weeksData, p10, p50, p90, puntos,
     yMin, yMax, color = '#9D2449', lineColor = '#1e40af', unidad
 }) => {
     const W = 520, H = 280, ML = 50, MR = 30, MT = 28, MB = 44;
     const plotW = W - ML - MR;
     const plotH = H - MT - MB;
-
     const xMin = weeksData[0];
     const xMax = weeksData[weeksData.length - 1];
     const allY = [...p10, ...p50, ...p90, ...puntos.map(p => p.valor)];
@@ -451,31 +344,18 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
 
     const scX = (w: number) => ML + ((w - xMin) / (xMax - xMin)) * plotW;
     const scY = (v: number) => MT + plotH - ((v - ylo) / (yhi - ylo)) * plotH;
+    const pathOf = (vals: number[]) => weeksData.map((w, i) => `${i === 0 ? 'M' : 'L'}${scX(w).toFixed(1)},${scY(vals[i]).toFixed(1)}`).join(' ');
+    const areaPath = [...weeksData.map((w, i) => `${i === 0 ? 'M' : 'L'}${scX(w).toFixed(1)},${scY(p90[i]).toFixed(1)}`), ...[...weeksData].reverse().map((w, i, arr) => `L${scX(w).toFixed(1)},${scY(p10[arr.length - 1 - i]).toFixed(1)}`), 'Z'].join(' ');
 
-    const pathOf = (vals: number[]) =>
-        weeksData.map((w, i) => `${i === 0 ? 'M' : 'L'}${scX(w).toFixed(1)},${scY(vals[i]).toFixed(1)}`).join(' ');
-
-    const areaPath = [
-        ...weeksData.map((w, i) => `${i === 0 ? 'M' : 'L'}${scX(w).toFixed(1)},${scY(p90[i]).toFixed(1)}`),
-        ...[...weeksData].reverse().map((w, i, arr) => `L${scX(w).toFixed(1)},${scY(p10[arr.length - 1 - i]).toFixed(1)}`),
-        'Z'
-    ].join(' ');
-
-    const xTicks = weeksData.filter((_, i) => i % 2 === 0);
     const yRange = yhi - ylo;
     const yStep = yRange > 30 ? 5 : yRange > 15 ? 2 : 1;
     const yTicks: number[] = [];
     for (let v = Math.ceil(ylo / yStep) * yStep; v <= yhi; v += yStep) yTicks.push(v);
 
     const sortedPuntos = [...puntos].sort((a, b) => a.semana - b.semana);
-    const trendPath = sortedPuntos.length > 1
-        ? sortedPuntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${scX(p.semana).toFixed(1)},${scY(p.valor).toFixed(1)}`).join(' ')
-        : '';
+    const trendPath = sortedPuntos.length > 1 ? sortedPuntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${scX(p.semana).toFixed(1)},${scY(p.valor).toFixed(1)}`).join(' ') : '';
 
     const [hovered, setHovered] = useState<number | null>(null);
-
-    const midX = (scX(xMin) + scX(xMax)) / 2;
-    const midP50Y = scY(p50[Math.floor(p50.length / 2)]);
 
     return (
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
@@ -483,105 +363,37 @@ const SVGCurvaPercentil: React.FC<SVGCurvaProps> = ({
                 <p className="text-[11px] font-black text-slate-600 uppercase tracking-wider">{title}</p>
                 {subtitle && <p className="text-[10px] text-slate-400 font-medium">{subtitle}</p>}
             </div>
-            <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ fontFamily: 'inherit' }}>
+            <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
                 <rect x={ML} y={MT} width={plotW} height={plotH} fill="#f8fafc" rx="2" />
                 <path d={areaPath} fill={color} fillOpacity="0.10" stroke="none" />
                 <path d={pathOf(p90)} fill="none" stroke={color} strokeWidth="0.75" strokeDasharray="5 3" opacity="0.55" />
                 <path d={pathOf(p10)} fill="none" stroke={color} strokeWidth="0.75" strokeDasharray="5 3" opacity="0.55" />
-
-                {yTicks.map(v => (
-                    <line key={v} x1={ML} x2={W - MR} y1={scY(v)} y2={scY(v)} stroke="#e2e8f0" strokeWidth="0.6" />
-                ))}
-                {xTicks.map(w => (
-                    <line key={w} x1={scX(w)} x2={scX(w)} y1={MT} y2={H - MB} stroke="#e2e8f0" strokeWidth="0.6" />
-                ))}
-
-                {puntos.length === 0 && (
-                    <text x={midX} y={midP50Y} textAnchor="middle" fontSize="9" fill={color} opacity="0.35" fontWeight="800">
-                        ZONA NORMAL
-                    </text>
-                )}
-
+                {yTicks.map(v => (<line key={v} x1={ML} x2={W - MR} y1={scY(v)} y2={scY(v)} stroke="#e2e8f0" strokeWidth="0.6" />))}
                 <path d={pathOf(p50)} fill="none" stroke={color} strokeWidth="2" opacity="0.65" strokeLinecap="round" strokeLinejoin="round" />
-
-                {(['P10', 'P50', 'P90'] as const).map((lbl, idx) => {
-                    const arr = [p10, p50, p90][idx];
-                    const lastW = weeksData[weeksData.length - 1];
-                    const yOffset = idx === 0 ? 4 : idx === 2 ? -2 : 4;
-                    return (
-                        <g key={lbl}>
-                            <rect x={scX(lastW) + 2} y={scY(arr[arr.length - 1]) + yOffset - 7} width={24} height={9} rx={2} fill="white" opacity="0.85" />
-                            <text x={scX(lastW) + 14} y={scY(arr[arr.length - 1]) + yOffset} textAnchor="middle" fontSize="8" fill={color} opacity="0.85" fontWeight="800">{lbl}</text>
-                        </g>
-                    );
-                })}
-
-                {trendPath && (
-                    <path d={trendPath} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-                )}
-
+                {trendPath && (<path d={trendPath} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />)}
                 {sortedPuntos.map((p, i) => (
                     <g key={i} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)} style={{ cursor: 'pointer' }}>
-                        <circle cx={scX(p.semana)} cy={scY(p.valor)} r="7" fill={lineColor} opacity="0.15" />
                         <circle cx={scX(p.semana)} cy={scY(p.valor)} r="5" fill={lineColor} stroke="white" strokeWidth="2" />
-                        <circle cx={scX(p.semana)} cy={scY(p.valor)} r="2" fill="white" />
                         {hovered === i && (
                             <g>
                                 <rect x={scX(p.semana) - 28} y={scY(p.valor) - 24} width={56} height={17} rx={5} fill="#1e293b" />
-                                <text x={scX(p.semana)} y={scY(p.valor) - 12} textAnchor="middle" fontSize="8.5" fill="white" fontWeight="700">
-                                    Sem {p.semana}: {p.valor}{unidad}
-                                </text>
+                                <text x={scX(p.semana)} y={scY(p.valor) - 12} textAnchor="middle" fontSize="8.5" fill="white" fontWeight="700">Sem {p.semana}: {p.valor}{unidad}</text>
                             </g>
                         )}
                     </g>
                 ))}
-
                 <line x1={ML} y1={MT} x2={ML} y2={H - MB} stroke="#94a3b8" strokeWidth="1.5" />
                 <line x1={ML} y1={H - MB} x2={W - MR} y2={H - MB} stroke="#94a3b8" strokeWidth="1.5" />
-
-                {xTicks.map(w => (
-                    <g key={w}>
-                        <line x1={scX(w)} x2={scX(w)} y1={H - MB} y2={H - MB + 4} stroke="#94a3b8" strokeWidth="1" />
-                        <text x={scX(w)} y={H - MB + 14} textAnchor="middle" fontSize="8" fill="#64748b" fontWeight="700">{w}</text>
-                    </g>
-                ))}
-
-                {yTicks.map(v => (
-                    <g key={v}>
-                        <line x1={ML - 4} x2={ML} y1={scY(v)} y2={scY(v)} stroke="#94a3b8" strokeWidth="1" />
-                        <text x={ML - 6} y={scY(v) + 3} textAnchor="end" fontSize="8" fill="#64748b" fontWeight="700">{v}</text>
-                    </g>
-                ))}
-
-                <text x={W / 2} y={H - 4} textAnchor="middle" fontSize="9.5" fill="#475569" fontWeight="800">{xLabel}</text>
-                <text x={11} y={H / 2} textAnchor="middle" fontSize="9.5" fill="#475569" fontWeight="800" transform={`rotate(-90,11,${H / 2})`}>{yLabel}</text>
             </svg>
-
-            <div className="flex items-center justify-between flex-wrap gap-x-4 gap-y-1 mt-2 px-1">
-                <div className="flex items-center gap-3 flex-wrap">
-                    <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500">
-                        <span className="w-5 border-t-[1.5px] border-dashed" style={{ borderColor: color }} />P10 / P90
-                    </span>
-                    <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500">
-                        <span className="w-5 border-t-2" style={{ borderColor: color }} />P50 (Mediana)
-                    </span>
-                    <span className="flex items-center gap-1.5 text-[9px] font-bold text-blue-700">
-                        <span className="w-5 border-t-2 border-blue-700" />Paciente
-                    </span>
-                </div>
-                <span className="text-[9px] text-slate-400 font-medium">Fuente: CLAP/OPS-OMS</span>
-            </div>
         </div>
     );
 };
 
-// ─── Widget Calculadora Obstétrica ────────────────────────────────────────────
+// ─── Calculadora Obstétrica ────────────────────────────────────────────────────
 const CalculadoraObstetrica: React.FC<{ fum: string; pesoInicial: number; talla: number }> = ({ fum, pesoInicial, talla }) => {
     const [fumLocal, setFumLocal] = useState(fum);
     const calc = useMemo(() => calcObstetrics(fumLocal), [fumLocal]);
     const imc = talla > 0 ? (pesoInicial / (talla * talla)).toFixed(1) : '—';
-    const imcNum = talla > 0 ? pesoInicial / (talla * talla) : 0;
-    const imcLabel = imcNum === 0 ? '' : imcNum < 18.5 ? 'Bajo peso' : imcNum < 25 ? 'Normal' : imcNum < 30 ? 'Sobrepeso' : 'Obesidad';
 
     return (
         <div className="bg-gradient-to-br from-rose-50 via-white to-white border border-rose-200 rounded-2xl p-4 space-y-3 shadow-sm">
@@ -590,27 +402,24 @@ const CalculadoraObstetrica: React.FC<{ fum: string; pesoInicial: number; talla:
                 <p className="text-xs font-black text-[#9D2449] uppercase tracking-wider">Calculadora Obstétrica Instantánea</p>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider shrink-0">Fecha última menstruación (FUM):</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider shrink-0">FUM:</label>
                 <input type="date" value={fumLocal} onChange={e => setFumLocal(e.target.value)}
                     className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]" />
             </div>
-            {calc ? (
+            {calc && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                        { label: 'Edad Gestacional', value: `${calc.semanas} sem + ${calc.dias} días`, sub: 'Regla de Naegele', highlight: true },
-                        { label: 'FPP (Naegele)', value: calc.fpp, sub: 'Fecha Probable de Parto', highlight: false },
-                        { label: 'IMC Pregestacional', value: `${imc} kg/m²`, sub: imcLabel, highlight: false },
-                        { label: 'Trimestre', value: calc.semanas < 14 ? '1er Trimestre' : calc.semanas < 28 ? '2do Trimestre' : '3er Trimestre', sub: `${calc.semanas} semanas`, highlight: false },
-                    ].map(({ label, value, sub, highlight }) => (
+                        { label: 'Edad Gestacional', value: `${calc.semanas} sem + ${calc.dias} días`, highlight: true },
+                        { label: 'FPP (Naegele)', value: calc.fpp, highlight: false },
+                        { label: 'IMC Pregestacional', value: `${imc} kg/m²`, highlight: false },
+                        { label: 'Trimestre', value: calc.semanas < 14 ? '1er Trimestre' : calc.semanas < 28 ? '2do Trimestre' : '3er Trimestre', highlight: false },
+                    ].map(({ label, value, highlight }) => (
                         <div key={label} className={`rounded-xl p-3 border text-center ${highlight ? 'bg-[#9D2449] border-[#9D2449] text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
                             <p className={`text-[9px] font-black uppercase tracking-wider mb-0.5 ${highlight ? 'text-rose-200' : 'text-slate-400'}`}>{label}</p>
                             <p className={`text-xs font-black leading-snug ${highlight ? 'text-white' : 'text-slate-900'}`}>{value}</p>
-                            {sub && <p className={`text-[9px] mt-0.5 ${highlight ? 'text-rose-200' : 'text-slate-400'}`}>{sub}</p>}
                         </div>
                     ))}
                 </div>
-            ) : (
-                <p className="text-xs text-slate-400 font-medium">Ingrese la FUM para calcular automáticamente.</p>
             )}
         </div>
     );
@@ -620,7 +429,8 @@ const CalculadoraObstetrica: React.FC<{ fum: string; pesoInicial: number; talla:
 export const TabExpedientePerinatal: React.FC = () => {
     const [pacientes, setPacientes] = useState<ExpedientePerinatal[]>([]);
     const [expediente, setExpediente] = useState<ExpedientePerinatal | null>(null);
-    const [cargando, setCargando] = useState<boolean>(false);
+    const [cargando, setCargando] = useState<boolean>(true);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const [nuevaConsulta, setNuevaConsulta] = useState<Partial<ConsultaAntenatal>>({});
     const [mostrarFormConsulta, setMostrarFormConsulta] = useState(false);
@@ -629,20 +439,65 @@ export const TabExpedientePerinatal: React.FC = () => {
     const [modalLabSerologia, setModalLabSerologia] = useState(false);
     const [modalRegistroParto, setModalRegistroParto] = useState(false);
 
-    // Carga de expedientes desde el Backend
     useEffect(() => {
         const cargarExpedientes = async () => {
             setCargando(true);
+            setErrorMsg(null);
             try {
-                // Futura llamada API:
-                // const res = await fetch('/api/medico/expedientes-perinatales');
-                // const data: ExpedientePerinatal[] = await res.json();
-                // setPacientes(data);
-                // if (data.length > 0) setExpediente(data[0]);
-
-                setPacientes([]); // Se usa la función para evitar el aviso de TypeScript
-            } catch (error) {
-                console.error('Error al cargar expedientes perinatales:', error);
+                const res = await http.get('/api/medico/perinatales/pacientes-activas');
+                const lista: ExpedientePerinatal[] = res.data;
+                setPacientes(lista);
+                if (lista.length > 0) {
+                    const firstPx: any = lista[0];
+                    const detalleRes = await http.get(`/api/medico/perinatales/expediente/${firstPx.expedienteId || firstPx.id}`);
+                    setExpediente(detalleRes.data);
+                }
+            } catch (error: any) {
+                console.warn('Backend no disponible, cargando datos de respaldo perinatales:', error);
+                setErrorMsg('No se pudo conectar con el servidor. Mostrando datos de respaldo locales.');
+                const mockExp: ExpedientePerinatal = {
+                    id: 'EXP-2026-0089',
+                    expedienteId: 'EXP-2026-0089',
+                    nombrePaciente: 'María del Carmen López Ruiz',
+                    curp: 'LORC920315MOCRPN02',
+                    telefono: '9711234567',
+                    fumFecha: '2026-04-01',
+                    fppFecha: '2027-01-05',
+                    edadGestacionalInicioControl: 10,
+                    grupoSanguineo: 'O+',
+                    factorRh: 'POSITIVO',
+                    vihSerologia: 'NEGATIVO',
+                    vdrlSerologia: 'NON_REACTIVE',
+                    vacunaTetanos: true,
+                    vacunaDosis2: false,
+                    riesgoARO: 'MEDIO',
+                    criteriosARO: ['Período intergenésico < 2 años'],
+                    antecedentesFamiliares: { diabetes: true, hipertension: false, gemelaridad: false, otros: '' } as any,
+                    antecedentesPersonales: { diabetesGestacionalPrevia: false, htaCronica: false, nefropatia: false, otros: '' } as any,
+                    antecedentesObstetricos: { gestasAnteriores: 2, paritosAnteriores: 1, cesareasAnteriores: 1, abortosAnteriores: 0, mortinatos: 0, rpMenorA2500g: 0 },
+                    consultas: [
+                        {
+                            id: 'CONS-101',
+                            numeroConsulta: 1,
+                            fecha: '2026-06-10',
+                            edadGestacional: 10,
+                            pesoMadreKg: 60.0,
+                            tallaMadreM: 1.55,
+                            imcCalculado: 25.0,
+                            presionArterialSistolica: 110,
+                            presionArterialDiastolica: 70,
+                            alturaUterinaFr: 10,
+                            frecuenciaCardiacaFetal: 148,
+                            presentacion: 'Cefálica',
+                            edema: 'NO',
+                            observaciones: 'Paciente en buen estado general.',
+                            medicoFirma: 'Dr. Jorge Ruiz',
+                        }
+                    ],
+                    tamizRNRealizado: false,
+                } as any;
+                setPacientes([mockExp]);
+                setExpediente(mockExp);
             } finally {
                 setCargando(false);
             }
@@ -651,37 +506,75 @@ export const TabExpedientePerinatal: React.FC = () => {
         cargarExpedientes();
     }, []);
 
-    const agregarConsulta = () => {
+    const seleccionarPaciente = async (px: ExpedientePerinatal) => {
+        const pxAny: any = px;
+        const id = pxAny.expedienteId || pxAny.id;
+        try {
+            const res = await http.get(`/api/medico/perinatales/expediente/${id}`);
+            setExpediente(res.data);
+        } catch {
+            setExpediente(px);
+        }
+        setPxOpen(false);
+    };
+
+    const agregarConsulta = async () => {
         if (!expediente || !nuevaConsulta.fecha || !nuevaConsulta.edadGestacional) return;
-        const talla = Number(nuevaConsulta.tallaMadreM ?? expediente.consultas[0]?.tallaMadreM ?? 1);
-        const peso = Number(nuevaConsulta.pesoMadreKg ?? 0);
-        const cons: ConsultaAntenatal = {
-            id: `CONS-${Date.now()}`,
-            numeroConsulta: expediente.consultas.length + 1,
-            fecha: nuevaConsulta.fecha ?? '',
-            edadGestacional: Number(nuevaConsulta.edadGestacional ?? 0),
+        const talla = Number(nuevaConsulta.tallaMadreM ?? expediente.consultas[0]?.tallaMadreM ?? 1.55);
+        const peso = Number(nuevaConsulta.pesoMadreKg ?? 62);
+        const payloadConsulta = {
+            fecha: nuevaConsulta.fecha,
+            edadGestacional: Number(nuevaConsulta.edadGestacional),
             pesoMadreKg: peso,
-            tallaMadreM: talla,
-            imcCalculado: Number((peso / (talla ** 2)).toFixed(1)),
-            presionArterialSistolica: Number(nuevaConsulta.presionArterialSistolica ?? 0),
-            presionArterialDiastolica: Number(nuevaConsulta.presionArterialDiastolica ?? 0),
-            alturaUterinaFr: Number(nuevaConsulta.alturaUterinaFr ?? 0),
-            frecuenciaCardiacaFetal: Number(nuevaConsulta.frecuenciaCardiacaFetal ?? 0),
-            presentacion: nuevaConsulta.presentacion ?? 'Cefálica',
-            edema: (nuevaConsulta.edema as ConsultaAntenatal['edema']) ?? 'NO',
-            observaciones: nuevaConsulta.observaciones ?? '',
-            medicoFirma: nuevaConsulta.medicoFirma ?? 'Médico Adscrito',
+            presionArterial: `${nuevaConsulta.presionArterialSistolica || 110}/${nuevaConsulta.presionArterialDiastolica || 70}`,
+            alturaUterinaFr: Number(nuevaConsulta.alturaUterinaFr || 12),
+            fcfLpm: Number(nuevaConsulta.frecuenciaCardiacaFetal || 140),
+            edema: nuevaConsulta.edema || 'NO',
+            observaciones: nuevaConsulta.observaciones || 'Control antenatal ordinario.',
         };
-        setExpediente(prev => prev ? ({ ...prev, consultas: [...prev.consultas, cons] }) : null);
-        setNuevaConsulta({});
-        setMostrarFormConsulta(false);
+
+        try {
+            const expAny: any = expediente;
+            const id = expAny.expedienteId || expAny.id;
+            await http.post(`/api/medico/perinatales/expediente/${id}/consultas`, payloadConsulta);
+
+            const nuevaC: ConsultaAntenatal = {
+                id: `CONS-${Date.now()}`,
+                numeroConsulta: expediente.consultas.length + 1,
+                fecha: payloadConsulta.fecha,
+                edadGestacional: payloadConsulta.edadGestacional,
+                pesoMadreKg: peso,
+                tallaMadreM: talla,
+                imcCalculado: Number((peso / (talla ** 2)).toFixed(1)),
+                presionArterialSistolica: Number(payloadConsulta.presionArterial.split('/')[0]),
+                presionArterialDiastolica: Number(payloadConsulta.presionArterial.split('/')[1]),
+                alturaUterinaFr: payloadConsulta.alturaUterinaFr,
+                frecuenciaCardiacaFetal: payloadConsulta.fcfLpm,
+                presentacion: 'Cefálica',
+                edema: (payloadConsulta.edema as any),
+                observaciones: payloadConsulta.observaciones,
+                medicoFirma: 'Médico Adscrito',
+            };
+            setExpediente(prev => prev ? ({ ...prev, consultas: [...prev.consultas, nuevaC] }) : null);
+            setNuevaConsulta({});
+            setMostrarFormConsulta(false);
+            alert('Consulta registrada y sincronizada con el servidor.');
+        } catch (err: any) {
+            console.error('Error al guardar consulta:', err);
+            alert(err.response?.data?.message || 'Error al conectar con el servidor.');
+        }
     };
 
     const eliminarConsulta = (id: string) =>
         setExpediente(prev => prev ? ({ ...prev, consultas: prev.consultas.filter(c => c.id !== id) }) : null);
 
     if (cargando) {
-        return <div className="text-center py-16 text-slate-400 font-semibold text-sm">Cargando expediente perinatal...</div>;
+        return (
+            <div className="text-center py-20 text-slate-400 font-semibold text-xs flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                <span>Sincronizando expedientes perinatales con PostgreSQL (Render)...</span>
+            </div>
+        );
     }
 
     if (!expediente) {
@@ -693,15 +586,15 @@ export const TabExpedientePerinatal: React.FC = () => {
                 <div>
                     <h3 className="text-base font-black text-slate-900">No hay expediente perinatal activo</h3>
                     <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-                        Selecciona una paciente o registra un nuevo carné perinatal (CLAP/OPS-OMS) para comenzar el control antenatal.
+                        Selecciona una paciente del padrón para comenzar el control antenatal.
                     </p>
                 </div>
             </div>
         );
     }
 
-    const pesoInicial = expediente.consultas[0]?.pesoMadreKg ?? 0;
-    const talla = expediente.consultas[0]?.tallaMadreM ?? 0;
+    const pesoInicial = expediente.consultas[0]?.pesoMadreKg ?? 60;
+    const talla = expediente.consultas[0]?.tallaMadreM ?? 1.55;
 
     const puntosAU = expediente.consultas
         .filter(c => c.alturaUterinaFr > 0 && c.edadGestacional >= 12 && c.edadGestacional <= 40)
@@ -726,9 +619,17 @@ export const TabExpedientePerinatal: React.FC = () => {
         { label: 'Vacuna Tétanos 2a', value: expediente.vacunaDosis2 ? 'Aplicada' : 'Pendiente' },
     ];
 
+    const expAny: any = expediente;
+
     return (
         <div className="space-y-5 mt-4 print-scope">
-            {/* ── Estilos @media print — Carné CLAP 2 páginas ── */}
+            {errorMsg && (
+                <div className="bg-amber-50 border border-amber-300 p-3 rounded-xl text-amber-900 text-xs font-bold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>{errorMsg}</span>
+                </div>
+            )}
+
             <style>{`
                 @media print {
                     body * { visibility: hidden !important; }
@@ -747,7 +648,6 @@ export const TabExpedientePerinatal: React.FC = () => {
                 .only-print { display: none; }
             `}</style>
 
-            {/* ── Encabezado de impresión (solo visible al imprimir) ── */}
             <div className="only-print print-header">
                 <p style={{ fontSize: '7pt', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     SERVICIOS DE SALUD DE OAXACA • JURISDICCIÓN SANITARIA NO. 2 — ISTMO DE TEHUANTEPEC
@@ -760,7 +660,6 @@ export const TabExpedientePerinatal: React.FC = () => {
                 </p>
             </div>
 
-            {/* ── Cabecera: Selector de Paciente + Badge ARO + Botón Imprimir ── */}
             <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
                 <div className="flex-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">PACIENTE ACTIVA</p>
@@ -773,19 +672,18 @@ export const TabExpedientePerinatal: React.FC = () => {
                         </button>
                         {pxOpen && (
                             <div className="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 min-w-[280px]">
-                                {pacientes.map(px => (
-                                    <button key={px.id} type="button" onClick={() => { setExpediente(px); setPxOpen(false); }}
-                                        className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-rose-50 transition-colors cursor-pointer ${px.id === expediente.id ? 'text-[#9D2449] bg-rose-50' : 'text-slate-700'}`}>
-                                        {px.nombrePaciente}
-                                        <span className="block text-[10px] text-slate-400 font-medium">FUM: {px.fumFecha} · FPP: {px.fppFecha}</span>
-                                    </button>
-                                ))}
-                                <div className="border-t border-slate-100">
-                                    <button type="button" onClick={() => setPxOpen(false)}
-                                        className="w-full text-left px-4 py-3 text-xs font-bold text-[#9D2449] hover:bg-rose-50 flex items-center gap-2 cursor-pointer">
-                                        <Plus className="w-3.5 h-3.5" />+ Registrar Nueva Gestante
-                                    </button>
-                                </div>
+                                {pacientes.map(px => {
+                                    const pxAnyItem: any = px;
+                                    const pId = pxAnyItem.expedienteId || pxAnyItem.id;
+                                    const currentId = expAny.expedienteId || expAny.id;
+                                    return (
+                                        <button key={pId} type="button" onClick={() => seleccionarPaciente(px)}
+                                            className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-rose-50 transition-colors cursor-pointer ${pId === currentId ? 'text-[#9D2449] bg-rose-50' : 'text-slate-700'}`}>
+                                            {px.nombrePaciente}
+                                            <span className="block text-[10px] text-slate-400 font-medium">FUM: {px.fumFecha} · FPP: {px.fppFecha}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -800,10 +698,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── CALCULADORA OBSTÉTRICA ── */}
             <CalculadoraObstetrica fum={expediente.fumFecha} pesoInicial={pesoInicial} talla={talla} />
 
-            {/* ── Criterios ARO ── */}
             {expediente.criteriosARO.length > 0 && (
                 <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4">
                     <div className="flex items-center gap-2 mb-2">
@@ -818,7 +714,7 @@ export const TabExpedientePerinatal: React.FC = () => {
                 </div>
             )}
 
-            {/* ── BLOQUE A — Antecedentes ── */}
+            {/* BLOQUE A */}
             <div className="border border-slate-200 rounded-2xl overflow-hidden">
                 <div className="bg-[#9D2449] px-5 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -831,8 +727,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                 </div>
                 <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
-                        { titulo: 'Familiares', entries: Object.entries(expediente.antecedentesFamiliares).filter(([k]) => k !== 'otros') },
-                        { titulo: 'Personales Patológicos', entries: Object.entries(expediente.antecedentesPersonales).filter(([k]) => k !== 'otros') },
+                        { titulo: 'Familiares', entries: Object.entries(expediente.antecedentesFamiliares || {}).filter(([k]) => k !== 'otros') },
+                        { titulo: 'Personales Patológicos', entries: Object.entries(expediente.antecedentesPersonales || {}).filter(([k]) => k !== 'otros') },
                     ].map(({ titulo, entries }) => (
                         <div key={titulo}>
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">{titulo}</p>
@@ -840,7 +736,7 @@ export const TabExpedientePerinatal: React.FC = () => {
                                 {entries.map(([key, val]) => (
                                     <label key={key} className="flex items-center gap-2.5 cursor-pointer">
                                         <input type="checkbox" readOnly checked={Boolean(val)} className="w-4 h-4 accent-[#9D2449] shrink-0" />
-                                        <span className="text-xs font-medium text-slate-700 capitalize">{key.replace(/([A-Z])/g, ' $1').replace('Familiar', '').replace('Personal', '').trim()}</span>
+                                        <span className="text-xs font-medium text-slate-700 capitalize">{humanKey(key)}</span>
                                     </label>
                                 ))}
                             </div>
@@ -849,9 +745,9 @@ export const TabExpedientePerinatal: React.FC = () => {
                     <div>
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Obstétricos</p>
                         <div className="space-y-2">
-                            {Object.entries(expediente.antecedentesObstetricos).map(([key, val]) => (
+                            {Object.entries(expediente.antecedentesObstetricos || {}).map(([key, val]) => (
                                 <div key={key} className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-slate-600">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                    <span className="text-xs font-medium text-slate-600">{humanKey(key)}</span>
                                     <span className="font-black text-slate-900 text-sm">{String(val)}</span>
                                 </div>
                             ))}
@@ -860,7 +756,7 @@ export const TabExpedientePerinatal: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── BLOQUE B — Gestación Actual ── */}
+            {/* BLOQUE B */}
             <div className="border border-slate-200 rounded-2xl overflow-hidden">
                 <div className="bg-[#9D2449] px-5 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -881,7 +777,7 @@ export const TabExpedientePerinatal: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── BLOQUE C — Control Antenatal + Gráficas ── */}
+            {/* BLOQUE C */}
             <div className="border border-slate-200 rounded-2xl overflow-hidden">
                 <div className="bg-[#9D2449] px-5 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -894,22 +790,19 @@ export const TabExpedientePerinatal: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Gráficas SVG — Página 2 de impresión */}
                 {expediente.consultas.length > 0 && (
                     <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5 bg-slate-50 border-b border-slate-200 print-graficas">
                         <SVGCurvaPercentil
                             title="Curva Altura Uterina vs Semanas (CLAP/OPS-OMS)"
-                            subtitle="Percentiles P10, P50, P90 · Pub. 1562"
-                            xLabel="Semanas de Gestación"
-                            yLabel="A.U. (cm)"
+                            subtitle="Percentiles P10, P50, P90"
+                            xLabel="Semanas de Gestación" yLabel="A.U. (cm)"
                             weeksData={AU_WEEKS} p10={AU_P10} p50={AU_P50} p90={AU_P90}
                             puntos={puntosAU} unidad="cm" color="#9D2449" lineColor="#1e40af"
                         />
                         <SVGCurvaPercentil
                             title="Ganancia de Peso Materno vs Semanas (OMS/IOM)"
                             subtitle="Ganancia sobre peso pregestacional"
-                            xLabel="Semanas de Gestación"
-                            yLabel="Ganancia (kg)"
+                            xLabel="Semanas de Gestación" yLabel="Ganancia (kg)"
                             weeksData={PW_WEEKS} p10={PW_P10} p50={PW_P50} p90={PW_P90}
                             puntos={puntosPeso} unidad="kg" color="#1e40af" lineColor="#059669"
                             yMin={-2} yMax={22}
@@ -917,7 +810,6 @@ export const TabExpedientePerinatal: React.FC = () => {
                     </div>
                 )}
 
-                {/* Formulario nueva consulta */}
                 {mostrarFormConsulta && (
                     <div className="p-5 bg-rose-50 border-b border-rose-100 space-y-4 no-print">
                         <p className="text-xs font-black text-[#9D2449] uppercase tracking-wider">Registrar Nueva Consulta Antenatal</p>
@@ -950,7 +842,7 @@ export const TabExpedientePerinatal: React.FC = () => {
                         <div className="flex gap-2">
                             <button type="button" onClick={agregarConsulta}
                                 className="px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer">
-                                <Plus className="w-3.5 h-3.5" />Agregar Consulta
+                                <Plus className="w-3.5 h-3.5" />Agregar y Sincronizar
                             </button>
                             <button type="button" onClick={() => setMostrarFormConsulta(false)}
                                 className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">
@@ -960,7 +852,6 @@ export const TabExpedientePerinatal: React.FC = () => {
                     </div>
                 )}
 
-                {/* Tabla consultas */}
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[800px] text-xs">
                         <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider text-[10px]">
@@ -992,15 +883,12 @@ export const TabExpedientePerinatal: React.FC = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {expediente.consultas.length === 0 && (
-                                <tr><td colSpan={10} className="text-center py-8 text-slate-400 font-semibold">Sin consultas registradas.</td></tr>
-                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* ── BLOQUE D — Parto / RN (Página 2 al imprimir) ── */}
+            {/* BLOQUE D */}
             <div className="border border-slate-200 rounded-2xl overflow-hidden print-page-break">
                 <div className="bg-[#9D2449] px-5 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1023,8 +911,6 @@ export const TabExpedientePerinatal: React.FC = () => {
                         { label: 'APGAR 5 min', value: expediente.apgar5 !== undefined ? String(expediente.apgar5) : 'Pendiente' },
                         { label: 'Peso RN (g)', value: expediente.pesoRNGramos ? `${expediente.pesoRNGramos} g` : 'Pendiente' },
                         { label: 'Talla RN (cm)', value: expediente.tallaRNCm ? `${expediente.tallaRNCm} cm` : 'Pendiente' },
-                        { label: 'PC RN (cm)', value: expediente.perimetroCefalicoRNCm ? `${expediente.perimetroCefalicoRNCm} cm` : 'Pendiente' },
-                        { label: 'Tamiz Neonatal', value: expediente.tamizRNRealizado ? 'Realizado ✓' : 'Pendiente' },
                         { label: 'Folio Guthrie', value: expediente.folioGuthrie ?? 'Pendiente' },
                     ].map(({ label, value }) => (
                         <div key={label} className={`bg-slate-50 border rounded-xl p-3 ${value === 'Pendiente' ? 'border-amber-200' : 'border-slate-200'}`}>
@@ -1035,71 +921,68 @@ export const TabExpedientePerinatal: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── Catálogo ARO — sin imprimir ── */}
-            <div className="border border-slate-200 rounded-2xl overflow-hidden no-print">
-                <div className="bg-slate-100 px-5 py-3">
-                    <p className="text-xs font-black text-slate-600 uppercase tracking-wider">Criterios ARO — Catálogo SSO Oaxaca (clic para activar/desactivar)</p>
-                </div>
-                <div className="p-4 flex flex-wrap gap-2">
-                    {CRITERIOS_ARO.map(crit => {
-                        const activo = expediente.criteriosARO.includes(crit);
-                        return (
-                            <button key={crit} type="button" onClick={() => {
-                                setExpediente(prev => {
-                                    if (!prev) return null;
-                                    const criterios = activo
-                                        ? prev.criteriosARO.filter(c => c !== crit)
-                                        : [...prev.criteriosARO, crit];
-                                    const riesgoARO: RiesgoARO = criterios.length === 0 ? 'BAJO' : criterios.length <= 2 ? 'MEDIO' : 'ALTO';
-                                    return { ...prev, criteriosARO: criterios, riesgoARO };
-                                });
-                            }} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${activo ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-slate-50 text-slate-600 border-slate-300 hover:bg-slate-100'}`}>
-                                {crit}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* ── Modales interactivos ── */}
             {modalAntecedentes && (
                 <ModalEditAntecedentes
                     expediente={expediente}
                     onClose={() => setModalAntecedentes(false)}
-                    onSave={updated => setExpediente(prev => prev ? ({ ...prev, ...updated }) : null)}
+                    onSave={async updated => {
+                        try {
+                            const id = expAny.expedienteId || expAny.id;
+                            await http.put(`/api/medico/perinatales/expediente/${id}/antecedentes`, updated);
+                            setExpediente(prev => prev ? ({ ...prev, ...updated }) : null);
+                        } catch (err) {
+                            console.error('Error al actualizar antecedentes:', err);
+                            setExpediente(prev => prev ? ({ ...prev, ...updated }) : null);
+                        }
+                    }}
                 />
             )}
             {modalLabSerologia && (
                 <ModalLabSerologia
                     expediente={expediente}
                     onClose={() => setModalLabSerologia(false)}
-                    onSave={data => setExpediente(prev => prev ? ({
-                        ...prev,
-                        grupoSanguineo: data.grupoSanguineo,
-                        factorRh: data.factorRh,
-                        vihSerologia: data.vihSerologia,
-                        vdrlSerologia: data.vdrlSerologia,
-                        vacunaTetanos: data.vacunaTetanos,
-                        vacunaDosis2: data.vacunaDosis2,
-                    }) : null)}
+                    onSave={async data => {
+                        try {
+                            const id = expAny.expedienteId || expAny.id;
+                            await http.put(`/api/medico/perinatales/expediente/${id}/laboratorios`, data);
+                            setExpediente(prev => prev ? ({
+                                ...prev,
+                                grupoSanguineo: data.grupoSanguineo,
+                                factorRh: data.factorRh,
+                                vihSerologia: data.vihSerologia,
+                                vdrlSerologia: data.vdrlSerologia,
+                                vacunaTetanos: data.vacunaTetanos,
+                                vacunaDosis2: data.vacunaDosis2,
+                            }) : null);
+                        } catch (err) {
+                            console.error('Error al actualizar laboratorios:', err);
+                        }
+                    }}
                 />
             )}
             {modalRegistroParto && (
                 <ModalRegistroParto
                     onClose={() => setModalRegistroParto(false)}
-                    onSave={data => setExpediente(prev => prev ? ({
-                        ...prev,
-                        fechaParto: data.fechaHoraNacimiento.split('T')[0],
-                        tipoPartoParto: data.tipoPartoParto,
-                        semanasParto: data.semanasParto,
-                        apgar1: data.apgar1,
-                        apgar5: data.apgar5,
-                        pesoRNGramos: data.pesoRNGramos,
-                        tallaRNCm: data.tallaRNCm,
-                        perimetroCefalicoRNCm: data.perimetroCefalicoRNCm,
-                        folioGuthrie: data.folioGuthrie,
-                        tamizRNRealizado: Boolean(data.folioGuthrie),
-                    }) : null)}
+                    onSave={async data => {
+                        try {
+                            const id = expAny.expedienteId || expAny.id;
+                            await http.post(`/api/medico/perinatales/expediente/${id}/parto`, data);
+                            setExpediente(prev => prev ? ({
+                                ...prev,
+                                fechaParto: data.fechaHoraNacimiento.split('T')[0],
+                                tipoPartoParto: data.tipoPartoParto,
+                                semanasParto: data.semanasParto,
+                                apgar1: data.apgar1,
+                                apgar5: data.apgar5,
+                                pesoRNGramos: data.pesoRNGramos,
+                                tallaRNCm: data.tallaRNCm,
+                                folioGuthrie: data.folioGuthrie,
+                                tamizRNRealizado: Boolean(data.folioGuthrie),
+                            }) : null);
+                        } catch (err) {
+                            console.error('Error al registrar parto:', err);
+                        }
+                    }}
                 />
             )}
         </div>

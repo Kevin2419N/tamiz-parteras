@@ -15,8 +15,10 @@ import {
     Stethoscope,
     Pill,
     Navigation,
+    Loader2,
 } from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext';
+import { http } from '../../../../services/http';
 import type { ReferenciaComunidad, FormularioContraRef, EstatusContraRef } from './types';
 
 // ─── Catálogo CIE-10 Obstétrico/Ginecológico (resumen clínico frecuente) ──────
@@ -424,27 +426,59 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
 export const TabContrareferencias: React.FC = () => {
     const [busqueda, setBusqueda] = useState('');
     const [referencias, setReferencias] = useState<ReferenciaComunidad[]>([]);
-    const [cargando, setCargando] = useState<boolean>(false);
+    const [cargando, setCargando] = useState<boolean>(true);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [referenciaSeleccionada, setReferenciaSeleccionada] = useState<ReferenciaComunidad | null>(null);
 
-    // Carga de referencias comunitarias desde el Backend
+    // Carga de referencias comunitarias desde el Backend con fallback local
     useEffect(() => {
         const cargarReferencias = async () => {
             setCargando(true);
+            setErrorMsg(null);
             try {
-                // Futura llamada API:
-                // const res = await fetch('/api/medico/referencias-comunidad');
-                // const data = await res.json();
-                // setReferencias(data);
-            } catch (error) {
-                console.error('Error al cargar referencias comunitarias:', error);
+                const res = await http.get('/api/medico/contrareferencias/pendientes');
+                setReferencias(res.data);
+            } catch (error: any) {
+                console.warn('Backend no disponible para contrareferencias, cargando datos de respaldo:', error);
+                setErrorMsg('No se pudo conectar con el servidor. Mostrando datos de respaldo locales.');
+
+                // Mock de respaldo para desarrollo offline / residency demo
+                const mockReferencias: ReferenciaComunidad[] = [
+                    {
+                        id: 'REF-COM-2026-001',
+                        folioReferencia: 'REF-COM-2026-001',
+                        nombrePaciente: 'Guadalupe Jiménez Santiago',
+                        edadPaciente: 27,
+                        comunidadOrigen: 'San Dionisio del Mar',
+                        municipio: 'San Dionisio del Mar',
+                        nombrePartera: 'Doña Rosa Partera Tradicional',
+                        nivelRiesgo: 'ALTO',
+                        motivoReferencia: 'Paciente primigesta con cifras tensionales elevadas (140/90 mmHg) reportada por partera comunitaria.',
+                        estatusContraRef: 'PENDIENTE_ATENCION',
+                        fechaReferencia: '2026-10-20',
+                    },
+                    {
+                        id: 'REF-COM-2026-002',
+                        folioReferencia: 'REF-COM-2026-002',
+                        nombrePaciente: 'Juana Martínez Pineda',
+                        edadPaciente: 32,
+                        comunidadOrigen: 'Playa Vicente',
+                        municipio: 'Juchitán de Zaragoza',
+                        nombrePartera: 'Abuela Martina Orozco',
+                        nivelRiesgo: 'MEDIO',
+                        motivoReferencia: 'Embarazo de 34 semanas con sospecha de disminución de movimientos fetales.',
+                        estatusContraRef: 'PENDIENTE_ATENCION',
+                        fechaReferencia: '2026-10-21',
+                    }
+                ];
+                setReferencias(mockReferencias);
             } finally {
                 setCargando(false);
             }
         };
 
         cargarReferencias();
-    }, [setReferencias]);
+    }, []);
 
     const refFiltradas = referencias.filter(r => {
         const q = busqueda.toLowerCase();
@@ -456,12 +490,7 @@ export const TabContrareferencias: React.FC = () => {
 
     const handleEmitir = async (data: FormularioContraRef) => {
         try {
-            // Futuro envío de la contrareferencia al backend:
-            // await fetch('/api/medico/emitir-contrareferencia', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(data)
-            // });
+            await http.post(`/api/medico/contrareferencias/emitir`, data);
 
             setReferencias(prev => prev.map(r =>
                 r.id === data.referenciaId
@@ -475,8 +504,23 @@ export const TabContrareferencias: React.FC = () => {
                     }
                     : r
             ));
-        } catch (error) {
-            console.error('Error al emitir contrareferencia:', error);
+            alert('Contrareferencia emitida y sincronizada correctamente con el servidor.');
+        } catch (error: any) {
+            console.error('Error al emitir contrareferencia en servidor:', error);
+            // Actualización local optimista en caso de fallo de red
+            setReferencias(prev => prev.map(r =>
+                r.id === data.referenciaId
+                    ? {
+                        ...r,
+                        estatusContraRef: 'ATENDIDA' as EstatusContraRef,
+                        diagnosticoMedico: data.diagnosticoImpresion,
+                        planManejo: data.planManejo,
+                        folioContraRef: data.folioContraRef,
+                        medicoResponsable: data.medicoFirma,
+                    }
+                    : r
+            ));
+            alert('Contrareferencia guardada localmente (modo offline / respaldo).');
         }
     };
 
@@ -485,6 +529,13 @@ export const TabContrareferencias: React.FC = () => {
 
     return (
         <div className="space-y-6 mt-4">
+            {errorMsg && (
+                <div className="bg-amber-50 border border-amber-300 p-3 rounded-xl text-amber-900 text-xs font-bold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>{errorMsg}</span>
+                </div>
+            )}
+
             {/* KPIs */}
             <div className="grid grid-cols-3 gap-4">
                 {[
@@ -519,7 +570,10 @@ export const TabContrareferencias: React.FC = () => {
             {/* Bandeja de referencias */}
             <div className="space-y-3">
                 {cargando ? (
-                    <div className="text-center py-12 text-slate-400 font-semibold text-sm">Cargando referencias comunitarias...</div>
+                    <div className="text-center py-20 text-slate-400 font-semibold text-xs flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                        <span>Sincronizando contrareferencias con PostgreSQL (Render)...</span>
+                    </div>
                 ) : refFiltradas.length === 0 ? (
                     <div className="text-center py-12 text-slate-400 font-semibold text-sm">No hay referencias comunitarias registradas.</div>
                 ) : (
