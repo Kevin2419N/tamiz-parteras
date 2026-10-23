@@ -7,7 +7,7 @@ interface FormatoReferenciaProps {
     hablarTexto?: (texto: string) => void;
     isListening?: boolean;
     campoEscuchando?: string | null;
-    iniciarDictado?: (campo: string) => void;
+    iniciarDictado?: (campo: string, setFieldState?: (val: string) => void) => void;
 }
 
 export const FormatoReferencia: React.FC<FormatoReferenciaProps> = ({

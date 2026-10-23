@@ -19,9 +19,11 @@ import {
     FileText,
     Building2,
     Award,
-    Megaphone
+    Megaphone,
+    Loader2
 } from 'lucide-react';
 import { handleVoiceInput } from '../../utils/voiceUtils';
+import { http } from '../../services/http'; // <--- Importamos tu instancia de Axios
 
 export interface CalendarioMujerProps {
     onBack?: () => void;
@@ -88,6 +90,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     const [nombreSupervisor, setNombreSupervisor] = useState('');
     const [centroSalud, setCentroSalud] = useState('');
     const [huellaRegistrada, setHuellaRegistrada] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Web Speech API Voice Dictation
     const startVoice = (setter: (val: string) => void, fieldKey: string) => {
@@ -115,13 +118,78 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         );
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Conexión real con el backend y PostgreSQL
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (hablarTexto) {
-            hablarTexto('Calendario de Atención a la Mujer Formato 2 registrado exitosamente.');
-        }
-        if (onSuccess) {
-            onSuccess();
+        setIsSubmitting(true);
+
+        const payload = {
+            parteraId: localStorage.getItem('partera_id') || 'DEFAULT-PARTERA-UUID',
+            datosUsuaria: {
+                nombreMujer,
+                edad: parseInt(edad) || 0,
+                fechaConsulta: fecha,
+                localidad,
+                municipio,
+                esCopiaCentroSalud: modoDuplicado
+            },
+            controlPrenatal: {
+                mesEmbarazoActivo: mesSeleccionado,
+                acidoFolicoEntregado: acidoFolico,
+                sulfatoFerrosoEntregado: hierro,
+                vacunaTetanos,
+                muacEmbarazo: cintaMUAC
+            },
+            embarazoComplicaciones: {
+                referido: referidoEmbarazo,
+                sintomas: sintomasComplicaciones
+            },
+            complicacionesHemorragicas: {
+                referido: referidoAborto,
+                complicaciones: tarjetasAborto
+            },
+            partoNormal: {
+                tipoParto: partoNormalPosicion,
+                resultado: partoNormalResultado
+            },
+            partoComplicado: {
+                referido: referidoPartoComplicado,
+                resultado: partoComplicadoOpcion
+            },
+            puerperio: {
+                muacPuerperio: cintaMUACPuerperio,
+                complicadoReferido: referidoPuerperio,
+                sintomas: puerperioCheckboxes
+            },
+            alertaMuerteMaterna: {
+                registrada: muerteMaternaEtapa !== null,
+                etapa: muerteMaternaEtapa
+            },
+            cierreAdministrativo: {
+                nombrePartera,
+                localidad: cierreLocalidad,
+                noMunicipio,
+                mesInformado,
+                nombreSupervisor,
+                centroSaludAdscripcion: centroSalud,
+                huellaFirmada: huellaRegistrada
+            }
+        };
+
+        try {
+            await http.post('/api/v1/calendario-mujer', payload);
+
+            if (hablarTexto) {
+                hablarTexto('Calendario de atención a la mujer registrado y guardado exitosamente en la base de datos.');
+            }
+            if (onSuccess) {
+                onSuccess();
+            }
+        } catch (error: any) {
+            console.error('Error al guardar calendario de la mujer:', error);
+            alert(error.response?.data?.message || 'Error al conectar con el servidor para guardar el calendario.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -255,7 +323,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setNombreMujer, 'nombreMujer')}
-                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'nombreMujer' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'nombreMujer' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar Nombre"
                                 >
@@ -277,7 +345,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setEdad, 'edad')}
-                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'edad' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'edad' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar Edad"
                                 >
@@ -299,7 +367,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setFecha, 'fecha')}
-                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'fecha' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'fecha' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar Fecha"
                                 >
@@ -321,7 +389,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setLocalidad, 'localidad')}
-                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'localidad' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'localidad' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar Localidad"
                                 >
@@ -343,7 +411,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => startVoice(setMunicipio, 'municipio')}
-                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md ${listeningField === 'municipio' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
+                                    className={`bg-[#9D2449] hover:bg-[#7A1B38] text-white p-3 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer ${listeningField === 'municipio' ? 'animate-pulse ring-4 ring-rose-400 bg-rose-700' : ''
                                         }`}
                                     title="Dictar Municipio"
                                 >
@@ -425,7 +493,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setAcidoFolico(!acidoFolico)}
-                                    className={`w-full py-2.5 px-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 ${acidoFolico
+                                    className={`w-full py-2.5 px-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${acidoFolico
                                         ? 'bg-emerald-100 border-emerald-600 text-emerald-950'
                                         : 'bg-white border-slate-300 text-slate-700'
                                         }`}
@@ -446,7 +514,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setHierro(!hierro)}
-                                    className={`w-full py-2.5 px-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 ${hierro
+                                    className={`w-full py-2.5 px-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${hierro
                                         ? 'bg-emerald-100 border-emerald-600 text-emerald-950'
                                         : 'bg-white border-slate-300 text-slate-700'
                                         }`}
@@ -478,7 +546,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                             type="button"
                                             key={v}
                                             onClick={() => setVacunaTetanos(v)}
-                                            className={`py-2 px-1 rounded-xl text-xs font-black border-2 transition-all ${vacunaTetanos === v
+                                            className={`py-2 px-1 rounded-xl text-xs font-black border-2 transition-all cursor-pointer ${vacunaTetanos === v
                                                 ? 'bg-[#9D2449] text-white border-[#7A1B38]'
                                                 : 'bg-white text-slate-800 border-slate-300 hover:bg-rose-50'
                                                 }`}
@@ -572,7 +640,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoEmbarazo(false)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${!referidoEmbarazo
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${!referidoEmbarazo
                                     ? 'bg-slate-700 text-white shadow-sm'
                                     : 'bg-transparent text-slate-600'
                                     }`}
@@ -582,7 +650,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoEmbarazo(true)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${referidoEmbarazo
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${referidoEmbarazo
                                     ? 'bg-[#9D2449] text-white shadow-sm ring-2 ring-rose-400'
                                     : 'bg-transparent text-slate-600'
                                     }`}
@@ -757,7 +825,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoAborto(false)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${!referidoAborto
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${!referidoAborto
                                     ? 'bg-slate-700 text-white shadow-sm'
                                     : 'bg-transparent text-slate-600'
                                     }`}
@@ -767,7 +835,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoAborto(true)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${referidoAborto
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${referidoAborto
                                     ? 'bg-[#9D2449] text-white shadow-sm ring-2 ring-rose-400'
                                     : 'bg-transparent text-slate-600'
                                     }`}
@@ -858,7 +926,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         setPartoNormalPosicion('VERTICAL');
                                         setPartoNormalResultado('NINO_VIVO');
                                     }}
-                                    className={`flex-1 md:flex-initial p-3 rounded-2xl border-2 flex items-center gap-2 transition-all ${partoNormalPosicion === 'VERTICAL' && partoNormalResultado === 'NINO_VIVO'
+                                    className={`flex-1 md:flex-initial p-3 rounded-2xl border-2 flex items-center gap-2 transition-all cursor-pointer ${partoNormalPosicion === 'VERTICAL' && partoNormalResultado === 'NINO_VIVO'
                                         ? 'bg-sky-100 border-sky-600 text-sky-950 font-black shadow-sm'
                                         : 'bg-white border-slate-300 text-slate-700'
                                         }`}
@@ -873,7 +941,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         setPartoNormalPosicion('VERTICAL');
                                         setPartoNormalResultado('NINA_VIVA');
                                     }}
-                                    className={`flex-1 md:flex-initial p-3 rounded-2xl border-2 flex items-center gap-2 transition-all ${partoNormalPosicion === 'VERTICAL' && partoNormalResultado === 'NINA_VIVA'
+                                    className={`flex-1 md:flex-initial p-3 rounded-2xl border-2 flex items-center gap-2 transition-all cursor-pointer ${partoNormalPosicion === 'VERTICAL' && partoNormalResultado === 'NINA_VIVA'
                                         ? 'bg-rose-100 border-rose-600 text-rose-950 font-black shadow-sm'
                                         : 'bg-white border-slate-300 text-slate-700'
                                         }`}
@@ -913,7 +981,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         setPartoNormalPosicion('HORIZONTAL');
                                         setPartoNormalResultado('NINO_VIVO');
                                     }}
-                                    className={`flex-1 md:flex-initial p-3 rounded-2xl border-2 flex items-center gap-2 transition-all ${partoNormalPosicion === 'HORIZONTAL' && partoNormalResultado === 'NINO_VIVO'
+                                    className={`flex-1 md:flex-initial p-3 rounded-2xl border-2 flex items-center gap-2 transition-all cursor-pointer ${partoNormalPosicion === 'HORIZONTAL' && partoNormalResultado === 'NINO_VIVO'
                                         ? 'bg-sky-100 border-sky-600 text-sky-950 font-black shadow-sm'
                                         : 'bg-white border-slate-300 text-slate-700'
                                         }`}
@@ -928,7 +996,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         setPartoNormalPosicion('HORIZONTAL');
                                         setPartoNormalResultado('NINA_VIVA');
                                     }}
-                                    className={`flex-1 md:flex-initial p-3 rounded-2xl border-2 flex items-center gap-2 transition-all ${partoNormalPosicion === 'HORIZONTAL' && partoNormalResultado === 'NINA_VIVA'
+                                    className={`flex-1 md:flex-initial p-3 rounded-2xl border-2 flex items-center gap-2 transition-all cursor-pointer ${partoNormalPosicion === 'HORIZONTAL' && partoNormalResultado === 'NINA_VIVA'
                                         ? 'bg-rose-100 border-rose-600 text-rose-950 font-black shadow-sm'
                                         : 'bg-white border-slate-300 text-slate-700'
                                         }`}
@@ -964,7 +1032,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoPartoComplicado(false)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${!referidoPartoComplicado
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${!referidoPartoComplicado
                                     ? 'bg-slate-700 text-white shadow-sm'
                                     : 'bg-transparent text-slate-600'
                                     }`}
@@ -974,7 +1042,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setReferidoPartoComplicado(true)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${referidoPartoComplicado
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${referidoPartoComplicado
                                     ? 'bg-[#9D2449] text-white shadow-sm ring-2 ring-rose-400'
                                     : 'bg-transparent text-slate-600'
                                     }`}
@@ -1105,7 +1173,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => setReferidoPuerperio(!referidoPuerperio)}
-                                        className={`px-3 py-1 rounded-xl text-xs font-black border transition-all flex items-center gap-1 ${referidoPuerperio ? 'bg-[#9D2449] text-white border-[#7A1B38]' : 'bg-white text-slate-700 border-slate-300'}`}
+                                        className={`px-3 py-1 rounded-xl text-xs font-black border transition-all flex items-center gap-1 cursor-pointer ${referidoPuerperio ? 'bg-[#9D2449] text-white border-[#7A1B38]' : 'bg-white text-slate-700 border-slate-300'}`}
                                     >
                                         <span>{referidoPuerperio ? 'SI' : 'NO'}</span>
                                         {referidoPuerperio && <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />}
@@ -1298,10 +1366,20 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
 
                     <button
                         type="submit"
-                        className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xl py-4 rounded-2xl w-full font-bold shadow-lg flex items-center justify-center gap-3 transition-transform active:scale-95 border-2 border-rose-300 cursor-pointer"
+                        disabled={isSubmitting}
+                        className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xl py-4 rounded-2xl w-full font-bold shadow-lg flex items-center justify-center gap-3 transition-transform active:scale-95 border-2 border-rose-300 cursor-pointer disabled:opacity-60"
                     >
-                        <Send className="w-6 h-6" />
-                        <span>REGISTRAR CALENDARIO DE LA MUJER (FORMATO 2)</span>
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="w-6 h-6 animate-spin text-white" />
+                                <span>Guardando en PostgreSQL (Render)...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Send className="w-6 h-6" />
+                                <span>REGISTRAR CALENDARIO DE LA MUJER (FORMATO 2)</span>
+                            </>
+                        )}
                     </button>
                 </div>
 

@@ -16,9 +16,11 @@ import {
     Award,
     Sparkles,
     Check,
-    Megaphone
+    Megaphone,
+    Loader2
 } from 'lucide-react';
 import { handleVoiceInput } from '../../../utils/voiceUtils';
+import { http } from '../../../services/http';
 
 interface FormatoCalendarioNinoProps {
     onBack?: () => void;
@@ -36,7 +38,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     // 1. Alternancia entre Vista Partera vs Duplicado Centro de Salud
     const [modoDuplicado, setModoDuplicado] = useState(false);
 
-    // 2. Datos de Identificación (Inician VACÍOS para captura/API)
+    // 2. Datos de Identificación
     const [nombreNino, setNombreNino] = useState('');
     const [edadNino, setEdadNino] = useState('');
     const [nombreMadre, setNombreMadre] = useState('');
@@ -66,7 +68,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     const [auditivoRef, setAuditivoRef] = useState('');
     const [auditivoApli, setAuditivoApli] = useState('');
 
-    // 6. Cierre Administrativo (Campos limpios sin datos estáticos)
+    // 6. Cierre Administrativo
     const [nombrePartera, setNombrePartera] = useState('');
     const [cierreLocalidad, setCierreLocalidad] = useState('');
     const [noMunicipio, setNoMunicipio] = useState('');
@@ -74,6 +76,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     const [nombreSupervisor, setNombreSupervisor] = useState('');
     const [centroSalud, setCentroSalud] = useState('');
     const [huellaRegistrada, setHuellaRegistrada] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Manejador universal de voz usando SpeechRecognition (es-MX)
     const startVoice = (setter: (val: string) => void, fieldKey: string) => {
@@ -83,12 +86,53 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
         );
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (hablarTexto) {
-            hablarTexto('Calendario del Niño Formato 3 registrado exitosamente.');
+        setIsSubmitting(true);
+
+        const payload = {
+            parteraId: localStorage.getItem('partera_id') || 'DEFAULT-PARTERA-UUID',
+            datosNino: {
+                nombreNino,
+                edadMeses: parseInt(edadNino) || 0,
+                nombreMadre,
+                localidad,
+                municipio,
+                fechaAtencion: fecha || new Date().toISOString().split('T')[0],
+                estadoNutricional: nutricionNino,
+                tipoLactancia
+            },
+            canalizaciones: {
+                tamizNeonatal: { referencia: tamizRef, aplicacion: tamizApli },
+                vacunaBcgHepatitis: { referencia: bcgRef, aplicacion: bcgApli },
+                vitaminasAyK: { referencia: vitRef, aplicacion: vitApli },
+                tamizAuditivo: { referencia: auditivoRef, aplicacion: auditivoApli }
+            },
+            cierreAdministrativo: {
+                nombrePartera,
+                localidad: cierreLocalidad,
+                noMunicipio,
+                mesInformado,
+                nombreSupervisor,
+                centroSaludAdscripcion: centroSalud,
+                huellaFirmada: huellaRegistrada,
+                esCopiaCentroSalud: modoDuplicado
+            }
+        };
+
+        try {
+            await http.post('/api/v1/calendario-nino', payload);
+
+            if (hablarTexto) {
+                hablarTexto('Calendario del Niño Formato 3 registrado y guardado exitosamente en la base de datos.');
+            }
+            onSuccess();
+        } catch (error: any) {
+            console.error('Error al guardar calendario del niño:', error);
+            alert(error.response?.data?.message || 'Error al conectar con el servidor para guardar el calendario.');
+        } finally {
+            setIsSubmitting(false);
         }
-        onSuccess();
     };
 
     return (
@@ -209,11 +253,12 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         {/* Nombre del Niño/a */}
                         <div className="space-y-1.5">
                             <label className="block text-xs font-bold text-slate-700">
-                                Nombre del Niño/a
+                                Nombre del Niño/a *
                             </label>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="text"
+                                    required
                                     value={nombreNino}
                                     onChange={(e) => setNombreNino(e.target.value)}
                                     placeholder="Nombre(s) y Apellidos"
@@ -235,11 +280,12 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         {/* Edad del Niño/a */}
                         <div className="space-y-1.5">
                             <label className="block text-xs font-bold text-slate-700">
-                                Edad del Niño/a (Meses / Años)
+                                Edad del Niño/a (Meses) *
                             </label>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="text"
+                                    required
                                     value={edadNino}
                                     onChange={(e) => setEdadNino(e.target.value)}
                                     placeholder="Ej. 3 meses"
@@ -261,11 +307,12 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         {/* Nombre de la Madre */}
                         <div className="space-y-1.5">
                             <label className="block text-xs font-bold text-slate-700">
-                                Nombre de la Madre
+                                Nombre de la Madre *
                             </label>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="text"
+                                    required
                                     value={nombreMadre}
                                     onChange={(e) => setNombreMadre(e.target.value)}
                                     placeholder="Nombre completo de la madre"
@@ -287,11 +334,12 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         {/* Localidad */}
                         <div className="space-y-1.5">
                             <label className="block text-xs font-bold text-slate-700">
-                                Localidad
+                                Localidad *
                             </label>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="text"
+                                    required
                                     value={localidad}
                                     onChange={(e) => setLocalidad(e.target.value)}
                                     placeholder="Comunidad / Localidad"
@@ -313,11 +361,12 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         {/* Municipio */}
                         <div className="space-y-1.5">
                             <label className="block text-xs font-bold text-slate-700">
-                                Municipio
+                                Municipio *
                             </label>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="text"
+                                    required
                                     value={municipio}
                                     onChange={(e) => setMunicipio(e.target.value)}
                                     placeholder="Municipio"
@@ -339,11 +388,12 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         {/* Fecha */}
                         <div className="space-y-1.5">
                             <label className="block text-xs font-bold text-slate-700">
-                                Fecha
+                                Fecha de Atención *
                             </label>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="date"
+                                    required
                                     value={fecha}
                                     onChange={(e) => setFecha(e.target.value)}
                                     className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base font-semibold text-slate-900 focus:bg-white focus:border-[#9D2449] focus:outline-none transition-colors"
@@ -875,10 +925,20 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 {/* BOTÓN FINAL DE GUARDADO GUINDA OAXACA */}
                 <button
                     type="submit"
-                    className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-lg md:text-xl py-4 px-4 rounded-2xl w-full font-bold shadow-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-transform cursor-pointer"
+                    disabled={isSubmitting}
+                    className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-lg md:text-xl py-4 px-4 rounded-2xl w-full font-bold shadow-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-transform cursor-pointer disabled:opacity-60"
                 >
-                    <Send className="w-6 h-6" />
-                    <span className="text-center">REGISTRAR CALENDARIO DEL NIÑO (FORMATO 3)</span>
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-6 h-6 animate-spin text-white" />
+                            <span>Guardando en PostgreSQL (Render)...</span>
+                        </>
+                    ) : (
+                        <>
+                            <Send className="w-6 h-6" />
+                            <span className="text-center">REGISTRAR CALENDARIO DEL NIÑO (FORMATO 3)</span>
+                        </>
+                    )}
                 </button>
             </div>
         </form>

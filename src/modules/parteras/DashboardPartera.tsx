@@ -110,7 +110,7 @@ export const DashboardPartera: React.FC = () => {
                         <input
                             type="password"
                             maxLength={4}
-                            placeholder="• • • •"
+                            placeholder="••••"
                             value={pinIngresado}
                             onChange={(e) => {
                                 setPinIngresado(e.target.value);
@@ -124,7 +124,7 @@ export const DashboardPartera: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => handleValidarPin('1234')}
-                        className="w-full py-4 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg"
+                        className="w-full py-4 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                     >
                         <QrCode className="w-5 h-5" />
                         <span>Escanear Tarjeta QR / Ingresar Demo (1234)</span>
@@ -137,16 +137,15 @@ export const DashboardPartera: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 pb-12 selection:bg-[#9D2449] selection:text-white">
 
-            {/* ENCABEZADO GUINDA INSTITUCIONAL OAXACA (SIN SIDEBAR ADMINISTRATIVO) */}
+            {/* ENCABEZADO GUINDA INSTITUCIONAL OAXACA */}
             <header className="bg-gradient-to-r from-[#9D2449] via-[#7A1B38] to-slate-900 text-white p-4 sm:p-6 shadow-xl sticky top-0 z-40">
                 <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex items-center gap-3">
-                        {/* Botón de Regresar al Menú Principal dentro del Banner */}
                         {vistaActiva !== 'HOME' && (
                             <button
                                 type="button"
                                 onClick={() => setVistaActiva('HOME')}
-                                className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/25 text-xs md:text-sm font-medium px-4 py-2.5 rounded-full flex items-center gap-2 transition-all shadow-sm active:scale-95 shrink-0"
+                                className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/25 text-xs md:text-sm font-medium px-4 py-2.5 rounded-full flex items-center gap-2 transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer"
                                 title="Regresar al Menú Principal"
                             >
                                 <ChevronLeft className="w-4 h-4" />
@@ -172,7 +171,7 @@ export const DashboardPartera: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* BOTÓN ASISTENCIA POR VOZ GIGANTE */}
+                    {/* BOTÓN ASISTENCIA POR VOZ */}
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                         <button
                             type="button"
@@ -183,7 +182,7 @@ export const DashboardPartera: React.FC = () => {
                                         'Bienvenida. Seleccione entre las 3 opciones oficiales: Ficha de Referencia y Contrareferencia, Calendario de Atención a la Mujer o Calendario del Niño menor de 2 años.'
                                     )
                             }
-                            className={`w-full sm:w-auto px-4 py-3 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 border ${isSpeaking
+                            className={`w-full sm:w-auto px-4 py-3 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 border cursor-pointer ${isSpeaking
                                 ? 'bg-amber-400 text-slate-950 border-amber-300 ring-4 ring-amber-300/40 animate-pulse'
                                 : 'bg-white text-[#9D2449] border-rose-200 hover:bg-rose-50'
                                 }`}
@@ -207,7 +206,6 @@ export const DashboardPartera: React.FC = () => {
             {/* CONTENIDO PRINCIPAL */}
             <main className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
 
-                {/* NOTIFICACIÓN REGISTRO EXITOSO */}
                 {registroExitoso && (
                     <div className="bg-emerald-50 border-4 border-emerald-400 p-8 rounded-3xl text-center space-y-4 shadow-2xl animate-bounce">
                         <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto" />
@@ -218,7 +216,6 @@ export const DashboardPartera: React.FC = () => {
                     </div>
                 )}
 
-                {/* VISTA HOME: 3 TARJETAS TÁCTILES ILUSTRADAS PRINCIPALES */}
                 {vistaActiva === 'HOME' && (
                     <div className="space-y-6">
                         <div className="bg-amber-50 border border-amber-300 p-4 rounded-3xl flex items-center gap-3 shadow-sm">
@@ -230,7 +227,7 @@ export const DashboardPartera: React.FC = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                            {/* TARJETA 1: FICHA DE REFERENCIA Y CONTRAREFERENCIA */}
+                            {/* TARJETA 1 */}
                             <button
                                 type="button"
                                 onClick={() => {
@@ -250,12 +247,12 @@ export const DashboardPartera: React.FC = () => {
                                         1. Ficha de Referencia y Contrareferencia
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                                        Formato 1: Canalizaciones urgentes, Zika, Tamiz y módulo de respuesta médica.
+                                        Canalizaciones urgentes, Zika, Tamiz y módulo de respuesta médica.
                                     </p>
                                 </div>
                             </button>
 
-                            {/* TARJETA 2: CALENDARIO DE ATENCIÓN A LA MUJER */}
+                            {/* TARJETA 2 */}
                             <button
                                 type="button"
                                 onClick={() => {
@@ -275,12 +272,12 @@ export const DashboardPartera: React.FC = () => {
                                         2. Calendario de Atención a la Mujer
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                                        Formato 2: Control meses 1-9, cinta MUAC, parto vertical/horizontal y muerte materna.
+                                        Control meses 1-9, cinta MUAC, parto vertical/horizontal y muerte materna.
                                     </p>
                                 </div>
                             </button>
 
-                            {/* TARJETA 3: CALENDARIO DEL NIÑO/A (<2 AÑOS) */}
+                            {/* TARJETA 3 */}
                             <button
                                 type="button"
                                 onClick={() => {
@@ -300,7 +297,7 @@ export const DashboardPartera: React.FC = () => {
                                         3. Calendario del Niño/a (Menor de 2 años)
                                     </span>
                                     <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                                        Formato 3: Semáforo nutricional, fechas de tamiz/vacunas y firma/huella digital.
+                                        Semáforo nutricional, fechas de tamiz/vacunas y firma/huella digital.
                                     </p>
                                 </div>
                             </button>
@@ -309,7 +306,6 @@ export const DashboardPartera: React.FC = () => {
                     </div>
                 )}
 
-                {/* VISTA 1: FICHA DE REFERENCIA Y CONTRAREFERENCIA (FORMATO 1) */}
                 {vistaActiva === 'REFERENCIA' && !registroExitoso && (
                     <FormatoReferencia
                         onBack={() => setVistaActiva('HOME')}
@@ -321,7 +317,6 @@ export const DashboardPartera: React.FC = () => {
                     />
                 )}
 
-                {/* VISTA 2: CALENDARIO DE ATENCIÓN A LA MUJER (FORMATO 2) */}
                 {vistaActiva === 'MUJER' && !registroExitoso && (
                     <CalendarioMujer
                         onBack={() => setVistaActiva('HOME')}
@@ -333,7 +328,6 @@ export const DashboardPartera: React.FC = () => {
                     />
                 )}
 
-                {/* VISTA 3: CALENDARIO DEL NIÑO/A (<2 AÑOS) (FORMATO 3) */}
                 {vistaActiva === 'NINO' && !registroExitoso && (
                     <FormatoCalendarioNino
                         onBack={() => setVistaActiva('HOME')}
@@ -349,3 +343,5 @@ export const DashboardPartera: React.FC = () => {
         </div>
     );
 };
+
+export default DashboardPartera;

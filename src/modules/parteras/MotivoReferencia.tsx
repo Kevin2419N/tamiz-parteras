@@ -17,6 +17,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { handleVoiceInput } from '../../utils/voiceUtils';
+import { http } from '../../services/http'; // <--- Importamos tu instancia de Axios
 
 interface MotivoReferenciaProps {
     onBack?: () => void;
@@ -135,12 +136,13 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         setMotivosSeleccionados(nuevosMotivos);
     };
 
-    // Envío real al Backend y PostgreSQL
+    // Envío real al Backend en Render y PostgreSQL vía Axios
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         const payloadReferencia = {
+            parteraId: localStorage.getItem('partera_id') || 'DEFAULT-PARTERA-UUID',
             centroSalud,
             nombreUsuaria,
             edad: Number(edad) || 0,
@@ -163,22 +165,13 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         };
 
         try {
-            const response = await fetch('http://localhost:4000/api/referencias', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payloadReferencia)
-            });
+            await http.post('/api/v1/referencias', payloadReferencia);
 
-            if (!response.ok) {
-                throw new Error('Error al registrar la hoja de referencia en el servidor backend');
-            }
-
-            speakText('Hoja de Referencia enviada y guardada con éxito en el sistema.');
+            speakText('Hoja de Referencia enviada y guardada con éxito en la base de datos.');
             if (onSuccess) onSuccess();
-        } catch (err) {
-            console.warn('Servidor backend no disponible, simulando éxito local:', err);
-            speakText('Hoja de Referencia enviada con éxito.');
-            if (onSuccess) onSuccess();
+        } catch (err: any) {
+            console.error('Error al enviar la hoja de referencia:', err);
+            alert(err.response?.data?.message || 'Error al conectar con el servidor para guardar la referencia.');
         } finally {
             setIsSubmitting(false);
         }
@@ -244,7 +237,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     <button
                         type="button"
                         onClick={() => isSpeaking ? stopSpeech() : speakText('Hoja de Referencia de Parteras Tradicionales. Servicios de Salud de Oaxaca.')}
-                        className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-[#9D2449] border-2 border-rose-200 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-sm cursor-pointer"
+                        className="px-4 py-2.5 bg-rose-550 hover:bg-rose-100 text-[#9D2449] border-2 border-rose-200 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-sm cursor-pointer"
                     >
                         {isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                         <span>{isSpeaking ? 'Detener Voz' : 'Escuchar Instrucciones'}</span>
@@ -522,7 +515,6 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                             </div>
                         </div>
 
-                        {/* Campos integrados para nombre y centro del médico */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
                             <div>
                                 <label className="block text-xs font-bold text-slate-300 uppercase">Nombre del Médico Tratante</label>
@@ -559,7 +551,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     {isSubmitting ? (
                         <>
                             <Loader2 className="w-6 h-6 animate-spin" />
-                            <span>Enviando Referencia al Servidor...</span>
+                            <span>Enviando Referencia a PostgreSQL (Render)...</span>
                         </>
                     ) : (
                         <>
