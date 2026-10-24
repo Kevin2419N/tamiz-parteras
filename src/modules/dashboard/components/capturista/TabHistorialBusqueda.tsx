@@ -1,268 +1,323 @@
+/* spell-checker: disable */
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Phone, Calendar, MessageSquare, CheckCircle2, X, Loader2 } from 'lucide-react';
+import { Search, Eye, Filter, Truck, AlertTriangle, CheckCircle2, FileText, Printer, X, Calendar, Loader2 } from 'lucide-react';
 import type { RegistroTamizHistorial } from './types';
 import { http } from '../../../../services/http'; // <--- Instancia de Axios centralizada
 
-interface TabAlertasRecallProps {
-    alertas?: RegistroTamizHistorial[];
+interface TabHistorialBusquedaProps {
+    registros?: RegistroTamizHistorial[];
 }
 
-export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: propsAlertas = [] }) => {
-    const [alertas, setAlertas] = useState<RegistroTamizHistorial[]>(propsAlertas);
+export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ registros: propsRegistros = [] }) => {
+    const [registros, setRegistros] = useState<RegistroTamizHistorial[]>(propsRegistros);
     const [cargando, setCargando] = useState<boolean>(false);
-    const [selectedContacto, setSelectedContacto] = useState<RegistroTamizHistorial | null>(null);
-    const [notifiedIds, setNotifiedIds] = useState<string[]>([]);
-    const [scheduledIds, setScheduledIds] = useState<string[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('TODOS');
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+    const [selectedRegistro, setSelectedRegistro] = useState<RegistroTamizHistorial | null>(null);
 
-    // Carga de alertas de recall reales desde el backend en PostgreSQL
+    // Carga de historial desde el backend real en PostgreSQL con filtros
     useEffect(() => {
-        const cargarAlertasRecall = async () => {
+        const cargarHistorial = async () => {
             setCargando(true);
             try {
-                const res = await http.get('/api/tamiz/alertas-recall');
-                setAlertas(res.data || []);
+                const params: any = {};
+                if (searchTerm.trim()) params.busqueda = searchTerm;
+                if (statusFilter !== 'TODOS') params.estatus = statusFilter;
+                if (startDate) params.fecha_inicio = startDate;
+                if (endDate) params.fecha_fin = endDate;
+
+                const res = await http.get('/api/tamiz/muestras', { params });
+                setRegistros(res.data || []);
             } catch (error) {
-                console.warn('Backend no disponible, cargando datos de respaldo locales para alertas recall:', error);
-                // Respaldo para demostración offline con aserción de tipo para evitar errores de TS
-                setAlertas([
-                    {
-                        id: '101',
-                        folio: '5458349',
-                        rn: 'RN Martínez Cruz',
-                        madre: 'Guadalupe Cruz Pérez',
-                        curpMadre: 'CUPG920310MOCMCR02',
-                        unidadMedica: 'Centro de Salud Salina Cruz',
-                        clues: 'OASCS002190',
-                        municipio: 'Salina Cruz',
-                        fechaToma: '2026-10-04',
-                        estatus: 'MUESTRA_INSUFICIENTE',
-                        motivoRecall: 'Muestra Coagulada / Insuficiente',
-                        prioridad: 'CRITICA',
-                        telefonoContacto: '9711234567'
-                    } as unknown as RegistroTamizHistorial
-                ]);
+                console.error('Error al cargar el historial desde el backend:', error);
+                setRegistros([]); // Dejar vacío si ocurre un error de conexión
             } finally {
                 setCargando(false);
             }
         };
 
-        cargarAlertasRecall();
-    }, []);
+        const timeoutId = setTimeout(() => {
+            cargarHistorial();
+        }, 300); // Debounce para búsqueda fluida
 
-    const handleSendNotification = async (item: RegistroTamizHistorial) => {
-        try {
-            await http.post('/api/tamiz/notificar-recall', {
-                casoId: item.id,
-                folio: item.folio,
-                telefono: (item as any).telefonoContacto,
-                mensaje: `SERVICIOS DE SALUD DE OAXACA: Se requiere acudir al Centro de Salud para RE-TOMA URGENTE de Tamiz Neonatal del recién nacido de ${item.madre}. Motivo: ${(item as any).motivoRecall || 'Muestra coagulada'}.`
-            });
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, statusFilter, startDate, endDate]);
 
-            setNotifiedIds(prev => [...prev, item.id]);
-            setSelectedContacto(null);
-            alert('¡Notificación enviada exitosamente a la madre / partera!');
-        } catch (error: any) {
-            console.error('Error al enviar notificación:', error);
-            setNotifiedIds(prev => [...prev, item.id]);
-            setSelectedContacto(null);
-            alert('Notificación registrada localmente (Modo Respaldo).');
+    const filtrados = registros.filter((item) => {
+        const matchSearch =
+            (item.folio && item.folio.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (item.rn && item.rn.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (item.madre && item.madre.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (item.municipio && item.municipio.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        const matchStatus = statusFilter === 'TODOS' || item.estatus === statusFilter;
+
+        let matchDate = true;
+        if (startDate && item.fechaToma) {
+            matchDate = matchDate && item.fechaToma >= startDate;
         }
-    };
+        if (endDate && item.fechaToma) {
+            matchDate = matchDate && item.fechaToma <= endDate;
+        }
 
-    const handleScheduleRetoma = async (item: RegistroTamizHistorial) => {
-        try {
-            await http.post('/api/tamiz/agendar-retoma', {
-                casoId: item.id,
-                folio: item.folio,
-                unidadMedica: item.unidadMedica
-            });
+        return matchSearch && matchStatus && matchDate;
+    });
 
-            setScheduledIds(prev => [...prev, item.id]);
-            alert(`¡Re-toma de muestra agendada exitosamente en el servidor para el recién nacido de ${item.madre} (Folio ${item.folio})!`);
-        } catch (error: any) {
-            console.error('Error al agendar re-toma:', error);
-            setScheduledIds(prev => [...prev, item.id]);
-            alert(`¡Re-toma agendada localmente para ${item.madre} (Folio ${item.folio})!`);
+    const getEstatusBadge = (estatus: string) => {
+        switch (estatus) {
+            case 'MUESTRA_COAGULADA':
+            case 'MUESTRA_INSUFICIENTE':
+            case 'RETOMA_SOLICITADA':
+            case 'RE_TOMA_URGENTE':
+                return (
+                    <span className="px-3 py-1 bg-rose-100 text-rose-900 border border-rose-300 rounded-full text-[10px] font-black flex items-center gap-1.5 shadow-sm">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600 animate-pulse" /> Re-Toma Urgente
+                    </span>
+                );
+            case 'EN_TRANSITO_LAB':
+            case 'EN_LOTE_TRANSITO':
+                return (
+                    <span className="px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                        <Truck className="w-3.5 h-3.5 text-amber-600" /> En Tránsito Lab
+                    </span>
+                );
+            case 'PROCESADA_NORMAL':
+            case 'REGISTRADO':
+                return (
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {estatus === 'REGISTRADO' ? 'Registrado' : 'Resultado Normal'}
+                    </span>
+                );
+            default:
+                return (
+                    <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-[10px] font-bold border border-slate-200">
+                        {estatus}
+                    </span>
+                );
         }
     };
 
     return (
         <div className="space-y-6">
 
-            {/* ENCABEZADO Y ADVERTENCIA SANITARIA */}
-            <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-6 text-rose-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
-                <div className="flex items-center gap-3.5">
-                    <div className="p-3 bg-rose-600 text-white rounded-2xl shadow-md animate-pulse shrink-0">
-                        <AlertTriangle className="w-7 h-7" />
+            {/* BARRA DE BÚSQUEDA, RANGO DE FECHAS Y FILTROS */}
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+
+                    {/* Búsqueda por Texto */}
+                    <div className="relative w-full lg:w-96">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por Folio Guthrie, RN, Madre o Municipio..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-300 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#9D2449] font-medium"
+                        />
                     </div>
-                    <div>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-700 block">
-                            VIGILANCIA EPIDEMIOLÓGICA • RE-TOMA URGENTE (RECALL)
+
+                    {/* Selector de Rango de Fechas (Calendario Inicio y Fin) */}
+                    <div className="flex items-center gap-2 w-full lg:w-auto bg-slate-50 p-2 rounded-2xl border border-slate-200">
+                        <span className="text-xs font-bold text-slate-600 flex items-center gap-1 pl-1">
+                            <Calendar className="w-4 h-4 text-[#9D2449]" /> Rango:
                         </span>
-                        <h2 className="text-xl font-black text-[#9D2449]">
-                            Centro de Alertas de Re-Toma Neonatal
-                        </h2>
-                        <p className="text-xs text-rose-800 font-medium mt-0.5">
-                            Casos prioritarios reportados por LESP Oaxaca que requieren nueva toma de muestras de sangre en talón.
-                        </p>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-xs text-slate-900 font-medium focus:outline-none focus:border-[#9D2449]"
+                            title="Fecha Inicio"
+                        />
+                        <span className="text-xs font-bold text-slate-400">a</span>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-xs text-slate-900 font-medium focus:outline-none focus:border-[#9D2449]"
+                            title="Fecha Fin"
+                        />
+                        {(startDate || endDate) && (
+                            <button
+                                type="button"
+                                onClick={() => { setStartDate(''); setEndDate(''); }}
+                                className="text-[10px] font-bold text-rose-700 hover:underline px-1 cursor-pointer"
+                            >
+                                Limpiar
+                            </button>
+                        )}
                     </div>
+
                 </div>
 
-                <div className="bg-white/80 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-rose-200 text-center shrink-0">
-                    <span className="text-xs font-bold text-rose-800 block">Total Casos Recall Activos</span>
-                    <span className="text-2xl font-black text-rose-600 font-mono">{alertas.length}</span>
+                {/* Filtros por Estatus Pill */}
+                <div className="flex items-center gap-2 w-full overflow-x-auto pt-2 border-t border-slate-100">
+                    <span className="text-xs font-bold text-slate-500 whitespace-nowrap flex items-center gap-1">
+                        <Filter className="w-3.5 h-3.5 text-[#9D2449]" /> Estatus:
+                    </span>
+                    {[
+                        { id: 'TODOS', label: 'Todos los Registros' },
+                        { id: 'EN_TRANSITO_LAB', label: 'En Tránsito Lab' },
+                        { id: 'PROCESADA_NORMAL', label: 'Procesada Normal' },
+                        { id: 'MUESTRA_COAGULADA', label: 'Alertas Re-Toma' },
+                    ].map((f) => (
+                        <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => setStatusFilter(f.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${statusFilter === f.id
+                                ? 'bg-[#9D2449] text-white shadow-sm'
+                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                }`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+
+            </div>
+
+            {/* TABLA DE REGISTROS HISTÓRICOS */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-[#9D2449]" />
+                        <span>Historial Completo de Tarjetas de Tamiz Registradas</span>
+                    </h3>
+                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                        {filtrados.length} Registros Encontrados
+                    </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-100/70 text-[11px] font-bold uppercase text-slate-500 border-b border-slate-200">
+                                <th className="py-3 px-3">Folio Guthrie</th>
+                                <th className="py-3 px-3">Recién Nacido</th>
+                                <th className="py-3 px-3">Madre / Tutor</th>
+                                <th className="py-3 px-3">Unidad Médica / CLUES</th>
+                                <th className="py-3 px-3">Fecha Toma</th>
+                                <th className="py-3 px-3">Estatus</th>
+                                <th className="py-3 px-3 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-xs font-medium">
+                            {cargando ? (
+                                <tr>
+                                    <td colSpan={7} className="py-10 text-center text-slate-400 font-semibold">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                            <span>Consultando registros en PostgreSQL...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filtrados.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="py-8 text-center text-slate-400 font-normal">
+                                        No se encontraron registros de tarjetas Guthrie que coincidan con la búsqueda.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filtrados.map((item) => (
+                                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="py-3.5 px-3 font-mono font-bold text-[#9D2449] bg-rose-50/40 rounded-lg">
+                                            {item.folio}
+                                        </td>
+                                        <td className="py-3.5 px-3 font-extrabold text-slate-900">{item.rn}</td>
+                                        <td className="py-3.5 px-3 text-slate-700">
+                                            <div>{item.madre}</div>
+                                            <div className="text-[10px] text-slate-400 font-mono">{item.curpMadre}</div>
+                                        </td>
+                                        <td className="py-3.5 px-3 text-slate-600">
+                                            <div className="font-bold text-slate-800">{item.unidadMedica}</div>
+                                            <div className="text-[10px] font-mono text-emerald-700">{item.clues}</div>
+                                        </td>
+                                        <td className="py-3.5 px-3 text-slate-500 font-mono">{item.fechaToma}</td>
+                                        <td className="py-3.5 px-3">{getEstatusBadge(item.estatus)}</td>
+                                        <td className="py-3.5 px-3 text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedRegistro(item)}
+                                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-[#9D2449] font-bold rounded-xl text-xs flex items-center gap-1 ml-auto border border-rose-200 transition-colors cursor-pointer"
+                                            >
+                                                <Eye className="w-3.5 h-3.5" />
+                                                <span>Ver Ficha</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* LISTA DE ALERTAS DE RE-TOMA CON BANDERAS LATERALES DE ADVERTENCIA */}
-            {cargando ? (
-                <div className="p-12 text-center text-slate-400 font-semibold bg-slate-50 rounded-3xl border border-slate-200 flex items-center justify-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
-                    <span>Cargando alertas de re-toma desde PostgreSQL...</span>
-                </div>
-            ) : alertas.length === 0 ? (
-                <div className="p-12 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-3xl border border-slate-200 space-y-2">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                    <p className="font-bold text-slate-700">No hay casos pendientes de re-toma (Recall) activos.</p>
-                    <p className="text-[11px] text-slate-500">Todas las muestras procesadas en la red jurisdiccional cumplen con la calidad normativa.</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {alertas.map((item: any) => {
-                        const isNotified = notifiedIds.includes(item.id);
-                        const isScheduled = scheduledIds.includes(item.id);
-                        const isCritica = item.prioridad === 'CRITICA';
-
-                        return (
-                            <div
-                                key={item.id}
-                                className={`bg-white rounded-3xl border-y border-r shadow-sm p-5 space-y-4 transition-all relative overflow-hidden flex flex-col justify-between ${isCritica
-                                    ? 'border-l-8 border-l-rose-600 border-rose-200 hover:border-rose-400'
-                                    : 'border-l-8 border-l-amber-500 border-amber-200 hover:border-amber-400'
-                                    }`}
-                            >
-
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-start border-b border-slate-100 pb-3">
-                                        <div>
-                                            <span className="font-mono text-xs font-black text-[#9D2449] bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                                                FOLIO: {item.folio}
-                                            </span>
-                                            <h3 className="text-base font-black text-slate-900 mt-1">{item.rn}</h3>
-                                            <p className="text-xs font-bold text-slate-600">Madre: {item.madre}</p>
-                                        </div>
-
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1 shadow-sm ${isCritica
-                                            ? 'bg-rose-600 text-white animate-pulse'
-                                            : 'bg-amber-100 text-amber-900 border border-amber-300'
-                                            }`}>
-                                            <AlertTriangle className="w-3 h-3" />
-                                            {item.prioridad === 'CRITICA' ? 'CRÍTICA URGENTE' : (item.prioridad || 'ALERTA')}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-2 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                                        <div className="flex items-center justify-between text-slate-700">
-                                            <span className="font-bold text-slate-500">Motivo de Re-Toma:</span>
-                                            <span className="font-black text-rose-700">{item.motivoRecall || 'Muestra Coagulada / Inadecuada'}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-slate-700">
-                                            <span className="font-bold text-slate-500">Municipio / Localidad:</span>
-                                            <span className="font-bold text-slate-900">{item.municipio}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-slate-700">
-                                            <span className="font-bold text-slate-500">Fecha Toma Original:</span>
-                                            <span className="font-mono font-bold text-slate-800">{item.fechaToma}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* BOTONES DIRECTOS DE ACCIÓN RÁPIDA */}
-                                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                                    {isNotified ? (
-                                        <div className="w-full py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5">
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                            <span>Madre / Partera Notificada Exitosamente</span>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedContacto(item)}
-                                                className="flex-1 py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
-                                            >
-                                                <Phone className="w-4 h-4 text-rose-200" />
-                                                <span>Contactar Madre / Partera</span>
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleScheduleRetoma(item)}
-                                                disabled={isScheduled}
-                                                className={`px-3 py-2.5 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all cursor-pointer ${isScheduled
-                                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 cursor-default'
-                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
-                                                    }`}
-                                                title="Programar Re-Toma en Unidad"
-                                            >
-                                                <Calendar className="w-4 h-4 text-slate-600" />
-                                                <span>{isScheduled ? 'Agendado ✓' : 'Agendar Re-Toma'}</span>
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* MODAL DE CONTACTO TELEFÓNICO / WHATSAPP */}
-            {selectedContacto && (
+            {/* MODAL DETALLE DE FICHA TÉCNICA GUTHRIE */}
+            {selectedRegistro && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border-2 border-[#9D2449] rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+                    <div className="bg-white border-2 border-[#9D2449] rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
                         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                            <div className="flex items-center gap-2 text-[#9D2449]">
-                                <Phone className="w-5 h-5" />
-                                <h3 className="text-base font-black text-slate-900">Notificar Alerta de Re-Toma</h3>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-rose-50 text-[#9D2449] rounded-2xl border border-rose-200">
+                                    <FileText className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-mono font-bold text-[#9D2449] block">
+                                        FOLIO GUTHRIE: {selectedRegistro.folio}
+                                    </span>
+                                    <h3 className="text-base font-black text-slate-900">
+                                        Ficha Oficial de Tamiz Neonatal
+                                    </h3>
+                                </div>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setSelectedContacto(null)}
-                                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                                onClick={() => setSelectedRegistro(null)}
+                                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="space-y-3 text-xs">
-                            <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 space-y-1">
-                                <p className="font-extrabold text-[#9D2449]">Folio Guthrie: {selectedContacto.folio}</p>
-                                <p className="font-bold text-slate-900">Madre: {selectedContacto.madre}</p>
-                                <p className="text-slate-600">Teléfono Celular: <span className="font-mono font-bold text-slate-900">{(selectedContacto as any).telefonoContacto || 'Sin número registrado'}</span></p>
+                        <div className="space-y-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Recién Nacido:</span>
+                                <span className="font-extrabold text-slate-900">{selectedRegistro.rn}</span>
                             </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Madre / Tutor:</span>
+                                <span className="font-extrabold text-slate-900">{selectedRegistro.madre}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Unidad de Toma (CLUES):</span>
+                                <span className="font-extrabold text-slate-900">{selectedRegistro.unidadMedica} ({selectedRegistro.clues})</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Municipio:</span>
+                                <span className="font-extrabold text-slate-900">{selectedRegistro.municipio}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Fecha Toma:</span>
+                                <span className="font-mono font-bold text-slate-900">{selectedRegistro.fechaToma}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-slate-500 font-bold">Estatus Muestra:</span>
+                                <span>{getEstatusBadge(selectedRegistro.estatus)}</span>
+                            </div>
+                        </div>
 
-                            <div className="space-y-1">
-                                <label className="block font-bold text-slate-700">Plantilla de Mensaje Oficial (SMS / WhatsApp):</label>
-                                <textarea
-                                    readOnly
-                                    rows={4}
-                                    value={`SERVICIOS DE SALUD DE OAXACA: Se requiere acudir al Centro de Salud para RE-TOMA URGENTE de Tamiz Neonatal del recién nacido de ${selectedContacto.madre}. Motivo: ${(selectedContacto as any).motivoRecall || 'Muestra coagulada'}. Favor de contactar a su Unidad de Salud.`}
-                                    className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
-                                />
-                            </div>
-
-                            <div className="flex gap-2 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => handleSendNotification(selectedContacto)}
-                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-                                >
-                                    <MessageSquare className="w-4 h-4 text-rose-200" />
-                                    <span>Enviar Mensaje SMS / WhatsApp</span>
-                                </button>
-                            </div>
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => window.print()}
+                                className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <Printer className="w-4 h-4" />
+                                <span>Reimprimir Tarjeta Guthrie</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -272,4 +327,4 @@ export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: pro
     );
 };
 
-export default TabAlertasRecall;
+export default TabHistorialBusqueda;

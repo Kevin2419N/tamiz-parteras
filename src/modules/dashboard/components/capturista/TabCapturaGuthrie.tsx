@@ -1,3 +1,4 @@
+/* spell-checker: disable */
 import React, { useState, useEffect } from 'react';
 import {
     Building2,
@@ -109,11 +110,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
     const handleCluesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedVal = e.target.value;
-        const found = catalogCLUES.find(c => `${c.clues} - ${c.nombre}` === selectedVal || c.clues === selectedVal);
+        const found = catalogCLUES.find(c => `${c.clues} ${c.nombre}` === selectedVal || c.clues === selectedVal);
         if (found) {
             setFormData(prev => ({
                 ...prev,
-                unidadMedica: `${found.clues} - ${found.nombre}`,
+                unidadMedica: `${found.clues} ${found.nombre}`,
                 clues: found.clues,
                 jurisdiccion: found.jurisdiccion,
                 estado: found.estado
@@ -126,7 +127,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         setIsSubmitting(true);
 
         try {
-            // Estructura de datos requerida por el backend especificado
+            // Estructura de datos requerida por el backend en PostgreSQL
             const payload = {
                 folio_tarjeta: formData.folio,
                 clues_unidad: formData.clues,
@@ -181,11 +182,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
             setSavedNotification(true);
             setTimeout(() => setSavedNotification(false), 5000);
         } catch (error: any) {
-            console.warn('Backend no disponible o error al guardar en servidor, respaldando localmente:', error);
-            // Si el servidor está inactivo, permitimos continuar localmente para la demostración
-            onSaveSuccess(formData);
-            setSavedNotification(true);
-            setTimeout(() => setSavedNotification(false), 5000);
+            console.error('Error al guardar la tarjeta Guthrie en el servidor:', error);
+            alert('Error al sincronizar el registro con el servidor PostgreSQL.');
         } finally {
             setIsSubmitting(false);
         }
@@ -355,7 +353,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     >
                                         <option value="">Seleccione una unidad médica...</option>
                                         {catalogCLUES.map((u) => (
-                                            <option key={u.clues} value={`${u.clues} - ${u.nombre}`}>
+                                            <option key={u.clues} value={`${u.clues} ${u.nombre}`}>
                                                 {u.clues} - {u.nombre}
                                             </option>
                                         ))}

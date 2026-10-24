@@ -1,3 +1,4 @@
+/* spell-checker: disable */
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Phone, Calendar, MessageSquare, CheckCircle2, X, Loader2 } from 'lucide-react';
 import type { RegistroTamizHistorial } from './types';
@@ -22,25 +23,8 @@ export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: pro
                 const res = await http.get('/api/tamiz/alertas-recall');
                 setAlertas(res.data || []);
             } catch (error) {
-                console.warn('Backend no disponible, cargando datos de respaldo locales para alertas recall:', error);
-                // Respaldo para demostración offline con aserción de tipo para evitar errores de TS
-                setAlertas([
-                    {
-                        id: '101',
-                        folio: '5458349',
-                        rn: 'RN Martínez Cruz',
-                        madre: 'Guadalupe Cruz Pérez',
-                        curpMadre: 'CUPG920310MOCMCR02',
-                        unidadMedica: 'Centro de Salud Salina Cruz',
-                        clues: 'OASCS002190',
-                        municipio: 'Salina Cruz',
-                        fechaToma: '2026-10-04',
-                        estatus: 'MUESTRA_INSUFICIENTE',
-                        motivoRecall: 'Muestra Coagulada / Insuficiente',
-                        prioridad: 'CRITICA',
-                        telefonoContacto: '9711234567'
-                    } as unknown as RegistroTamizHistorial
-                ]);
+                console.error('Error al cargar alertas de recall desde el backend:', error);
+                setAlertas([]); // Dejar vacío si ocurre un error de conexión
             } finally {
                 setCargando(false);
             }
@@ -63,9 +47,7 @@ export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: pro
             alert('¡Notificación enviada exitosamente a la madre / partera!');
         } catch (error: any) {
             console.error('Error al enviar notificación:', error);
-            setNotifiedIds(prev => [...prev, item.id]);
-            setSelectedContacto(null);
-            alert('Notificación registrada localmente (Modo Respaldo).');
+            alert('Error al enviar la notificación a través del servidor.');
         }
     };
 
@@ -81,8 +63,7 @@ export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: pro
             alert(`¡Re-toma de muestra agendada exitosamente en el servidor para el recién nacido de ${item.madre} (Folio ${item.folio})!`);
         } catch (error: any) {
             console.error('Error al agendar re-toma:', error);
-            setScheduledIds(prev => [...prev, item.id]);
-            alert(`¡Re-toma agendada localmente para ${item.madre} (Folio ${item.folio})!`);
+            alert('Error al agendar la re-toma en el servidor.');
         }
     };
 
