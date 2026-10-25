@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-// Creamos la instancia de Axios con la URL base definida en las variables de entorno de Vite
+// Limpiamos la URL base por si tiene barras al final y añadimos /api/v1 de forma estandarizada
+const rawBase = import.meta.env.VITE_API_BASE_URL || 'https://backend-parteras.onrender.com';
+const cleanBase = rawBase.replace(/\/+$/, '');
+
 export const http = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend-parteras.onrender.com/api/v1',
+    baseURL: `${cleanBase}/api/v1`,
     timeout: 15000, // Tiempo máximo de espera (15 segundos)
     headers: {
         'Content-Type': 'application/json',
@@ -13,7 +16,6 @@ export const http = axios.create({
 // Interceptor de Request: Inyecta automáticamente el Token JWT si el usuario ha iniciado sesión
 http.interceptors.request.use(
     (config) => {
-        // Buscamos el token en localStorage (puedes adaptarlo si lo guardas en sessionStorage o Zustand/Context)
         const token = localStorage.getItem('token_sso_parteras');
 
         if (token) {
@@ -41,7 +43,6 @@ http.interceptors.response.use(
                 localStorage.removeItem('token_sso_parteras');
                 localStorage.removeItem('user_sso_parteras');
 
-                // Redirigir al login si no estamos ya en él
                 if (window.location.pathname !== '/login') {
                     window.location.href = '/login';
                 }
