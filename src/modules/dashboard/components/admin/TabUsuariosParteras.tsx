@@ -5,7 +5,7 @@ import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 import { http } from '../../../../services/http';
 
 export const TabUsuariosParteras: React.FC = () => {
-    // Estado del padrón de parteras (inicializado garantizando un arreglo vacío)
+    // Estado del padrón de parteras
     const [parteras, setParteras] = useState<ParteraCredencial[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -20,15 +20,13 @@ export const TabUsuariosParteras: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Carga oficial del padrón de parteras desde PostgreSQL (Render) con validación estricta de arreglo
+    // Carga oficial del padrón de parteras desde PostgreSQL (Render)
     useEffect(() => {
         const cargarParteras = async () => {
             setCargando(true);
             setErrorMessage(null);
             try {
                 const response = await http.get('/admin/parteras');
-                
-                // Inspección segura de la respuesta de la API para prevenir pantallas negras
                 const rawData = response.data;
                 let listaValida: ParteraCredencial[] = [];
 
@@ -46,7 +44,7 @@ export const TabUsuariosParteras: React.FC = () => {
             } catch (error: any) {
                 console.error('Error al cargar padrón de parteras:', error);
                 setErrorMessage('No se pudo conectar con el servidor para obtener el padrón de parteras.');
-                setParteras([]); // Aseguramos que se mantenga como arreglo vacío ante el fallo
+                setParteras([]);
             } finally {
                 setCargando(false);
             }
@@ -90,6 +88,7 @@ export const TabUsuariosParteras: React.FC = () => {
 
         const unit = cluesList.find((u) => u.id === selectedCluesId) || cluesList[0];
         const nombreCompletoCompuesto = `${nombres.trim()} ${apellidoPaterno.trim()} ${apellidoMaterno.trim()}`.trim();
+        const pinGenerado = newPin || Math.floor(1000 + Math.random() * 9000).toString();
 
         const payload = {
             nombreCompleto: nombreCompletoCompuesto,
@@ -100,17 +99,20 @@ export const TabUsuariosParteras: React.FC = () => {
             comunidad: newComunidad || 'Cabecera Municipal',
             centroSaludAdscripcion: unit ? unit.nombre : 'Centro de Salud',
             cluesAdscripcion: unit ? unit.clues : 'OASSA000000',
-            pinCuatroDigitos: newPin || Math.floor(1000 + Math.random() * 9000).toString(),
+            pinCuatroDigitos: pinGenerado,
             estatusAcreditacion: 'ACREDITADA'
         };
 
         try {
             const response = await http.post('/admin/parteras', payload);
-            const creada: ParteraCredencial = response.data?.partera || response.data;
+            const creada: ParteraCredencial = response.data?.partera || response.data || payload;
 
-            // Actualización segura utilizando el arreglo previo garantizado
+            // Actualizamos la lista con la partera recién creada
             setParteras((prev) => [creada, ...(Array.isArray(prev) ? prev : [])]);
+            
+            // Cerramos el modal de registro y ABRIMOS AUTOMÁTICAMENTE LA CREDENCIAL QR LISTA PARA DESCARGAR/IMPRIMIR
             setShowRegisterModal(false);
+            setSelectedParteraQR(creada);
 
             // Reset form
             setNombres('');
@@ -203,7 +205,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                         <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-block mb-0.5">
                                             {p.estatusAcreditacion || 'ACREDITADA'}
                                         </span>
-                                        <h3 className="text-xs font-black text-slate-900">{p.nombreCompleto}</h3>
+                                        <h3 className="text-xs font-black text-slate-900">{p.nombreCompleto || 'Sin nombre'}</h3>
                                         <p className="text-[10px] text-slate-500 font-mono">CURP: {p.curp}</p>
                                     </div>
                                 </div>
@@ -238,7 +240,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                 className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                             >
                                 <QrCode className="w-4 h-4 text-rose-200" />
-                                <span>Generar Credencial QR Oficial</span>
+                                <span>Ver Credencial QR Oficial</span>
                             </button>
                         </div>
                     ))
@@ -283,7 +285,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 {getInitials(p.nombreCompleto)}
                                             </div>
                                             <div>
-                                                <div className="font-black text-slate-900">{p.nombreCompleto}</div>
+                                                <div className="font-black text-slate-900">{p.nombreCompleto || 'Sin nombre'}</div>
                                                 <div className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
                                                     <Languages className="w-3 h-3 text-[#9D2449]" />
                                                     <span>{p.lenguaMaterna || 'Español'}</span>
@@ -317,7 +319,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                             className="px-3.5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
                                         >
                                             <QrCode className="w-4 h-4 text-rose-200" />
-                                            <span>Generar Credencial</span>
+                                            <span>Ver Credencial</span>
                                         </button>
                                     </td>
                                 </tr>
@@ -358,7 +360,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             <div className="space-y-0.5">
                                 <span className="font-extrabold uppercase tracking-wider block text-[10px]">Acreditación Comunitaria e Identidad Intercultural</span>
                                 <p className="text-slate-700 font-medium text-[11px]">
-                                    El registro desglosado de los apellidos permite la vinculación exacta con la clave CURP y la expedición homologada de credenciales QR.
+                                    Al guardar el registro, el sistema generará automáticamente la credencial QR oficial lista para imprimir.
                                 </p>
                             </div>
                         </div>
@@ -555,12 +557,12 @@ export const TabUsuariosParteras: React.FC = () => {
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin text-white" />
-                                            <span>Guardando en PostgreSQL...</span>
+                                            <span>Guardando y Generando Credencial...</span>
                                         </>
                                     ) : (
                                         <>
                                             <UserCheck className="w-4 h-4 text-rose-200" />
-                                            <span>Guardar y Acreditar Partera</span>
+                                            <span>Guardar y Ver Credencial QR</span>
                                         </>
                                     )}
                                 </button>
@@ -570,7 +572,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 </div>
             )}
 
-            {/* CREDENCIAL QR PARTERA */}
+            {/* CREDENCIAL QR PARTERA (PROFESIONAL, LISTA PARA DESCARGAR/IMPRIMIR) */}
             {selectedParteraQR && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xl max-w-sm w-full space-y-4 text-center relative">
@@ -649,14 +651,16 @@ export const TabUsuariosParteras: React.FC = () => {
                             <span>Red de Salud Intercultural SSO Oaxaca</span>
                         </div>
 
-                        {/* BOTÓN IMPRIMIR */}
+                        {/* BOTÓN IMPRIMIR / DESCARGAR */}
                         <button
                             type="button"
-                            onClick={() => alert(`Imprimiendo credencial oficial de ${selectedParteraQR.nombreCompleto}...`)}
+                            onClick={() => {
+                                window.print();
+                            }}
                             className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                         >
                             <Printer className="w-4 h-4" />
-                            <span>Imprimir Credencial QR</span>
+                            <span>Imprimir / Descargar Credencial Oficial</span>
                         </button>
                     </div>
                 </div>
