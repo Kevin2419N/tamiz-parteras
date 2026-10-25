@@ -5,7 +5,7 @@ import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 import { http } from '../../../../services/http';
 
 export const TabUsuariosParteras: React.FC = () => {
-    // Estado del padrón de parteras
+    // Estado del padrón de parteras (inicializado garantizando un arreglo vacío)
     const [parteras, setParteras] = useState<ParteraCredencial[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -20,19 +20,33 @@ export const TabUsuariosParteras: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Carga oficial del padrón de parteras desde PostgreSQL (Render)
+    // Carga oficial del padrón de parteras desde PostgreSQL (Render) con validación estricta de arreglo
     useEffect(() => {
         const cargarParteras = async () => {
             setCargando(true);
             setErrorMessage(null);
             try {
                 const response = await http.get('/admin/parteras');
-                if (response.data) {
-                    setParteras(response.data);
+                
+                // Inspección segura de la respuesta de la API para prevenir pantallas negras
+                const rawData = response.data;
+                let listaValida: ParteraCredencial[] = [];
+
+                if (Array.isArray(rawData)) {
+                    listaValida = rawData;
+                } else if (rawData && typeof rawData === 'object') {
+                    if (Array.isArray(rawData.parteras)) {
+                        listaValida = rawData.parteras;
+                    } else if (Array.isArray(rawData.data)) {
+                        listaValida = rawData.data;
+                    }
                 }
+
+                setParteras(listaValida);
             } catch (error: any) {
                 console.error('Error al cargar padrón de parteras:', error);
                 setErrorMessage('No se pudo conectar con el servidor para obtener el padrón de parteras.');
+                setParteras([]); // Aseguramos que se mantenga como arreglo vacío ante el fallo
             } finally {
                 setCargando(false);
             }
@@ -92,9 +106,10 @@ export const TabUsuariosParteras: React.FC = () => {
 
         try {
             const response = await http.post('/admin/parteras', payload);
-            const creada: ParteraCredencial = response.data.partera || response.data;
+            const creada: ParteraCredencial = response.data?.partera || response.data;
 
-            setParteras([creada, ...parteras]);
+            // Actualización segura utilizando el arreglo previo garantizado
+            setParteras((prev) => [creada, ...(Array.isArray(prev) ? prev : [])]);
             setShowRegisterModal(false);
 
             // Reset form
@@ -114,6 +129,7 @@ export const TabUsuariosParteras: React.FC = () => {
     };
 
     const getInitials = (name: string) => {
+        if (!name || typeof name !== 'string') return 'PT';
         const words = name.split(' ').filter(Boolean);
         if (words.length >= 2) {
             return `${words[0][0]}${words[1][0]}`.toUpperCase();
@@ -171,13 +187,13 @@ export const TabUsuariosParteras: React.FC = () => {
                         <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
                         <span>Cargando padrón desde PostgreSQL (Render)...</span>
                     </div>
-                ) : parteras.length === 0 ? (
+                ) : !Array.isArray(parteras) || parteras.length === 0 ? (
                     <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
                         No hay parteras registradas en el padrón.
                     </div>
                 ) : (
                     parteras.map((p) => (
-                        <div key={p.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <div key={p.id || p.curp} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
@@ -185,7 +201,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                     </div>
                                     <div>
                                         <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-block mb-0.5">
-                                            {p.estatusAcreditacion}
+                                            {p.estatusAcreditacion || 'ACREDITADA'}
                                         </span>
                                         <h3 className="text-xs font-black text-slate-900">{p.nombreCompleto}</h3>
                                         <p className="text-[10px] text-slate-500 font-mono">CURP: {p.curp}</p>
@@ -252,7 +268,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                     </div>
                                 </td>
                             </tr>
-                        ) : parteras.length === 0 ? (
+                        ) : !Array.isArray(parteras) || parteras.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
                                     No hay parteras registradas en el padrón.
@@ -260,7 +276,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             </tr>
                         ) : (
                             parteras.map((p) => (
-                                <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                                <tr key={p.id || p.curp} className="hover:bg-slate-50/80 transition-colors">
                                     <td className="py-3.5 px-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-9 h-9 rounded-full bg-[#9D2449] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm border border-rose-200">
