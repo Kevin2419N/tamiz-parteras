@@ -32,13 +32,14 @@ export const fetchCluesCatalogFromBackend = async (): Promise<UnidadCLUES[]> => 
 
 export const addCluesUnit = async (unit: any): Promise<UnidadCLUES | null> => {
     try {
-        // Mapeamos los campos y enviamos tanto 'clues' como 'clave_clues' 
-        // para asegurar que PostgreSQL no rechace el registro por la restricción not-null.
-        const claveUnica = unit.clues || unit.clave_clues || '';
+        const claveUnica = unit.clues || unit.clave_clues || unit.claveClues || '';
+        const nombreTexto = unit.nombre || unit.nombre_unidad || '';
+
         const payloadBackend = {
-            clues: claveUnica,
             clave_clues: claveUnica,
-            nombre: unit.nombre,
+            clues: claveUnica,
+            nombre: nombreTexto,
+            nombre_unidad: nombreTexto,
             municipio: unit.municipio || '',
             localidad: unit.localidad || unit.municipio || '',
             tipo: unit.tipo || unit.tipoUnidad || '',
