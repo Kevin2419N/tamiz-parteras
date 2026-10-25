@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Creamos la instancia de Axios con la URL base apuntando oficialmente al /api/v1 del backend en Render
 export const http = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend-parteras.onrender.com/api/v1',
     timeout: 15000,
@@ -10,7 +9,7 @@ export const http = axios.create({
     },
 });
 
-// Interceptor de Request: Inyecta automáticamente el Token JWT
+// Interceptor de Request para el Token JWT
 http.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token_sso_parteras');
@@ -22,7 +21,7 @@ http.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Interceptor de Response: Manejo de errores globales
+// Interceptor de Response para manejar 401
 http.interceptors.response.use(
     (response) => response,
     (error) => {
