@@ -1,7 +1,6 @@
 import type { UnidadCLUES } from './types';
 import { http } from '../../../../services/http';
 
-// Catálogo en memoria con suscriptores. Inicia vacío: se hidrata desde la API real (Render)
 let catalogStore: UnidadCLUES[] = [];
 type Listener = (units: UnidadCLUES[]) => void;
 const listeners = new Set<Listener>();
@@ -10,9 +9,6 @@ export const getCluesCatalog = (): UnidadCLUES[] => {
     return catalogStore;
 };
 
-/**
- * Reemplaza el catálogo completo y notifica a todos los componentes suscritos.
- */
 export const setCluesCatalog = (units: UnidadCLUES[]): void => {
     catalogStore = units;
     listeners.forEach((l) => l(catalogStore));

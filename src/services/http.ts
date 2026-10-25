@@ -9,7 +9,7 @@ export const http = axios.create({
     },
 });
 
-// Interceptor de Request para el Token JWT
+// Interceptor de Request: Inyecta automáticamente el Token JWT de sesión
 http.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token_sso_parteras');
@@ -21,7 +21,7 @@ http.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Interceptor de Response para manejar 401
+// Interceptor de Response: Manejo global de errores y expiración de sesión (401)
 http.interceptors.response.use(
     (response) => response,
     (error) => {
