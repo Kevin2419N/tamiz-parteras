@@ -85,7 +85,7 @@ const VOICE_TEXT: Record<PinMethod, string> = {
     qr: 'Acerque su credencial con código QR a la cámara y espere.',
 };
 
-/* Clases compartidas optimizadas */
+/* Clases compartidas */
 const ACCENT = 'bg-gradient-to-r from-sky-600 to-blue-700';
 const FOCUS =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900';
@@ -99,14 +99,14 @@ const KEY = `min-h-12 rounded-2xl border border-white/15 bg-white/10 text-2xl fo
 const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/15 bg-black/25 p-1';
 
 const LOGIN_CSS = `
-@keyframes lgFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes lgFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes lgShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
 @keyframes lgCard{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes lgLaser{from{top:4%}to{top:96%}}
 @keyframes lgPop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
-.lg-fade{animation:lgFade .25s ease-out both}
+.lg-fade{animation:lgFade .35s cubic-bezier(0.16, 1, 0.3, 1) both}
 .lg-shake{animation:lgShake .4s cubic-bezier(.36,.07,.19,.97) both}
-.lg-card{animation:lgCard .5s cubic-bezier(.22,1,.36,1) both}
+.lg-card{animation:lgCard .6s cubic-bezier(.22,1,.36,1) both}
 .lg-laser{animation:lgLaser 2s ease-in-out infinite alternate}
 .lg-pop{animation:lgPop .3s cubic-bezier(.34,1.56,.64,1) both}
 .lg-quiet{scrollbar-width:none}
@@ -784,17 +784,23 @@ export function Login() {
             </div>
 
             <div className="flex w-full max-w-md flex-col items-center md:max-w-4xl">
-                <div className="lg-card flex h-[min(36rem,calc(100dvh-6rem))] w-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-2xl shadow-black/50 backdrop-blur-xl md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-                    <aside className="relative shrink-0 overflow-hidden border-b border-white/15 p-3.5 sm:p-4 md:border-b-0 md:p-8">
+                {/* Contenedor principal con transición ultra fluida en espejo */}
+                <div
+                    className={`lg-card flex h-[min(36rem,calc(100dvh-6rem))] w-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-2xl shadow-black/50 backdrop-blur-xl md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                        isInstitutional ? '' : 'md:[direction:rtl]'
+                    }`}
+                >
+                    {/* ── Panel lateral (marca / información) ── */}
+                    <aside className={`relative shrink-0 overflow-hidden border-b border-white/15 p-3.5 sm:p-4 md:border-b-0 md:p-8 transition-all duration-700 ${!isInstitutional ? 'md:[direction:ltr]' : ''}`}>
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-blue-600/35 via-sky-500/10 to-transparent transition-opacity duration-500 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-blue-600/35 via-sky-500/10 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-100' : 'opacity-0'
                             }`}
                         />
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-cyan-400/30 via-sky-400/10 to-transparent transition-opacity duration-500 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-cyan-400/30 via-sky-400/10 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-0' : 'opacity-100'
                             }`}
                         />
@@ -840,7 +846,8 @@ export function Login() {
                         </div>
                     </aside>
 
-                    <section className="flex min-h-0 flex-1 flex-col bg-slate-950/25 p-4 sm:p-6 md:border-l md:border-white/15 md:p-7">
+                    {/* ── Panel de formularios ── */}
+                    <section className={`flex min-h-0 flex-1 flex-col bg-slate-950/25 p-4 sm:p-6 md:border-l md:border-white/15 md:p-7 transition-all duration-700 ${!isInstitutional ? 'md:[direction:ltr] md:border-l-0 md:border-r' : ''}`}>
                         <div
                             role="tablist"
                             aria-label="Tipo de acceso"
@@ -849,7 +856,7 @@ export function Login() {
                         >
                             <span
                                 aria-hidden="true"
-                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-950/40 transition-transform duration-300 ${SLIDE} ${
+                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-950/40 transition-transform duration-500 ${SLIDE} ${
                                     isInstitutional ? 'translate-x-0' : 'translate-x-full'
                                 }`}
                             />
@@ -880,7 +887,7 @@ export function Login() {
 
                         <div className="-m-1 min-h-0 flex-1 overflow-hidden p-1">
                             <div
-                                className={`flex h-full w-[200%] transition-transform duration-300 ${SLIDE} ${
+                                className={`flex h-full w-[200%] transition-transform duration-500 ${SLIDE} ${
                                     isInstitutional ? 'translate-x-0' : '-translate-x-1/2'
                                 }`}
                             >
