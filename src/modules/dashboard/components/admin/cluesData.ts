@@ -23,8 +23,7 @@ export const setCluesCatalog = (units: UnidadCLUES[]): void => {
  */
 export const fetchCluesCatalogFromBackend = async (): Promise<UnidadCLUES[]> => {
     try {
-        // Usamos la instancia http con el prefijo /api/v1 y apuntamos a /admin/clues
-        const response = await http.get('/admin/clues');
+        const response = await http.get('/clues');
         if (response.data) {
             setCluesCatalog(response.data);
             return response.data;
@@ -37,8 +36,7 @@ export const fetchCluesCatalogFromBackend = async (): Promise<UnidadCLUES[]> => 
 
 export const addCluesUnit = async (unit: Omit<UnidadCLUES, 'id'>): Promise<UnidadCLUES | null> => {
     try {
-        // Petición oficial a través de la instancia http autenticada
-        const response = await http.post('/admin/clues', unit);
+        const response = await http.post('/clues', unit);
         const createdUnit: UnidadCLUES = response.data.unidad || response.data;
 
         catalogStore = [createdUnit, ...catalogStore];
