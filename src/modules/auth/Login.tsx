@@ -16,11 +16,7 @@ import {
     RotateCcw,
     X,
     CheckCircle2,
-    HelpCircle,
-    AlertCircle,
-    ShieldCheck,
-    Sparkles,
-    Activity
+    AlertCircle
 } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -38,7 +34,7 @@ export const Login: React.FC = () => {
     // Tab 2: Midwife Access State (WCAG 2.1 AAA)
     const [pinDigits, setPinDigits] = useState<string[]>([]);
     const [showQRScannerModal, setShowQRScannerModal] = useState(false);
-    const [isScanningQR, setIsScanningQR] = useState(false);
+    const [, setIsScanningQR] = useState(false);
     const [qrScanSuccess, setQrScanSuccess] = useState(false);
 
     // Webcam / Video Ref for QR Scanner
@@ -209,132 +205,141 @@ export const Login: React.FC = () => {
         }
     };
 
+    const isInstitutional = activeTab === 'INSTITUCIONAL';
+
     return (
-        <div className="fixed inset-0 w-screen h-screen bg-gradient-to-br from-slate-950 via-[#4A1022] to-slate-900 overflow-y-auto flex items-center justify-center p-4 sm:p-6 lg:p-8 selection:bg-[#9D2449] selection:text-white">
+        <div className="fixed inset-0 w-screen h-screen flex flex-col items-center justify-between p-3 sm:p-5 overflow-hidden selection:bg-teal-700 selection:text-white relative">
             
-            {/* Elementos decorativos de fondo con animación suave */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-rose-700/15 blur-[120px] pointer-events-none animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-pink-900/20 blur-[140px] pointer-events-none" />
+            {/* Imagen de fondo real "fondo-login.png" correctamente ajustada */}
+            <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
+                style={{ backgroundImage: `url('/fondo-login.png')` }}
+            />
+            {/* Overlay sutil para dar contraste clínico profesional sin opacar el fondo */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-950/60 via-blue-950/50 to-slate-950/70 backdrop-blur-[2px] z-0 pointer-events-none" />
 
-            <div className="w-full max-w-5xl z-10 flex flex-col items-center my-auto transition-all duration-300">
+            {/* Main Centered Container - Pro & Compact */}
+            <div className="w-full max-w-4xl h-full max-h-[660px] flex flex-col justify-between z-10 my-auto gap-3">
 
-                {/* Header Superior con Logos Oficiales */}
-                <header className="w-full bg-white/95 backdrop-blur-xl border border-white/20 p-4 sm:p-6 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 mb-6 transition-all">
-                    <div className="flex items-center justify-between w-full md:w-auto gap-6">
+                {/* Header Superior con Logos Oficiales y Cristal */}
+                <header className="w-full bg-white/85 backdrop-blur-xl shadow-2xl rounded-2xl px-5 py-3 flex items-center justify-between gap-4 border border-white/50 shrink-0 transition-all">
+                    <div className="flex items-center">
                         <img
                             src="/logo-jurisdiccion.png"
-                            alt="Logo Jurisdicción Sanitaria No. 2 Istmo"
-                            className="h-14 sm:h-16 w-auto object-contain transform hover:scale-105 transition-transform duration-300"
+                            alt="Jurisdicción Sanitaria No. 2"
+                            className="h-9 sm:h-11 w-auto object-contain"
                         />
-                        <div className="block md:hidden text-right">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-800">Servicios de Salud</span>
-                        </div>
                     </div>
 
-                    <div className="text-center flex-1 px-2">
-                        <h1 className="text-slate-900 text-base sm:text-xl lg:text-2xl font-black tracking-tight flex items-center justify-center gap-2">
-                            <span>Jurisdicción Sanitaria No. 2</span>
-                            <span className="text-[#9D2449] font-light">|</span>
-                            <span className="text-slate-700 font-bold">Istmo</span>
+                    <div className="text-center px-2 flex-1">
+                        <h1 className="text-slate-900 text-xs sm:text-sm font-black tracking-tight leading-tight">
+                            Jurisdicción Sanitaria No. 2 <span className="text-teal-700 font-light">|</span> Istmo
                         </h1>
-                        <p className="text-slate-500 text-xs sm:text-sm font-medium mt-0.5">
+                        <p className="text-slate-600 text-[10px] font-medium hidden sm:block">
                             Sistema Web de Gestión Operativa para Tamiz Neonatal y Red de Parteras Tradicionales
                         </p>
                     </div>
 
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center">
                         <img
                             src="/Logo-Secretaria.png"
-                            alt="Logo Secretaría de Salud Oaxaca"
-                            className="h-12 sm:h-16 w-auto object-contain transform hover:scale-105 transition-transform duration-300"
+                            alt="Secretaría de Salud Oaxaca"
+                            className="h-8 sm:h-10 w-auto object-contain"
                         />
                     </div>
                 </header>
 
-                {/* Tarjeta Principal de Login */}
-                <main className="w-full bg-white/95 backdrop-blur-2xl border border-white/50 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden grid grid-cols-1 md:grid-cols-12 transition-all">
+                {/* Tarjeta Principal Glassmorphic */}
+                <main className="w-full flex-1 bg-slate-900/45 backdrop-blur-2xl shadow-[0_30px_70px_rgba(0,0,0,0.6)] rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-12 border border-white/30 min-h-0 transition-all duration-500">
 
-                    {/* Panel Lateral Izquierdo (Identidad y Estado) */}
-                    <div className="md:col-span-5 bg-gradient-to-br from-[#9D2449] via-[#7A1B38] to-slate-950 p-6 sm:p-8 flex flex-col justify-between text-white relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/20 rounded-full blur-2xl pointer-events-none" />
+                    {/* Panel Izquierdo Dinámico (Cambia entre Azul Médico e Inteligente Teal/Esmeralda) */}
+                    <div className={`md:col-span-5 p-6 sm:p-7 flex flex-col justify-between text-white relative overflow-hidden shrink-0 transition-all duration-700 ${
+                        isInstitutional 
+                            ? 'bg-gradient-to-br from-blue-950/90 via-blue-900/75 to-slate-950/90' 
+                            : 'bg-gradient-to-br from-teal-950/90 via-emerald-900/75 to-slate-950/90'
+                    }`}>
+                        <div className="absolute top-0 right-0 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
 
-                        <div className="relative z-10 space-y-6">
-                            <div className="inline-flex items-center gap-2.5 px-3.5 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-rose-200">
-                                <Sparkles className="w-5 h-5 text-rose-300 animate-spin" style={{ animationDuration: '6s' }} />
-                                <span className="text-xs font-bold tracking-wide uppercase">Plataforma Oficial Segura</span>
+                        <div className="space-y-4 relative z-10">
+                            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/30 transition-colors duration-500 ${
+                                isInstitutional ? 'bg-blue-500/30 text-blue-200' : 'bg-teal-500/30 text-teal-200'
+                            }`}>
+                                {isInstitutional ? <Building2 className="w-6 h-6" /> : <HeartHandshake className="w-6 h-6" />}
                             </div>
 
                             <div className="space-y-2">
-                                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
-                                    Salud Reproductiva y Tamizaje
+                                <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full border transition-colors duration-500 ${
+                                    isInstitutional ? 'bg-blue-500/20 border-blue-400/40 text-blue-200' : 'bg-teal-500/20 border-teal-400/40 text-teal-200'
+                                }`}>
+                                    {isInstitutional ? 'Portal Institucional' : 'Módulo Comunitario'}
+                                </span>
+                                
+                                <h2 className="text-lg sm:text-xl font-black tracking-tight leading-snug">
+                                    {isInstitutional ? 'Control Operativo de Tamizaje' : 'Red de Partería Tradicional'}
                                 </h2>
-                                <p className="text-xs sm:text-sm text-rose-100/90 leading-relaxed font-medium">
-                                    Gestión centralizada en tiempo real con PostgreSQL para el seguimiento oportuno de recién nacidos y partería tradicional en la región del Istmo.
+                                
+                                <p className="text-[11px] sm:text-xs text-slate-200 leading-relaxed font-normal">
+                                    {isInstitutional 
+                                        ? 'Acceso exclusivo para capturistas y personal médico autorizado en la gestión y seguimiento de tamices neonatales.' 
+                                        : 'Sistema accesible y asistido por voz para el registro seguro de atenciones y referencias obstétricas de la partería.'}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="relative z-10 mt-8 pt-6 border-t border-white/15 space-y-3">
-                            <div className="flex items-center gap-3 text-xs text-rose-100 font-semibold bg-black/20 p-3 rounded-2xl border border-white/10">
-                                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-                                <span>Conexión Segura vía API Backend (Render)</span>
-                            </div>
-                            <div className="flex items-center justify-between text-[11px] text-rose-200/80 px-1 font-medium">
-                                <span>Estado del Servidor: <strong className="text-emerald-400 font-bold">En Línea</strong></span>
-                                <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                            </div>
+                        <div className="pt-4 border-t border-white/20 relative z-10 text-[10px] text-slate-300 flex items-center justify-between">
+                            <span>Servicios de Salud de Oaxaca</span>
+                            <span className="font-bold text-white">Istmo 2026</span>
                         </div>
                     </div>
 
-                    {/* Panel Derecho (Formularios y Pestañas) */}
-                    <div className="md:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-between bg-white/80">
+                    {/* Panel Derecho Translúcido ("Lo blanco transparente") */}
+                    <div className="md:col-span-7 p-5 sm:p-6 flex flex-col justify-between bg-white/85 backdrop-blur-2xl overflow-y-auto">
                         <div>
                             {errorMessage && (
-                                <div className="mb-5 p-4 bg-rose-50 border border-rose-300/80 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold animate-shake shadow-sm">
-                                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                                <div className="mb-3.5 p-3 bg-rose-50/90 border border-rose-200 rounded-xl flex items-center gap-2.5 text-rose-900 text-xs font-bold shadow-sm animate-shake">
+                                    <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
                                     <span>{errorMessage}</span>
                                 </div>
                             )}
 
-                            {/* Pestañas de Selección de Perfil */}
-                            <div className="grid grid-cols-2 p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 mb-6 gap-1.5 shadow-inner">
+                            {/* Pestañas de Selección Pro */}
+                            <div className="grid grid-cols-2 p-1 bg-slate-200/80 backdrop-blur-sm rounded-2xl mb-4 gap-1.5 border border-slate-300/70 shadow-inner">
                                 <button
                                     onClick={() => { setActiveTab('INSTITUCIONAL'); setErrorMessage(null); }}
-                                    className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
-                                        activeTab === 'INSTITUCIONAL'
-                                            ? 'bg-[#9D2449] text-white shadow-lg shadow-[#9D2449]/25 transform scale-[1.02]'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                    className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+                                        isInstitutional
+                                            ? 'bg-blue-900 text-white shadow-md'
+                                            : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
                                     }`}
                                 >
-                                    <Building2 className="w-4 h-4 shrink-0" />
+                                    <Building2 className="w-3.5 h-3.5 shrink-0" />
                                     <span>Personal Institucional</span>
                                 </button>
 
                                 <button
                                     onClick={() => { setActiveTab('PARTERA'); setErrorMessage(null); }}
-                                    className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
-                                        activeTab === 'PARTERA'
-                                            ? 'bg-[#9D2449] text-white shadow-lg shadow-[#9D2449]/25 transform scale-[1.02]'
+                                    className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+                                        !isInstitutional
+                                            ? 'bg-teal-800 text-white shadow-md'
                                             : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
                                     }`}
                                 >
-                                    <HeartHandshake className="w-4 h-4 shrink-0" />
+                                    <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
                                     <span>Partera Tradicional</span>
                                 </button>
                             </div>
 
-                            {/* Contenido Pestaña 1: Personal Institucional */}
-                            {activeTab === 'INSTITUCIONAL' && (
-                                <form onSubmit={handleInstitutionalSubmit} className="space-y-4 animate-fadeIn">
-                                    <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-                                        <label className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5">
-                                            Perfil de Acceso Autorizado
+                            {/* Tab 1 Form: Institucional */}
+                            {isInstitutional && (
+                                <form onSubmit={handleInstitutionalSubmit} className="space-y-3.5 animate-fadeIn">
+                                    <div className="bg-white/70 backdrop-blur-sm p-3 rounded-xl border border-slate-300/70 shadow-sm">
+                                        <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                                            Perfil de Acceso
                                         </label>
                                         <select
                                             value={rolSeleccionado}
                                             onChange={(e) => setRolSeleccionado(e.target.value as UserRole)}
-                                            className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#9D2449] focus:outline-none focus:ring-2 focus:ring-[#9D2449]/20 focus:border-[#9D2449] transition-all cursor-pointer"
+                                            className="w-full bg-white/90 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-900 cursor-pointer"
                                         >
                                             <option value={UserRole.CAPTURISTA_TAMIZ}>Capturista de Tamiz Neonatal</option>
                                             <option value={UserRole.MEDICO_UNIDAD}>Médico de Unidad / Contrareferencias</option>
@@ -343,35 +348,35 @@ export const Login: React.FC = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">
                                             Correo Electrónico Institucional
                                         </label>
                                         <div className="relative">
-                                            <UserIcon className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+                                            <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                                             <input
                                                 type="email"
                                                 required
                                                 placeholder="usuario@salud.gob.mx"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full bg-slate-50/50 border border-slate-300 rounded-2xl pl-11 pr-4 py-3 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#9D2449]/20 focus:border-[#9D2449] focus:bg-white transition-all shadow-sm"
+                                                className="w-full bg-white/90 border border-slate-300 rounded-xl pl-10 pr-3 py-2.5 text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-900 shadow-sm"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                            Contraseña Institucional
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                                            Contraseña
                                         </label>
                                         <div className="relative">
-                                            <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+                                            <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                                             <input
                                                 type="password"
                                                 required
                                                 placeholder="••••••••••••"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
-                                                className="w-full bg-slate-50/50 border border-slate-300 rounded-2xl pl-11 pr-4 py-3 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#9D2449]/20 focus:border-[#9D2449] focus:bg-white transition-all shadow-sm"
+                                                className="w-full bg-white/90 border border-slate-300 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-900 shadow-sm"
                                             />
                                         </div>
                                     </div>
@@ -379,91 +384,93 @@ export const Login: React.FC = () => {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full mt-2 py-4 px-6 rounded-2xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-[#9D2449] to-[#7A1B38] hover:from-[#7A1B38] hover:to-[#5E1228] shadow-xl shadow-[#9D2449]/25 transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                                        className="w-full mt-1 py-3 px-5 rounded-xl font-bold text-xs text-white bg-blue-900 hover:bg-blue-950 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-[0.98]"
                                     >
                                         {isSubmitting ? (
                                             <>
                                                 <Loader2 className="w-4 h-4 animate-spin text-white" />
-                                                <span>Conectando con Servidor Backend...</span>
+                                                <span>Iniciando sesión...</span>
                                             </>
                                         ) : (
                                             <>
-                                                <span>Iniciar Sesión Institucional</span>
-                                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                                <span>Entrar al Sistema</span>
+                                                <ArrowRight className="w-4 h-4" />
                                             </>
                                         )}
                                     </button>
                                 </form>
                             )}
 
-                            {/* Contenido Pestaña 2: Partera Tradicional */}
-                            {activeTab === 'PARTERA' && (
-                                <div className="space-y-5 animate-fadeIn">
-                                    <div className="bg-rose-50/80 border border-rose-200 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2.5 bg-rose-100 text-[#9D2449] rounded-xl shadow-sm">
-                                                <Volume2 className="w-5 h-5" />
+                            {/* Tab 2 Form: Partera Tradicional (Voz + QR + PIN con acento Teal/Esmeralda) */}
+                            {!isInstitutional && (
+                                <div className="space-y-3 animate-fadeIn">
+                                    <div className="bg-teal-50/85 backdrop-blur-sm border border-teal-200 p-2.5 rounded-xl flex items-center justify-between gap-2.5 shadow-sm">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="p-2 bg-teal-100 text-teal-800 rounded-lg">
+                                                <Volume2 className="w-4 h-4" />
                                             </div>
                                             <div>
                                                 <h3 className="text-xs font-bold text-slate-900">Asistencia por Voz</h3>
-                                                <p className="text-[11px] text-slate-600 font-medium">Escuche las instrucciones de acceso.</p>
+                                                <p className="text-[10px] text-slate-600">Escuchar guía de acceso.</p>
                                             </div>
                                         </div>
 
                                         <button
                                             type="button"
                                             onClick={isSpeaking ? stopVoice : speakInstructions}
-                                            className="px-3.5 py-2 rounded-xl text-xs font-black bg-[#9D2449] hover:bg-[#7A1B38] text-white shadow-md transition-all cursor-pointer"
+                                            className="px-3 py-1.5 rounded-lg text-xs font-black bg-teal-800 hover:bg-teal-900 text-white shadow-sm cursor-pointer"
                                         >
-                                            {isSpeaking ? 'Detener' : 'Escuchar Guía'}
+                                            {isSpeaking ? 'Detener' : 'Escuchar'}
                                         </button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+                                        {/* Botón de Escaneo QR Pro */}
                                         <button
                                             type="button"
                                             onClick={handleStartQRScan}
-                                            className="w-full h-full min-h-[160px] p-4 bg-rose-50/40 hover:bg-rose-50/90 border-2 border-dashed border-[#9D2449]/60 hover:border-[#9D2449] rounded-3xl flex flex-col items-center justify-center gap-3 text-center transition-all duration-300 shadow-sm cursor-pointer group"
+                                            className="w-full h-full min-h-[140px] p-3 bg-gradient-to-br from-teal-50/90 to-white/95 hover:from-teal-100 hover:to-teal-50 border-2 border-teal-700 rounded-2xl flex flex-col items-center justify-center gap-2 text-center transition-all cursor-pointer group shadow-sm"
                                         >
-                                            <div className="p-3.5 bg-[#9D2449] text-white rounded-2xl shadow-md group-hover:scale-110 transition-transform">
-                                                <QrCode className="w-8 h-8" />
+                                            <div className="p-3 bg-teal-800 text-white rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                                                <QrCode className="w-6 h-6" />
                                             </div>
                                             <div>
-                                                <span className="block text-xs sm:text-sm font-black text-slate-900">ESCANEAR CÓDIGO QR</span>
-                                                <span className="text-[10px] text-slate-500 font-medium">Verificación biométrica / credencial</span>
+                                                <span className="block text-xs font-black text-slate-900">ESCANEAR QR</span>
+                                                <span className="text-[10px] text-slate-600 font-medium">Credencial de partera</span>
                                             </div>
                                         </button>
 
-                                        <div className="space-y-3 bg-slate-50/80 p-4 rounded-3xl border border-slate-200/80 shadow-sm">
+                                        {/* Teclado PIN táctil */}
+                                        <div className="space-y-2 bg-white/90 backdrop-blur-sm p-3 rounded-2xl border border-slate-300/70 shadow-sm">
                                             <div className="text-center">
-                                                <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9D2449]">
-                                                    Código PIN de 4 Dígitos
+                                                <span className="block text-[10px] font-extrabold uppercase tracking-wider text-teal-800">
+                                                    PIN de 4 Dígitos
                                                 </span>
                                             </div>
 
-                                            <div className="flex justify-center items-center gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-inner">
+                                            <div className="flex justify-center items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
                                                 {[0, 1, 2, 3].map((idx) => {
                                                     const filled = pinDigits.length > idx;
                                                     return (
                                                         <div
                                                             key={idx}
-                                                            className={`w-5 h-5 rounded-full border-2 transition-all duration-300 flex items-center justify-center ${
-                                                                filled ? 'bg-[#9D2449] border-[#9D2449] scale-110 shadow-sm' : 'border-slate-300 bg-slate-50'
+                                                            className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
+                                                                filled ? 'bg-teal-800 border-teal-800' : 'border-slate-300 bg-white'
                                                             }`}
                                                         >
-                                                            {filled && <span className="w-2 h-2 rounded-full bg-white animate-ping" />}
+                                                            {filled && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                                                         </div>
                                                     );
                                                 })}
                                             </div>
 
-                                            <div className="grid grid-cols-3 gap-1.5">
+                                            <div className="grid grid-cols-3 gap-1">
                                                 {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
                                                     <button
                                                         key={num}
                                                         type="button"
                                                         onClick={() => handleKeypadPress(num)}
-                                                        className="h-10 bg-white hover:bg-rose-50 border border-slate-200 text-slate-900 font-black text-base rounded-xl shadow-sm transition-transform active:scale-95 cursor-pointer"
+                                                        className="h-8 bg-slate-50 hover:bg-teal-50 border border-slate-200 text-slate-900 font-black text-xs rounded-lg shadow-sm cursor-pointer active:scale-95 transition-transform"
                                                     >
                                                         {num}
                                                     </button>
@@ -471,23 +478,23 @@ export const Login: React.FC = () => {
                                                 <button
                                                     type="button"
                                                     onClick={handleKeypadDelete}
-                                                    className="h-10 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-[#9D2449] rounded-xl flex items-center justify-center transition-transform active:scale-95 cursor-pointer"
+                                                    className="h-8 bg-teal-50 border border-teal-200 text-teal-800 rounded-lg flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
                                                 >
-                                                    <Delete className="w-4 h-4" />
+                                                    <Delete className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleKeypadPress('0')}
-                                                    className="h-10 bg-white hover:bg-rose-50 border border-slate-200 text-slate-900 font-black text-base rounded-xl shadow-sm transition-transform active:scale-95 cursor-pointer"
+                                                    className="h-8 bg-slate-50 hover:bg-teal-50 border border-slate-200 text-slate-900 font-black text-xs rounded-lg cursor-pointer active:scale-95 transition-transform"
                                                 >
                                                     0
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={handleKeypadClear}
-                                                    className="h-10 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 rounded-xl flex items-center justify-center transition-transform active:scale-95 cursor-pointer"
+                                                    className="h-8 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
                                                 >
-                                                    <RotateCcw className="w-4 h-4" />
+                                                    <RotateCcw className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                         </div>
@@ -496,30 +503,30 @@ export const Login: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Footer Inferior de la Tarjeta */}
-                        <footer className="mt-8 pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2 font-medium">
-                            <span>Jurisdicción Sanitaria No. 2 • Istmo de Tehuantepec</span>
-                            <span className="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">Soporte Técnico: <strong>800 123 4567</strong></span>
+                        {/* Footer de Tarjeta */}
+                        <footer className="mt-3 pt-3 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
+                            <span>Jurisdicción Sanitaria No. 2 • Istmo</span>
+                            <span>Soporte: 800 123 4567</span>
                         </footer>
                     </div>
                 </main>
             </div>
 
-            {/* Modal de Escaneo QR con Cámara Web Real */}
+            {/* Modal QR Scanner */}
             {showQRScannerModal && (
-                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
-                    <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative text-center border border-white/20">
+                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl max-w-sm w-full p-5 space-y-3 shadow-2xl relative text-center">
                         <div className="flex justify-between items-center">
-                            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                                <QrCode className="w-5 h-5 text-[#9D2449]" />
-                                <span>Verificando Credencial QR...</span>
+                            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                                <QrCode className="w-4 h-4 text-teal-800" />
+                                <span>Escaneando Credencial...</span>
                             </h3>
-                            <button onClick={handleCloseModal} className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">
+                            <button onClick={handleCloseModal} className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 cursor-pointer">
                                 <X className="w-4 h-4 text-slate-600" />
                             </button>
                         </div>
 
-                        <div className="w-full h-60 bg-slate-950 rounded-2xl flex items-center justify-center relative overflow-hidden border-2 border-[#9D2449] shadow-inner">
+                        <div className="w-full h-48 bg-slate-950 rounded-2xl flex items-center justify-center relative overflow-hidden border-2 border-teal-700">
                             <video
                                 ref={videoRef}
                                 className="w-full h-full object-cover"
@@ -528,24 +535,16 @@ export const Login: React.FC = () => {
                                 autoPlay
                             />
                             {qrScanSuccess && (
-                                <div className="absolute inset-0 bg-emerald-950/90 backdrop-blur-sm flex flex-col items-center justify-center gap-2 text-emerald-300 animate-fadeIn">
-                                    <CheckCircle2 className="w-16 h-16 text-emerald-400 animate-bounce" />
-                                    <span className="text-xs font-bold uppercase tracking-wider">¡Credencial Verificada con Éxito!</span>
-                                </div>
-                            )}
-                            {!qrScanSuccess && isScanningQR && (
-                                <div className="absolute bottom-3 left-3 right-3 bg-slate-950/80 backdrop-blur-md py-2 px-4 rounded-xl flex items-center justify-center gap-2 border border-white/10">
-                                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-                                    <span className="text-xs text-rose-200 font-bold">Escaneando código en base de datos...</span>
+                                <div className="absolute inset-0 bg-emerald-950/90 flex flex-col items-center justify-center gap-2 text-emerald-300">
+                                    <CheckCircle2 className="w-12 h-12 text-emerald-400 animate-bounce" />
+                                    <span className="text-xs font-bold uppercase">¡Acceso Correcto!</span>
                                 </div>
                             )}
                         </div>
 
-                        <div className="flex justify-center">
-                            <span className="text-xs text-slate-500 font-medium flex items-center gap-1.5 bg-slate-50 py-2 px-4 rounded-xl border border-slate-200">
-                                <HelpCircle className="w-4 h-4 text-[#9D2449]" /> Coloque su credencial frente a la cámara del dispositivo
-                            </span>
-                        </div>
+                        <span className="text-[11px] text-slate-500 block">
+                            Coloque el código QR frente a la cámara
+                        </span>
                     </div>
                 </div>
             )}
