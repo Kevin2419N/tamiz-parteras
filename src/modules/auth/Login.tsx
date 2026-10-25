@@ -25,6 +25,7 @@ import {
     Volume2,
     VolumeX,
 } from 'lucide-react';
+import jsQR from 'jsqr';
 import { useAuth } from '../../context/AuthContext';
 import { http } from '../../services/http';
 import { UserRole } from '../../types';
@@ -37,12 +38,12 @@ import type { User } from '../../types';
 const TOKEN_KEY = 'token_sso_parteras';
 const REMEMBER_KEY = 'tamiz_remember_email';
 const PIN_LENGTH = 4;
-const SUPPORT_PHONE = '800 123 4567'; // TODO: número real de soporte
+const SUPPORT_PHONE = '800 123 4567';
 
 type AccessMode = 'institucional' | 'partera';
 type PinMethod = 'pin' | 'qr';
 type NoticeKind = 'error' | 'info';
-type ScanState = 'idle' | 'starting' | 'scanning' | 'verifying' | 'success' | 'denied' | 'unsupported';
+type ScanState = 'idle' | 'starting' | 'scanning' | 'verifying' | 'success' | 'denied';
 
 interface LoginResponse {
     token: string;
@@ -56,15 +57,6 @@ interface Notice {
 interface ApiErrorBody {
     message?: string;
 }
-
-/* BarcodeDetector aún no está en lib.dom: se declara lo mínimo necesario. */
-interface DetectedBarcode {
-    rawValue: string;
-}
-interface BarcodeDetectorLike {
-    detect: (source: HTMLVideoElement) => Promise<DetectedBarcode[]>;
-}
-type BarcodeDetectorCtor = new (options?: { formats?: string[] }) => BarcodeDetectorLike;
 
 const MODES: ReadonlyArray<{ id: AccessMode; label: string; Icon: typeof Building2 }> = [
     { id: 'institucional', label: 'Personal institucional', Icon: Building2 },
@@ -90,11 +82,11 @@ const ROLE_OPTIONS: ReadonlyArray<{ value: UserRole; label: string }> = [
 
 const VOICE_TEXT: Record<PinMethod, string> = {
     pin: 'Escriba su PIN de cuatro números tocando el teclado de la pantalla.',
-    qr: 'Acerque su credencial con código QR a la cámara y espere unos segundos.',
+    qr: 'Acerque su credencial con código QR a la cámara y espere.',
 };
 
-/* Clases compartidas */
-const ACCENT = 'bg-linear-to-r from-sky-600 to-blue-700';
+/* Clases compartidas optimizadas */
+const ACCENT = 'bg-gradient-to-r from-sky-600 to-blue-700';
 const FOCUS =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900';
 const SLIDE = 'ease-[cubic-bezier(0.65,0,0.35,1)]';
@@ -102,35 +94,30 @@ const LABEL = 'mb-1 block text-xs font-medium text-sky-50';
 const INPUT =
     'min-h-11 w-full rounded-xl border border-white/20 bg-white/10 pl-10 text-base text-white placeholder:text-white/50 transition-colors focus:border-sky-300 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-sky-300/40 disabled:opacity-60';
 const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-sky-200/80';
-const PRIMARY = `group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-950/40 transition duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:brightness-100 motion-reduce:transition-none ${FOCUS}`;
-const KEY = `min-h-12 rounded-2xl border border-white/15 bg-white/10 text-2xl font-semibold text-white transition duration-150 hover:bg-white/20 active:scale-95 active:bg-sky-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 motion-reduce:transition-none ${FOCUS}`;
+const PRIMARY = `group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-950/40 transition duration-150 hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
+const KEY = `min-h-12 rounded-2xl border border-white/15 bg-white/10 text-2xl font-semibold text-white transition duration-100 hover:bg-white/20 active:scale-95 active:bg-sky-500/40 disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`;
 const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/15 bg-black/25 p-1';
 
-/* Animaciones propias del componente (no requieren tocar index.css). */
 const LOGIN_CSS = `
 @keyframes lgFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes lgShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
 @keyframes lgCard{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes lgLaser{from{top:4%}to{top:96%}}
 @keyframes lgPop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
-.lg-fade{animation:lgFade .35s ease-out both}
-.lg-shake{animation:lgShake .5s cubic-bezier(.36,.07,.19,.97) both}
-.lg-card{animation:lgCard .8s cubic-bezier(.22,1,.36,1) both}
-.lg-laser{animation:lgLaser 2.2s ease-in-out infinite alternate}
-.lg-pop{animation:lgPop .4s cubic-bezier(.34,1.56,.64,1) both}
+.lg-fade{animation:lgFade .25s ease-out both}
+.lg-shake{animation:lgShake .4s cubic-bezier(.36,.07,.19,.97) both}
+.lg-card{animation:lgCard .5s cubic-bezier(.22,1,.36,1) both}
+.lg-laser{animation:lgLaser 2s ease-in-out infinite alternate}
+.lg-pop{animation:lgPop .3s cubic-bezier(.34,1.56,.64,1) both}
 .lg-quiet{scrollbar-width:none}
 .lg-quiet::-webkit-scrollbar{display:none}
 @media (prefers-reduced-motion:reduce){.lg-fade,.lg-shake,.lg-card,.lg-laser,.lg-pop{animation:none}}
 `;
 
-/* ═══════════════════════════════════════════════════════════════
-   Utilidades
-   ═══════════════════════════════════════════════════════════════ */
-
 function getErrorMessage(error: unknown, fallback: string): string {
     if (isAxiosError<ApiErrorBody>(error)) {
-        if (error.code === 'ECONNABORTED') return 'El servidor tardó demasiado en responder. Inténtalo de nuevo en unos segundos.';
-        if (!error.response) return 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.';
+        if (error.code === 'ECONNABORTED') return 'El servidor tardó demasiado en responder.';
+        if (!error.response) return 'No hay conexión con el servidor. Revisa tu internet.';
         return error.response.data?.message ?? fallback;
     }
     return fallback;
@@ -148,19 +135,8 @@ function writeRememberedEmail(email: string | null): void {
     try {
         if (email) localStorage.setItem(REMEMBER_KEY, email);
         else localStorage.removeItem(REMEMBER_KEY);
-    } catch {
-        /* Almacenamiento bloqueado (modo privado): se ignora. */
-    }
+    } catch {}
 }
-
-function getBarcodeDetector(): BarcodeDetectorCtor | null {
-    const ctor = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
-    return ctor ?? null;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Aviso de estado (ocupa siempre el mismo espacio: no mueve el layout)
-   ═══════════════════════════════════════════════════════════════ */
 
 function StatusSlot({ notice }: { notice: Notice | null }) {
     const isError = notice?.kind === 'error';
@@ -183,10 +159,6 @@ function StatusSlot({ notice }: { notice: Notice | null }) {
     );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Panel 1: acceso institucional
-   ═══════════════════════════════════════════════════════════════ */
-
 interface InstitutionalFormProps {
     busy: boolean;
     onSubmit: (email: string, password: string, rol: UserRole) => Promise<boolean>;
@@ -199,7 +171,6 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
     const [rol, setRol] = useState<UserRole>(UserRole.CAPTURISTA_TAMIZ);
     const [showPassword, setShowPassword] = useState(false);
     const [remember, setRemember] = useState<boolean>(() => readRememberedEmail() !== '');
-    const [capsLock, setCapsLock] = useState(false);
     const passwordRef = useRef<HTMLInputElement>(null);
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -214,14 +185,10 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
         }
     };
 
-    const detectCaps = (event: ReactKeyboardEvent<HTMLInputElement>) => setCapsLock(event.getModifierState('CapsLock'));
-
     return (
         <form onSubmit={handleSubmit} className="flex h-full flex-col justify-center gap-3">
             <div>
-                <label htmlFor="login-rol" className={LABEL}>
-                    Perfil de acceso
-                </label>
+                <label htmlFor="login-rol" className={LABEL}>Perfil de acceso</label>
                 <div className="relative">
                     <UserCheck className={FIELD_ICON} aria-hidden="true" />
                     <select
@@ -242,9 +209,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
             </div>
 
             <div>
-                <label htmlFor="login-email" className={LABEL}>
-                    Correo institucional
-                </label>
+                <label htmlFor="login-email" className={LABEL}>Correo institucional</label>
                 <div className="relative">
                     <Mail className={FIELD_ICON} aria-hidden="true" />
                     <input
@@ -263,16 +228,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
             </div>
 
             <div>
-                <div className="mb-1 flex items-baseline justify-between gap-2">
-                    <label htmlFor="login-password" className="text-xs font-medium text-sky-50">
-                        Contraseña
-                    </label>
-                    {capsLock && (
-                        <span className="lg-fade text-xs text-amber-200" role="status">
-                            Bloq Mayús activado
-                        </span>
-                    )}
-                </div>
+                <label htmlFor="login-password" className={LABEL}>Contraseña</label>
                 <div className="relative">
                     <Lock className={FIELD_ICON} aria-hidden="true" />
                     <input
@@ -285,19 +241,15 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
                         value={password}
                         disabled={busy}
                         onChange={(event) => setPassword(event.target.value)}
-                        onKeyDown={detectCaps}
-                        onKeyUp={detectCaps}
-                        onBlur={() => setCapsLock(false)}
                         className={`${INPUT} pr-11`}
                     />
                     <button
                         type="button"
-                        onClick={() => setShowPassword((visible) => !visible)}
+                        onClick={() => setShowPassword((v) => !v)}
                         aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                        aria-pressed={showPassword}
-                        className={`absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-sky-100/80 transition hover:bg-white/10 hover:text-white active:scale-90 motion-reduce:transition-none ${FOCUS}`}
+                        className={`absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-sky-100/80 transition hover:bg-white/10 hover:text-white ${FOCUS}`}
                     >
-                        {showPassword ? <EyeOff className="size-5" aria-hidden="true" /> : <Eye className="size-5" aria-hidden="true" />}
+                        {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                     </button>
                 </div>
             </div>
@@ -322,18 +274,14 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
             </div>
 
             <button type="submit" disabled={busy} className={PRIMARY}>
-                <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/4 -skew-x-12 bg-white/25 transition-transform duration-700 group-hover:translate-x-[520%] motion-reduce:hidden"
-                />
                 {busy ? (
                     <>
-                        <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+                        <Loader2 className="size-5 animate-spin" />
                         <span>Verificando…</span>
                     </>
                 ) : (
                     <>
-                        <LogIn className="size-5" aria-hidden="true" />
+                        <LogIn className="size-5" />
                         <span>Iniciar sesión</span>
                     </>
                 )}
@@ -341,10 +289,6 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
         </form>
     );
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   Panel 2a: visor QR (cámara real + láser)
-   ═══════════════════════════════════════════════════════════════ */
 
 interface QrViewfinderProps {
     onDetect: (code: string) => Promise<boolean>;
@@ -355,75 +299,75 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
     const [state, setState] = useState<ScanState>('idle');
     const [rejected, setRejected] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const timerRef = useRef<number | null>(null);
-    const retryRef = useRef<number | null>(null);
     const onDetectRef = useRef(onDetect);
 
     useEffect(() => {
         onDetectRef.current = onDetect;
     }, [onDetect]);
 
-    const stopLoop = useCallback(() => {
+    const stopCamera = useCallback(() => {
         if (timerRef.current !== null) {
             window.clearInterval(timerRef.current);
             timerRef.current = null;
         }
-    }, []);
-
-    const stopCamera = useCallback(() => {
-        stopLoop();
-        if (retryRef.current !== null) {
-            window.clearTimeout(retryRef.current);
-            retryRef.current = null;
-        }
         streamRef.current?.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
-    }, [stopLoop]);
+    }, []);
 
-    // La cámara se apaga siempre que el visor se desmonta.
     useEffect(() => stopCamera, [stopCamera]);
 
-    const startLoop: (detector: BarcodeDetectorLike) => void = useCallback(
-        (detector: BarcodeDetectorLike) => {
-            stopLoop();
-            timerRef.current = window.setInterval(async () => {
-                const video = videoRef.current;
-                if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
-                try {
-                    const [first] = await detector.detect(video);
-                    if (!first?.rawValue) return;
+    const startScanningLoop = useCallback(() => {
+        if (timerRef.current !== null) window.clearInterval(timerRef.current);
+        
+        timerRef.current = window.setInterval(() => {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            if (!video || !canvas || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
 
-                    stopLoop();
-                    setState('verifying');
-                    const ok = await onDetectRef.current(first.rawValue);
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            if (!context) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'dontInvert',
+            });
+
+            if (code?.data) {
+                if (timerRef.current !== null) window.clearInterval(timerRef.current);
+                setState('verifying');
+                void onDetectRef.current(code.data).then((ok) => {
                     if (ok) {
                         setState('success');
                         stopCamera();
-                        return;
+                    } else {
+                        setRejected(true);
+                        setTimeout(() => {
+                            setRejected(false);
+                            setState('scanning');
+                            startScanningLoop();
+                        }, 1200);
                     }
-                    setRejected(true);
-                    retryRef.current = window.setTimeout(() => {
-                        setRejected(false);
-                        setState('scanning');
-                        startLoop(detector);
-                    }, 1800);
-                } catch {
-                    /* Un fotograma ilegible no es un error: se prueba con el siguiente. */
-                }
-            }, 250);
-        },
-        [stopCamera, stopLoop],
-    );
+                });
+            }
+        }, 150);
+    }, [stopCamera]);
 
     const startCamera = async () => {
-        const Detector = getBarcodeDetector();
-        if (!Detector || !navigator.mediaDevices?.getUserMedia) {
-            setState('unsupported');
-            return;
-        }
         setState('starting');
         setRejected(false);
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+            setState('denied');
+            return;
+        }
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: { ideal: 'environment' } },
@@ -433,12 +377,13 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
             const video = videoRef.current;
             if (!video) {
                 stopCamera();
+                setState('denied');
                 return;
             }
             video.srcObject = stream;
             await video.play();
             setState('scanning');
-            startLoop(new Detector({ formats: ['qr_code'] }));
+            startScanningLoop();
         } catch {
             stopCamera();
             setState('denied');
@@ -446,7 +391,6 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
     };
 
     const live = state === 'scanning' || state === 'verifying' || state === 'success';
-    const blocked = state === 'denied' || state === 'unsupported';
     const frame = state === 'success' ? 'border-emerald-300' : rejected ? 'border-rose-300' : 'border-sky-300';
 
     return (
@@ -457,12 +401,13 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
                     muted
                     playsInline
                     aria-label="Vista de la cámara"
-                    className={`absolute inset-0 size-full object-cover transition-opacity duration-500 ${live ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute inset-0 size-full object-cover transition-opacity duration-300 ${live ? 'opacity-100' : 'opacity-0'}`}
                 />
+                <canvas ref={canvasRef} className="hidden" />
 
                 {!live && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-b from-slate-900/60 to-sky-950/60">
-                        {blocked ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-slate-900/60 to-sky-950/60">
+                        {state === 'denied' ? (
                             <CameraOff className="size-11 text-sky-200/60" aria-hidden="true" />
                         ) : (
                             <QrCode className="size-12 text-sky-200/40" aria-hidden="true" />
@@ -497,46 +442,40 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
             <p className="flex min-h-10 items-center justify-center text-center text-xs leading-snug text-sky-100/80 sm:text-sm" aria-live="polite">
                 {state === 'idle' && 'Activa la cámara y acerca tu credencial con código QR.'}
                 {state === 'starting' && 'Abriendo la cámara…'}
-                {state === 'scanning' && !rejected && 'Centra el código QR dentro del marco.'}
-                {state === 'scanning' && rejected && 'Ese código no está registrado. Prueba con otra credencial.'}
+                {state === 'scanning' && !rejected && 'Centra el código QR de la partera dentro del marco.'}
+                {state === 'scanning' && rejected && 'Código no registrado. Prueba de nuevo.'}
                 {state === 'verifying' && 'Verificando credencial…'}
                 {state === 'success' && 'Entrando al sistema…'}
-                {state === 'denied' && 'No se pudo usar la cámara. Permite el acceso en tu navegador o usa tu PIN.'}
-                {state === 'unsupported' && 'Este navegador no puede leer códigos QR. Usa tu PIN.'}
+                {state === 'denied' && 'No se pudo abrir la cámara. Revisa permisos o usa tu PIN.'}
             </p>
 
-            {/* Zona de botones con alto reservado para que nada se mueva */}
             <div className="min-h-12">
-                {(state === 'idle' || state === 'starting') && (
-                    <button type="button" onClick={startCamera} disabled={state === 'starting'} className={PRIMARY}>
-                        <Camera className="size-5" aria-hidden="true" />
-                        <span>Activar cámara</span>
-                    </button>
-                )}
-                {blocked && (
+                {(state === 'idle' || state === 'denied' || state === 'starting') && (
                     <div className="flex gap-2">
                         {state === 'denied' && (
                             <button
                                 type="button"
                                 onClick={startCamera}
-                                className={`min-h-12 flex-1 rounded-xl border border-white/25 bg-white/10 px-3 text-sm font-medium transition hover:bg-white/20 active:scale-[0.98] motion-reduce:transition-none ${FOCUS}`}
+                                className={`min-h-12 flex-1 rounded-xl border border-white/25 bg-white/10 px-3 text-sm font-medium transition hover:bg-white/20 ${FOCUS}`}
                             >
                                 Reintentar
                             </button>
                         )}
-                        <button type="button" onClick={onUsePin} className={`${PRIMARY} flex-1`}>
-                            Usar mi PIN
+                        <button type="button" onClick={startCamera} disabled={state === 'starting'} className={`${PRIMARY} flex-1`}>
+                            <Camera className="size-5" />
+                            <span>{state === 'starting' ? 'Abriendo...' : 'Activar cámara'}</span>
                         </button>
                     </div>
+                )}
+                {state === 'scanning' && (
+                    <button type="button" onClick={onUsePin} className={PRIMARY}>
+                        <span>Usar mi PIN</span>
+                    </button>
                 )}
             </div>
         </div>
     );
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   Panel 2: acceso para parteras (PIN / QR / voz)
-   ═══════════════════════════════════════════════════════════════ */
 
 interface MidwifeAccessProps {
     active: boolean;
@@ -550,7 +489,6 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
     const [digits, setDigits] = useState('');
     const [shakeKey, setShakeKey] = useState(0);
     const [speaking, setSpeaking] = useState(false);
-    const [voiceUnavailable, setVoiceUnavailable] = useState(false);
     const busyRef = useRef(busy);
     const digitsRef = useRef('');
 
@@ -564,7 +502,9 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
     }, []);
 
     const stopVoice = useCallback(() => {
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
         setSpeaking(false);
     }, []);
 
@@ -573,14 +513,11 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
             stopVoice();
             return;
         }
-        if (!('speechSynthesis' in window)) {
-            setVoiceUnavailable(true);
-            return;
-        }
+        if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(VOICE_TEXT[method]);
         utterance.lang = 'es-MX';
-        utterance.rate = 0.9;
+        utterance.rate = 1.0;
         utterance.onstart = () => setSpeaking(true);
         utterance.onend = () => setSpeaking(false);
         utterance.onerror = () => setSpeaking(false);
@@ -589,7 +526,6 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
 
     useEffect(() => stopVoice, [stopVoice]);
 
-    // Al salir del panel se limpia el PIN escrito y se calla la voz.
     useEffect(() => {
         if (!active) {
             updateDigits('');
@@ -601,9 +537,11 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
         async (pin: string) => {
             const ok = await onPin(pin);
             if (!ok) {
-                setShakeKey((key) => key + 1);
+                setShakeKey((k) => k + 1);
                 updateDigits('');
-                if (typeof navigator.vibrate === 'function') navigator.vibrate(120);
+                if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                    navigator.vibrate(100);
+                }
             }
         },
         [onPin, updateDigits],
@@ -614,7 +552,9 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
             if (busyRef.current || digitsRef.current.length >= PIN_LENGTH) return;
             const next = digitsRef.current + digit;
             updateDigits(next);
-            if (next.length === PIN_LENGTH) void submitPin(next);
+            if (next.length === PIN_LENGTH) {
+                void submitPin(next);
+            }
         },
         [submitPin, updateDigits],
     );
@@ -627,7 +567,6 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
         if (!busyRef.current) updateDigits('');
     }, [updateDigits]);
 
-    // Teclado físico en equipos de escritorio.
     useEffect(() => {
         if (!active || method !== 'pin') return;
         const onKeyDown = (event: KeyboardEvent) => {
@@ -653,7 +592,7 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                 <div role="group" aria-label="Forma de acceso" className={`${PILL_TRACK} flex-1`}>
                     <span
                         aria-hidden="true"
-                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md transition-transform duration-300 ease-out motion-reduce:transition-none ${
+                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md transition-transform duration-300 ease-out ${
                             method === 'pin' ? 'translate-x-0' : 'translate-x-full'
                         }`}
                     />
@@ -668,7 +607,7 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                             type="button"
                             aria-pressed={method === id}
                             onClick={() => changeMethod(id)}
-                            className={`relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-1 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS} ${
+                            className={`relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-1 text-sm font-medium transition-colors ${FOCUS} ${
                                 method === id ? 'text-white' : 'text-sky-100/70 hover:text-white'
                             }`}
                         >
@@ -683,12 +622,11 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                     onClick={toggleVoice}
                     aria-pressed={speaking}
                     aria-label={speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
-                    title={voiceUnavailable ? 'Este navegador no puede leer en voz alta' : speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
-                    className={`flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black/25 text-sky-100 transition hover:bg-white/10 hover:text-white active:scale-90 motion-reduce:transition-none ${FOCUS} ${
+                    className={`flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black/25 text-sky-100 transition hover:bg-white/10 hover:text-white active:scale-90 ${FOCUS} ${
                         speaking ? 'bg-sky-500/30' : ''
-                    } ${voiceUnavailable ? 'opacity-50' : ''}`}
+                    }`}
                 >
-                    {speaking ? <VolumeX className="size-5" aria-hidden="true" /> : <Volume2 className="size-5" aria-hidden="true" />}
+                    {speaking ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
                 </button>
             </div>
 
@@ -704,7 +642,7 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                             {Array.from({ length: PIN_LENGTH }, (_, index) => (
                                 <span
                                     key={index}
-                                    className={`size-5 rounded-full border-2 transition-all duration-200 motion-reduce:transition-none ${
+                                    className={`size-5 rounded-full border-2 transition-all duration-150 ${
                                         index < digits.length
                                             ? 'scale-110 border-sky-300 bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.7)]'
                                             : 'border-white/40 bg-transparent'
@@ -716,7 +654,7 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                         <p className="flex h-5 items-center justify-center gap-2 text-sm text-sky-100/80" aria-live="polite">
                             {busy ? (
                                 <>
-                                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                                    <Loader2 className="size-4 animate-spin" />
                                     Verificando PIN…
                                 </>
                             ) : (
@@ -731,13 +669,13 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                                 </button>
                             ))}
                             <button type="button" disabled={busy} onClick={clearAll} aria-label="Borrar todo" className={`${KEY} flex items-center justify-center text-sky-100`}>
-                                <RotateCcw className="size-5" aria-hidden="true" />
+                                <RotateCcw className="size-5" />
                             </button>
                             <button type="button" disabled={busy} onClick={() => pressDigit('0')} className={KEY}>
                                 0
                             </button>
-                            <button type="button" disabled={busy} onClick={deleteLast} aria-label="Borrar último número" className={`${KEY} flex items-center justify-center text-sky-100`}>
-                                <Delete className="size-5" aria-hidden="true" />
+                            <button type="button" disabled={busy} onClick={deleteLast} aria-label="Borrar último" className={`${KEY} flex items-center justify-center text-sky-100`}>
+                                <Delete className="size-5" />
                             </button>
                         </div>
                     </div>
@@ -748,10 +686,6 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
         </div>
     );
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   Login (contenedor principal)
-   ═══════════════════════════════════════════════════════════════ */
 
 export function Login() {
     const navigate = useNavigate();
@@ -790,7 +724,6 @@ export function Login() {
         document.getElementById(tabId(next))?.focus();
     };
 
-    /** Flujo común a los tres accesos: consulta al backend, guarda sesión y entra al panel. */
     const authenticate = useCallback(
         async (request: () => Promise<LoginResponse>, fallbackError: string): Promise<boolean> => {
             setBusy(true);
@@ -843,33 +776,29 @@ export function Login() {
         <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden p-3 text-white selection:bg-sky-400/40 sm:p-6">
             <style>{LOGIN_CSS}</style>
 
-            {/* Fondo: imagen escalada con cover + tinte celeste oscuro + viñeta */}
             <div aria-hidden="true" className="fixed inset-0 -z-10 bg-slate-950">
                 <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/fondo-login.png')" }} />
-                <div className="absolute inset-0 bg-linear-to-br from-slate-950/90 via-sky-950/80 to-slate-900/90" />
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-sky-950/80 to-slate-900/90" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.14),transparent_60%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(2,6,23,0.55))]" />
             </div>
 
             <div className="flex w-full max-w-md flex-col items-center md:max-w-4xl">
-                {/* Tarjeta de tamaño fijo: no cambia al alternar pestañas */}
                 <div className="lg-card flex h-[min(36rem,calc(100dvh-6rem))] w-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-2xl shadow-black/50 backdrop-blur-xl md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-                    {/* ── Panel de marca ── */}
                     <aside className="relative shrink-0 overflow-hidden border-b border-white/15 p-3.5 sm:p-4 md:border-b-0 md:p-8">
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-linear-to-br from-blue-600/35 via-sky-500/10 to-transparent transition-opacity duration-700 motion-reduce:transition-none ${
+                            className={`absolute inset-0 bg-gradient-to-br from-blue-600/35 via-sky-500/10 to-transparent transition-opacity duration-500 ${
                                 isInstitutional ? 'opacity-100' : 'opacity-0'
                             }`}
                         />
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-linear-to-br from-cyan-400/30 via-sky-400/10 to-transparent transition-opacity duration-700 motion-reduce:transition-none ${
+                            className={`absolute inset-0 bg-gradient-to-br from-cyan-400/30 via-sky-400/10 to-transparent transition-opacity duration-500 ${
                                 isInstitutional ? 'opacity-0' : 'opacity-100'
                             }`}
                         />
 
-                        {/* Móvil: cabecera compacta de una línea */}
                         <div className="relative flex items-center gap-2.5 md:hidden">
                             <img
                                 src="/logo-jurisdiccion.png"
@@ -881,22 +810,19 @@ export function Login() {
                                 <p className="truncate text-[11px] text-sky-100/80">Istmo, Servicios de Salud de Oaxaca</p>
                             </div>
                             <div className="flex h-9 shrink-0 items-center rounded-lg bg-white/95 px-2 shadow-md">
-                                <img src="/Logo-Secretaria.png" alt="Secretaría de Salud, Servicios de Salud de Oaxaca" className="h-4 w-auto" />
+                                <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" className="h-4 w-auto" />
                             </div>
                         </div>
 
-                        {/* Escritorio: panel de marca completo */}
                         <div className="relative hidden h-full flex-col justify-between gap-5 md:flex">
                             <div className="flex items-center gap-3">
-                                {/* El escudo trae fondo blanco cuadrado: el recorte circular lo integra. */}
                                 <img
                                     src="/logo-jurisdiccion.png"
                                     alt="Jurisdicción Sanitaria No. 2 Istmo"
                                     className="size-16 shrink-0 rounded-full bg-white object-cover shadow-lg ring-2 ring-white/40"
                                 />
-                                {/* El logo de la Secretaría tiene letras oscuras: necesita base clara. */}
                                 <div className="flex h-14 items-center rounded-xl bg-white/95 px-3 shadow-lg">
-                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud, Servicios de Salud de Oaxaca" className="h-9 w-auto" />
+                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" className="h-9 w-auto" />
                                 </div>
                             </div>
 
@@ -914,7 +840,6 @@ export function Login() {
                         </div>
                     </aside>
 
-                    {/* ── Panel de acceso ── */}
                     <section className="flex min-h-0 flex-1 flex-col bg-slate-950/25 p-4 sm:p-6 md:border-l md:border-white/15 md:p-7">
                         <div
                             role="tablist"
@@ -924,7 +849,7 @@ export function Login() {
                         >
                             <span
                                 aria-hidden="true"
-                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-950/40 transition-transform duration-500 ${SLIDE} motion-reduce:transition-none ${
+                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-950/40 transition-transform duration-300 ${SLIDE} ${
                                     isInstitutional ? 'translate-x-0' : 'translate-x-full'
                                 }`}
                             />
@@ -940,7 +865,7 @@ export function Login() {
                                         aria-controls={panelId(id)}
                                         tabIndex={selected ? 0 : -1}
                                         onClick={() => switchMode(id)}
-                                        className={`relative z-10 flex min-h-10 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS} ${
+                                        className={`relative z-10 flex min-h-10 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium transition-colors ${FOCUS} ${
                                             selected ? 'text-white' : 'text-sky-100/70 hover:text-white'
                                         }`}
                                     >
@@ -953,10 +878,9 @@ export function Login() {
 
                         <StatusSlot notice={notice} />
 
-                        {/* Pista deslizante: los dos paneles viven lado a lado y se desplazan */}
                         <div className="-m-1 min-h-0 flex-1 overflow-hidden p-1">
                             <div
-                                className={`flex h-full w-[200%] transition-transform duration-500 ${SLIDE} motion-reduce:transition-none ${
+                                className={`flex h-full w-[200%] transition-transform duration-300 ${SLIDE} ${
                                     isInstitutional ? 'translate-x-0' : '-translate-x-1/2'
                                 }`}
                             >
@@ -965,8 +889,8 @@ export function Login() {
                                     role="tabpanel"
                                     aria-labelledby={tabId('institucional')}
                                     inert={!isInstitutional}
-                                    className={`lg-quiet h-full w-1/2 shrink-0 overflow-y-auto px-1 py-0.5 transition-opacity duration-500 motion-reduce:transition-none ${
-                                        isInstitutional ? 'opacity-100' : 'opacity-0'
+                                    className={`lg-quiet h-full w-1/2 shrink-0 overflow-y-auto px-1 py-0.5 transition-opacity duration-300 ${
+                                        isInstitutional ? 'opacity-100' : 'opacity-0 pointer-events-none'
                                     }`}
                                 >
                                     <InstitutionalForm busy={busy} onSubmit={handleInstitutional} onForgotPassword={handleForgotPassword} />
@@ -977,8 +901,8 @@ export function Login() {
                                     role="tabpanel"
                                     aria-labelledby={tabId('partera')}
                                     inert={isInstitutional}
-                                    className={`lg-quiet h-full w-1/2 shrink-0 overflow-y-auto px-1 py-0.5 transition-opacity duration-500 motion-reduce:transition-none ${
-                                        isInstitutional ? 'opacity-0' : 'opacity-100'
+                                    className={`lg-quiet h-full w-1/2 shrink-0 overflow-y-auto px-1 py-0.5 transition-opacity duration-300 ${
+                                        isInstitutional ? 'opacity-0 pointer-events-none' : 'opacity-100'
                                     }`}
                                 >
                                     <MidwifeAccess active={!isInstitutional} busy={busy} onPin={handlePin} onQr={handleQr} />
