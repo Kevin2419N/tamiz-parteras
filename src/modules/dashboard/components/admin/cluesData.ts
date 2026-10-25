@@ -14,9 +14,6 @@ export const setCluesCatalog = (units: UnidadCLUES[]): void => {
     listeners.forEach((l) => l(catalogStore));
 };
 
-/**
- * Carga oficial del catálogo de CLUES directamente desde el backend en Render (PostgreSQL).
- */
 export const fetchCluesCatalogFromBackend = async (): Promise<UnidadCLUES[]> => {
     try {
         const response = await http.get('/clues');
@@ -30,10 +27,21 @@ export const fetchCluesCatalogFromBackend = async (): Promise<UnidadCLUES[]> => 
     return catalogStore;
 };
 
-export const addCluesUnit = async (unit: Omit<UnidadCLUES, 'id'>): Promise<UnidadCLUES | null> => {
+export const addCluesUnit = async (unit: any): Promise<UnidadCLUES | null> => {
     try {
-        const response = await http.post('/clues', unit);
-        const createdUnit: UnidadCLUES = response.data.unidad || response.data;
+        // Mapeamos los datos exactamente como los pide el backend de tu compañero:
+        // clues, nombre, municipio, localidad, tipo, estatus
+        const payloadBackend = {
+            clues: unit.clues,
+            nombre: unit.nombre,
+            municipio: unit.municipio || unit.municipioLocalidad || '',
+            localidad: unit.localidad || unit.municipio || '', // Respaldo por si viene combinado
+            tipo: unit.tipo || unit.tipoUnidad || '',          // Mapeamos tipoUnidad -> tipo
+            estatus: unit.estatus || 'ACTIVO'
+        };
+
+        const response = await http.post('/clues', payloadBackend);
+        const createdUnit: UnidadCLUES = response.data.data || response.data.unidad || response.data;
 
         catalogStore = [createdUnit, ...catalogStore];
         listeners.forEach((l) => l(catalogStore));
