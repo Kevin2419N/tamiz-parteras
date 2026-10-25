@@ -1,555 +1,1005 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserRole } from '../../types';
+import { isAxiosError } from 'axios';
+import {
+    AlertCircle,
+    Building2,
+    Camera,
+    CameraOff,
+    CheckCircle2,
+    ChevronDown,
+    Delete,
+    Eye,
+    EyeOff,
+    HeartHandshake,
+    Info,
+    KeyRound,
+    Loader2,
+    Lock,
+    LogIn,
+    Mail,
+    QrCode,
+    RotateCcw,
+    UserCheck,
+    Volume2,
+    VolumeX,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { http } from '../../services/http';
-import {
-    Building2,
-    HeartHandshake,
-    User as UserIcon,
-    Lock,
-    ArrowRight,
-    QrCode,
-    Volume2,
-    Loader2,
-    Delete,
-    RotateCcw,
-    X,
-    CheckCircle2,
-    AlertCircle
-} from 'lucide-react';
+import { UserRole } from '../../types';
+import type { User } from '../../types';
 
-export const Login: React.FC = () => {
-    const navigate = useNavigate();
-    const { login } = useAuth();
-    const [activeTab, setActiveTab] = useState<'INSTITUCIONAL' | 'PARTERA'>('INSTITUCIONAL');
+/* ═══════════════════════════════════════════════════════════════
+   Constantes y tipos
+   ═══════════════════════════════════════════════════════════════ */
 
-    // Tab 1: Institutional State
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [rolSeleccionado, setRolSeleccionado] = useState<UserRole>(UserRole.CAPTURISTA_TAMIZ);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+const TOKEN_KEY = 'token_sso_parteras';
+const REMEMBER_KEY = 'tamiz_remember_email';
+const PIN_LENGTH = 4;
+const SUPPORT_PHONE = '800 123 4567'; // TODO: número real de soporte
 
-    // Tab 2: Midwife Access State (WCAG 2.1 AAA)
-    const [pinDigits, setPinDigits] = useState<string[]>([]);
-    const [showQRScannerModal, setShowQRScannerModal] = useState(false);
-    const [, setIsScanningQR] = useState(false);
-    const [qrScanSuccess, setQrScanSuccess] = useState(false);
+type AccessMode = 'institucional' | 'partera';
+type PinMethod = 'pin' | 'qr';
+type NoticeKind = 'error' | 'info';
+type ScanState = 'idle' | 'starting' | 'scanning' | 'verifying' | 'success' | 'denied' | 'unsupported';
 
-    // Webcam / Video Ref for QR Scanner
-    const videoRef = useRef<HTMLVideoElement | null>(null);
-    const mediaStreamRef = useRef<MediaStream | null>(null);
+interface LoginResponse {
+    token: string;
+    user: User;
+}
+interface Notice {
+    id: number;
+    kind: NoticeKind;
+    text: string;
+}
+interface ApiErrorBody {
+    message?: string;
+}
 
-    // Voice Assistance State (Web Speech API)
-    const [isSpeaking, setIsSpeaking] = useState(false);
+/* BarcodeDetector aún no está en lib.dom: se declara lo mínimo necesario. */
+interface DetectedBarcode {
+    rawValue: string;
+}
+interface BarcodeDetectorLike {
+    detect: (source: HTMLVideoElement) => Promise<DetectedBarcode[]>;
+}
+type BarcodeDetectorCtor = new (options?: { formats?: string[] }) => BarcodeDetectorLike;
 
-    const speakInstructions = () => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const text = 'Por favor, acerque su credencial con código QR a la cámara o ingrese su código PIN de cuatro números.';
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'es-MX';
-            utterance.rate = 0.9;
-            utterance.pitch = 1.0;
+const MODES: ReadonlyArray<{ id: AccessMode; label: string; Icon: typeof Building2 }> = [
+    { id: 'institucional', label: 'Personal institucional', Icon: Building2 },
+    { id: 'partera', label: 'Partera tradicional', Icon: HeartHandshake },
+];
 
-            utterance.onstart = () => setIsSpeaking(true);
-            utterance.onend = () => setIsSpeaking(false);
-            utterance.onerror = () => setIsSpeaking(false);
+const MODE_COPY: Record<AccessMode, { title: string; text: string }> = {
+    institucional: {
+        title: 'Control operativo del tamiz',
+        text: 'Captura de muestras, seguimiento de resultados y contrarreferencias para el personal autorizado de la jurisdicción.',
+    },
+    partera: {
+        title: 'Red de partería tradicional',
+        text: 'Registro de atenciones, calendario y referencias obstétricas desde la comunidad, con apoyo de voz.',
+    },
+};
 
-            window.speechSynthesis.speak(utterance);
-        } else {
-            alert('La asistencia por voz no está disponible en este navegador.');
-        }
-    };
+const ROLE_OPTIONS: ReadonlyArray<{ value: UserRole; label: string }> = [
+    { value: UserRole.CAPTURISTA_TAMIZ, label: 'Capturista de tamiz neonatal' },
+    { value: UserRole.MEDICO_UNIDAD, label: 'Médico de unidad y contrarreferencias' },
+    { value: UserRole.ADMIN_JURISDICCIONAL, label: 'Administrador jurisdiccional' },
+];
 
-    const stopVoice = () => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            setIsSpeaking(false);
-        }
-    };
+const VOICE_TEXT: Record<PinMethod, string> = {
+    pin: 'Escriba su PIN de cuatro números tocando el teclado de la pantalla.',
+    qr: 'Acerque su credencial con código QR a la cámara y espere unos segundos.',
+};
 
-    useEffect(() => {
-        return () => {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
-            stopCameraStream();
-        };
-    }, []);
+/* Clases compartidas */
+const ACCENT = 'bg-linear-to-r from-sky-600 to-blue-700';
+const FOCUS =
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900';
+const SLIDE = 'ease-[cubic-bezier(0.65,0,0.35,1)]';
+const LABEL = 'mb-1 block text-xs font-medium text-sky-50';
+const INPUT =
+    'min-h-11 w-full rounded-xl border border-white/20 bg-white/10 pl-10 text-base text-white placeholder:text-white/50 transition-colors focus:border-sky-300 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-sky-300/40 disabled:opacity-60';
+const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-sky-200/80';
+const PRIMARY = `group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-950/40 transition duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:brightness-100 motion-reduce:transition-none ${FOCUS}`;
+const KEY = `min-h-12 rounded-2xl border border-white/15 bg-white/10 text-2xl font-semibold text-white transition duration-150 hover:bg-white/20 active:scale-95 active:bg-sky-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 motion-reduce:transition-none ${FOCUS}`;
+const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/15 bg-black/25 p-1';
 
-    const stopCameraStream = () => {
-        if (mediaStreamRef.current) {
-            mediaStreamRef.current.getTracks().forEach(track => track.stop());
-            mediaStreamRef.current = null;
-        }
-    };
+/* Animaciones propias del componente (no requieren tocar index.css). */
+const LOGIN_CSS = `
+@keyframes lgFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes lgShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+@keyframes lgCard{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes lgLaser{from{top:4%}to{top:96%}}
+@keyframes lgPop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+.lg-fade{animation:lgFade .35s ease-out both}
+.lg-shake{animation:lgShake .5s cubic-bezier(.36,.07,.19,.97) both}
+.lg-card{animation:lgCard .8s cubic-bezier(.22,1,.36,1) both}
+.lg-laser{animation:lgLaser 2.2s ease-in-out infinite alternate}
+.lg-pop{animation:lgPop .4s cubic-bezier(.34,1.56,.64,1) both}
+.lg-quiet{scrollbar-width:none}
+.lg-quiet::-webkit-scrollbar{display:none}
+@media (prefers-reduced-motion:reduce){.lg-fade,.lg-shake,.lg-card,.lg-laser,.lg-pop{animation:none}}
+`;
 
-    const handleKeypadPress = async (digit: string) => {
-        if (pinDigits.length < 4) {
-            const newPin = [...pinDigits, digit];
-            setPinDigits(newPin);
+/* ═══════════════════════════════════════════════════════════════
+   Utilidades
+   ═══════════════════════════════════════════════════════════════ */
 
-            if (newPin.length === 4) {
-                const pinString = newPin.join('');
-                setIsSubmitting(true);
-                setErrorMessage(null);
+function getErrorMessage(error: unknown, fallback: string): string {
+    if (isAxiosError<ApiErrorBody>(error)) {
+        if (error.code === 'ECONNABORTED') return 'El servidor tardó demasiado en responder. Inténtalo de nuevo en unos segundos.';
+        if (!error.response) return 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.';
+        return error.response.data?.message ?? fallback;
+    }
+    return fallback;
+}
 
-                try {
-                    const response = await http.post('/auth/login-partera-pin', { pin: pinString });
-                    const { token, user } = response.data;
+function readRememberedEmail(): string {
+    try {
+        return localStorage.getItem(REMEMBER_KEY) ?? '';
+    } catch {
+        return '';
+    }
+}
 
-                    localStorage.setItem('token_sso_parteras', token);
-                    login(user);
-                    navigate('/dashboard');
-                } catch (error: any) {
-                    console.error('Error en autenticación por PIN:', error);
-                    setErrorMessage(error.response?.data?.message || 'PIN incorrecto o no registrado.');
-                    setPinDigits([]);
-                } finally {
-                    setIsSubmitting(false);
-                }
-            }
-        }
-    };
+function writeRememberedEmail(email: string | null): void {
+    try {
+        if (email) localStorage.setItem(REMEMBER_KEY, email);
+        else localStorage.removeItem(REMEMBER_KEY);
+    } catch {
+        /* Almacenamiento bloqueado (modo privado): se ignora. */
+    }
+}
 
-    const handleKeypadDelete = () => {
-        setPinDigits((prev) => prev.slice(0, -1));
-    };
+function getBarcodeDetector(): BarcodeDetectorCtor | null {
+    const ctor = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
+    return ctor ?? null;
+}
 
-    const handleKeypadClear = () => {
-        setPinDigits([]);
-    };
+/* ═══════════════════════════════════════════════════════════════
+   Aviso de estado (ocupa siempre el mismo espacio: no mueve el layout)
+   ═══════════════════════════════════════════════════════════════ */
 
-    const handleStartQRScan = async () => {
-        setShowQRScannerModal(true);
-        setIsScanningQR(true);
-        setQrScanSuccess(false);
-        setErrorMessage(null);
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
-            });
-            mediaStreamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.play();
-            }
-        } catch (err) {
-            console.error('No se pudo acceder a la cámara:', err);
-            setErrorMessage('No se pudo acceder a la cámara del dispositivo. Verifique permisos.');
-        }
-
-        setTimeout(async () => {
-            try {
-                const qrMockValue = 'QR-PARTERA-JUM-001';
-                const response = await http.post('/auth/login-partera-qr', { codigo_qr: qrMockValue });
-                const { token, user } = response.data;
-
-                stopCameraStream();
-                setIsScanningQR(false);
-                setQrScanSuccess(true);
-
-                localStorage.setItem('token_sso_parteras', token);
-
-                setTimeout(() => {
-                    setShowQRScannerModal(false);
-                    login(user);
-                    navigate('/dashboard');
-                }, 1000);
-            } catch (error: any) {
-                console.error('Error en autenticación por QR:', error);
-                stopCameraStream();
-                setIsScanningQR(false);
-                setErrorMessage(error.response?.data?.message || 'Código QR no reconocido en el sistema.');
-                setTimeout(() => {
-                    setShowQRScannerModal(false);
-                }, 1500);
-            }
-        }, 3000);
-    };
-
-    const handleCloseModal = () => {
-        stopCameraStream();
-        setShowQRScannerModal(false);
-        setIsScanningQR(false);
-    };
-
-    const handleInstitutionalSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setErrorMessage(null);
-
-        try {
-            const response = await http.post('/auth/login-institucional', {
-                email,
-                password,
-                rol: rolSeleccionado
-            });
-
-            const { token, user } = response.data;
-
-            localStorage.setItem('token_sso_parteras', token);
-            login(user);
-            navigate('/dashboard');
-        } catch (error: any) {
-            console.error('Error en login institucional:', error);
-            setErrorMessage(
-                error.response?.data?.message ||
-                'Credenciales inválidas o error de conexión con el servidor.'
-            );
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const isInstitutional = activeTab === 'INSTITUCIONAL';
-
+function StatusSlot({ notice }: { notice: Notice | null }) {
+    const isError = notice?.kind === 'error';
+    const Icon = isError ? AlertCircle : Info;
     return (
-        <div className="fixed inset-0 w-screen h-screen flex flex-col items-center justify-between p-3 sm:p-5 overflow-hidden selection:bg-teal-700 selection:text-white relative">
-            
-            {/* Imagen de fondo real "fondo-login.png" correctamente ajustada */}
-            <div 
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
-                style={{ backgroundImage: `url('/fondo-login.png')` }}
-            />
-            {/* Overlay sutil para dar contraste clínico profesional sin opacar el fondo */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950/60 via-blue-950/50 to-slate-950/70 backdrop-blur-[2px] z-0 pointer-events-none" />
-
-            {/* Main Centered Container - Pro & Compact */}
-            <div className="w-full max-w-4xl h-full max-h-[660px] flex flex-col justify-between z-10 my-auto gap-3">
-
-                {/* Header Superior con Logos Oficiales y Cristal */}
-                <header className="w-full bg-white/85 backdrop-blur-xl shadow-2xl rounded-2xl px-5 py-3 flex items-center justify-between gap-4 border border-white/50 shrink-0 transition-all">
-                    <div className="flex items-center">
-                        <img
-                            src="/logo-jurisdiccion.png"
-                            alt="Jurisdicción Sanitaria No. 2"
-                            className="h-9 sm:h-11 w-auto object-contain"
-                        />
-                    </div>
-
-                    <div className="text-center px-2 flex-1">
-                        <h1 className="text-slate-900 text-xs sm:text-sm font-black tracking-tight leading-tight">
-                            Jurisdicción Sanitaria No. 2 <span className="text-teal-700 font-light">|</span> Istmo
-                        </h1>
-                        <p className="text-slate-600 text-[10px] font-medium hidden sm:block">
-                            Sistema Web de Gestión Operativa para Tamiz Neonatal y Red de Parteras Tradicionales
-                        </p>
-                    </div>
-
-                    <div className="flex items-center">
-                        <img
-                            src="/Logo-Secretaria.png"
-                            alt="Secretaría de Salud Oaxaca"
-                            className="h-8 sm:h-10 w-auto object-contain"
-                        />
-                    </div>
-                </header>
-
-                {/* Tarjeta Principal Glassmorphic */}
-                <main className="w-full flex-1 bg-slate-900/45 backdrop-blur-2xl shadow-[0_30px_70px_rgba(0,0,0,0.6)] rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-12 border border-white/30 min-h-0 transition-all duration-500">
-
-                    {/* Panel Izquierdo Dinámico (Cambia entre Azul Médico e Inteligente Teal/Esmeralda) */}
-                    <div className={`md:col-span-5 p-6 sm:p-7 flex flex-col justify-between text-white relative overflow-hidden shrink-0 transition-all duration-700 ${
-                        isInstitutional 
-                            ? 'bg-gradient-to-br from-blue-950/90 via-blue-900/75 to-slate-950/90' 
-                            : 'bg-gradient-to-br from-teal-950/90 via-emerald-900/75 to-slate-950/90'
-                    }`}>
-                        <div className="absolute top-0 right-0 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-
-                        <div className="space-y-4 relative z-10">
-                            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/30 transition-colors duration-500 ${
-                                isInstitutional ? 'bg-blue-500/30 text-blue-200' : 'bg-teal-500/30 text-teal-200'
-                            }`}>
-                                {isInstitutional ? <Building2 className="w-6 h-6" /> : <HeartHandshake className="w-6 h-6" />}
-                            </div>
-
-                            <div className="space-y-2">
-                                <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full border transition-colors duration-500 ${
-                                    isInstitutional ? 'bg-blue-500/20 border-blue-400/40 text-blue-200' : 'bg-teal-500/20 border-teal-400/40 text-teal-200'
-                                }`}>
-                                    {isInstitutional ? 'Portal Institucional' : 'Módulo Comunitario'}
-                                </span>
-                                
-                                <h2 className="text-lg sm:text-xl font-black tracking-tight leading-snug">
-                                    {isInstitutional ? 'Control Operativo de Tamizaje' : 'Red de Partería Tradicional'}
-                                </h2>
-                                
-                                <p className="text-[11px] sm:text-xs text-slate-200 leading-relaxed font-normal">
-                                    {isInstitutional 
-                                        ? 'Acceso exclusivo para capturistas y personal médico autorizado en la gestión y seguimiento de tamices neonatales.' 
-                                        : 'Sistema accesible y asistido por voz para el registro seguro de atenciones y referencias obstétricas de la partería.'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="pt-4 border-t border-white/20 relative z-10 text-[10px] text-slate-300 flex items-center justify-between">
-                            <span>Servicios de Salud de Oaxaca</span>
-                            <span className="font-bold text-white">Istmo 2026</span>
-                        </div>
-                    </div>
-
-                    {/* Panel Derecho Translúcido ("Lo blanco transparente") */}
-                    <div className="md:col-span-7 p-5 sm:p-6 flex flex-col justify-between bg-white/85 backdrop-blur-2xl overflow-y-auto">
-                        <div>
-                            {errorMessage && (
-                                <div className="mb-3.5 p-3 bg-rose-50/90 border border-rose-200 rounded-xl flex items-center gap-2.5 text-rose-900 text-xs font-bold shadow-sm animate-shake">
-                                    <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
-                                    <span>{errorMessage}</span>
-                                </div>
-                            )}
-
-                            {/* Pestañas de Selección Pro */}
-                            <div className="grid grid-cols-2 p-1 bg-slate-200/80 backdrop-blur-sm rounded-2xl mb-4 gap-1.5 border border-slate-300/70 shadow-inner">
-                                <button
-                                    onClick={() => { setActiveTab('INSTITUCIONAL'); setErrorMessage(null); }}
-                                    className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
-                                        isInstitutional
-                                            ? 'bg-blue-900 text-white shadow-md'
-                                            : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
-                                    }`}
-                                >
-                                    <Building2 className="w-3.5 h-3.5 shrink-0" />
-                                    <span>Personal Institucional</span>
-                                </button>
-
-                                <button
-                                    onClick={() => { setActiveTab('PARTERA'); setErrorMessage(null); }}
-                                    className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
-                                        !isInstitutional
-                                            ? 'bg-teal-800 text-white shadow-md'
-                                            : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
-                                    }`}
-                                >
-                                    <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
-                                    <span>Partera Tradicional</span>
-                                </button>
-                            </div>
-
-                            {/* Tab 1 Form: Institucional */}
-                            {isInstitutional && (
-                                <form onSubmit={handleInstitutionalSubmit} className="space-y-3.5 animate-fadeIn">
-                                    <div className="bg-white/70 backdrop-blur-sm p-3 rounded-xl border border-slate-300/70 shadow-sm">
-                                        <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
-                                            Perfil de Acceso
-                                        </label>
-                                        <select
-                                            value={rolSeleccionado}
-                                            onChange={(e) => setRolSeleccionado(e.target.value as UserRole)}
-                                            className="w-full bg-white/90 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-900 cursor-pointer"
-                                        >
-                                            <option value={UserRole.CAPTURISTA_TAMIZ}>Capturista de Tamiz Neonatal</option>
-                                            <option value={UserRole.MEDICO_UNIDAD}>Médico de Unidad / Contrareferencias</option>
-                                            <option value={UserRole.ADMIN_JURISDICCIONAL}>Administrador Jurisdiccional</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                                            Correo Electrónico Institucional
-                                        </label>
-                                        <div className="relative">
-                                            <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                                            <input
-                                                type="email"
-                                                required
-                                                placeholder="usuario@salud.gob.mx"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full bg-white/90 border border-slate-300 rounded-xl pl-10 pr-3 py-2.5 text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-900 shadow-sm"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                                            Contraseña
-                                        </label>
-                                        <div className="relative">
-                                            <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                                            <input
-                                                type="password"
-                                                required
-                                                placeholder="••••••••••••"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                className="w-full bg-white/90 border border-slate-300 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-900 shadow-sm"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="w-full mt-1 py-3 px-5 rounded-xl font-bold text-xs text-white bg-blue-900 hover:bg-blue-950 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-[0.98]"
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin text-white" />
-                                                <span>Iniciando sesión...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span>Entrar al Sistema</span>
-                                                <ArrowRight className="w-4 h-4" />
-                                            </>
-                                        )}
-                                    </button>
-                                </form>
-                            )}
-
-                            {/* Tab 2 Form: Partera Tradicional (Voz + QR + PIN con acento Teal/Esmeralda) */}
-                            {!isInstitutional && (
-                                <div className="space-y-3 animate-fadeIn">
-                                    <div className="bg-teal-50/85 backdrop-blur-sm border border-teal-200 p-2.5 rounded-xl flex items-center justify-between gap-2.5 shadow-sm">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="p-2 bg-teal-100 text-teal-800 rounded-lg">
-                                                <Volume2 className="w-4 h-4" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xs font-bold text-slate-900">Asistencia por Voz</h3>
-                                                <p className="text-[10px] text-slate-600">Escuchar guía de acceso.</p>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={isSpeaking ? stopVoice : speakInstructions}
-                                            className="px-3 py-1.5 rounded-lg text-xs font-black bg-teal-800 hover:bg-teal-900 text-white shadow-sm cursor-pointer"
-                                        >
-                                            {isSpeaking ? 'Detener' : 'Escuchar'}
-                                        </button>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-                                        {/* Botón de Escaneo QR Pro */}
-                                        <button
-                                            type="button"
-                                            onClick={handleStartQRScan}
-                                            className="w-full h-full min-h-[140px] p-3 bg-gradient-to-br from-teal-50/90 to-white/95 hover:from-teal-100 hover:to-teal-50 border-2 border-teal-700 rounded-2xl flex flex-col items-center justify-center gap-2 text-center transition-all cursor-pointer group shadow-sm"
-                                        >
-                                            <div className="p-3 bg-teal-800 text-white rounded-xl shadow-md group-hover:scale-110 transition-transform">
-                                                <QrCode className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <span className="block text-xs font-black text-slate-900">ESCANEAR QR</span>
-                                                <span className="text-[10px] text-slate-600 font-medium">Credencial de partera</span>
-                                            </div>
-                                        </button>
-
-                                        {/* Teclado PIN táctil */}
-                                        <div className="space-y-2 bg-white/90 backdrop-blur-sm p-3 rounded-2xl border border-slate-300/70 shadow-sm">
-                                            <div className="text-center">
-                                                <span className="block text-[10px] font-extrabold uppercase tracking-wider text-teal-800">
-                                                    PIN de 4 Dígitos
-                                                </span>
-                                            </div>
-
-                                            <div className="flex justify-center items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
-                                                {[0, 1, 2, 3].map((idx) => {
-                                                    const filled = pinDigits.length > idx;
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
-                                                                filled ? 'bg-teal-800 border-teal-800' : 'border-slate-300 bg-white'
-                                                            }`}
-                                                        >
-                                                            {filled && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            <div className="grid grid-cols-3 gap-1">
-                                                {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
-                                                    <button
-                                                        key={num}
-                                                        type="button"
-                                                        onClick={() => handleKeypadPress(num)}
-                                                        className="h-8 bg-slate-50 hover:bg-teal-50 border border-slate-200 text-slate-900 font-black text-xs rounded-lg shadow-sm cursor-pointer active:scale-95 transition-transform"
-                                                    >
-                                                        {num}
-                                                    </button>
-                                                ))}
-                                                <button
-                                                    type="button"
-                                                    onClick={handleKeypadDelete}
-                                                    className="h-8 bg-teal-50 border border-teal-200 text-teal-800 rounded-lg flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
-                                                >
-                                                    <Delete className="w-3.5 h-3.5" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleKeypadPress('0')}
-                                                    className="h-8 bg-slate-50 hover:bg-teal-50 border border-slate-200 text-slate-900 font-black text-xs rounded-lg cursor-pointer active:scale-95 transition-transform"
-                                                >
-                                                    0
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleKeypadClear}
-                                                    className="h-8 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
-                                                >
-                                                    <RotateCcw className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Footer de Tarjeta */}
-                        <footer className="mt-3 pt-3 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
-                            <span>Jurisdicción Sanitaria No. 2 • Istmo</span>
-                            <span>Soporte: 800 123 4567</span>
-                        </footer>
-                    </div>
-                </main>
-            </div>
-
-            {/* Modal QR Scanner */}
-            {showQRScannerModal && (
-                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl max-w-sm w-full p-5 space-y-3 shadow-2xl relative text-center">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                                <QrCode className="w-4 h-4 text-teal-800" />
-                                <span>Escaneando Credencial...</span>
-                            </h3>
-                            <button onClick={handleCloseModal} className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 cursor-pointer">
-                                <X className="w-4 h-4 text-slate-600" />
-                            </button>
-                        </div>
-
-                        <div className="w-full h-48 bg-slate-950 rounded-2xl flex items-center justify-center relative overflow-hidden border-2 border-teal-700">
-                            <video
-                                ref={videoRef}
-                                className="w-full h-full object-cover"
-                                playsInline
-                                muted
-                                autoPlay
-                            />
-                            {qrScanSuccess && (
-                                <div className="absolute inset-0 bg-emerald-950/90 flex flex-col items-center justify-center gap-2 text-emerald-300">
-                                    <CheckCircle2 className="w-12 h-12 text-emerald-400 animate-bounce" />
-                                    <span className="text-xs font-bold uppercase">¡Acceso Correcto!</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <span className="text-[11px] text-slate-500 block">
-                            Coloque el código QR frente a la cámara
-                        </span>
-                    </div>
+        <div className="mb-2 h-10 shrink-0" aria-live="polite">
+            {notice && (
+                <div
+                    key={notice.id}
+                    role={isError ? 'alert' : 'status'}
+                    className={`flex h-full items-center gap-2 rounded-xl border px-3 text-xs leading-tight backdrop-blur-sm ${
+                        isError ? 'lg-shake border-rose-300/40 bg-rose-500/20 text-rose-50' : 'lg-fade border-sky-300/40 bg-sky-400/20 text-sky-50'
+                    }`}
+                >
+                    <Icon className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="line-clamp-2">{notice.text}</span>
                 </div>
             )}
         </div>
     );
-};
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Panel 1: acceso institucional
+   ═══════════════════════════════════════════════════════════════ */
+
+interface InstitutionalFormProps {
+    busy: boolean;
+    onSubmit: (email: string, password: string, rol: UserRole) => Promise<boolean>;
+    onForgotPassword: () => void;
+}
+
+function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFormProps) {
+    const [email, setEmail] = useState<string>(readRememberedEmail);
+    const [password, setPassword] = useState('');
+    const [rol, setRol] = useState<UserRole>(UserRole.CAPTURISTA_TAMIZ);
+    const [showPassword, setShowPassword] = useState(false);
+    const [remember, setRemember] = useState<boolean>(() => readRememberedEmail() !== '');
+    const [capsLock, setCapsLock] = useState(false);
+    const passwordRef = useRef<HTMLInputElement>(null);
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (busy) return;
+        const cleanEmail = email.trim();
+        writeRememberedEmail(remember ? cleanEmail : null);
+        const ok = await onSubmit(cleanEmail, password, rol);
+        if (!ok) {
+            setPassword('');
+            passwordRef.current?.focus();
+        }
+    };
+
+    const detectCaps = (event: ReactKeyboardEvent<HTMLInputElement>) => setCapsLock(event.getModifierState('CapsLock'));
+
+    return (
+        <form onSubmit={handleSubmit} className="flex h-full flex-col justify-center gap-3">
+            <div>
+                <label htmlFor="login-rol" className={LABEL}>
+                    Perfil de acceso
+                </label>
+                <div className="relative">
+                    <UserCheck className={FIELD_ICON} aria-hidden="true" />
+                    <select
+                        id="login-rol"
+                        value={rol}
+                        disabled={busy}
+                        onChange={(event) => setRol(event.target.value as UserRole)}
+                        className={`${INPUT} cursor-pointer appearance-none pr-9`}
+                    >
+                        {ROLE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value} className="bg-slate-900 text-white">
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-sky-200/80" aria-hidden="true" />
+                </div>
+            </div>
+
+            <div>
+                <label htmlFor="login-email" className={LABEL}>
+                    Correo institucional
+                </label>
+                <div className="relative">
+                    <Mail className={FIELD_ICON} aria-hidden="true" />
+                    <input
+                        id="login-email"
+                        type="email"
+                        required
+                        autoComplete="username"
+                        inputMode="email"
+                        placeholder="nombre@salud.gob.mx"
+                        value={email}
+                        disabled={busy}
+                        onChange={(event) => setEmail(event.target.value)}
+                        className={`${INPUT} pr-3`}
+                    />
+                </div>
+            </div>
+
+            <div>
+                <div className="mb-1 flex items-baseline justify-between gap-2">
+                    <label htmlFor="login-password" className="text-xs font-medium text-sky-50">
+                        Contraseña
+                    </label>
+                    {capsLock && (
+                        <span className="lg-fade text-xs text-amber-200" role="status">
+                            Bloq Mayús activado
+                        </span>
+                    )}
+                </div>
+                <div className="relative">
+                    <Lock className={FIELD_ICON} aria-hidden="true" />
+                    <input
+                        id="login-password"
+                        ref={passwordRef}
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        autoComplete="current-password"
+                        placeholder="Tu contraseña"
+                        value={password}
+                        disabled={busy}
+                        onChange={(event) => setPassword(event.target.value)}
+                        onKeyDown={detectCaps}
+                        onKeyUp={detectCaps}
+                        onBlur={() => setCapsLock(false)}
+                        className={`${INPUT} pr-11`}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword((visible) => !visible)}
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        aria-pressed={showPassword}
+                        className={`absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-sky-100/80 transition hover:bg-white/10 hover:text-white active:scale-90 motion-reduce:transition-none ${FOCUS}`}
+                    >
+                        {showPassword ? <EyeOff className="size-5" aria-hidden="true" /> : <Eye className="size-5" aria-hidden="true" />}
+                    </button>
+                </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
+                <label className="flex cursor-pointer select-none items-center gap-2 text-sky-50">
+                    <input
+                        type="checkbox"
+                        checked={remember}
+                        onChange={(event) => setRemember(event.target.checked)}
+                        className="size-4 cursor-pointer rounded accent-sky-500"
+                    />
+                    Recordar equipo
+                </label>
+                <button
+                    type="button"
+                    onClick={onForgotPassword}
+                    className={`rounded text-sky-200 underline-offset-4 transition-colors hover:text-white hover:underline ${FOCUS}`}
+                >
+                    ¿Olvidaste tu contraseña?
+                </button>
+            </div>
+
+            <button type="submit" disabled={busy} className={PRIMARY}>
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/4 -skew-x-12 bg-white/25 transition-transform duration-700 group-hover:translate-x-[520%] motion-reduce:hidden"
+                />
+                {busy ? (
+                    <>
+                        <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+                        <span>Verificando…</span>
+                    </>
+                ) : (
+                    <>
+                        <LogIn className="size-5" aria-hidden="true" />
+                        <span>Iniciar sesión</span>
+                    </>
+                )}
+            </button>
+        </form>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Panel 2a: visor QR (cámara real + láser)
+   ═══════════════════════════════════════════════════════════════ */
+
+interface QrViewfinderProps {
+    onDetect: (code: string) => Promise<boolean>;
+    onUsePin: () => void;
+}
+
+function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
+    const [state, setState] = useState<ScanState>('idle');
+    const [rejected, setRejected] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const timerRef = useRef<number | null>(null);
+    const retryRef = useRef<number | null>(null);
+    const onDetectRef = useRef(onDetect);
+
+    useEffect(() => {
+        onDetectRef.current = onDetect;
+    }, [onDetect]);
+
+    const stopLoop = useCallback(() => {
+        if (timerRef.current !== null) {
+            window.clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+    }, []);
+
+    const stopCamera = useCallback(() => {
+        stopLoop();
+        if (retryRef.current !== null) {
+            window.clearTimeout(retryRef.current);
+            retryRef.current = null;
+        }
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+    }, [stopLoop]);
+
+    // La cámara se apaga siempre que el visor se desmonta.
+    useEffect(() => stopCamera, [stopCamera]);
+
+    const startLoop: (detector: BarcodeDetectorLike) => void = useCallback(
+        (detector: BarcodeDetectorLike) => {
+            stopLoop();
+            timerRef.current = window.setInterval(async () => {
+                const video = videoRef.current;
+                if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+                try {
+                    const [first] = await detector.detect(video);
+                    if (!first?.rawValue) return;
+
+                    stopLoop();
+                    setState('verifying');
+                    const ok = await onDetectRef.current(first.rawValue);
+                    if (ok) {
+                        setState('success');
+                        stopCamera();
+                        return;
+                    }
+                    setRejected(true);
+                    retryRef.current = window.setTimeout(() => {
+                        setRejected(false);
+                        setState('scanning');
+                        startLoop(detector);
+                    }, 1800);
+                } catch {
+                    /* Un fotograma ilegible no es un error: se prueba con el siguiente. */
+                }
+            }, 250);
+        },
+        [stopCamera, stopLoop],
+    );
+
+    const startCamera = async () => {
+        const Detector = getBarcodeDetector();
+        if (!Detector || !navigator.mediaDevices?.getUserMedia) {
+            setState('unsupported');
+            return;
+        }
+        setState('starting');
+        setRejected(false);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' } },
+                audio: false,
+            });
+            streamRef.current = stream;
+            const video = videoRef.current;
+            if (!video) {
+                stopCamera();
+                return;
+            }
+            video.srcObject = stream;
+            await video.play();
+            setState('scanning');
+            startLoop(new Detector({ formats: ['qr_code'] }));
+        } catch {
+            stopCamera();
+            setState('denied');
+        }
+    };
+
+    const live = state === 'scanning' || state === 'verifying' || state === 'success';
+    const blocked = state === 'denied' || state === 'unsupported';
+    const frame = state === 'success' ? 'border-emerald-300' : rejected ? 'border-rose-300' : 'border-sky-300';
+
+    return (
+        <div className="flex flex-col gap-2">
+            <div className="relative mx-auto size-44 overflow-hidden rounded-3xl border border-white/20 bg-slate-950/70 shadow-inner sm:size-48">
+                <video
+                    ref={videoRef}
+                    muted
+                    playsInline
+                    aria-label="Vista de la cámara"
+                    className={`absolute inset-0 size-full object-cover transition-opacity duration-500 ${live ? 'opacity-100' : 'opacity-0'}`}
+                />
+
+                {!live && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-b from-slate-900/60 to-sky-950/60">
+                        {blocked ? (
+                            <CameraOff className="size-11 text-sky-200/60" aria-hidden="true" />
+                        ) : (
+                            <QrCode className="size-12 text-sky-200/40" aria-hidden="true" />
+                        )}
+                    </div>
+                )}
+
+                <div className="pointer-events-none absolute inset-5" aria-hidden="true">
+                    <span className={`absolute left-0 top-0 size-7 rounded-tl-xl border-l-4 border-t-4 transition-colors duration-300 ${frame}`} />
+                    <span className={`absolute right-0 top-0 size-7 rounded-tr-xl border-r-4 border-t-4 transition-colors duration-300 ${frame}`} />
+                    <span className={`absolute bottom-0 left-0 size-7 rounded-bl-xl border-b-4 border-l-4 transition-colors duration-300 ${frame}`} />
+                    <span className={`absolute bottom-0 right-0 size-7 rounded-br-xl border-b-4 border-r-4 transition-colors duration-300 ${frame}`} />
+                    {state === 'scanning' && !rejected && (
+                        <span className="lg-laser absolute inset-x-1 top-0 h-0.5 rounded-full bg-sky-300 shadow-[0_0_14px_3px_rgba(125,211,252,0.85)] motion-reduce:hidden" />
+                    )}
+                </div>
+
+                {(state === 'starting' || state === 'verifying') && (
+                    <div className="lg-fade absolute inset-0 flex items-center justify-center bg-slate-950/60">
+                        <Loader2 className="size-9 animate-spin text-sky-200" aria-hidden="true" />
+                    </div>
+                )}
+
+                {state === 'success' && (
+                    <div className="lg-fade absolute inset-0 flex flex-col items-center justify-center gap-2 bg-emerald-950/80 text-emerald-100">
+                        <CheckCircle2 className="lg-pop size-12 text-emerald-300" aria-hidden="true" />
+                        <span className="text-sm font-medium">Credencial reconocida</span>
+                    </div>
+                )}
+            </div>
+
+            <p className="flex min-h-10 items-center justify-center text-center text-xs leading-snug text-sky-100/80 sm:text-sm" aria-live="polite">
+                {state === 'idle' && 'Activa la cámara y acerca tu credencial con código QR.'}
+                {state === 'starting' && 'Abriendo la cámara…'}
+                {state === 'scanning' && !rejected && 'Centra el código QR dentro del marco.'}
+                {state === 'scanning' && rejected && 'Ese código no está registrado. Prueba con otra credencial.'}
+                {state === 'verifying' && 'Verificando credencial…'}
+                {state === 'success' && 'Entrando al sistema…'}
+                {state === 'denied' && 'No se pudo usar la cámara. Permite el acceso en tu navegador o usa tu PIN.'}
+                {state === 'unsupported' && 'Este navegador no puede leer códigos QR. Usa tu PIN.'}
+            </p>
+
+            {/* Zona de botones con alto reservado para que nada se mueva */}
+            <div className="min-h-12">
+                {(state === 'idle' || state === 'starting') && (
+                    <button type="button" onClick={startCamera} disabled={state === 'starting'} className={PRIMARY}>
+                        <Camera className="size-5" aria-hidden="true" />
+                        <span>Activar cámara</span>
+                    </button>
+                )}
+                {blocked && (
+                    <div className="flex gap-2">
+                        {state === 'denied' && (
+                            <button
+                                type="button"
+                                onClick={startCamera}
+                                className={`min-h-12 flex-1 rounded-xl border border-white/25 bg-white/10 px-3 text-sm font-medium transition hover:bg-white/20 active:scale-[0.98] motion-reduce:transition-none ${FOCUS}`}
+                            >
+                                Reintentar
+                            </button>
+                        )}
+                        <button type="button" onClick={onUsePin} className={`${PRIMARY} flex-1`}>
+                            Usar mi PIN
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Panel 2: acceso para parteras (PIN / QR / voz)
+   ═══════════════════════════════════════════════════════════════ */
+
+interface MidwifeAccessProps {
+    active: boolean;
+    busy: boolean;
+    onPin: (pin: string) => Promise<boolean>;
+    onQr: (code: string) => Promise<boolean>;
+}
+
+function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
+    const [method, setMethod] = useState<PinMethod>('pin');
+    const [digits, setDigits] = useState('');
+    const [shakeKey, setShakeKey] = useState(0);
+    const [speaking, setSpeaking] = useState(false);
+    const [voiceUnavailable, setVoiceUnavailable] = useState(false);
+    const busyRef = useRef(busy);
+    const digitsRef = useRef('');
+
+    useEffect(() => {
+        busyRef.current = busy;
+    }, [busy]);
+
+    const updateDigits = useCallback((value: string) => {
+        digitsRef.current = value;
+        setDigits(value);
+    }, []);
+
+    const stopVoice = useCallback(() => {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        setSpeaking(false);
+    }, []);
+
+    const toggleVoice = () => {
+        if (speaking) {
+            stopVoice();
+            return;
+        }
+        if (!('speechSynthesis' in window)) {
+            setVoiceUnavailable(true);
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(VOICE_TEXT[method]);
+        utterance.lang = 'es-MX';
+        utterance.rate = 0.9;
+        utterance.onstart = () => setSpeaking(true);
+        utterance.onend = () => setSpeaking(false);
+        utterance.onerror = () => setSpeaking(false);
+        window.speechSynthesis.speak(utterance);
+    };
+
+    useEffect(() => stopVoice, [stopVoice]);
+
+    // Al salir del panel se limpia el PIN escrito y se calla la voz.
+    useEffect(() => {
+        if (!active) {
+            updateDigits('');
+            stopVoice();
+        }
+    }, [active, stopVoice, updateDigits]);
+
+    const submitPin = useCallback(
+        async (pin: string) => {
+            const ok = await onPin(pin);
+            if (!ok) {
+                setShakeKey((key) => key + 1);
+                updateDigits('');
+                if (typeof navigator.vibrate === 'function') navigator.vibrate(120);
+            }
+        },
+        [onPin, updateDigits],
+    );
+
+    const pressDigit = useCallback(
+        (digit: string) => {
+            if (busyRef.current || digitsRef.current.length >= PIN_LENGTH) return;
+            const next = digitsRef.current + digit;
+            updateDigits(next);
+            if (next.length === PIN_LENGTH) void submitPin(next);
+        },
+        [submitPin, updateDigits],
+    );
+
+    const deleteLast = useCallback(() => {
+        if (!busyRef.current) updateDigits(digitsRef.current.slice(0, -1));
+    }, [updateDigits]);
+
+    const clearAll = useCallback(() => {
+        if (!busyRef.current) updateDigits('');
+    }, [updateDigits]);
+
+    // Teclado físico en equipos de escritorio.
+    useEffect(() => {
+        if (!active || method !== 'pin') return;
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
+            if (/^\d$/.test(event.key)) pressDigit(event.key);
+            else if (event.key === 'Backspace') deleteLast();
+            else if (event.key === 'Escape') clearAll();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [active, method, pressDigit, deleteLast, clearAll]);
+
+    const changeMethod = (next: PinMethod) => {
+        if (next === method) return;
+        stopVoice();
+        updateDigits('');
+        setMethod(next);
+    };
+
+    return (
+        <div className="flex h-full flex-col gap-3">
+            <div className="flex items-center gap-2">
+                <div role="group" aria-label="Forma de acceso" className={`${PILL_TRACK} flex-1`}>
+                    <span
+                        aria-hidden="true"
+                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md transition-transform duration-300 ease-out motion-reduce:transition-none ${
+                            method === 'pin' ? 'translate-x-0' : 'translate-x-full'
+                        }`}
+                    />
+                    {(
+                        [
+                            { id: 'pin', label: 'Escribir PIN', Icon: KeyRound },
+                            { id: 'qr', label: 'Escanear QR', Icon: QrCode },
+                        ] as const
+                    ).map(({ id, label, Icon }) => (
+                        <button
+                            key={id}
+                            type="button"
+                            aria-pressed={method === id}
+                            onClick={() => changeMethod(id)}
+                            className={`relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-1 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS} ${
+                                method === id ? 'text-white' : 'text-sky-100/70 hover:text-white'
+                            }`}
+                        >
+                            <Icon className="size-4 shrink-0" aria-hidden="true" />
+                            <span className="truncate">{label}</span>
+                        </button>
+                    ))}
+                </div>
+
+                <button
+                    type="button"
+                    onClick={toggleVoice}
+                    aria-pressed={speaking}
+                    aria-label={speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
+                    title={voiceUnavailable ? 'Este navegador no puede leer en voz alta' : speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
+                    className={`flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black/25 text-sky-100 transition hover:bg-white/10 hover:text-white active:scale-90 motion-reduce:transition-none ${FOCUS} ${
+                        speaking ? 'bg-sky-500/30' : ''
+                    } ${voiceUnavailable ? 'opacity-50' : ''}`}
+                >
+                    {speaking ? <VolumeX className="size-5" aria-hidden="true" /> : <Volume2 className="size-5" aria-hidden="true" />}
+                </button>
+            </div>
+
+            <div key={method} className="lg-fade flex min-h-0 flex-1 flex-col justify-center">
+                {method === 'pin' ? (
+                    <div className="flex flex-col gap-3">
+                        <div
+                            key={shakeKey}
+                            role="img"
+                            aria-label={`${digits.length} de ${PIN_LENGTH} dígitos ingresados`}
+                            className={`flex justify-center gap-4 ${shakeKey > 0 ? 'lg-shake' : ''}`}
+                        >
+                            {Array.from({ length: PIN_LENGTH }, (_, index) => (
+                                <span
+                                    key={index}
+                                    className={`size-5 rounded-full border-2 transition-all duration-200 motion-reduce:transition-none ${
+                                        index < digits.length
+                                            ? 'scale-110 border-sky-300 bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.7)]'
+                                            : 'border-white/40 bg-transparent'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+
+                        <p className="flex h-5 items-center justify-center gap-2 text-sm text-sky-100/80" aria-live="polite">
+                            {busy ? (
+                                <>
+                                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                                    Verificando PIN…
+                                </>
+                            ) : (
+                                'Toca los números para escribir tu PIN'
+                            )}
+                        </p>
+
+                        <div className="mx-auto grid w-full max-w-64 grid-cols-3 gap-2">
+                            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
+                                <button key={digit} type="button" disabled={busy} onClick={() => pressDigit(digit)} className={KEY}>
+                                    {digit}
+                                </button>
+                            ))}
+                            <button type="button" disabled={busy} onClick={clearAll} aria-label="Borrar todo" className={`${KEY} flex items-center justify-center text-sky-100`}>
+                                <RotateCcw className="size-5" aria-hidden="true" />
+                            </button>
+                            <button type="button" disabled={busy} onClick={() => pressDigit('0')} className={KEY}>
+                                0
+                            </button>
+                            <button type="button" disabled={busy} onClick={deleteLast} aria-label="Borrar último número" className={`${KEY} flex items-center justify-center text-sky-100`}>
+                                <Delete className="size-5" aria-hidden="true" />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    active && <QrViewfinder onDetect={onQr} onUsePin={() => changeMethod('pin')} />
+                )}
+            </div>
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Login (contenedor principal)
+   ═══════════════════════════════════════════════════════════════ */
+
+export function Login() {
+    const navigate = useNavigate();
+    const { login } = useAuth();
+    const baseId = useId();
+
+    const [mode, setMode] = useState<AccessMode>('institucional');
+    const [busy, setBusy] = useState(false);
+    const [notice, setNotice] = useState<Notice | null>(null);
+
+    const isInstitutional = mode === 'institucional';
+    const tabId = (id: AccessMode) => `${baseId}-tab-${id}`;
+    const panelId = (id: AccessMode) => `${baseId}-panel-${id}`;
+
+    const showNotice = useCallback((kind: NoticeKind, text: string) => {
+        setNotice({ id: Date.now(), kind, text });
+    }, []);
+
+    const switchMode = (next: AccessMode) => {
+        if (next === mode || busy) return;
+        setNotice(null);
+        setMode(next);
+    };
+
+    const handleTabKeys = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+        const index = MODES.findIndex((item) => item.id === mode);
+        let target: number | null = null;
+        if (event.key === 'ArrowRight') target = (index + 1) % MODES.length;
+        else if (event.key === 'ArrowLeft') target = (index - 1 + MODES.length) % MODES.length;
+        else if (event.key === 'Home') target = 0;
+        else if (event.key === 'End') target = MODES.length - 1;
+        if (target === null) return;
+        event.preventDefault();
+        const next = MODES[target].id;
+        switchMode(next);
+        document.getElementById(tabId(next))?.focus();
+    };
+
+    /** Flujo común a los tres accesos: consulta al backend, guarda sesión y entra al panel. */
+    const authenticate = useCallback(
+        async (request: () => Promise<LoginResponse>, fallbackError: string): Promise<boolean> => {
+            setBusy(true);
+            setNotice(null);
+            try {
+                const { token, user } = await request();
+                localStorage.setItem(TOKEN_KEY, token);
+                login(user);
+                navigate('/dashboard', { replace: true });
+                return true;
+            } catch (error) {
+                showNotice('error', getErrorMessage(error, fallbackError));
+                return false;
+            } finally {
+                setBusy(false);
+            }
+        },
+        [login, navigate, showNotice],
+    );
+
+    const handleInstitutional = useCallback(
+        (email: string, password: string, rol: UserRole) =>
+            authenticate(
+                async () => (await http.post<LoginResponse>('/auth/login-institucional', { email, password, rol })).data,
+                'Correo o contraseña incorrectos.',
+            ),
+        [authenticate],
+    );
+
+    const handlePin = useCallback(
+        (pin: string) =>
+            authenticate(async () => (await http.post<LoginResponse>('/auth/login-partera-pin', { pin })).data, 'PIN incorrecto o no registrado.'),
+        [authenticate],
+    );
+
+    const handleQr = useCallback(
+        (code: string) =>
+            authenticate(
+                async () => (await http.post<LoginResponse>('/auth/login-partera-qr', { codigo_qr: code })).data,
+                'Código QR no reconocido en el sistema.',
+            ),
+        [authenticate],
+    );
+
+    const handleForgotPassword = useCallback(() => {
+        showNotice('info', 'Para restablecer tu contraseña, solicita apoyo al administrador jurisdiccional.');
+    }, [showNotice]);
+
+    return (
+        <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden p-3 text-white selection:bg-sky-400/40 sm:p-6">
+            <style>{LOGIN_CSS}</style>
+
+            {/* Fondo: imagen escalada con cover + tinte celeste oscuro + viñeta */}
+            <div aria-hidden="true" className="fixed inset-0 -z-10 bg-slate-950">
+                <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/fondo-login.png')" }} />
+                <div className="absolute inset-0 bg-linear-to-br from-slate-950/90 via-sky-950/80 to-slate-900/90" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.14),transparent_60%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(2,6,23,0.55))]" />
+            </div>
+
+            <div className="flex w-full max-w-md flex-col items-center md:max-w-4xl">
+                {/* Tarjeta de tamaño fijo: no cambia al alternar pestañas */}
+                <div className="lg-card flex h-[min(36rem,calc(100dvh-6rem))] w-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-2xl shadow-black/50 backdrop-blur-xl md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+                    {/* ── Panel de marca ── */}
+                    <aside className="relative shrink-0 overflow-hidden border-b border-white/15 p-3.5 sm:p-4 md:border-b-0 md:p-8">
+                        <div
+                            aria-hidden="true"
+                            className={`absolute inset-0 bg-linear-to-br from-blue-600/35 via-sky-500/10 to-transparent transition-opacity duration-700 motion-reduce:transition-none ${
+                                isInstitutional ? 'opacity-100' : 'opacity-0'
+                            }`}
+                        />
+                        <div
+                            aria-hidden="true"
+                            className={`absolute inset-0 bg-linear-to-br from-cyan-400/30 via-sky-400/10 to-transparent transition-opacity duration-700 motion-reduce:transition-none ${
+                                isInstitutional ? 'opacity-0' : 'opacity-100'
+                            }`}
+                        />
+
+                        {/* Móvil: cabecera compacta de una línea */}
+                        <div className="relative flex items-center gap-2.5 md:hidden">
+                            <img
+                                src="/logo-jurisdiccion.png"
+                                alt="Jurisdicción Sanitaria No. 2 Istmo"
+                                className="size-10 shrink-0 rounded-full bg-white object-cover shadow-md ring-2 ring-white/40"
+                            />
+                            <div className="min-w-0 flex-1">
+                                <h1 className="truncate text-sm font-semibold leading-tight">Jurisdicción Sanitaria No. 2</h1>
+                                <p className="truncate text-[11px] text-sky-100/80">Istmo, Servicios de Salud de Oaxaca</p>
+                            </div>
+                            <div className="flex h-9 shrink-0 items-center rounded-lg bg-white/95 px-2 shadow-md">
+                                <img src="/Logo-Secretaria.png" alt="Secretaría de Salud, Servicios de Salud de Oaxaca" className="h-4 w-auto" />
+                            </div>
+                        </div>
+
+                        {/* Escritorio: panel de marca completo */}
+                        <div className="relative hidden h-full flex-col justify-between gap-5 md:flex">
+                            <div className="flex items-center gap-3">
+                                {/* El escudo trae fondo blanco cuadrado: el recorte circular lo integra. */}
+                                <img
+                                    src="/logo-jurisdiccion.png"
+                                    alt="Jurisdicción Sanitaria No. 2 Istmo"
+                                    className="size-16 shrink-0 rounded-full bg-white object-cover shadow-lg ring-2 ring-white/40"
+                                />
+                                {/* El logo de la Secretaría tiene letras oscuras: necesita base clara. */}
+                                <div className="flex h-14 items-center rounded-xl bg-white/95 px-3 shadow-lg">
+                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud, Servicios de Salud de Oaxaca" className="h-9 w-auto" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <h1 className="text-2xl font-semibold leading-tight">Jurisdicción Sanitaria No. 2</h1>
+                                <p className="text-sm text-sky-100/80">Istmo, Servicios de Salud de Oaxaca</p>
+                            </div>
+
+                            <div key={mode} className="lg-fade space-y-2">
+                                <h2 className="text-lg font-medium">{MODE_COPY[mode].title}</h2>
+                                <p className="text-sm leading-relaxed text-sky-100/80">{MODE_COPY[mode].text}</p>
+                            </div>
+
+                            <p className="text-xs text-sky-100/60">Sistema de gestión de tamiz neonatal y parteras tradicionales</p>
+                        </div>
+                    </aside>
+
+                    {/* ── Panel de acceso ── */}
+                    <section className="flex min-h-0 flex-1 flex-col bg-slate-950/25 p-4 sm:p-6 md:border-l md:border-white/15 md:p-7">
+                        <div
+                            role="tablist"
+                            aria-label="Tipo de acceso"
+                            onKeyDown={handleTabKeys}
+                            className={`${PILL_TRACK} mb-3 shrink-0`}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-950/40 transition-transform duration-500 ${SLIDE} motion-reduce:transition-none ${
+                                    isInstitutional ? 'translate-x-0' : 'translate-x-full'
+                                }`}
+                            />
+                            {MODES.map(({ id, label, Icon }) => {
+                                const selected = id === mode;
+                                return (
+                                    <button
+                                        key={id}
+                                        id={tabId(id)}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={selected}
+                                        aria-controls={panelId(id)}
+                                        tabIndex={selected ? 0 : -1}
+                                        onClick={() => switchMode(id)}
+                                        className={`relative z-10 flex min-h-10 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS} ${
+                                            selected ? 'text-white' : 'text-sky-100/70 hover:text-white'
+                                        }`}
+                                    >
+                                        <Icon className="size-4 shrink-0" aria-hidden="true" />
+                                        <span className="truncate">{label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <StatusSlot notice={notice} />
+
+                        {/* Pista deslizante: los dos paneles viven lado a lado y se desplazan */}
+                        <div className="-m-1 min-h-0 flex-1 overflow-hidden p-1">
+                            <div
+                                className={`flex h-full w-[200%] transition-transform duration-500 ${SLIDE} motion-reduce:transition-none ${
+                                    isInstitutional ? 'translate-x-0' : '-translate-x-1/2'
+                                }`}
+                            >
+                                <div
+                                    id={panelId('institucional')}
+                                    role="tabpanel"
+                                    aria-labelledby={tabId('institucional')}
+                                    inert={!isInstitutional}
+                                    className={`lg-quiet h-full w-1/2 shrink-0 overflow-y-auto px-1 py-0.5 transition-opacity duration-500 motion-reduce:transition-none ${
+                                        isInstitutional ? 'opacity-100' : 'opacity-0'
+                                    }`}
+                                >
+                                    <InstitutionalForm busy={busy} onSubmit={handleInstitutional} onForgotPassword={handleForgotPassword} />
+                                </div>
+
+                                <div
+                                    id={panelId('partera')}
+                                    role="tabpanel"
+                                    aria-labelledby={tabId('partera')}
+                                    inert={isInstitutional}
+                                    className={`lg-quiet h-full w-1/2 shrink-0 overflow-y-auto px-1 py-0.5 transition-opacity duration-500 motion-reduce:transition-none ${
+                                        isInstitutional ? 'opacity-0' : 'opacity-100'
+                                    }`}
+                                >
+                                    <MidwifeAccess active={!isInstitutional} busy={busy} onPin={handlePin} onQr={handleQr} />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <p className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-0.5 text-center text-xs text-sky-100/70">
+                    <span>Uso exclusivo de personal autorizado</span>
+                    <a
+                        href={`tel:${SUPPORT_PHONE.replace(/\s/g, '')}`}
+                        className={`rounded underline-offset-4 hover:text-white hover:underline ${FOCUS}`}
+                    >
+                        Soporte: {SUPPORT_PHONE}
+                    </a>
+                </p>
+            </div>
+        </div>
+    );
+}
 
 export default Login;
