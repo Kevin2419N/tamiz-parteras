@@ -136,11 +136,11 @@ export const TabUnidadesCLUES: React.FC = () => {
                         No hay unidades médicas registradas en el catálogo.
                     </div>
                 ) : (
-                    cluesCatalog.map((u) => (
+                    cluesCatalog.map((u: any) => (
                         <div key={u.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <h3 className="text-xs font-black text-slate-900">{u.nombre}</h3>
+                                    <h3 className="text-xs font-black text-slate-900">{u.nombre || u.nombre_unidad}</h3>
                                     <p className="text-[11px] text-slate-600 font-medium">Municipio: <strong>{u.municipio}</strong></p>
                                 </div>
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${u.estatus === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
@@ -153,12 +153,12 @@ export const TabUnidadesCLUES: React.FC = () => {
                                 <div>
                                     <span className="text-[10px] text-slate-400 block font-bold uppercase">Clave CLUES</span>
                                     <span className="font-mono bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-lg px-2 py-0.5 text-xs">
-                                        {u.clues}
+                                        {u.clues || u.clave_clues}
                                     </span>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-[10px] text-slate-400 block font-bold uppercase">Tipo</span>
-                                    <span className="font-bold text-[#9D2449] text-[11px]">{u.tipoUnidad}</span>
+                                    <span className="font-bold text-[#9D2449] text-[11px]">{u.tipoUnidad || u.tipo || u.tipo_establecimiento}</span>
                                 </div>
                             </div>
                         </div>
@@ -195,16 +195,16 @@ export const TabUnidadesCLUES: React.FC = () => {
                                 </td>
                             </tr>
                         ) : (
-                            cluesCatalog.map((u) => (
+                            cluesCatalog.map((u: any) => (
                                 <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
-                                    <td className="py-3.5 px-4 font-black text-slate-900">{u.nombre}</td>
+                                    <td className="py-3.5 px-4 font-black text-slate-900">{u.nombre || u.nombre_unidad}</td>
                                     <td className="py-3.5 px-4">
                                         <span className="font-mono bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-lg px-2.5 py-1 text-xs inline-block shadow-sm">
-                                            {u.clues}
+                                            {u.clues || u.clave_clues}
                                         </span>
                                     </td>
                                     <td className="py-3.5 px-4 font-bold text-slate-800">{u.municipio}</td>
-                                    <td className="py-3.5 px-4 text-slate-700 font-medium">{u.tipoUnidad}</td>
+                                    <td className="py-3.5 px-4 text-slate-700 font-medium">{u.tipoUnidad || u.tipo || u.tipo_establecimiento}</td>
                                     <td className="py-3.5 px-4 text-center">
                                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${u.estatus === 'ACTIVO'
                                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
