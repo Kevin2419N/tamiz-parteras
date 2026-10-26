@@ -34,6 +34,7 @@ export const addCluesUnit = async (unit: any): Promise<UnidadCLUES | null> => {
     try {
         const claveUnica = unit.clues || unit.clave_clues || unit.claveClues || '';
         const nombreTexto = unit.nombre || unit.nombre_unidad || '';
+        const tipoTexto = unit.tipo || unit.tipoUnidad || unit.tipo_establecimiento || '';
 
         const payloadBackend = {
             clave_clues: claveUnica,
@@ -42,7 +43,8 @@ export const addCluesUnit = async (unit: any): Promise<UnidadCLUES | null> => {
             nombre_unidad: nombreTexto,
             municipio: unit.municipio || '',
             localidad: unit.localidad || unit.municipio || '',
-            tipo: unit.tipo || unit.tipoUnidad || '',
+            tipo: tipoTexto,
+            tipo_establecimiento: tipoTexto, // <--- Añadido para la columna exacta de PostgreSQL
             estatus: unit.estatus || 'ACTIVO'
         };
 
