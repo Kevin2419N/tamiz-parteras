@@ -107,14 +107,11 @@ export const TabUsuariosParteras: React.FC = () => {
             const response = await http.post('/admin/parteras', payload);
             const creada: ParteraCredencial = response.data?.partera || response.data || payload;
 
-            // Actualizamos la lista con la partera recién creada
             setParteras((prev) => [creada, ...(Array.isArray(prev) ? prev : [])]);
             
-            // Cerramos el modal de registro y ABRIMOS AUTOMÁTICAMENTE LA CREDENCIAL QR LISTA PARA DESCARGAR/IMPRIMIR
             setShowRegisterModal(false);
             setSelectedParteraQR(creada);
 
-            // Reset form
             setNombres('');
             setApellidoPaterno('');
             setApellidoMaterno('');
@@ -141,6 +138,28 @@ export const TabUsuariosParteras: React.FC = () => {
 
     return (
         <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+
+            {/* ESTILOS CSS PARA IMPRESIÓN PROFESIONAL DE LA CREDENCIAL */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                @media print {
+                    body * {
+                        visibility: hidden;
+                    }
+                    #printable-credential, #printable-credential * {
+                        visibility: visible;
+                    }
+                    #printable-credential {
+                        position: fixed;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 100%;
+                        max-width: 380px;
+                        box-shadow: none !important;
+                        border: 2px solid #9D2449 !important;
+                    }
+                }
+            `}} />
 
             {/* CABECERA INSTITUCIONAL */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
@@ -334,7 +353,6 @@ export const TabUsuariosParteras: React.FC = () => {
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
 
-                        {/* ENCABEZADO MODAL */}
                         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-rose-50 rounded-2xl border border-rose-200 text-[#9D2449]">
@@ -354,7 +372,6 @@ export const TabUsuariosParteras: React.FC = () => {
                             </button>
                         </div>
 
-                        {/* BANNER DE ACREDITACIÓN SALUD MATERNA */}
                         <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-2xl flex items-start gap-3 text-xs text-amber-900">
                             <ShieldCheck className="w-5 h-5 shrink-0 text-amber-700 mt-0.5" />
                             <div className="space-y-0.5">
@@ -365,10 +382,8 @@ export const TabUsuariosParteras: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* FORMULARIO DE REGISTRO EN 2 COLUMNAS */}
                         <form onSubmit={handleRegisterPartera} className="space-y-4 text-xs font-semibold">
 
-                            {/* NOMBRES DESGLOSADOS EN 3 CAMPOS */}
                             <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                                 <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
                                     Identidad de la Partera (Nombres y Apellidos *):
@@ -411,10 +426,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                                {/* COLUMNA 1 */}
                                 <div className="space-y-3.5">
-                                    {/* CURP de la Partera */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
                                             <span>CURP de la Partera *</span>
@@ -433,7 +445,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                         />
                                     </div>
 
-                                    {/* Lengua Materna */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center gap-1.5">
                                             <Languages className="w-3.5 h-3.5 text-[#9D2449]" />
@@ -452,7 +463,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    {/* Teléfono / Recaudo */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1">Teléfono / Teléfono de Recaudo</label>
                                         <div className="relative">
@@ -469,9 +479,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* COLUMNA 2 */}
                                 <div className="space-y-3.5">
-                                    {/* Municipio */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1">Municipio / Localidad * (Texto Libre)</label>
                                         <input
@@ -484,7 +492,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                         />
                                     </div>
 
-                                    {/* Comunidad / Barrio */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1">Comunidad / Barrio / Sección</label>
                                         <input
@@ -496,7 +503,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                         />
                                     </div>
 
-                                    {/* Centro de Salud Adscrito (CLUES) */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1">Centro de Salud Adscrito (CLUES) *</label>
                                         <select
@@ -512,7 +518,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    {/* PIN Táctil de Acceso */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
                                             <span>PIN Táctil de Acceso (4 Dígitos Numéricos) *</span>
@@ -540,7 +545,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* BOTONES DE ACCIÓN */}
                             <div className="flex gap-3 pt-3 border-t border-slate-200">
                                 <button
                                     type="button"
@@ -572,28 +576,36 @@ export const TabUsuariosParteras: React.FC = () => {
                 </div>
             )}
 
-            {/* CREDENCIAL QR PARTERA (PROFESIONAL, LISTA PARA DESCARGAR/IMPRIMIR) */}
+            {/* CREDENCIAL QR OFICIAL PROFESIONAL INSTITUCIONAL */}
             {selectedParteraQR && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xl max-w-sm w-full space-y-4 text-center relative">
+                    <div 
+                        id="printable-credential"
+                        className="bg-white border-2 border-[#9D2449]/30 rounded-3xl p-6 shadow-2xl max-w-sm w-full space-y-4 text-center relative overflow-hidden"
+                    >
+                        {/* MARCA DE AGUA INSTITUCIONAL DE FONDO */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+                            <Heart className="w-64 h-64 text-[#9D2449]" />
+                        </div>
+
                         <button
                             type="button"
                             onClick={() => setSelectedParteraQR(null)}
-                            className="absolute right-4 top-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl"
+                            className="absolute right-4 top-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl z-10"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
-                        {/* ENCABEZADO CON AMBOS LOGOS OFICIALES */}
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-3 pt-2">
+                        {/* ENCABEZADO OFICIAL SSO */}
+                        <div className="flex items-center justify-between border-b-2 border-[#9D2449]/20 pb-3 pt-1">
                             <img
                                 src="/logo-jurisdiccion.png"
                                 alt="Jurisdicción"
                                 className="h-10 w-auto object-contain mix-blend-multiply"
                             />
                             <div className="text-center">
-                                <span className="text-[9px] font-black uppercase text-[#9D2449] block">SSO OAXACA</span>
-                                <span className="text-[8px] font-bold text-slate-500 block">JURISDICCIÓN NO. 2</span>
+                                <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">SSO OAXACA</span>
+                                <span className="text-[9px] font-bold text-slate-600 block">JURISDICCIÓN SANITARIA NO. 2</span>
                             </div>
                             <img
                                 src="/Logo-Secretaria.png"
@@ -602,53 +614,67 @@ export const TabUsuariosParteras: React.FC = () => {
                             />
                         </div>
 
-                        {/* FRANJA GUINDA INSTITUCIONAL */}
-                        <div className="bg-[#9D2449] text-white py-2 px-3 rounded-xl shadow-sm">
-                            <span className="text-[10px] font-black uppercase tracking-wider block">
-                                ACREDITACIÓN DE MEDICINA TRADICIONAL
+                        {/* TÍTULO EJECUTIVO DE ACREDITACIÓN */}
+                        <div className="bg-[#9D2449] text-white py-2 px-3 rounded-xl shadow-md border border-rose-900">
+                            <span className="text-[11px] font-black uppercase tracking-wider block">
+                                CREDENCIAL DE ACREDITACIÓN OFICIAL
                             </span>
+                            <span className="text-[9px] font-medium text-rose-200 block">Medicina Tradicional e Interculturalidad</span>
                         </div>
 
-                        {/* DATOS DE LA PARTERA CON AVATAR CIRCULAR */}
-                        <div className="space-y-1 text-slate-900">
-                            <div className="w-14 h-14 rounded-full bg-[#9D2449] text-white mx-auto flex items-center justify-center font-black text-lg shadow-md border-2 border-rose-200">
+                        {/* DATOS DE IDENTIDAD DE LA PARTERA */}
+                        <div className="space-y-1.5 text-slate-900 relative z-10">
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#9D2449] to-[#6E1833] text-white mx-auto flex items-center justify-center font-black text-xl shadow-lg border-2 border-white">
                                 {getInitials(selectedParteraQR.nombreCompleto)}
                             </div>
-                            <h4 className="text-base font-black text-[#9D2449] pt-1">{selectedParteraQR.nombreCompleto}</h4>
-                            <p className="text-[11px] text-slate-500 font-mono">CURP: {selectedParteraQR.curp}</p>
-                            <p className="text-[11px] font-bold text-slate-700">{selectedParteraQR.municipio} {selectedParteraQR.comunidad ? `(${selectedParteraQR.comunidad})` : ''}</p>
+                            <h4 className="text-base font-black text-slate-900 pt-1 leading-tight">{selectedParteraQR.nombreCompleto}</h4>
+                            <div className="inline-block bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
+                                <span className="text-xs text-slate-700 font-mono font-bold tracking-wide">CURP: {selectedParteraQR.curp}</span>
+                            </div>
+                            <p className="text-xs font-bold text-[#9D2449]">{selectedParteraQR.municipio} {selectedParteraQR.comunidad ? `• ${selectedParteraQR.comunidad}` : ''}</p>
                             {selectedParteraQR.lenguaMaterna && (
-                                <p className="text-[10px] text-slate-500 italic">Lengua: {selectedParteraQR.lenguaMaterna}</p>
+                                <p className="text-[11px] text-slate-600 font-medium">Lengua Materna: <strong className="text-slate-800">{selectedParteraQR.lenguaMaterna}</strong></p>
                             )}
                         </div>
 
-                        {/* ADSCRIPCIÓN HOSPITALARIA / CLUES */}
+                        {/* UNIDAD ADSCRITA / CLUES */}
                         {selectedParteraQR.centroSaludAdscripcion && (
-                            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-left text-[11px] space-y-0.5">
-                                <span className="text-[9px] font-bold uppercase text-slate-400 block">Centro de Salud Adscrito:</span>
-                                <div className="font-bold text-slate-800 truncate">{selectedParteraQR.centroSaludAdscripcion}</div>
-                                {selectedParteraQR.cluesAdscripcion && (
-                                    <div className="font-mono text-[10px] font-bold text-[#9D2449]">CLUES: {selectedParteraQR.cluesAdscripcion}</div>
-                                )}
+                            <div className="p-3 bg-rose-50/60 rounded-2xl border border-rose-200 text-left text-xs space-y-1 relative z-10">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-extrabold uppercase text-[#9D2449]">Unidad Médica Adscrita:</span>
+                                    {selectedParteraQR.cluesAdscripcion && (
+                                        <span className="font-mono text-[10px] font-black bg-white px-2 py-0.5 rounded text-slate-800 border border-rose-300">
+                                            {selectedParteraQR.cluesAdscripcion}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="font-bold text-slate-900">{selectedParteraQR.centroSaludAdscripcion}</div>
                             </div>
                         )}
 
-                        {/* PIN EN CAJA DORADA */}
-                        <div className="bg-amber-100 text-amber-900 font-bold px-3 py-2 rounded-xl border border-amber-300 w-fit mx-auto text-xs flex items-center gap-1.5 shadow-inner">
-                            <Key className="w-3.5 h-3.5 text-amber-700" />
-                            <span>PIN TÁCTIL: {selectedParteraQR.pinCuatroDigitos}</span>
+                        {/* PIN TÁCTIL DE ACCESO */}
+                        <div className="bg-gradient-to-r from-amber-50 via-amber-100 to-amber-50 text-amber-950 font-bold px-4 py-2.5 rounded-2xl border border-amber-300 w-fit mx-auto text-xs flex items-center gap-2 shadow-sm relative z-10">
+                            <Key className="w-4 h-4 text-amber-700" />
+                            <span>PIN TÁCTIL DE ACCESO: <strong className="font-mono font-black text-sm text-[#9D2449]">{selectedParteraQR.pinCuatroDigitos}</strong></span>
                         </div>
 
-                        {/* QR CENTRADO EN CAJA BLANCA CON BORDE */}
-                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 max-w-[140px] mx-auto shadow-sm">
-                            <div className="w-24 h-24 mx-auto bg-white border border-slate-300 rounded-xl flex items-center justify-center p-1.5">
-                                <QrCode className="w-full h-full text-slate-900" />
+                        {/* CÓDIGO QR DINÁMICO EXCLUSIVO CON EL PIN (LOGIN RÁPIDO) */}
+                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 max-w-[160px] mx-auto shadow-sm relative z-10">
+                            <div className="w-32 h-32 mx-auto bg-white border border-slate-300 rounded-xl flex items-center justify-center p-2 shadow-inner">
+                                <img
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+                                        selectedParteraQR.pinCuatroDigitos
+                                    )}`}
+                                    alt="Código QR de Acceso Rápido"
+                                    className="w-full h-full object-contain"
+                                />
                             </div>
+                            <span className="text-[10px] text-slate-600 font-mono mt-1.5 block font-extrabold">Escanear para Login</span>
                         </div>
 
-                        <div className="flex items-center justify-center gap-1.5 text-[10px] text-emerald-800 font-bold">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Red de Salud Intercultural SSO Oaxaca</span>
+                        <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-800 font-extrabold relative z-10">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Credencial Oficial Verificada • SSO</span>
                         </div>
 
                         {/* BOTÓN IMPRIMIR / DESCARGAR */}
@@ -657,7 +683,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             onClick={() => {
                                 window.print();
                             }}
-                            className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                            className="w-full py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all relative z-10"
                         >
                             <Printer className="w-4 h-4" />
                             <span>Imprimir / Descargar Credencial Oficial</span>
