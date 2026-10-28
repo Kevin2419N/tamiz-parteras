@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Phone, Key, QrCode, UserCheck, Printer, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
-import type { ParteraCredencial, UnidadCLUES } from './types';
-import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
+import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Phone, Key, QrCode, UserCheck, Printer, CheckCircle2, Loader2, AlertCircle, Calendar, User } from 'lucide-react';
+import type { ParteraCredencial } from './types';
 import { http } from '../../../../services/http';
 
 export const TabUsuariosParteras: React.FC = () => {
@@ -9,16 +8,6 @@ export const TabUsuariosParteras: React.FC = () => {
     const [parteras, setParteras] = useState<ParteraCredencial[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-    // Catálogo dinámico de CLUES
-    const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
-
-    useEffect(() => {
-        const unsubscribe = subscribeCluesCatalog((updatedList) => {
-            setCluesList(updatedList);
-        });
-        return unsubscribe;
-    }, []);
 
     // Carga oficial del padrón de parteras desde PostgreSQL (Render)
     useEffect(() => {
@@ -59,22 +48,17 @@ export const TabUsuariosParteras: React.FC = () => {
     const [apellidoPaterno, setApellidoPaterno] = useState('');
     const [apellidoMaterno, setApellidoMaterno] = useState('');
     const [newCurp, setNewCurp] = useState('');
+    const [newFechaNacimiento, setNewFechaNacimiento] = useState('');
+    const [newSexo, setNewSexo] = useState('Femenino');
     const [newLengua, setNewLengua] = useState('Zapoteco del Istmo');
     const [newTelefono, setNewTelefono] = useState('');
     const [newMunicipio, setNewMunicipio] = useState('Juchitán de Zaragoza');
     const [newComunidad, setNewComunidad] = useState('');
-    const [selectedCluesId, setSelectedCluesId] = useState('');
     const [newPin, setNewPin] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Modal para Ver y Generar Credencial QR
     const [selectedParteraQR, setSelectedParteraQR] = useState<ParteraCredencial | null>(null);
-
-    useEffect(() => {
-        if (cluesList.length > 0 && !selectedCluesId) {
-            setSelectedCluesId(cluesList[0].id);
-        }
-    }, [cluesList, selectedCluesId]);
 
     const generateRandom4Pin = () => {
         const pin = Math.floor(1000 + Math.random() * 9000).toString();
@@ -86,19 +70,18 @@ export const TabUsuariosParteras: React.FC = () => {
         setIsSubmitting(true);
         setErrorMessage(null);
 
-        const unit = cluesList.find((u) => u.id === selectedCluesId) || cluesList[0];
         const nombreCompletoCompuesto = `${nombres.trim()} ${apellidoPaterno.trim()} ${apellidoMaterno.trim()}`.trim();
         const pinGenerado = newPin || Math.floor(1000 + Math.random() * 9000).toString();
 
         const payload = {
             nombreCompleto: nombreCompletoCompuesto,
             curp: newCurp.toUpperCase(),
+            fechaNacimiento: newFechaNacimiento,
+            sexo: newSexo,
             lenguaMaterna: newLengua,
             telefonoRecaudo: newTelefono,
             municipio: newMunicipio,
             comunidad: newComunidad || 'Cabecera Municipal',
-            centroSaludAdscripcion: unit ? unit.nombre : 'Centro de Salud',
-            cluesAdscripcion: unit ? unit.clues : 'OASSA000000',
             pinCuatroDigitos: pinGenerado,
             estatusAcreditacion: 'ACREDITADA'
         };
@@ -116,6 +99,7 @@ export const TabUsuariosParteras: React.FC = () => {
             setApellidoPaterno('');
             setApellidoMaterno('');
             setNewCurp('');
+            setNewFechaNacimiento('');
             setNewTelefono('');
             setNewComunidad('');
             setNewPin('');
@@ -245,12 +229,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                         <span>Lengua: <strong>{p.lenguaMaterna}</strong></span>
                                     </div>
                                 )}
-                                {p.centroSaludAdscripcion && (
-                                    <div className="text-[11px] text-slate-600 pt-1 border-t border-slate-100 mt-1 flex justify-between">
-                                        <span>Adscripción CLUES:</span>
-                                        <span className="font-bold text-[#9D2449] truncate max-w-[150px]">{p.centroSaludAdscripcion}</span>
-                                    </div>
-                                )}
                             </div>
 
                             <button
@@ -274,7 +252,6 @@ export const TabUsuariosParteras: React.FC = () => {
                             <th className="py-3.5 px-4">Partera Tradicional / Lengua</th>
                             <th className="py-3.5 px-4">CURP</th>
                             <th className="py-3.5 px-4">Ubicación (Municipio / Comunidad)</th>
-                            <th className="py-3.5 px-4">Centro de Salud (CLUES)</th>
                             <th className="py-3.5 px-4 text-center">PIN Táctil</th>
                             <th className="py-3.5 px-4 text-right">Credencialización</th>
                         </tr>
@@ -282,7 +259,7 @@ export const TabUsuariosParteras: React.FC = () => {
                     <tbody className="divide-y divide-slate-100 text-slate-700">
                         {cargando ? (
                             <tr>
-                                <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                                <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
                                     <div className="flex items-center justify-center gap-2">
                                         <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
                                         <span>Cargando padrón desde PostgreSQL (Render)...</span>
@@ -291,7 +268,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             </tr>
                         ) : !Array.isArray(parteras) || parteras.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
+                                <td colSpan={5} className="py-8 text-center text-slate-400 font-normal">
                                     No hay parteras registradas en el padrón.
                                 </td>
                             </tr>
@@ -317,14 +294,6 @@ export const TabUsuariosParteras: React.FC = () => {
                                         <div className="font-bold text-slate-800">{p.municipio}</div>
                                         <div className="text-[11px] text-slate-500">{p.comunidad}</div>
                                     </td>
-                                    <td className="py-3.5 px-4">
-                                        <div className="font-bold text-slate-800 truncate max-w-[180px]">{p.centroSaludAdscripcion || 'Centro de Salud'}</div>
-                                        {p.cluesAdscripcion && (
-                                            <span className="text-[10px] font-mono text-[#9D2449] font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                                                {p.cluesAdscripcion}
-                                            </span>
-                                        )}
-                                    </td>
                                     <td className="py-3.5 px-4 text-center">
                                         <span className="bg-amber-100 text-amber-900 font-mono font-black text-xs px-2.5 py-1 rounded-xl inline-flex items-center gap-1 border border-amber-300 shadow-sm">
                                             <Key className="w-3 h-3 text-amber-700" />
@@ -348,45 +317,48 @@ export const TabUsuariosParteras: React.FC = () => {
                 </table>
             </div>
 
-            {/* MODAL REGISTRAR PARTERA ACREDITADA */}
+            {/* MODAL REGISTRAR PARTERA ACREDITADA (REDISEÑO PROFESIONAL CON FECHA Y NACIMIENTO / SIN CLUES) */}
             {showRegisterModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div className="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[92vh]">
 
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-rose-50 rounded-2xl border border-rose-200 text-[#9D2449]">
+                        {/* ENCABEZADO MODAL */}
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <div className="flex items-center gap-3.5">
+                                <div className="p-3 bg-rose-50 rounded-2xl border border-rose-200 text-[#9D2449]">
                                     <Heart className="w-6 h-6 fill-rose-100" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-black text-slate-900">Registrar Nueva Partera Acreditada</h3>
+                                    <h3 className="text-base sm:text-lg font-black text-slate-900">Registrar Nueva Partera Acreditada</h3>
                                     <p className="text-xs text-slate-500 font-medium">Servicios de Salud de Oaxaca • Padrón de Medicina Tradicional</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowRegisterModal(false)}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-2xl transition-colors cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-2xl flex items-start gap-3 text-xs text-amber-900">
+                        <div className="p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-start gap-3.5 text-xs text-amber-900">
                             <ShieldCheck className="w-5 h-5 shrink-0 text-amber-700 mt-0.5" />
                             <div className="space-y-0.5">
-                                <span className="font-extrabold uppercase tracking-wider block text-[10px]">Acreditación Comunitaria e Identidad Intercultural</span>
+                                <span className="font-extrabold uppercase tracking-wider block text-[10px] text-amber-800">Acreditación Comunitaria e Identidad Intercultural</span>
                                 <p className="text-slate-700 font-medium text-[11px]">
-                                    Al guardar el registro, el sistema generará automáticamente la credencial QR oficial lista para imprimir.
+                                    Complete los datos de la partera tradicional. Al guardar, el sistema generará de inmediato su credencial oficial con QR de acceso rápido.
                                 </p>
                             </div>
                         </div>
 
-                        <form onSubmit={handleRegisterPartera} className="space-y-4 text-xs font-semibold">
+                        <form onSubmit={handleRegisterPartera} className="space-y-5 text-xs font-semibold">
 
-                            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
-                                <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
-                                    Identidad de la Partera (Nombres y Apellidos *):
+                            {/* SECCIÓN 1: IDENTIDAD */}
+                            <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 space-y-3.5">
+                                <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block flex items-center gap-1.5">
+                                    <User className="w-3.5 h-3.5" />
+                                    <span>Identidad Oficial (Nombres y Apellidos *)</span>
                                 </span>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <div>
@@ -397,7 +369,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                             placeholder="Ej. María Elena"
                                             value={nombres}
                                             onChange={(e) => setNombres(e.target.value)}
-                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] shadow-sm"
                                         />
                                     </div>
                                     <div>
@@ -408,7 +380,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                             placeholder="Ej. Velasco"
                                             value={apellidoPaterno}
                                             onChange={(e) => setApellidoPaterno(e.target.value)}
-                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] shadow-sm"
                                         />
                                     </div>
                                     <div>
@@ -419,14 +391,16 @@ export const TabUsuariosParteras: React.FC = () => {
                                             placeholder="Ej. Morales"
                                             value={apellidoMaterno}
                                             onChange={(e) => setApellidoMaterno(e.target.value)}
-                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] shadow-sm"
                                         />
                                     </div>
                                 </div>
                             </div>
 
+                            {/* SECCIÓN 2: DATOS DEMOGRÁFICOS Y DE NACIMIENTO (NUEVOS CAMPOS) */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-3.5">
+                                <div className="space-y-4">
+                                    {/* CURP */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
                                             <span>CURP de la Partera *</span>
@@ -441,10 +415,42 @@ export const TabUsuariosParteras: React.FC = () => {
                                             placeholder="VEMA650810MOCMNS09"
                                             value={newCurp}
                                             onChange={(e) => setNewCurp(e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 uppercase font-mono focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 uppercase font-mono focus:outline-none focus:border-[#9D2449] shadow-sm"
                                         />
                                     </div>
 
+                                    {/* FECHA DE NACIMIENTO (NUEVO) */}
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1 flex items-center gap-1.5">
+                                            <Calendar className="w-3.5 h-3.5 text-[#9D2449]" />
+                                            <span>Fecha de Nacimiento *</span>
+                                        </label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={newFechaNacimiento}
+                                            onChange={(e) => setNewFechaNacimiento(e.target.value)}
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] shadow-sm font-medium"
+                                        />
+                                    </div>
+
+                                    {/* SEXO (NUEVO) */}
+                                    <div>
+                                        <label className="block text-slate-800 font-bold mb-1">Sexo *</label>
+                                        <select
+                                            value={newSexo}
+                                            onChange={(e) => setNewSexo(e.target.value)}
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] shadow-sm font-semibold"
+                                        >
+                                            <option value="Femenino">Femenino</option>
+                                            <option value="Masculino">Masculino</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {/* LENGUA MATERNA */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1 flex items-center gap-1.5">
                                             <Languages className="w-3.5 h-3.5 text-[#9D2449]" />
@@ -453,7 +459,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                         <select
                                             value={newLengua}
                                             onChange={(e) => setNewLengua(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-semibold"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] shadow-sm font-semibold"
                                         >
                                             <option value="Zapoteco del Istmo">Zapoteco del Istmo (Diidxazá)</option>
                                             <option value="Ombeayiüts / Huave">Ombeayiüts / Huave (San Mateo / Ikoods)</option>
@@ -463,35 +469,20 @@ export const TabUsuariosParteras: React.FC = () => {
                                         </select>
                                     </div>
 
+                                    {/* MUNICIPIO */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Teléfono / Teléfono de Recaudo</label>
-                                        <div className="relative">
-                                            <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                                            <input
-                                                type="tel"
-                                                maxLength={10}
-                                                placeholder="971 123 4567"
-                                                value={newTelefono}
-                                                onChange={(e) => setNewTelefono(e.target.value.replace(/\D/g, ''))}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449]"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3.5">
-                                    <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Municipio / Localidad * (Texto Libre)</label>
+                                        <label className="block text-slate-800 font-bold mb-1">Municipio / Localidad *</label>
                                         <input
                                             type="text"
                                             required
-                                            placeholder="Escriba el municipio..."
+                                            placeholder="Ej. Juchitán de Zaragoza"
                                             value={newMunicipio}
                                             onChange={(e) => setNewMunicipio(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-semibold"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] shadow-sm font-semibold"
                                         />
                                     </div>
 
+                                    {/* COMUNIDAD / BARRIO */}
                                     <div>
                                         <label className="block text-slate-800 font-bold mb-1">Comunidad / Barrio / Sección</label>
                                         <input
@@ -499,57 +490,61 @@ export const TabUsuariosParteras: React.FC = () => {
                                             placeholder="Ej. Sección Segunda"
                                             value={newComunidad}
                                             onChange={(e) => setNewComunidad(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] shadow-sm"
                                         />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Centro de Salud Adscrito (CLUES) *</label>
-                                        <select
-                                            value={selectedCluesId}
-                                            onChange={(e) => setSelectedCluesId(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] text-xs font-semibold"
-                                        >
-                                            {cluesList.map((unit) => (
-                                                <option key={unit.id} value={unit.id}>
-                                                    {unit.nombre} [{unit.clues}]
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
-                                            <span>PIN Táctil de Acceso (4 Dígitos Numéricos) *</span>
-                                            <button
-                                                type="button"
-                                                onClick={generateRandom4Pin}
-                                                className="text-[10px] text-[#9D2449] hover:underline font-bold"
-                                            >
-                                                Generar PIN
-                                            </button>
-                                        </label>
-                                        <div className="relative">
-                                            <Key className="w-4 h-4 text-amber-600 absolute left-3 top-3" />
-                                            <input
-                                                type="text"
-                                                required
-                                                maxLength={4}
-                                                placeholder="Ej. 4892"
-                                                value={newPin}
-                                                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 font-mono font-black text-sm tracking-widest focus:outline-none focus:border-[#9D2449]"
-                                            />
-                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 pt-3 border-t border-slate-200">
+                            {/* SECCIÓN 3: CONTACTO Y ACCESO */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                                <div>
+                                    <label className="block text-slate-800 font-bold mb-1">Teléfono / Recaudo</label>
+                                    <div className="relative">
+                                        <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                                        <input
+                                            type="tel"
+                                            maxLength={10}
+                                            placeholder="971 123 4567"
+                                            value={newTelefono}
+                                            onChange={(e) => setNewTelefono(e.target.value.replace(/\D/g, ''))}
+                                            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono shadow-sm focus:outline-none focus:border-[#9D2449]"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
+                                        <span>PIN Táctil (4 Dígitos) *</span>
+                                        <button
+                                            type="button"
+                                            onClick={generateRandom4Pin}
+                                            className="text-[10px] text-[#9D2449] hover:underline font-bold cursor-pointer"
+                                        >
+                                            Generar PIN
+                                        </button>
+                                    </label>
+                                    <div className="relative">
+                                        <Key className="w-4 h-4 text-amber-600 absolute left-3 top-3" />
+                                        <input
+                                            type="text"
+                                            required
+                                            maxLength={4}
+                                            placeholder="Ej. 4892"
+                                            value={newPin}
+                                            onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                                            className="w-full pl-9 pr-3 py-2.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 font-mono font-black text-sm tracking-widest shadow-sm focus:outline-none focus:border-[#9D2449]"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* BOTONES DE ACCIÓN */}
+                            <div className="flex gap-3 pt-4 border-t border-slate-200">
                                 <button
                                     type="button"
                                     onClick={() => setShowRegisterModal(false)}
-                                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer"
+                                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer shadow-sm"
                                 >
                                     Cancelar
                                 </button>
@@ -561,7 +556,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin text-white" />
-                                            <span>Guardando y Generando Credencial...</span>
+                                            <span>Guardando y Generando...</span>
                                         </>
                                     ) : (
                                         <>
@@ -576,9 +571,9 @@ export const TabUsuariosParteras: React.FC = () => {
                 </div>
             )}
 
-            {/* CREDENCIAL QR OFICIAL PROFESIONAL INSTITUCIONAL */}
+            {/* CREDENCIAL QR OFICIAL PROFESIONAL INSTITUCIONAL (SIN CLUES) */}
             {selectedParteraQR && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-50 flex items-center justify-center p-4">
                     <div 
                         id="printable-credential"
                         className="bg-white border-2 border-[#9D2449]/30 rounded-3xl p-6 shadow-2xl max-w-sm w-full space-y-4 text-center relative overflow-hidden"
@@ -591,7 +586,7 @@ export const TabUsuariosParteras: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setSelectedParteraQR(null)}
-                            className="absolute right-4 top-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl z-10"
+                            className="absolute right-4 top-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl z-10 cursor-pointer"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -625,37 +620,28 @@ export const TabUsuariosParteras: React.FC = () => {
                         {/* DATOS DE IDENTIDAD DE LA PARTERA */}
                         <div className="space-y-1.5 text-slate-900 relative z-10">
                             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#9D2449] to-[#6E1833] text-white mx-auto flex items-center justify-center font-black text-xl shadow-lg border-2 border-white">
-                                {getInitials(selectedParteraQR.nombreCompleto)}
+                                {getInitials(selectedParteraQR.nombreCompleto || (selectedParteraQR as any).nombre)}
                             </div>
-                            <h4 className="text-base font-black text-slate-900 pt-1 leading-tight">{selectedParteraQR.nombreCompleto}</h4>
+                            <h4 className="text-base font-black text-slate-900 pt-1 leading-tight">
+                                {selectedParteraQR.nombreCompleto || (selectedParteraQR as any).nombre || 'Partera Tradicional Acreditada'}
+                            </h4>
                             <div className="inline-block bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
-                                <span className="text-xs text-slate-700 font-mono font-bold tracking-wide">CURP: {selectedParteraQR.curp}</span>
+                                <span className="text-xs text-slate-700 font-mono font-bold tracking-wide">
+                                    CURP: {selectedParteraQR.curp || 'No registrada'}
+                                </span>
                             </div>
-                            <p className="text-xs font-bold text-[#9D2449]">{selectedParteraQR.municipio} {selectedParteraQR.comunidad ? `• ${selectedParteraQR.comunidad}` : ''}</p>
+                            <p className="text-xs font-bold text-[#9D2449]">
+                                {selectedParteraQR.municipio || 'Juchitán de Zaragoza'} {selectedParteraQR.comunidad ? `• ${selectedParteraQR.comunidad}` : ''}
+                            </p>
                             {selectedParteraQR.lenguaMaterna && (
-                                <p className="text-[11px] text-slate-600 font-medium">Lengua Materna: <strong className="text-slate-800">{selectedParteraQR.lenguaMaterna}</strong></p>
+                                <p className="text-[11px] text-slate-600 font-medium">Lengua: <strong className="text-slate-800">{selectedParteraQR.lenguaMaterna}</strong></p>
                             )}
                         </div>
-
-                        {/* UNIDAD ADSCRITA / CLUES */}
-                        {selectedParteraQR.centroSaludAdscripcion && (
-                            <div className="p-3 bg-rose-50/60 rounded-2xl border border-rose-200 text-left text-xs space-y-1 relative z-10">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-extrabold uppercase text-[#9D2449]">Unidad Médica Adscrita:</span>
-                                    {selectedParteraQR.cluesAdscripcion && (
-                                        <span className="font-mono text-[10px] font-black bg-white px-2 py-0.5 rounded text-slate-800 border border-rose-300">
-                                            {selectedParteraQR.cluesAdscripcion}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="font-bold text-slate-900">{selectedParteraQR.centroSaludAdscripcion}</div>
-                            </div>
-                        )}
 
                         {/* PIN TÁCTIL DE ACCESO */}
                         <div className="bg-gradient-to-r from-amber-50 via-amber-100 to-amber-50 text-amber-950 font-bold px-4 py-2.5 rounded-2xl border border-amber-300 w-fit mx-auto text-xs flex items-center gap-2 shadow-sm relative z-10">
                             <Key className="w-4 h-4 text-amber-700" />
-                            <span>PIN TÁCTIL DE ACCESO: <strong className="font-mono font-black text-sm text-[#9D2449]">{selectedParteraQR.pinCuatroDigitos}</strong></span>
+                            <span>PIN TÁCTIL DE ACCESO: <strong className="font-mono font-black text-sm text-[#9D2449]">{selectedParteraQR.pinCuatroDigitos || (selectedParteraQR as any).pin || '0000'}</strong></span>
                         </div>
 
                         {/* CÓDIGO QR DINÁMICO EXCLUSIVO CON EL PIN (LOGIN RÁPIDO) */}
@@ -663,7 +649,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             <div className="w-32 h-32 mx-auto bg-white border border-slate-300 rounded-xl flex items-center justify-center p-2 shadow-inner">
                                 <img
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                                        selectedParteraQR.pinCuatroDigitos
+                                        selectedParteraQR.pinCuatroDigitos || (selectedParteraQR as any).pin || '0000'
                                     )}`}
                                     alt="Código QR de Acceso Rápido"
                                     className="w-full h-full object-contain"
