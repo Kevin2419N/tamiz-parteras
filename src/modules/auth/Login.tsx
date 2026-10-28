@@ -755,14 +755,14 @@ export function Login() {
 
     const handlePin = useCallback(
         (pin: string) =>
-            authenticate(async () => (await http.post<LoginResponse>('/v1/parteras/login-pin', { pin })).data, 'PIN incorrecto o no registrado.'),
+            authenticate(async () => (await http.post<LoginResponse>('/parteras/login-pin', { pin })).data, 'PIN incorrecto o no registrado.'),
         [authenticate],
     );
 
     const handleQr = useCallback(
         (code: string) =>
             authenticate(
-                async () => (await http.post<LoginResponse>('/v1/parteras/login-pin', { pin: code })).data,
+                async () => (await http.post<LoginResponse>('/parteras/login-pin', { pin: code })).data,
                 'Código QR no reconocido en el sistema.',
             ),
         [authenticate],
