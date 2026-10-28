@@ -147,9 +147,7 @@ export const TabCuentasPersonal: React.FC = () => {
         switch (r) {
             case 'ADMIN_JURISDICCIONAL': return 'Administrador Jurisdiccional';
             case 'CAPTURISTA_TAMIZ': return 'Capturista de Tamiz';
-            case 'GESTOR_PARTERAS': return 'Gestor de Parteras';
             case 'MEDICO_UNIDAD': return 'Médico de Unidad';
-            case 'SUPERVISOR_ZONA': return 'Supervisor de Zona';
             default: return r;
         }
     };
@@ -179,7 +177,7 @@ export const TabCuentasPersonal: React.FC = () => {
                             <span>Cuentas del Personal de Salud (Servidores Públicos SSO)</span>
                         </h2>
                         <p className="text-xs text-slate-500 font-medium mt-0.5">
-                            Gestión de accesos institucionales para médicos, capturistas de tamiz y gestores jurisdiccionales.
+                            Gestión de accesos institucionales para médicos, capturistas de tamiz y administradores jurisdiccionales.
                         </p>
                     </div>
                 </div>
@@ -329,96 +327,101 @@ export const TabCuentasPersonal: React.FC = () => {
                 </table>
             </div>
 
-            {/* MODAL CREAR USUARIO INSTITUTIONAL SSO */}
+            {/* MODAL CREAR USUARIO INSTITUTIONAL SSO (REDESIGN) */}
             {showModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+                    <div className="bg-white border border-slate-200 rounded-[2.5rem] max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[92vh] relative">
 
                         {/* CABECERA DEL MODAL */}
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-rose-50 rounded-2xl border border-rose-200 text-[#9D2449]">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-5">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-gradient-to-br from-[#9D2449] to-[#7A1B38] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-rose-950/20">
                                     <Shield className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-black text-slate-900">Crear Usuario Institucional SSO</h3>
-                                    <p className="text-xs text-slate-500 font-medium">Servicios de Salud de Oaxaca • Alta de Servidor Público</p>
+                                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Alta de Servidor Público SSO</h3>
+                                    <p className="text-xs text-slate-500 font-medium">Servicios de Salud de Oaxaca • Credencialización Institucional</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowModal(false)}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                                className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-2xl transition-all cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {/* BADGE DE SEGURIDAD Y VALIDACIÓN SSO */}
-                        <div className="p-3.5 bg-rose-50/70 border border-rose-200 rounded-2xl flex items-start gap-3 text-xs text-[#9D2449]">
-                            <ShieldCheck className="w-5 h-5 shrink-0 text-[#9D2449] mt-0.5" />
-                            <div className="space-y-0.5">
-                                <span className="font-extrabold uppercase tracking-wider block text-[10px]">Autenticación Institucional Cifrada (256-bit)</span>
-                                <p className="text-slate-700 font-medium text-[11px]">
-                                    El correo institucional se autogenera con el formato <code className="bg-white px-1 py-0.5 rounded border border-rose-200 font-mono text-[#9D2449] font-bold">nombre.apellidopaterno@salud.oaxaca.gob.mx</code>.
+                        <div className="p-4 bg-gradient-to-r from-rose-50/80 via-rose-50/30 to-transparent border border-rose-200/80 rounded-2xl flex items-start gap-3.5 text-xs">
+                            <div className="p-2 bg-rose-100 text-[#9D2449] rounded-xl shrink-0 mt-0.5">
+                                <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1">
+                                <span className="font-extrabold uppercase tracking-wider text-[10px] text-[#9D2449] block">Autenticación Institucional Segura</span>
+                                <p className="text-slate-600 font-medium text-[11px] leading-relaxed">
+                                    El correo institucional se autogenera con el formato oficial <code className="bg-white px-1.5 py-0.5 rounded-lg border border-rose-200 font-mono text-[#9D2449] font-bold shadow-2xs">nombre.apellidopaterno@salud.oaxaca.gob.mx</code>.
                                 </p>
                             </div>
                         </div>
 
-                        {/* FORMULARIO EN LAYOUT DE 2 COLUMNAS */}
-                        <form onSubmit={handleCreateUser} className="space-y-4 text-xs font-semibold">
+                        {/* FORMULARIO */}
+                        <form onSubmit={handleCreateUser} className="space-y-5 text-xs font-semibold">
 
                             {/* NOMBRES DESGLOSADOS EN 3 CAMPOS */}
-                            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
-                                <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
-                                    Datos Personales del Servidor Público (Nombres y Apellidos *):
-                                </span>
+                            <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-black uppercase text-slate-700 tracking-wider">
+                                        Nombres y Apellidos del Personal
+                                    </span>
+                                    <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">Obligatorio</span>
+                                </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Nombre(s) *</label>
+                                        <label className="block text-slate-600 font-bold mb-1 text-[11px]">Nombre(s)</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Ej. Alejandro"
                                             value={nombres}
                                             onChange={(e) => handleNombreChange(e.target.value)}
-                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all font-medium"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Apellido Paterno *</label>
+                                        <label className="block text-slate-600 font-bold mb-1 text-[11px]">Apellido Paterno</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Ej. Gómez"
                                             value={apellidoPaterno}
                                             onChange={(e) => handleApellidoPaternoChange(e.target.value)}
-                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all font-medium"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Apellido Materno *</label>
+                                        <label className="block text-slate-600 font-bold mb-1 text-[11px]">Apellido Materno</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Ej. Ruiz"
                                             value={apellidoMaterno}
                                             onChange={(e) => setApellidoMaterno(e.target.value)}
-                                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all font-medium"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                                 {/* COLUMNA 1 */}
-                                <div className="space-y-3.5">
+                                <div className="space-y-4">
                                     {/* CURP */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
-                                            <span>CURP * (18 Caracteres)</span>
-                                            <span className={`text-[10px] font-mono font-bold ${curp.length === 18 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                        <label className="block text-slate-700 font-bold mb-1.5 flex items-center justify-between text-[11px]">
+                                            <span>CURP (18 Caracteres)</span>
+                                            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${curp.length === 18 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}`}>
                                                 {curp.length}/18
                                             </span>
                                         </label>
@@ -429,86 +432,84 @@ export const TabCuentasPersonal: React.FC = () => {
                                             placeholder="GORA850412HOCMNS02"
                                             value={curp}
                                             onChange={(e) => setCurp(e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono uppercase focus:outline-none focus:border-[#9D2449]"
+                                            className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-300 rounded-xl text-slate-900 font-mono uppercase focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all font-bold tracking-wider"
                                         />
                                     </div>
 
                                     {/* Correo Electrónico Institucional (Autogenerado) */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
-                                            <span>Correo Electrónico Institucional * (Autogenerado)</span>
-                                            <span className="text-[10px] text-emerald-700 font-bold">@salud.oaxaca.gob.mx</span>
+                                        <label className="block text-slate-700 font-bold mb-1.5 flex items-center justify-between text-[11px]">
+                                            <span>Correo Institucional (Autogenerado)</span>
+                                            <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">@salud.oaxaca.gob.mx</span>
                                         </label>
                                         <div className="relative">
-                                            <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                                            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                                             <input
                                                 type="email"
                                                 required
                                                 placeholder="alejandro.gomez@salud.oaxaca.gob.mx"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-emerald-50/60 border border-emerald-300 rounded-xl text-slate-900 font-mono font-bold focus:outline-none focus:border-[#9D2449]"
+                                                className="w-full pl-10 pr-3.5 py-2.5 bg-emerald-50/40 border border-emerald-300 rounded-xl text-slate-900 font-mono font-bold focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-emerald-100 transition-all text-[11px]"
                                             />
                                         </div>
                                     </div>
 
                                     {/* Teléfono de Contacto */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Teléfono de Contacto</label>
+                                        <label className="block text-slate-700 font-bold mb-1.5 text-[11px]">Teléfono de Contacto</label>
                                         <div className="relative">
-                                            <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                                            <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                                             <input
                                                 type="tel"
                                                 maxLength={10}
                                                 placeholder="971 123 4567"
                                                 value={telefono}
                                                 onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ''))}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449]"
+                                                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/80 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all"
                                             />
                                         </div>
                                     </div>
 
                                     {/* Municipio / Localidad */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Municipio / Localidad * (Texto Libre)</label>
+                                        <label className="block text-slate-700 font-bold mb-1.5 text-[11px]">Municipio / Localidad (Texto Libre)</label>
                                         <input
                                             type="text"
                                             placeholder="Escriba el municipio..."
                                             value={municipio}
                                             onChange={(e) => setMunicipio(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-semibold"
+                                            className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all font-semibold"
                                         />
                                     </div>
                                 </div>
 
                                 {/* COLUMNA 2 */}
-                                <div className="space-y-3.5">
-                                    {/* Rol Asignado */}
+                                <div className="space-y-4">
+                                    {/* Rol Asignado (Roles Actualizados sin los obsoletos) */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1">Rol Asignado *</label>
+                                        <label className="block text-slate-700 font-bold mb-1.5 text-[11px]">Rol Asignado en el Sistema *</label>
                                         <select
                                             value={rol}
                                             onChange={(e) => setRol(e.target.value as UsuarioSSO['rol'])}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-semibold"
+                                            className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all font-bold text-xs"
                                         >
                                             <option value="CAPTURISTA_TAMIZ">Capturista de Tamiz Neonatal</option>
                                             <option value="MEDICO_UNIDAD">Médico de Unidad / Hospital</option>
-                                            <option value="SUPERVISOR_ZONA">Supervisor de Zona Epidemiológica</option>
-                                            <option value="GESTOR_PARTERAS">Gestor de Parteras Tradicionales</option>
                                             <option value="ADMIN_JURISDICCIONAL">Administrador Jurisdiccional</option>
                                         </select>
                                     </div>
 
                                     {/* Unidad Médica / CLUES */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
+                                        <label className="block text-slate-700 font-bold mb-1.5 flex items-center justify-between text-[11px]">
                                             <span>Unidad Médica de Adscripción / CLUES *</span>
                                             <Building2 className="w-3.5 h-3.5 text-[#9D2449]" />
                                         </label>
                                         <select
                                             value={selectedCluesId}
                                             onChange={(e) => setSelectedCluesId(e.target.value)}
-                                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] font-medium text-xs"
+                                            className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all font-medium text-xs truncate"
                                         >
                                             {cluesList.map((unit) => (
                                                 <option key={unit.id} value={unit.id}>
@@ -520,30 +521,30 @@ export const TabCuentasPersonal: React.FC = () => {
 
                                     {/* Contraseña Temporal / PIN */}
                                     <div>
-                                        <label className="block text-slate-800 font-bold mb-1 flex items-center justify-between">
-                                            <span>Contraseña Temporal / PIN de Primer Ingreso *</span>
+                                        <label className="block text-slate-700 font-bold mb-1.5 flex items-center justify-between text-[11px]">
+                                            <span>Contraseña Temporal / PIN *</span>
                                             <button
                                                 type="button"
                                                 onClick={generateRandomPin}
-                                                className="text-[10px] text-[#9D2449] hover:underline font-bold"
+                                                className="text-[10px] text-[#9D2449] hover:underline font-extrabold cursor-pointer"
                                             >
                                                 Generar Aleatorio
                                             </button>
                                         </label>
                                         <div className="relative flex items-center">
-                                            <Lock className="w-4 h-4 text-slate-400 absolute left-3" />
+                                            <Lock className="w-4 h-4 text-slate-400 absolute left-3.5" />
                                             <input
                                                 type={showPinText ? 'text' : 'password'}
                                                 required
                                                 placeholder="PIN o Clave de 6 dígitos"
                                                 value={pinTemporal}
                                                 onChange={(e) => setPinTemporal(e.target.value)}
-                                                className="w-full pl-9 pr-16 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-[#9D2449]"
+                                                className="w-full pl-10 pr-16 py-2.5 bg-slate-50/80 border border-slate-300 rounded-xl text-slate-900 font-mono font-bold focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-rose-100 transition-all"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPinText(!showPinText)}
-                                                className="absolute right-3 text-[10px] font-black text-slate-500 hover:text-slate-800 uppercase"
+                                                className="absolute right-3 text-[10px] font-black text-slate-500 hover:text-slate-800 uppercase cursor-pointer"
                                             >
                                                 {showPinText ? 'Ocultar' : 'Ver'}
                                             </button>
@@ -555,10 +556,10 @@ export const TabCuentasPersonal: React.FC = () => {
                                         const currentUnit = cluesList.find((u) => u.id === selectedCluesId);
                                         if (!currentUnit) return null;
                                         return (
-                                            <div className="p-3 bg-slate-100/80 rounded-2xl border border-slate-200 space-y-1 text-[11px]">
+                                            <div className="p-3.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 space-y-1 text-[11px]">
                                                 <div className="flex justify-between font-bold text-slate-800">
                                                     <span>Clave CLUES Configurada:</span>
-                                                    <span className="font-mono text-[#9D2449] bg-white px-2 py-0.5 rounded border border-rose-200">
+                                                    <span className="font-mono text-[#9D2449] bg-white px-2 py-0.5 rounded-lg border border-rose-200 shadow-2xs font-extrabold">
                                                         {currentUnit.clues}
                                                     </span>
                                                 </div>
@@ -573,18 +574,18 @@ export const TabCuentasPersonal: React.FC = () => {
                             </div>
 
                             {/* BOTONES DE ACCIÓN DEL MODAL */}
-                            <div className="flex gap-3 pt-3 border-t border-slate-200">
+                            <div className="flex gap-3 pt-4 border-t border-slate-100">
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
-                                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer"
+                                    className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all cursor-pointer text-xs"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60"
+                                    className="flex-1 py-3.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-2xl shadow-lg shadow-rose-950/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-60 text-xs"
                                 >
                                     {isSubmitting ? (
                                         <>
