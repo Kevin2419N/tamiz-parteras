@@ -89,7 +89,15 @@ export const TabUsuariosParteras: React.FC = () => {
 
         try {
             const response = await http.post('/admin/parteras', payload);
-            const creada: ParteraCredencial = response.data?.partera || response.data?.data || payload;
+            const datosServidor = response.data?.partera || response.data?.data || {};
+            const pinFinalAsignado = datosServidor.pin || datosServidor.pinCuatroDigitos || pinGenerado;
+
+            const creada: ParteraCredencial = {
+                ...payload,
+                ...datosServidor,
+                pinCuatroDigitos: pinFinalAsignado,
+                pin: pinFinalAsignado
+            };
 
             setParteras((prev) => [creada, ...(Array.isArray(prev) ? prev : [])]);
             
@@ -213,7 +221,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                 </div>
                                 <div className="bg-amber-50 text-amber-900 font-mono font-black text-xs px-2.5 py-1 rounded-xl flex items-center gap-1 border border-amber-200 shrink-0">
                                     <Key className="w-3 h-3 text-amber-600" />
-                                    <span>PIN: {p.pinCuatroDigitos}</span>
+                                    <span>PIN: {p.pinCuatroDigitos || (p as any).pin}</span>
                                 </div>
                             </div>
 
@@ -298,7 +306,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                     <td className="py-4 px-5 text-center">
                                         <span className="bg-amber-50 text-amber-900 font-mono font-black text-xs px-3 py-1.5 rounded-xl inline-flex items-center gap-1 border border-amber-200/80 shadow-xs">
                                             <Key className="w-3.5 h-3.5 text-amber-600" />
-                                            <span>{p.pinCuatroDigitos}</span>
+                                            <span>{p.pinCuatroDigitos || (p as any).pin}</span>
                                         </span>
                                     </td>
                                     <td className="py-4 px-5 text-right">
@@ -604,14 +612,14 @@ export const TabUsuariosParteras: React.FC = () => {
 
                         <div className="bg-gradient-to-r from-amber-50 via-amber-100/60 to-amber-50 text-amber-950 font-bold px-4 py-2.5 rounded-2xl border border-amber-300 w-fit mx-auto text-xs flex items-center gap-2 shadow-2xs relative z-10">
                             <Key className="w-4 h-4 text-amber-700" />
-                            <span>PIN TÁCTIL DE ACCESO: <strong className="font-mono font-black text-sm text-[#9D2449]">{selectedParteraQR.pinCuatroDigitos || '0000'}</strong></span>
+                            <span>PIN TÁCTIL DE ACCESO: <strong className="font-mono font-black text-sm text-[#9D2449]">{selectedParteraQR.pinCuatroDigitos || (selectedParteraQR as any).pin || '0000'}</strong></span>
                         </div>
 
                         <div className="bg-slate-50 p-3.5 rounded-2.5xl border border-slate-200/80 max-w-[170px] mx-auto shadow-2xs relative z-10">
                             <div className="w-32 h-32 mx-auto bg-white border border-slate-200 rounded-2xl flex items-center justify-center p-2 shadow-inner">
                                 <img
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                                        selectedParteraQR.pinCuatroDigitos || '0000'
+                                        selectedParteraQR.pinCuatroDigitos || (selectedParteraQR as any).pin || '0000'
                                     )}`}
                                     alt="Código QR de Acceso Rápido"
                                     className="w-full h-full object-contain"
