@@ -20,13 +20,13 @@ export const TabCuentasPersonal: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Carga oficial de usuarios desde PostgreSQL (Render)
+    // Carga oficial de usuarios desde PostgreSQL (Render) -> Ruta sincronizada a /admin/usuarios-sso
     useEffect(() => {
         const cargarUsuarios = async () => {
             setCargando(true);
             setErrorMessage(null);
             try {
-                const response = await http.get('/admin/usuarios');
+                const response = await http.get('/admin/usuarios-sso');
                 if (response.data) {
                     setUsuarios(response.data);
                 }
@@ -107,12 +107,15 @@ export const TabCuentasPersonal: React.FC = () => {
         const nombreCompleto = `${nombres.trim()} ${apellidoPaterno.trim()} ${apellidoMaterno.trim()}`.trim();
 
         const payload = {
-            nombre: nombreCompleto,
+            nombre: nombres.trim(),
+            apellidoPaterno: apellidoPaterno.trim(),
+            apellidoMaterno: apellidoMaterno.trim(),
             curp: curp.toUpperCase(),
-            email: email.toLowerCase(),
+            correoInstitucional: email.toLowerCase(),
             telefono,
             municipio: municipio.trim() || foundUnit?.municipio || 'Juchitán de Zaragoza',
             rol,
+            unidadMedicaId: foundUnit ? foundUnit.id : null,
             unidadAsignada: foundUnit ? `${foundUnit.nombre} (${foundUnit.clues})` : 'Unidad Médica SSO',
             clues: foundUnit?.clues || 'OASSA000000',
             pinTemporal: pinTemporal || '123456',
@@ -120,7 +123,8 @@ export const TabCuentasPersonal: React.FC = () => {
         };
 
         try {
-            const response = await http.post('/admin/usuarios', payload);
+            // Ruta oficial unificada en /admin/usuarios-sso
+            const response = await http.post('/admin/usuarios-sso', payload);
             const newUser: UsuarioSSO = response.data.usuario || response.data;
 
             setUsuarios([newUser, ...usuarios]);
