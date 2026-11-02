@@ -55,7 +55,7 @@ export const TabUsuariosParteras: React.FC = () => {
     const [newPin, setNewPin] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Estado para la nueva Ventana Central de Confirmación de Éxito
+    // Estado para la Ventana Central de Confirmación de Éxito
     const [successModalData, setSuccessModalData] = useState<ParteraCredencial | null>(null);
 
     // Modal para Ver y Generar Credencial QR
@@ -105,7 +105,7 @@ export const TabUsuariosParteras: React.FC = () => {
             setParteras((prev) => [creada, ...(Array.isArray(prev) ? prev : [])]);
             
             setShowRegisterModal(false);
-            setSuccessModalData(creada); // Muestra la ventana central de éxito con estilo Pro
+            setSuccessModalData(creada);
 
             setNombres('');
             setApellidoPaterno('');
@@ -134,7 +134,6 @@ export const TabUsuariosParteras: React.FC = () => {
     return (
         <div className="space-y-6 text-white">
 
-            {/* ESTILOS CSS AVANZADOS Y ANIMACIONES */}
             <style dangerouslySetInnerHTML={{ __html: `
                 @keyframes lgFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
                 @keyframes lgModal{from{opacity:0;transform:scale(0.95) translateY(20px)}to{opacity:1;transform:none}}
@@ -142,6 +141,8 @@ export const TabUsuariosParteras: React.FC = () => {
                 .lg-fade{animation:lgFade .35s ease both}
                 .lg-modal{animation:lgModal .4s cubic-bezier(0.16,1,0.3,1) both}
                 .lg-pop{animation:lgPop .45s cubic-bezier(0.34,1.56,0.64,1) both}
+                .lg-quiet{scrollbar-width:none}
+                .lg-quiet::-webkit-scrollbar{display:none}
                 @media print {
                     body * { visibility: hidden; }
                     #printable-credential, #printable-credential * { visibility: visible; }
@@ -183,7 +184,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 </button>
             </div>
 
-            {/* MENSAJE DE ERROR SI FALLA LA API */}
+            {/* MENSAJE DE ERROR */}
             {errorMessage && (
                 <div className="p-4 bg-rose-950/60 border border-rose-300/40 rounded-2xl flex items-center gap-3 text-rose-100 text-xs font-bold backdrop-blur-md">
                     <AlertCircle className="w-5 h-5 text-rose-300 shrink-0" />
@@ -327,228 +328,232 @@ export const TabUsuariosParteras: React.FC = () => {
                 </table>
             </div>
 
-            {/* MODAL REGISTRAR PARTERA ACREDITADA (GLASSMORPHISM AVANZADO) */}
+            {/* MODAL REGISTRAR PARTERA (DISEÑO PRO Y LIMPIO SIN DOBLE SCROLL) */}
             {showRegisterModal && (
-                <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-slate-900/90 border border-white/40 rounded-[32px] max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl shadow-slate-950/80 backdrop-blur-3xl overflow-y-auto max-h-[92vh] lg-modal">
+                <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-hidden">
+                    <div className="bg-slate-900/95 border border-white/40 rounded-[32px] max-w-2xl w-full p-5 sm:p-7 space-y-5 shadow-2xl shadow-slate-950/90 backdrop-blur-3xl max-h-[90vh] flex flex-col lg-modal">
 
-                        {/* ENCABEZADO MODAL */}
-                        <div className="flex items-center justify-between border-b border-white/20 pb-5">
-                            <div className="flex items-center gap-3.5">
-                                <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-300/40 text-cyan-300 backdrop-blur-md">
-                                    <Heart className="w-6 h-6 fill-cyan-400/20" />
+                        {/* ENCABEZADO FIJO */}
+                        <div className="flex items-center justify-between border-b border-white/20 pb-4 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-cyan-500/20 rounded-2xl border border-cyan-300/40 text-cyan-300 backdrop-blur-md">
+                                    <Heart className="w-5 h-5 fill-cyan-400/20" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base sm:text-lg font-black text-white tracking-tight">Registrar Nueva Partera Acreditada</h3>
-                                    <p className="text-xs text-cyan-100/80 font-medium">Servicios de Salud de Oaxaca • Padrón de Medicina Tradicional</p>
+                                    <h3 className="text-sm sm:text-base font-black text-white tracking-tight">Registrar Nueva Partera Acreditada</h3>
+                                    <p className="text-[11px] text-cyan-100/80 font-medium">Servicios de Salud de Oaxaca • Padrón de Medicina Tradicional</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowRegisterModal(false)}
-                                className="p-2.5 text-cyan-200/70 hover:text-white hover:bg-white/10 rounded-2xl transition-colors cursor-pointer"
+                                className="p-2 text-cyan-200/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="p-4 bg-cyan-500/10 border border-cyan-300/30 rounded-2xl flex items-start gap-3.5 text-xs text-cyan-100 backdrop-blur-md">
-                            <ShieldCheck className="w-5 h-5 shrink-0 text-cyan-300 mt-0.5" />
-                            <div className="space-y-0.5">
-                                <span className="font-extrabold uppercase tracking-wider block text-[10px] text-cyan-200">Acreditación Comunitaria e Identidad Intercultural</span>
-                                <p className="text-cyan-50/90 font-medium text-[11px]">
-                                    Complete los datos oficiales. Al guardar, el sistema generará de inmediato su credencial con código QR de acceso seguro.
-                                </p>
+                        {/* CUERPO CON SCROLL ÚNICO */}
+                        <div className="overflow-y-auto lg-quiet space-y-4 pr-1">
+                            <div className="p-3.5 bg-cyan-500/10 border border-cyan-300/30 rounded-2xl flex items-start gap-3 text-xs text-cyan-100 backdrop-blur-md">
+                                <ShieldCheck className="w-5 h-5 shrink-0 text-cyan-300 mt-0.5" />
+                                <div>
+                                    <span className="font-extrabold uppercase tracking-wider block text-[10px] text-cyan-200">Acreditación Comunitaria e Identidad Intercultural</span>
+                                    <p className="text-cyan-50/90 font-medium text-[11px]">
+                                        Complete los datos oficiales. Al guardar, el sistema generará de inmediato su credencial con código QR de acceso seguro.
+                                    </p>
+                                </div>
                             </div>
+
+                            <form id="partera-form" onSubmit={handleRegisterPartera} className="space-y-4 text-xs font-semibold">
+
+                                {/* SECCIÓN 1: IDENTIDAD */}
+                                <div className="bg-white/5 p-3.5 rounded-2xl border border-white/10 space-y-3 backdrop-blur-md">
+                                    <span className="text-[10px] font-black uppercase text-cyan-300 tracking-wider block flex items-center gap-1.5">
+                                        <User className="w-3.5 h-3.5" />
+                                        <span>Identidad Oficial (Nombres y Apellidos *)</span>
+                                    </span>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        <div>
+                                            <label className="block text-cyan-100 font-bold mb-1">Nombre(s) *</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Ej. María Elena"
+                                                value={nombres}
+                                                onChange={(e) => setNombres(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-cyan-100 font-bold mb-1">Apellido Paterno *</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Ej. Velasco"
+                                                value={apellidoPaterno}
+                                                onChange={(e) => setApellidoPaterno(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-cyan-100 font-bold mb-1">Apellido Materno *</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Ej. Morales"
+                                                value={apellidoMaterno}
+                                                onChange={(e) => setApellidoMaterno(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* SECCIÓN 2: DATOS DEMOGRÁFICOS */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div className="space-y-3.5">
+                                        <div>
+                                            <label className="block text-cyan-100 font-bold mb-1 flex items-center justify-between">
+                                                <span>CURP de la Partera *</span>
+                                                <span className={`text-[10px] font-mono font-bold ${newCurp.length === 18 ? 'text-emerald-300' : 'text-cyan-200/60'}`}>
+                                                    {newCurp.length}/18
+                                                </span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                maxLength={18}
+                                                placeholder="VEMA650810MOCMNS09"
+                                                value={newCurp}
+                                                onChange={(e) => setNewCurp(e.target.value.toUpperCase())}
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white uppercase font-mono placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-cyan-100 font-bold mb-1 flex items-center gap-1.5">
+                                                <Languages className="w-3.5 h-3.5 text-cyan-300" />
+                                                <span>Lengua Materna *</span>
+                                            </label>
+                                            <select
+                                                value={newLengua}
+                                                onChange={(e) => setNewLengua(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-950 border border-white/30 rounded-xl text-white focus:outline-none focus:border-cyan-300 font-semibold"
+                                            >
+                                                <option value="Zapoteco del Istmo">Zapoteco del Istmo (Diidxazá)</option>
+                                                <option value="Ombeayiüts / Huave">Ombeayiüts / Huave (San Mateo / Ikoods)</option>
+                                                <option value="Mixe">Mixe (Ayuuk)</option>
+                                                <option value="Zoque">Zoque (Angpøiny)</option>
+                                                <option value="Español">Español</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3.5">
+                                        <div>
+                                            <label className="block text-cyan-100 font-bold mb-1">Municipio / Localidad *</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Ej. Juchitán de Zaragoza"
+                                                value={newMunicipio}
+                                                onChange={(e) => setNewMunicipio(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-semibold"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-cyan-100 font-bold mb-1">Comunidad / Barrio / Sección</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ej. Sección Segunda"
+                                                value={newComunidad}
+                                                onChange={(e) => setNewComunidad(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* SECCIÓN 3: CONTACTO Y ACCESO */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3 border-t border-white/20">
+                                    <div>
+                                        <label className="block text-cyan-100 font-bold mb-1">Teléfono / Recaudo</label>
+                                        <div className="relative">
+                                            <Phone className="w-4 h-4 text-cyan-300 absolute left-3.5 top-3" />
+                                            <input
+                                                type="tel"
+                                                maxLength={10}
+                                                placeholder="971 123 4567"
+                                                value={newTelefono}
+                                                onChange={(e) => setNewTelefono(e.target.value.replace(/\D/g, ''))}
+                                                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white font-mono placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-300 font-medium"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-cyan-100 font-bold mb-1 flex items-center justify-between">
+                                            <span>PIN Táctil (4 Dígitos) *</span>
+                                            <button
+                                                type="button"
+                                                onClick={generateRandom4Pin}
+                                                className="text-[10px] text-cyan-300 hover:underline font-bold cursor-pointer"
+                                            >
+                                                Generar PIN
+                                            </button>
+                                        </label>
+                                        <div className="relative">
+                                            <Key className="w-4 h-4 text-amber-300 absolute left-3.5 top-3" />
+                                            <input
+                                                type="text"
+                                                required
+                                                maxLength={4}
+                                                placeholder="Ej. 4892"
+                                                value={newPin}
+                                                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                                                className="w-full pl-10 pr-3.5 py-2.5 bg-amber-500/20 border border-amber-300/50 rounded-xl text-amber-100 font-mono font-black text-sm tracking-widest focus:outline-none focus:border-cyan-300"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
 
-                        <form onSubmit={handleRegisterPartera} className="space-y-5 text-xs font-semibold">
-
-                            {/* SECCIÓN 1: IDENTIDAD */}
-                            <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-3.5 backdrop-blur-md">
-                                <span className="text-[10px] font-black uppercase text-cyan-300 tracking-wider block flex items-center gap-1.5">
-                                    <User className="w-3.5 h-3.5" />
-                                    <span>Identidad Oficial (Nombres y Apellidos *)</span>
-                                </span>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="block text-cyan-100 font-bold mb-1.5">Nombre(s) *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="Ej. María Elena"
-                                            value={nombres}
-                                            onChange={(e) => setNombres(e.target.value)}
-                                            className="w-full px-3.5 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-cyan-100 font-bold mb-1.5">Apellido Paterno *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="Ej. Velasco"
-                                            value={apellidoPaterno}
-                                            onChange={(e) => setApellidoPaterno(e.target.value)}
-                                            className="w-full px-3.5 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-cyan-100 font-bold mb-1.5">Apellido Materno *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="Ej. Morales"
-                                            value={apellidoMaterno}
-                                            onChange={(e) => setApellidoMaterno(e.target.value)}
-                                            className="w-full px-3.5 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* SECCIÓN 2: DATOS DEMOGRÁFICOS */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-cyan-100 font-bold mb-1.5 flex items-center justify-between">
-                                            <span>CURP de la Partera *</span>
-                                            <span className={`text-[10px] font-mono font-bold ${newCurp.length === 18 ? 'text-emerald-300' : 'text-cyan-200/60'}`}>
-                                                {newCurp.length}/18
-                                            </span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            maxLength={18}
-                                            placeholder="VEMA650810MOCMNS09"
-                                            value={newCurp}
-                                            onChange={(e) => setNewCurp(e.target.value.toUpperCase())}
-                                            className="w-full px-3.5 py-3 bg-white/10 border border-white/30 rounded-xl text-white uppercase font-mono placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-cyan-100 font-bold mb-1.5 flex items-center gap-1.5">
-                                            <Languages className="w-3.5 h-3.5 text-cyan-300" />
-                                            <span>Lengua Materna *</span>
-                                        </label>
-                                        <select
-                                            value={newLengua}
-                                            onChange={(e) => setNewLengua(e.target.value)}
-                                            className="w-full px-3.5 py-3 bg-slate-900 border border-white/30 rounded-xl text-white focus:outline-none focus:border-cyan-300 font-semibold"
-                                        >
-                                            <option value="Zapoteco del Istmo" className="bg-slate-900">Zapoteco del Istmo (Diidxazá)</option>
-                                            <option value="Ombeayiüts / Huave" className="bg-slate-900">Ombeayiüts / Huave (San Mateo / Ikoods)</option>
-                                            <option value="Mixe" className="bg-slate-900">Mixe (Ayuuk)</option>
-                                            <option value="Zoque" className="bg-slate-900">Zoque (Angpøiny)</option>
-                                            <option value="Español" className="bg-slate-900">Español</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-cyan-100 font-bold mb-1.5">Municipio / Localidad *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="Ej. Juchitán de Zaragoza"
-                                            value={newMunicipio}
-                                            onChange={(e) => setNewMunicipio(e.target.value)}
-                                            className="w-full px-3.5 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-semibold"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-cyan-100 font-bold mb-1.5">Comunidad / Barrio / Sección</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Ej. Sección Segunda"
-                                            value={newComunidad}
-                                            onChange={(e) => setNewComunidad(e.target.value)}
-                                            className="w-full px-3.5 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30 font-medium"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* SECCIÓN 3: CONTACTO Y ACCESO */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/20">
-                                <div>
-                                    <label className="block text-cyan-100 font-bold mb-1.5">Teléfono / Recaudo</label>
-                                    <div className="relative">
-                                        <Phone className="w-4 h-4 text-cyan-300 absolute left-3.5 top-3.5" />
-                                        <input
-                                            type="tel"
-                                            maxLength={10}
-                                            placeholder="971 123 4567"
-                                            value={newTelefono}
-                                            onChange={(e) => setNewTelefono(e.target.value.replace(/\D/g, ''))}
-                                            className="w-full pl-10 pr-3.5 py-3 bg-white/10 border border-white/30 rounded-xl text-white font-mono placeholder:text-white/40 focus:outline-none focus:border-cyan-300 font-medium"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-cyan-100 font-bold mb-1.5 flex items-center justify-between">
-                                        <span>PIN Táctil (4 Dígitos) *</span>
-                                        <button
-                                            type="button"
-                                            onClick={generateRandom4Pin}
-                                            className="text-[10px] text-cyan-300 hover:underline font-bold cursor-pointer"
-                                        >
-                                            Generar PIN
-                                        </button>
-                                    </label>
-                                    <div className="relative">
-                                        <Key className="w-4 h-4 text-amber-300 absolute left-3.5 top-3.5" />
-                                        <input
-                                            type="text"
-                                            required
-                                            maxLength={4}
-                                            placeholder="Ej. 4892"
-                                            value={newPin}
-                                            onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                                            className="w-full pl-10 pr-3.5 py-3 bg-amber-500/20 border border-amber-300/50 rounded-xl text-amber-100 font-mono font-black text-sm tracking-widest focus:outline-none focus:border-cyan-300"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* BOTONES DE ACCIÓN */}
-                            <div className="flex gap-3 pt-5 border-t border-white/20">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowRegisterModal(false)}
-                                    className="flex-1 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl transition-colors cursor-pointer border border-white/20"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="flex-1 py-3.5 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold rounded-2xl shadow-lg shadow-cyan-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60 border border-white/40"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin text-white" />
-                                            <span>Guardando y Generando...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <UserCheck className="w-4 h-4 text-cyan-200" />
-                                            <span>Guardar y Ver Credencial QR</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
+                        {/* PIE DE MODAL FIJO CON BOTONES */}
+                        <div className="flex gap-3 pt-3 border-t border-white/25 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setShowRegisterModal(false)}
+                                className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors cursor-pointer border border-white/20 text-xs"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                form="partera-form"
+                                disabled={isSubmitting}
+                                className="flex-1 py-3 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold rounded-xl shadow-lg shadow-cyan-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60 border border-white/40 text-xs"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                                        <span>Guardando...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <UserCheck className="w-4 h-4 text-cyan-200" />
+                                        <span>Guardar y Ver Credencial QR</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* 🌟 NUEVA VENTANA CENTRAL DE CONFIRMACIÓN DE ÉXITO (MODAL PRO) */}
+            {/* VENTANA CENTRAL DE CONFIRMACIÓN DE ÉXITO */}
             {successModalData && (
                 <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
                     <div className="bg-slate-900 border border-cyan-400/50 rounded-[32px] max-w-md w-full p-6 sm:p-8 space-y-5 shadow-[0_0_50px_rgba(34,211,238,0.25)] text-center relative overflow-hidden lg-pop">
