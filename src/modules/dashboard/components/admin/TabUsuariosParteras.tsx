@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Phone, Key, QrCode, UserCheck, Printer, CheckCircle2, Loader2, AlertCircle, User, Sparkles } from 'lucide-react';
+import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Key, QrCode, UserCheck, Printer, CheckCircle2, Loader2, AlertCircle, User, Sparkles, Phone as PhoneIcon } from 'lucide-react';
 import type { ParteraCredencial } from './types';
 import { http } from '../../../../services/http';
 
@@ -475,7 +475,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                     <div>
                                         <label className="block text-rose-100 font-bold mb-1">Teléfono / Recaudo</label>
                                         <div className="relative">
-                                            <Phone className="w-4 h-4 text-rose-400 absolute left-3.5 top-3" />
+                                            <PhoneIcon className="w-4 h-4 text-rose-400 absolute left-3.5 top-3" />
                                             <input
                                                 type="tel"
                                                 maxLength={10}
@@ -611,7 +611,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 </div>
             )}
 
-            {/* CREDENCIAL OFICIAL DOBLE CARA (FRENTE Y REVERSO EN TONO GUINDA CON istmo.png) */}
+            {/* CREDENCIAL OFICIAL DOBLE CARA CON istmo.png EXTENDIDO A TODO EL ANCHO Y DATOS REALES */}
             {selectedParteraQR && (
                 <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 overflow-y-auto">
                     <div className="bg-slate-900/90 border border-rose-500/50 rounded-[32px] p-5 sm:p-6 shadow-2xl shadow-slate-950/90 max-w-4xl w-full space-y-5 text-center relative backdrop-blur-3xl lg-modal">
@@ -631,19 +631,19 @@ export const TabUsuariosParteras: React.FC = () => {
                         </div>
 
                         {/* CONTENEDOR IMPRIMIBLE DOBLE CARA */}
-                        <div id="printable-credentials" className="grid grid-cols-1 md:grid-cols-2 gap-5 justify-items-center py-2">
+                        <div id="printable-credentials" className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center py-2">
                             
                             {/* --- FRENTE DE LA CREDENCIAL --- */}
-                            <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 w-full max-w-[340px] h-[510px] shadow-xl text-slate-900 relative flex flex-col justify-between overflow-hidden">
+                            <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 w-full max-w-[340px] h-[520px] shadow-2xl text-slate-900 relative flex flex-col justify-between overflow-hidden">
                                 
                                 {/* Encabezado Institucional */}
-                                <div className="flex items-center justify-between border-b-2 border-rose-900/20 pb-2.5">
-                                    <img src="/logo-jurisdiccion.png" alt="Jurisdicción" className="h-8 w-auto object-contain mix-blend-multiply" />
+                                <div className="flex items-center justify-between border-b-2 border-[#9D2449]/20 pb-2">
+                                    <img src="/logo-jurisdiccion.png" alt="Jurisdicción" className="h-7 w-auto object-contain mix-blend-multiply" />
                                     <div className="text-center">
-                                        <span className="text-[9px] font-black uppercase text-[#9D2449] tracking-wider block">SSO OAXACA</span>
-                                        <span className="text-[8px] font-bold text-slate-600 block">JURISDICCIÓN SANITARIA NO. 2</span>
+                                        <span className="text-[8px] font-black uppercase text-[#9D2449] tracking-wider block">SSO OAXACA</span>
+                                        <span className="text-[7px] font-bold text-slate-600 block">JURISDICCIÓN SANITARIA NO. 2</span>
                                     </div>
-                                    <img src="/Logo-Secretaria.png" alt="Secretaría" className="h-8 w-auto object-contain mix-blend-multiply" />
+                                    <img src="/Logo-Secretaria.png" alt="Secretaría" className="h-7 w-auto object-contain mix-blend-multiply" />
                                 </div>
 
                                 <div className="bg-[#9D2449] text-white py-1.5 px-2 rounded-xl shadow-xs border border-rose-900">
@@ -653,13 +653,13 @@ export const TabUsuariosParteras: React.FC = () => {
                                     <span className="text-[8px] font-medium text-rose-200 block">Medicina Tradicional e Interculturalidad</span>
                                 </div>
 
-                                {/* Datos de la Partera */}
-                                <div className="space-y-2 relative z-10 my-auto">
+                                {/* Datos de la Partera (Datos Reales Dinámicos) */}
+                                <div className="space-y-2 relative z-10 my-auto pb-6">
                                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9D2449] to-[#6E1833] text-white mx-auto flex items-center justify-center font-black text-xl shadow-md border-2 border-white">
                                         {getInitials(selectedParteraQR.nombreCompleto)}
                                     </div>
                                     <h4 className="text-sm font-black text-slate-900 leading-tight pt-0.5">
-                                        {selectedParteraQR.nombreCompleto || 'Partera Tradicional Acreditada'}
+                                        {selectedParteraQR.nombreCompleto || 'Sin nombre'}
                                     </h4>
                                     <div className="inline-block bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">
                                         <span className="text-[11px] text-slate-700 font-mono font-bold tracking-wide">
@@ -674,26 +674,26 @@ export const TabUsuariosParteras: React.FC = () => {
                                     )}
                                 </div>
 
-                                {/* Cintillo Floral Istmeño (Fondo Inferior transparente istmo.png) */}
-                                <div className="absolute bottom-0 inset-x-0 h-24 overflow-hidden pointer-events-none flex justify-center items-end pb-1">
-                                    <img src="/istmo.png" alt="Bordado Istmeño" className="w-full h-auto object-contain opacity-100 max-h-20" />
+                                {/* Cintillo Floral Istmeño (Estirado de esquina a esquina en la parte inferior) */}
+                                <div className="absolute bottom-0 inset-x-0 h-16 pointer-events-none overflow-hidden flex items-end">
+                                    <img src="/istmo.png" alt="Bordado Istmeño" className="w-full h-full object-cover object-bottom" />
                                 </div>
                             </div>
 
                             {/* --- REVERSO DE LA CREDENCIAL --- */}
-                            <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 w-full max-w-[340px] h-[510px] shadow-xl text-slate-900 relative flex flex-col justify-between overflow-hidden">
+                            <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 w-full max-w-[340px] h-[520px] shadow-2xl text-slate-900 relative flex flex-col justify-between overflow-hidden">
                                 
                                 <div className="text-center pt-1">
                                     <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block">ÁREA DE AUTENTICACIÓN DIGITAL</span>
                                 </div>
 
-                                <div className="bg-amber-100/80 text-amber-950 font-bold px-3 py-1.5 rounded-xl border border-amber-300 mx-auto text-xs flex items-center gap-1.5 shadow-2xs">
+                                <div className="bg-amber-100/90 text-amber-950 font-bold px-3 py-1.5 rounded-xl border border-amber-300 mx-auto text-xs flex items-center gap-1.5 shadow-2xs">
                                     <Key className="w-3.5 h-3.5 text-amber-700" />
                                     <span>PIN TÁCTIL: <strong className="font-mono font-black text-sm text-[#9D2449]">{selectedParteraQR.pinCuatroDigitos || (selectedParteraQR as any).pin || '0000'}</strong></span>
                                 </div>
 
-                                <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 max-w-[150px] mx-auto shadow-2xs my-auto">
-                                    <div className="w-28 h-28 mx-auto bg-white border border-slate-200 rounded-xl flex items-center justify-center p-1.5 shadow-inner">
+                                <div className="bg-slate-50 p-2 rounded-2xl border border-slate-200/80 max-w-[140px] mx-auto shadow-2xs my-auto">
+                                    <div className="w-24 h-24 mx-auto bg-white border border-slate-200 rounded-xl flex items-center justify-center p-1 shadow-inner">
                                         <img
                                             src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
                                                 selectedParteraQR.pinCuatroDigitos || (selectedParteraQR as any).pin || '0000'
@@ -702,7 +702,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                             className="w-full h-full object-contain"
                                         />
                                     </div>
-                                    <span className="text-[9px] text-slate-500 font-mono mt-1.5 block font-extrabold uppercase">Escanear para Login</span>
+                                    <span className="text-[8px] text-slate-500 font-mono mt-1 block font-extrabold uppercase">Escanear para Login</span>
                                 </div>
 
                                 <div className="flex items-center justify-center gap-1 text-[10px] text-emerald-800 font-extrabold pb-6">
@@ -710,9 +710,9 @@ export const TabUsuariosParteras: React.FC = () => {
                                     <span>Credencial Oficial Verificada • SSO</span>
                                 </div>
 
-                                {/* Cintillo Floral Istmeño (Fondo Inferior Reverso transparente istmo.png) */}
-                                <div className="absolute bottom-0 inset-x-0 h-24 overflow-hidden pointer-events-none flex justify-center items-end pb-1">
-                                    <img src="/istmo.png" alt="Bordado Istmeño" className="w-full h-auto object-contain opacity-100 max-h-20" />
+                                {/* Cintillo Floral Istmeño (Estirado de esquina a esquina en la parte inferior) */}
+                                <div className="absolute bottom-0 inset-x-0 h-16 pointer-events-none overflow-hidden flex items-end">
+                                    <img src="/istmo.png" alt="Bordado Istmeño" className="w-full h-full object-cover object-bottom" />
                                 </div>
                             </div>
 
