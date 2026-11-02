@@ -36,7 +36,7 @@ interface AdminDashboardProps {
 
 export type TabType = 'TAMIZ' | 'REFERENCIAS' | 'CALENDARIOS' | 'PARTERAS' | 'CUENTAS' | 'CLUES' | 'CONFIGURACION';
 
-/* Estilos de UI/UX Homologados y Glassmorphism Avanzado */
+/* Estilos de UI/UX Avanzados y Animaciones Nativas */
 const ACCENT = 'bg-gradient-to-r from-cyan-400 to-blue-600';
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-0';
 const GLASS = 'lg-edge relative border border-white/40 bg-slate-900/35 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.6)] backdrop-blur-3xl';
@@ -44,16 +44,16 @@ const PRIMARY_BTN = `lg-sheen group relative flex items-center justify-center ga
 const SECONDARY_BTN = `flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all duration-200 hover:border-white/50 hover:bg-white/20 active:scale-[0.98] ${FOCUS}`;
 
 const DASHBOARD_CSS = `
-@keyframes lgFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@keyframes lgCard{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
-@keyframes lgFloatA{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(4%,6%,0)}}
-@keyframes lgFloatB{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-5%,-4%,0)}}
+@keyframes lgFade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes lgCard{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes lgFloatA{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(5%,7%,0)}}
+@keyframes lgFloatB{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-6%,-5%,0)}}
 @keyframes lgSheen{from{transform:translateX(-160%) skewX(-15deg)}to{transform:translateX(420%) skewX(-15deg)}}
-@keyframes lgHalo{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.7);opacity:0}}
-.lg-fade{animation:lgFade .35s cubic-bezier(0.16,1,0.3,1) both}
-.lg-card{animation:lgCard .6s cubic-bezier(.22,1,.36,1) both}
-.lg-float-a{animation:lgFloatA 22s ease-in-out infinite}
-.lg-float-b{animation:lgFloatB 28s ease-in-out infinite}
+@keyframes lgHalo{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.75);opacity:0}}
+.lg-fade{animation:lgFade .4s cubic-bezier(0.16,1,0.3,1) both}
+.lg-card{animation:lgCard .65s cubic-bezier(.22,1,.36,1) both}
+.lg-float-a{animation:lgFloatA 20s ease-in-out infinite}
+.lg-float-b{animation:lgFloatB 26s ease-in-out infinite}
 .lg-halo{animation:lgHalo 2.2s ease-out infinite}
 .lg-text{text-shadow:0 1px 3px rgba(15,23,42,.4)}
 .lg-quiet{scrollbar-width:none}
@@ -82,8 +82,8 @@ function NavItem({ active, icon, label, badge, onClick }: NavItemProps) {
             onClick={onClick}
             className={`group relative flex w-full items-center justify-between gap-3 rounded-2xl px-3.5 py-3 text-xs font-bold transition-all duration-300 cursor-pointer active:scale-[0.98] ${FOCUS} ${
                 active
-                    ? `${ACCENT} text-white shadow-lg shadow-cyan-950/50 ring-1 ring-white/50`
-                    : 'bg-white/5 text-white/80 hover:bg-white/15 hover:text-white border border-white/10'
+                    ? `${ACCENT} text-white shadow-lg shadow-cyan-950/50 ring-1 ring-white/50 translate-x-1`
+                    : 'bg-white/5 text-white/80 hover:bg-white/15 hover:text-white border border-white/10 hover:translate-x-1'
             }`}
         >
             <div className="flex items-center gap-3 min-w-0">
@@ -133,26 +133,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="lg-text min-h-screen w-full overflow-x-hidden p-3 text-white selection:bg-cyan-300/40 sm:p-6">
             <style>{DASHBOARD_CSS}</style>
 
-            {/* Fondo Inmersivo unificado con el Login (Imagen + Nebulosas) */}
+            {/* Fondo Inmersivo Absoluto (Fondo-login.png + Gradiente + Nebulosas Animadas) */}
             <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950">
                 <img
                     src="/fondo-login.png"
                     alt=""
                     draggable={false}
-                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                    className="absolute inset-0 size-full object-cover object-center opacity-85 brightness-105 contrast-105 blur-md"
+                    className="absolute inset-0 size-full object-cover object-center opacity-90 brightness-105 contrast-105 blur-md scale-105 transition-transform duration-1000"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/30 via-blue-900/20 to-slate-950/60" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(165,243,252,0.25),transparent_70%)]" />
-                <div className="lg-float-a absolute -left-20 -top-20 size-[32rem] rounded-full bg-cyan-400/20 blur-3xl" />
-                <div className="lg-float-b absolute -bottom-28 -right-20 size-[36rem] rounded-full bg-blue-400/20 blur-3xl" />
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/40 via-blue-950/30 to-slate-950/70 backdrop-blur-[2px]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(165,243,252,0.3),transparent_70%)]" />
+                <div className="lg-float-a absolute -left-20 -top-20 size-[36rem] rounded-full bg-cyan-400/25 blur-3xl pointer-events-none" />
+                <div className="lg-float-b absolute -bottom-28 -right-20 size-[40rem] rounded-full bg-blue-500/25 blur-3xl pointer-events-none" />
             </div>
 
             {/* Contenedor Principal con Estructura de Centro de Mando */}
             <div className="mx-auto max-w-7xl space-y-6">
 
                 {/* 1. CABECERA INSTITUCIONAL SUPERIOR */}
-                <header className={`lg-card ${GLASS} rounded-3xl p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4`}>
+                <header className={`lg-card ${GLASS} rounded-3xl p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 hover:border-white/60`}>
                     <div className="flex items-center gap-3.5">
                         <img
                             src="/logo-jurisdiccion.png"
@@ -171,15 +170,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {/* Logo Secretaría sin fondo blanco sólido (integrado con sutileza) */}
                         <div className="flex h-12 items-center rounded-2xl bg-white/95 px-3.5 shadow-lg backdrop-blur-md transition-transform duration-300 hover:scale-105">
                             <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-6 w-auto object-contain" />
                         </div>
-                        {/* Botón menú móvil */}
                         <button
                             type="button"
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="flex md:hidden size-12 items-center justify-center rounded-2xl bg-white/10 border border-white/30 text-white"
+                            className="flex md:hidden size-12 items-center justify-center rounded-2xl bg-white/10 border border-white/30 text-white active:scale-95 transition"
                         >
                             {sidebarOpen ? <X className="size-6" /> : <Menu className="size-6" />}
                         </button>
@@ -187,8 +184,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </header>
 
                 {/* 2. BANNER HERO DE ADMINISTRADOR & METRICAS (KPIs) */}
-                <div className={`lg-card ${GLASS} rounded-3xl p-5 sm:p-6 relative overflow-hidden`}>
-                    <div aria-hidden="true" className="absolute -right-10 -top-10 size-56 rounded-full bg-cyan-400/20 blur-3xl" />
+                <div className={`lg-card ${GLASS} rounded-3xl p-5 sm:p-6 relative overflow-hidden transition-all duration-300 hover:border-white/60`}>
+                    <div aria-hidden="true" className="absolute -right-10 -top-10 size-56 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
                     
                     <div className="relative flex flex-col lg:flex-row justify-between items-center gap-6">
                         
@@ -203,7 +200,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {userName.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                     </div>
                                 )}
-                                <span className="absolute bottom-1 right-1 size-4 rounded-full bg-emerald-400 ring-4 ring-slate-900 shadow-md" title="En línea" />
+                                <span className="absolute bottom-1 right-1 size-4 rounded-full bg-emerald-400 ring-4 ring-slate-900 shadow-md animate-pulse" title="En línea" />
                             </div>
 
                             <div className="space-y-1">
@@ -284,7 +281,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                     {/* Área de Trabajo Principal */}
                     <main className="lg:col-span-9 w-full">
-                        <div className={`lg-card ${GLASS} rounded-3xl p-4 sm:p-6 lg-fade min-h-[550px] shadow-2xl`}>
+                        <div key={activeTab} className={`lg-card ${GLASS} rounded-3xl p-4 sm:p-6 lg-fade min-h-[550px] shadow-2xl`}>
                             {activeTab === 'TAMIZ' && <TabTamizNeonatal />}
                             {activeTab === 'REFERENCIAS' && <TabReferencias />}
                             {activeTab === 'CALENDARIOS' && <TabCalendarios />}
