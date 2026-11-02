@@ -116,12 +116,13 @@ export const DashboardLayout: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-100/80 text-slate-800 flex flex-col md:flex-row selection:bg-emerald-600 selection:text-white">
+        /* CORREGIDO: bg-transparent para permitir que el fondo inmersivo del AdminDashboard o Login luzca libremente */
+        <div className="min-h-screen bg-transparent text-slate-800 flex flex-col md:flex-row selection:bg-emerald-600 selection:text-white">
 
-            {/* SIDEBAR DESKTOP COLAPSABLE (MODO CLARO) - Oculto para rol PARTERA_TRADICIONAL, ADMIN_JURISDICCIONAL, MEDICO_UNIDAD y CAPTURISTA_TAMIZ (Diseño Full-Width) */}
+            {/* SIDEBAR DESKTOP COLAPSABLE */}
             {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && currentUser.rol !== UserRole.ADMIN_JURISDICCIONAL && currentUser.rol !== UserRole.MEDICO_UNIDAD && currentUser.rol !== UserRole.CAPTURISTA_TAMIZ && (
                 <aside
-                    className={`hidden md:flex flex-col bg-white border-r border-slate-200/90 p-4 justify-between transition-all duration-300 shrink-0 shadow-sm ${sidebarCollapsed ? 'w-20' : 'w-64'
+                    className={`hidden md:flex flex-col bg-white/80 backdrop-blur-md border-r border-slate-200/90 p-4 justify-between transition-all duration-300 shrink-0 shadow-sm ${sidebarCollapsed ? 'w-20' : 'w-64'
                         }`}
                 >
                     <div>
@@ -238,11 +239,11 @@ export const DashboardLayout: React.FC = () => {
                 </aside>
             )}
 
-            {/* NAVBAR SUPERIOR RESPONSIVE (MODO CLARO) - Oculto para módulo Partera */}
-            <div className="flex-1 flex flex-col min-w-0">
+            {/* NAVBAR SUPERIOR RESPONSIVE */}
+            <div className="flex-1 flex flex-col min-w-0 bg-transparent">
 
                 {currentUser.rol !== UserRole.PARTERA_TRADICIONAL && currentUser.rol !== UserRole.ADMIN_JURISDICCIONAL && currentUser.rol !== UserRole.MEDICO_UNIDAD && currentUser.rol !== UserRole.CAPTURISTA_TAMIZ && !location.pathname.includes('/parteras/comunitaria') && (
-                    <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sticky top-0 z-20 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 shadow-sm text-center">
+                    <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-4 sticky top-0 z-20 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 shadow-sm text-center">
 
                         {/* Botón de Menú Móvil & Controles Rápidos */}
                         <div className="md:hidden flex items-center justify-between w-full border-b border-slate-100 pb-2">
@@ -359,7 +360,7 @@ export const DashboardLayout: React.FC = () => {
 
                 {/* MENU DRAWER MOBILE */}
                 {mobileMenuOpen && (
-                    <div className="md:hidden bg-white border-b border-slate-200 p-4 space-y-2 shadow-lg">
+                    <div className="md:hidden bg-white/95 backdrop-blur-md border-b border-slate-200 p-4 space-y-2 shadow-lg">
                         <div className="mb-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
                             <p className="text-xs font-bold text-slate-900">{currentUser.nombre}</p>
                             <p className="text-[10px] font-semibold text-teal-700">{currentUser.rol}</p>
@@ -401,8 +402,8 @@ export const DashboardLayout: React.FC = () => {
                     </div>
                 )}
 
-                {/* MAIN BODY AREA FULL-WIDTH */}
-                <main className="w-full min-h-screen bg-slate-50/80 p-3 sm:p-6 lg:p-8 overflow-y-auto">
+                {/* MAIN BODY AREA TRANSPARENTE */}
+                <main className="w-full min-h-screen bg-transparent p-3 sm:p-6 lg:p-8 overflow-y-auto">
                     {location.pathname === '/dashboard' ? (
                         currentUser.rol === UserRole.PARTERA_TRADICIONAL ? (
                             <DashboardPartera />
