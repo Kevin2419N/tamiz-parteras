@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import type {
+    FormEvent,
+    KeyboardEvent as ReactKeyboardEvent,
+    PointerEvent as ReactPointerEvent,
+    ReactNode,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import {
-    AlertCircle,
+    AlertTriangle,
+    Baby,
     Building2,
     Camera,
     CameraOff,
@@ -13,6 +19,7 @@ import {
     Eye,
     EyeOff,
     HeartHandshake,
+    HeartPulse,
     Info,
     KeyRound,
     Loader2,
@@ -21,10 +28,13 @@ import {
     Mail,
     QrCode,
     RotateCcw,
+    ShieldCheck,
     UserCheck,
     Volume2,
     VolumeX,
+    X,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import jsQR from 'jsqr';
 import { useAuth } from '../../context/AuthContext';
 import { http } from '../../services/http';
@@ -39,6 +49,9 @@ const TOKEN_KEY = 'token_sso_parteras';
 const REMEMBER_KEY = 'tamiz_remember_email';
 const PIN_LENGTH = 4;
 const SUPPORT_PHONE = '800 123 4567';
+const WELCOME_MS = 3400;
+const NAME_KEYS = ['nombre', 'nombreCompleto', 'nombre_completo', 'name', 'fullName'] as const;
+const TITLE_TOKENS = /^(dr|dra|lic|mtro|mtra|enf|ing|c)\.?$/i;
 
 type AccessMode = 'institucional' | 'partera';
 type PinMethod = 'pin' | 'qr';
@@ -57,20 +70,34 @@ interface Notice {
 interface ApiErrorBody {
     message?: string;
 }
+interface WelcomeState {
+    user: User;
+    name: string;
+    audience: AccessMode;
+}
 
-const MODES: ReadonlyArray<{ id: AccessMode; label: string; Icon: typeof Building2 }> = [
+const MODES: ReadonlyArray<{ id: AccessMode; label: string; Icon: LucideIcon }> = [
     { id: 'institucional', label: 'Personal institucional', Icon: Building2 },
     { id: 'partera', label: 'Partera tradicional', Icon: HeartHandshake },
 ];
 
-const MODE_COPY: Record<AccessMode, { title: string; text: string }> = {
+const MODE_COPY: Record<AccessMode, { title: string; text: string; chips: ReadonlyArray<{ Icon: LucideIcon; label: string }> }> = {
     institucional: {
         title: 'Control operativo del tamiz',
         text: 'Captura de muestras, seguimiento de resultados y contrarreferencias para el personal autorizado de la jurisdicción.',
+        chips: [
+            { Icon: Baby, label: 'Tamiz neonatal' },
+            { Icon: ShieldCheck, label: 'Acceso seguro' },
+        ],
     },
     partera: {
         title: 'Red de partería tradicional',
         text: 'Registro de atenciones, calendario y referencias obstétricas desde la comunidad, con apoyo de voz.',
+        chips: [
+            { Icon: HeartPulse, label: 'Atención materna' },
+            { Icon: Volume2, label: 'Apoyo de voz' },
+            { Icon: QrCode, label: 'Ingreso con QR' },
+        ],
     },
 };
 
@@ -85,34 +112,73 @@ const VOICE_TEXT: Record<PinMethod, string> = {
     qr: 'Acerque su credencial con código QR a la cámara y espere.',
 };
 
+const WELCOME_STAGES: ReadonlyArray<{ from: number; label: string }> = [
+    { from: 0, label: 'Verificando credenciales' },
+    { from: 28, label: 'Sincronizando Tamiz Neonatal' },
+    { from: 58, label: 'Sincronizando Red de Parteras' },
+    { from: 86, label: 'Preparando tu espacio de trabajo' },
+    { from: 100, label: 'Todo listo' },
+];
+
 /* Clases compartidas */
-const ACCENT = 'bg-gradient-to-r from-sky-600 to-blue-700';
+const ACCENT = 'bg-gradient-to-r from-sky-500 to-blue-600';
 const FOCUS =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900';
 const SLIDE = 'ease-[cubic-bezier(0.65,0,0.35,1)]';
-const LABEL = 'mb-1 block text-xs font-medium text-sky-50';
+const GLASS = 'lg-edge relative border border-white/20 bg-slate-950/40 shadow-2xl shadow-black/60 backdrop-blur-2xl';
+const LABEL = 'mb-1.5 block text-xs font-medium text-sky-50';
 const INPUT =
-    'min-h-11 w-full rounded-xl border border-white/20 bg-white/10 pl-10 text-base text-white placeholder:text-white/50 transition-colors focus:border-sky-300 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-sky-300/40 disabled:opacity-60';
+    'min-h-12 w-full rounded-xl border border-white/20 bg-white/10 pl-10 text-base text-white placeholder:text-white/45 transition duration-200 focus:border-sky-300 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-sky-300/40 disabled:opacity-60';
 const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-sky-200/80';
-const PRIMARY = `group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-950/40 transition duration-150 hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
-const KEY = `min-h-12 rounded-2xl border border-white/15 bg-white/10 text-2xl font-semibold text-white transition duration-100 hover:bg-white/20 active:scale-95 active:bg-sky-500/40 disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`;
+const PRIMARY = `lg-sheen group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-950/50 transition duration-150 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
+const SECONDARY = `min-h-12 rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-medium text-white transition duration-150 hover:bg-white/20 active:scale-[0.98] ${FOCUS}`;
 const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/15 bg-black/25 p-1';
 
 const LOGIN_CSS = `
-@keyframes lgFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes lgFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes lgShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
-@keyframes lgCard{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
-@keyframes lgLaser{from{top:4%}to{top:96%}}
+@keyframes lgCard{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes lgLaser{from{top:0}to{top:100%}}
 @keyframes lgPop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
-.lg-fade{animation:lgFade .35s cubic-bezier(0.16, 1, 0.3, 1) both}
-.lg-shake{animation:lgShake .4s cubic-bezier(.36,.07,.19,.97) both}
-.lg-card{animation:lgCard .6s cubic-bezier(.22,1,.36,1) both}
-.lg-laser{animation:lgLaser 2s ease-in-out infinite alternate}
-.lg-pop{animation:lgPop .3s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes lgRipple{from{transform:translate(-50%,-50%) scale(0);opacity:.55}to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+@keyframes lgAlertIn{from{opacity:0;transform:translateY(-18px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes lgVeil{from{opacity:0}to{opacity:1}}
+@keyframes lgModal{from{opacity:0;transform:translateY(24px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes lgFloatA{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(5%,7%,0)}}
+@keyframes lgFloatB{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-6%,-5%,0)}}
+@keyframes lgSheen{from{transform:translateX(-160%) skewX(-15deg)}to{transform:translateX(420%) skewX(-15deg)}}
+@keyframes lgHalo{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.7);opacity:0}}
+@keyframes lgBar{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+.lg-fade{animation:lgFade .4s cubic-bezier(0.16,1,0.3,1) both}
+.lg-shake{animation:lgShake .45s cubic-bezier(.36,.07,.19,.97) both}
+.lg-shake-late{animation:lgShake .5s cubic-bezier(.36,.07,.19,.97) .3s both}
+.lg-card{animation:lgCard .7s cubic-bezier(.22,1,.36,1) both}
+.lg-laser{animation:lgLaser 2.1s ease-in-out infinite alternate}
+.lg-pop{animation:lgPop .35s cubic-bezier(.34,1.56,.64,1) both}
+.lg-ripple{animation:lgRipple .6s ease-out forwards}
+.lg-alert-in{animation:lgAlertIn .45s cubic-bezier(.22,1,.36,1) both}
+.lg-veil{animation:lgVeil .35s ease-out both}
+.lg-modal{animation:lgModal .55s cubic-bezier(.22,1,.36,1) both}
+.lg-float-a{animation:lgFloatA 18s ease-in-out infinite}
+.lg-float-b{animation:lgFloatB 22s ease-in-out infinite}
+.lg-halo{animation:lgHalo 2.2s ease-out infinite}
+.lg-bar-shine{animation:lgBar 1.6s linear infinite}
 .lg-quiet{scrollbar-width:none}
 .lg-quiet::-webkit-scrollbar{display:none}
-@media (prefers-reduced-motion:reduce){.lg-fade,.lg-shake,.lg-card,.lg-laser,.lg-pop{animation:none}}
+.lg-edge::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(255,255,255,.06) 38%,rgba(255,255,255,0) 62%,rgba(255,255,255,.28));
+-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.lg-sheen::after{content:'';position:absolute;inset:0 auto 0 0;width:35%;pointer-events:none;
+background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:translateX(-160%) skewX(-15deg)}
+.lg-sheen:hover:not(:disabled)::after{animation:lgSheen .9s ease}
+@media (prefers-reduced-motion:reduce){
+.lg-fade,.lg-shake,.lg-shake-late,.lg-card,.lg-laser,.lg-pop,.lg-ripple,.lg-alert-in,.lg-veil,.lg-modal,.lg-float-a,.lg-float-b,.lg-halo,.lg-bar-shine{animation:none}
+.lg-sheen:hover:not(:disabled)::after{animation:none}}
 `;
+
+/* ═══════════════════════════════════════════════════════════════
+   Utilidades
+   ═══════════════════════════════════════════════════════════════ */
 
 function getErrorMessage(error: unknown, fallback: string): string {
     if (isAxiosError<ApiErrorBody>(error)) {
@@ -135,29 +201,255 @@ function writeRememberedEmail(email: string | null): void {
     try {
         if (email) localStorage.setItem(REMEMBER_KEY, email);
         else localStorage.removeItem(REMEMBER_KEY);
-    } catch {}
+    } catch {
+        /* almacenamiento no disponible (modo privado) */
+    }
 }
 
-function StatusSlot({ notice }: { notice: Notice | null }) {
-    const isError = notice?.kind === 'error';
-    const Icon = isError ? AlertCircle : Info;
+/** Primer nombre del usuario, ignorando títulos (Dr., Lic., etc.). Vacío si el modelo no trae nombre. */
+function getFirstName(user: User): string {
+    const record = user as unknown as Record<string, unknown>;
+    for (const key of NAME_KEYS) {
+        const value = record[key];
+        if (typeof value === 'string' && value.trim()) {
+            const token = value.trim().split(/\s+/).find((part) => !TITLE_TOKENS.test(part));
+            if (token) return token;
+        }
+    }
+    return '';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Voz natural en español de México (Web Speech API)
+   ═══════════════════════════════════════════════════════════════ */
+
+const PREFERRED_VOICES = /(dalia|paulina|sabina|angelica|renata|elena)/i;
+
+function isSpeechSupported(): boolean {
+    return typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+}
+
+/** es-MX primero; es-US / es-419 como respaldo latino. Nunca voces de España. */
+function scoreVoice(voice: SpeechSynthesisVoice): number {
+    const lang = voice.lang.replace('_', '-').toLowerCase();
+    let score: number;
+    if (lang === 'es-mx') score = 100;
+    else if (lang === 'es-us' || lang === 'es-419') score = 25;
+    else return -1;
+    if (/natural|neural|online/i.test(voice.name)) score += 30;
+    if (PREFERRED_VOICES.test(voice.name)) score += 15;
+    if (voice.localService) score += 3;
+    return score;
+}
+
+function pickMexicanVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+    let best: SpeechSynthesisVoice | null = null;
+    let bestScore = 0;
+    for (const voice of voices) {
+        const score = scoreVoice(voice);
+        if (score > bestScore) {
+            best = voice;
+            bestScore = score;
+        }
+    }
+    return best;
+}
+
+function useMexicanVoice() {
+    const supported = isSpeechSupported();
+    const [speaking, setSpeaking] = useState(false);
+    const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+    const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+    const engagedRef = useRef(false);
+
+    useEffect(() => {
+        if (!supported) return;
+        const synth = window.speechSynthesis;
+        const loadVoices = () => {
+            voiceRef.current = pickMexicanVoice(synth.getVoices());
+        };
+        loadVoices();
+        synth.addEventListener('voiceschanged', loadVoices);
+        return () => {
+            synth.removeEventListener('voiceschanged', loadVoices);
+            synth.cancel();
+        };
+    }, [supported]);
+
+    const stop = useCallback(() => {
+        if (supported) window.speechSynthesis.cancel();
+        utteranceRef.current = null;
+        setSpeaking(false);
+    }, [supported]);
+
+    const speak = useCallback(
+        (text: string) => {
+            if (!supported) return;
+            const synth = window.speechSynthesis;
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-MX';
+            if (voiceRef.current) utterance.voice = voiceRef.current;
+            utterance.rate = 0.94;
+            utterance.pitch = 1.05;
+            utterance.volume = 1;
+            const finish = () => {
+                if (utteranceRef.current === utterance) {
+                    utteranceRef.current = null;
+                    setSpeaking(false);
+                }
+            };
+            utterance.onstart = () => setSpeaking(true);
+            utterance.onend = finish;
+            utterance.onerror = finish;
+            utteranceRef.current = utterance;
+            synth.speak(utterance);
+        },
+        [supported],
+    );
+
+    /** La partera activó la voz al menos una vez: a partir de aquí se narran avisos importantes. */
+    const engage = useCallback(() => {
+        engagedRef.current = true;
+    }, []);
+
+    const announce = useCallback(
+        (text: string) => {
+            if (engagedRef.current) speak(text);
+        },
+        [speak],
+    );
+
+    return useMemo(
+        () => ({ supported, speaking, speak, stop, engage, announce }),
+        [supported, speaking, speak, stop, engage, announce],
+    );
+}
+
+type VoiceApi = ReturnType<typeof useMexicanVoice>;
+
+/* ═══════════════════════════════════════════════════════════════
+   Alerta flotante (reemplaza cualquier alert() del navegador)
+   ═══════════════════════════════════════════════════════════════ */
+
+interface FloatingAlertProps {
+    notice: Notice;
+    onRetry: () => void;
+    onClose: () => void;
+}
+
+function FloatingAlert({ notice, onRetry, onClose }: FloatingAlertProps) {
+    const isError = notice.kind === 'error';
+    const Icon = isError ? AlertTriangle : Info;
+
+    useEffect(() => {
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', onKey);
+        const timer = isError ? null : window.setTimeout(onClose, 8000);
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            if (timer !== null) window.clearTimeout(timer);
+        };
+    }, [notice.id, isError, onClose]);
+
     return (
-        <div className="mb-2 h-10 shrink-0" aria-live="polite">
-            {notice && (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6">
+            <div key={notice.id} className="lg-alert-in pointer-events-auto w-full max-w-sm">
                 <div
-                    key={notice.id}
                     role={isError ? 'alert' : 'status'}
-                    className={`flex h-full items-center gap-2 rounded-xl border px-3 text-xs leading-tight backdrop-blur-sm ${
-                        isError ? 'lg-shake border-rose-300/40 bg-rose-500/20 text-rose-50' : 'lg-fade border-sky-300/40 bg-sky-400/20 text-sky-50'
+                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-950/60 p-4 shadow-2xl shadow-black/60 backdrop-blur-2xl ${
+                        isError ? 'lg-shake-late border-rose-300/30' : 'border-sky-300/30'
                     }`}
                 >
-                    <Icon className="size-4 shrink-0" aria-hidden="true" />
-                    <span className="line-clamp-2">{notice.text}</span>
+                    <div
+                        aria-hidden="true"
+                        className={`absolute -top-12 left-1/2 h-24 w-48 -translate-x-1/2 rounded-full blur-2xl ${isError ? 'bg-rose-500/30' : 'bg-sky-400/25'}`}
+                    />
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Cerrar aviso"
+                        className={`absolute right-2 top-2 flex size-9 items-center justify-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white ${FOCUS}`}
+                    >
+                        <X className="size-4" />
+                    </button>
+                    <div className="relative flex gap-3 pr-8">
+                        <span
+                            className={`flex size-11 shrink-0 items-center justify-center rounded-full ring-1 ${
+                                isError ? 'bg-rose-500/20 text-amber-300 ring-rose-300/40' : 'bg-sky-400/20 text-sky-200 ring-sky-300/40'
+                            }`}
+                        >
+                            <Icon className="size-6" aria-hidden="true" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-white">{isError ? 'No pudimos iniciar sesión' : 'Aviso'}</p>
+                            <p className="mt-0.5 text-sm leading-snug text-sky-50/85">{notice.text}</p>
+                        </div>
+                    </div>
+                    <div className="relative mt-3.5 flex justify-end">
+                        <button type="button" onClick={onRetry} className={`${SECONDARY} flex min-h-11 items-center gap-2`}>
+                            {isError && <RotateCcw className="size-4" aria-hidden="true" />}
+                            {isError ? 'Reintentar' : 'Entendido'}
+                        </button>
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Tecla del PIN con animación de pulsación (ripple + escala + háptico)
+   ═══════════════════════════════════════════════════════════════ */
+
+interface PinKeyProps {
+    disabled: boolean;
+    onPress: () => void;
+    ariaLabel?: string;
+    muted?: boolean;
+    children: ReactNode;
+}
+
+function PinKey({ disabled, onPress, ariaLabel, muted = false, children }: PinKeyProps) {
+    const [ripple, setRipple] = useState<{ id: number; x: number; y: number } | null>(null);
+
+    const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
+        if (disabled) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        setRipple({ id: event.timeStamp, x: event.clientX - rect.left, y: event.clientY - rect.top });
+        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') navigator.vibrate(8);
+    };
+
+    return (
+        <button
+            type="button"
+            disabled={disabled}
+            aria-label={ariaLabel}
+            onPointerDown={handlePointerDown}
+            onClick={onPress}
+            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-b from-white/15 to-white/5 text-2xl font-semibold shadow-[0_2px_10px_rgba(2,6,23,0.35)] transition duration-100 hover:from-white/25 hover:to-white/10 active:scale-90 active:border-sky-300/60 active:from-sky-400/40 active:to-sky-500/20 active:shadow-inner disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
+                muted ? 'text-sky-100' : 'text-white'
+            }`}
+        >
+            {ripple && (
+                <span
+                    key={ripple.id}
+                    aria-hidden="true"
+                    onAnimationEnd={() => setRipple(null)}
+                    style={{ left: ripple.x, top: ripple.y }}
+                    className="lg-ripple pointer-events-none absolute size-28 rounded-full bg-sky-200/60"
+                />
+            )}
+            <span className="relative">{children}</span>
+        </button>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Formulario institucional
+   ═══════════════════════════════════════════════════════════════ */
 
 interface InstitutionalFormProps {
     busy: boolean;
@@ -186,7 +478,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
     };
 
     return (
-        <form onSubmit={handleSubmit} className="flex h-full flex-col justify-center gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
                 <label htmlFor="login-rol" className={LABEL}>Perfil de acceso</label>
                 <div className="relative">
@@ -241,21 +533,21 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
                         value={password}
                         disabled={busy}
                         onChange={(event) => setPassword(event.target.value)}
-                        className={`${INPUT} pr-11`}
+                        className={`${INPUT} pr-12`}
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
                         aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                        className={`absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-sky-100/80 transition hover:bg-white/10 hover:text-white ${FOCUS}`}
+                        className={`absolute right-1 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg text-sky-100/80 transition hover:bg-white/10 hover:text-white active:scale-90 ${FOCUS}`}
                     >
                         {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                     </button>
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
-                <label className="flex cursor-pointer select-none items-center gap-2 text-sky-50">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm">
+                <label className="flex min-h-9 cursor-pointer select-none items-center gap-2 text-sky-50">
                     <input
                         type="checkbox"
                         checked={remember}
@@ -267,7 +559,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
                 <button
                     type="button"
                     onClick={onForgotPassword}
-                    className={`rounded text-sky-200 underline-offset-4 transition-colors hover:text-white hover:underline ${FOCUS}`}
+                    className={`min-h-9 rounded text-sky-200 underline-offset-4 transition-colors hover:text-white hover:underline ${FOCUS}`}
                 >
                     ¿Olvidaste tu contraseña?
                 </button>
@@ -290,6 +582,10 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
     );
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Visor QR con línea láser
+   ═══════════════════════════════════════════════════════════════ */
+
 interface QrViewfinderProps {
     onDetect: (code: string) => Promise<boolean>;
     onUsePin: () => void;
@@ -302,6 +598,7 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const timerRef = useRef<number | null>(null);
+    const retryRef = useRef<number | null>(null);
     const onDetectRef = useRef(onDetect);
 
     useEffect(() => {
@@ -313,6 +610,10 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
             window.clearInterval(timerRef.current);
             timerRef.current = null;
         }
+        if (retryRef.current !== null) {
+            window.clearTimeout(retryRef.current);
+            retryRef.current = null;
+        }
         streamRef.current?.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
     }, []);
@@ -321,7 +622,7 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
 
     const startScanningLoop = useCallback(() => {
         if (timerRef.current !== null) window.clearInterval(timerRef.current);
-        
+
         timerRef.current = window.setInterval(() => {
             const video = videoRef.current;
             const canvas = canvasRef.current;
@@ -348,7 +649,8 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
                         stopCamera();
                     } else {
                         setRejected(true);
-                        setTimeout(() => {
+                        retryRef.current = window.setTimeout(() => {
+                            retryRef.current = null;
                             setRejected(false);
                             setState('scanning');
                             startScanningLoop();
@@ -394,8 +696,8 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
     const frame = state === 'success' ? 'border-emerald-300' : rejected ? 'border-rose-300' : 'border-sky-300';
 
     return (
-        <div className="flex flex-col gap-2">
-            <div className="relative mx-auto size-44 overflow-hidden rounded-3xl border border-white/20 bg-slate-950/70 shadow-inner sm:size-48">
+        <div className="flex flex-col gap-3">
+            <div className="relative mx-auto aspect-square w-full max-w-[14rem] overflow-hidden rounded-3xl border border-white/20 bg-slate-950/70 shadow-inner shadow-black/50 sm:max-w-[15rem]">
                 <video
                     ref={videoRef}
                     muted
@@ -421,12 +723,12 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
                     <span className={`absolute bottom-0 left-0 size-7 rounded-bl-xl border-b-4 border-l-4 transition-colors duration-300 ${frame}`} />
                     <span className={`absolute bottom-0 right-0 size-7 rounded-br-xl border-b-4 border-r-4 transition-colors duration-300 ${frame}`} />
                     {state === 'scanning' && !rejected && (
-                        <span className="lg-laser absolute inset-x-1 top-0 h-0.5 rounded-full bg-sky-300 shadow-[0_0_14px_3px_rgba(125,211,252,0.85)] motion-reduce:hidden" />
+                        <span className="lg-laser absolute inset-x-0 top-0 h-0.5 rounded-full bg-gradient-to-r from-transparent via-sky-200 to-transparent shadow-[0_0_16px_4px_rgba(125,211,252,0.85)] motion-reduce:hidden" />
                     )}
                 </div>
 
                 {(state === 'starting' || state === 'verifying') && (
-                    <div className="lg-fade absolute inset-0 flex items-center justify-center bg-slate-950/60">
+                    <div className="lg-fade absolute inset-0 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
                         <Loader2 className="size-9 animate-spin text-sky-200" aria-hidden="true" />
                     </div>
                 )}
@@ -439,7 +741,7 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
                 )}
             </div>
 
-            <p className="flex min-h-10 items-center justify-center text-center text-xs leading-snug text-sky-100/80 sm:text-sm" aria-live="polite">
+            <p className="flex min-h-10 items-center justify-center text-center text-sm leading-snug text-sky-100/85" aria-live="polite">
                 {state === 'idle' && 'Activa la cámara y acerca tu credencial con código QR.'}
                 {state === 'starting' && 'Abriendo la cámara…'}
                 {state === 'scanning' && !rejected && 'Centra el código QR de la partera dentro del marco.'}
@@ -453,17 +755,13 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
                 {(state === 'idle' || state === 'denied' || state === 'starting') && (
                     <div className="flex gap-2">
                         {state === 'denied' && (
-                            <button
-                                type="button"
-                                onClick={startCamera}
-                                className={`min-h-12 flex-1 rounded-xl border border-white/25 bg-white/10 px-3 text-sm font-medium transition hover:bg-white/20 ${FOCUS}`}
-                            >
-                                Reintentar
+                            <button type="button" onClick={onUsePin} className={`${SECONDARY} flex-1`}>
+                                Usar mi PIN
                             </button>
                         )}
                         <button type="button" onClick={startCamera} disabled={state === 'starting'} className={`${PRIMARY} flex-1`}>
                             <Camera className="size-5" />
-                            <span>{state === 'starting' ? 'Abriendo...' : 'Activar cámara'}</span>
+                            <span>{state === 'starting' ? 'Abriendo...' : state === 'denied' ? 'Reintentar' : 'Activar cámara'}</span>
                         </button>
                     </div>
                 )}
@@ -477,20 +775,25 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
     );
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Acceso de parteras (PIN / QR + voz)
+   ═══════════════════════════════════════════════════════════════ */
+
 interface MidwifeAccessProps {
     active: boolean;
     busy: boolean;
+    voice: VoiceApi;
     onPin: (pin: string) => Promise<boolean>;
     onQr: (code: string) => Promise<boolean>;
 }
 
-function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
+function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps) {
     const [method, setMethod] = useState<PinMethod>('pin');
     const [digits, setDigits] = useState('');
     const [shakeKey, setShakeKey] = useState(0);
-    const [speaking, setSpeaking] = useState(false);
     const busyRef = useRef(busy);
     const digitsRef = useRef('');
+    const { speaking, stop: stopVoice, speak, engage, supported } = voice;
 
     useEffect(() => {
         busyRef.current = busy;
@@ -501,30 +804,14 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
         setDigits(value);
     }, []);
 
-    const stopVoice = useCallback(() => {
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
-        setSpeaking(false);
-    }, []);
-
     const toggleVoice = () => {
         if (speaking) {
             stopVoice();
             return;
         }
-        if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(VOICE_TEXT[method]);
-        utterance.lang = 'es-MX';
-        utterance.rate = 1.0;
-        utterance.onstart = () => setSpeaking(true);
-        utterance.onend = () => setSpeaking(false);
-        utterance.onerror = () => setSpeaking(false);
-        window.speechSynthesis.speak(utterance);
+        engage();
+        speak(VOICE_TEXT[method]);
     };
-
-    useEffect(() => stopVoice, [stopVoice]);
 
     useEffect(() => {
         if (!active) {
@@ -587,12 +874,12 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
     };
 
     return (
-        <div className="flex h-full flex-col gap-3">
+        <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
                 <div role="group" aria-label="Forma de acceso" className={`${PILL_TRACK} flex-1`}>
                     <span
                         aria-hidden="true"
-                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md transition-transform duration-300 ease-out ${
+                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md shadow-sky-950/40 transition-transform duration-300 ${SLIDE} ${
                             method === 'pin' ? 'translate-x-0' : 'translate-x-full'
                         }`}
                     />
@@ -607,7 +894,7 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                             type="button"
                             aria-pressed={method === id}
                             onClick={() => changeMethod(id)}
-                            className={`relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-1 text-sm font-medium transition-colors ${FOCUS} ${
+                            className={`relative z-10 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-1 text-sm font-medium transition-colors ${FOCUS} ${
                                 method === id ? 'text-white' : 'text-sky-100/70 hover:text-white'
                             }`}
                         >
@@ -617,20 +904,23 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                     ))}
                 </div>
 
-                <button
-                    type="button"
-                    onClick={toggleVoice}
-                    aria-pressed={speaking}
-                    aria-label={speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
-                    className={`flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black/25 text-sky-100 transition hover:bg-white/10 hover:text-white active:scale-90 ${FOCUS} ${
-                        speaking ? 'bg-sky-500/30' : ''
-                    }`}
-                >
-                    {speaking ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-                </button>
+                {supported && (
+                    <button
+                        type="button"
+                        onClick={toggleVoice}
+                        aria-pressed={speaking}
+                        aria-label={speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
+                        className={`relative flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black/25 text-sky-100 transition hover:bg-white/10 hover:text-white active:scale-90 ${FOCUS} ${
+                            speaking ? 'border-sky-300/50 bg-sky-500/30' : ''
+                        }`}
+                    >
+                        {speaking && <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-2xl border border-sky-300/60" />}
+                        {speaking ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+                    </button>
+                )}
             </div>
 
-            <div key={method} className="lg-fade flex min-h-0 flex-1 flex-col justify-center">
+            <div key={method} className="lg-fade flex flex-col justify-center">
                 {method === 'pin' ? (
                     <div className="flex flex-col gap-3">
                         <div
@@ -642,9 +932,9 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                             {Array.from({ length: PIN_LENGTH }, (_, index) => (
                                 <span
                                     key={index}
-                                    className={`size-5 rounded-full border-2 transition-all duration-150 ${
+                                    className={`size-5 rounded-full border-2 transition-all duration-200 ${
                                         index < digits.length
-                                            ? 'scale-110 border-sky-300 bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.7)]'
+                                            ? 'scale-110 border-sky-300 bg-sky-300 shadow-[0_0_16px_rgba(125,211,252,0.75)]'
                                             : 'border-white/40 bg-transparent'
                                     }`}
                                 />
@@ -662,21 +952,21 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
                             )}
                         </p>
 
-                        <div className="mx-auto grid w-full max-w-64 grid-cols-3 gap-2">
+                        <div className="mx-auto grid w-full max-w-72 grid-cols-3 gap-2.5 sm:max-w-64 sm:gap-2">
                             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-                                <button key={digit} type="button" disabled={busy} onClick={() => pressDigit(digit)} className={KEY}>
+                                <PinKey key={digit} disabled={busy} onPress={() => pressDigit(digit)}>
                                     {digit}
-                                </button>
+                                </PinKey>
                             ))}
-                            <button type="button" disabled={busy} onClick={clearAll} aria-label="Borrar todo" className={`${KEY} flex items-center justify-center text-sky-100`}>
+                            <PinKey disabled={busy} onPress={clearAll} ariaLabel="Borrar todo" muted>
                                 <RotateCcw className="size-5" />
-                            </button>
-                            <button type="button" disabled={busy} onClick={() => pressDigit('0')} className={KEY}>
+                            </PinKey>
+                            <PinKey disabled={busy} onPress={() => pressDigit('0')}>
                                 0
-                            </button>
-                            <button type="button" disabled={busy} onClick={deleteLast} aria-label="Borrar último" className={`${KEY} flex items-center justify-center text-sky-100`}>
+                            </PinKey>
+                            <PinKey disabled={busy} onPress={deleteLast} ariaLabel="Borrar último" muted>
                                 <Delete className="size-5" />
-                            </button>
+                            </PinKey>
                         </div>
                     </div>
                 ) : (
@@ -687,16 +977,150 @@ function MidwifeAccess({ active, busy, onPin, onQr }: MidwifeAccessProps) {
     );
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Modal de bienvenida con barra de sincronización
+   ═══════════════════════════════════════════════════════════════ */
+
+interface WelcomeModalProps {
+    name: string;
+    audience: AccessMode;
+    onDone: () => void;
+}
+
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
+    const [progress, setProgress] = useState(0);
+    const onDoneRef = useRef(onDone);
+    const doneRef = useRef(false);
+    const skipRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        onDoneRef.current = onDone;
+    }, [onDone]);
+
+    const finish = useCallback(() => {
+        if (doneRef.current) return;
+        doneRef.current = true;
+        onDoneRef.current();
+    }, []);
+
+    useEffect(() => {
+        skipRef.current?.focus();
+        let raf = 0;
+        let timeout = 0;
+        const start = performance.now();
+        const tick = (now: number) => {
+            const t = Math.min(1, (now - start) / WELCOME_MS);
+            setProgress(Math.round(easeInOutCubic(t) * 100));
+            if (t < 1) raf = requestAnimationFrame(tick);
+            else timeout = window.setTimeout(finish, 450);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => {
+            cancelAnimationFrame(raf);
+            window.clearTimeout(timeout);
+        };
+    }, [finish]);
+
+    const stage = [...WELCOME_STAGES].reverse().find((item) => progress >= item.from) ?? WELCOME_STAGES[0];
+    const complete = progress >= 100;
+    const isMidwife = audience === 'partera';
+    const title = isMidwife ? `¡Bienvenida${name ? `, ${name}` : ''}!` : `¡Hola de nuevo${name ? `, ${name}` : ''}!`;
+    const message = isMidwife
+        ? 'Gracias por acompañar y cuidar la vida en tu comunidad. Ya casi está todo listo.'
+        : 'Qué gusto verte por aquí. Estamos dejando todo listo para tu jornada.';
+
+    return (
+        <div className="lg-veil fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="welcome-title"
+                className={`${GLASS} lg-modal w-full max-w-sm overflow-hidden rounded-3xl p-6 text-center sm:p-8`}
+            >
+                <div aria-hidden="true" className="absolute -top-16 left-1/2 h-40 w-64 -translate-x-1/2 rounded-full bg-sky-400/25 blur-3xl" />
+
+                <div className="relative mx-auto mb-5 flex size-24 items-center justify-center">
+                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-sky-300/50" />
+                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-sky-300/40 [animation-delay:1.1s]" />
+                    <img
+                        src="/logo-jurisdiccion.png"
+                        alt=""
+                        draggable={false}
+                        className="relative size-20 rounded-full bg-white object-cover shadow-xl ring-4 ring-white/30"
+                    />
+                    <span
+                        className={`absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full ring-4 ring-slate-900/60 transition-colors duration-500 ${
+                            complete ? 'bg-emerald-400 text-emerald-950' : 'bg-sky-500 text-white'
+                        }`}
+                    >
+                        {complete ? <CheckCircle2 className="lg-pop size-5" /> : <HeartHandshake className="size-4" />}
+                    </span>
+                </div>
+
+                <h2 id="welcome-title" className="relative text-2xl font-semibold leading-tight">{title}</h2>
+                <p className="relative mx-auto mt-2 max-w-xs text-sm leading-relaxed text-sky-100/85">{message}</p>
+
+                <div className="relative mt-6">
+                    <div
+                        role="progressbar"
+                        aria-label="Sincronización institucional"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={progress}
+                        className="relative h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30"
+                    >
+                        <div
+                            className={`relative h-full overflow-hidden rounded-full transition-colors duration-500 ${
+                                complete ? 'bg-gradient-to-r from-emerald-400 to-emerald-300' : 'bg-gradient-to-r from-sky-400 to-cyan-300'
+                            }`}
+                            style={{ width: `${progress}%` }}
+                        >
+                            {!complete && (
+                                <span className="lg-bar-shine absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent motion-reduce:hidden" />
+                            )}
+                        </div>
+                    </div>
+                    <div className="mt-2.5 flex items-center justify-between gap-3 text-xs text-sky-100/80" aria-live="polite">
+                        <span key={stage.label} className="lg-fade flex min-w-0 items-center gap-1.5 truncate">
+                            {complete ? (
+                                <CheckCircle2 className="size-3.5 shrink-0 text-emerald-300" aria-hidden="true" />
+                            ) : (
+                                <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden="true" />
+                            )}
+                            <span className="truncate">{stage.label}</span>
+                        </span>
+                        <span className="shrink-0 tabular-nums">{progress}%</span>
+                    </div>
+                </div>
+
+                <button ref={skipRef} type="button" onClick={finish} className={`${SECONDARY} relative mt-5 w-full`}>
+                    Entrar ahora
+                </button>
+            </div>
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Pantalla de Login
+   ═══════════════════════════════════════════════════════════════ */
+
 export function Login() {
     const navigate = useNavigate();
     const { login } = useAuth();
     const baseId = useId();
+    const voice = useMexicanVoice();
+    const { announce } = voice;
 
     const [mode, setMode] = useState<AccessMode>('institucional');
     const [busy, setBusy] = useState(false);
     const [notice, setNotice] = useState<Notice | null>(null);
+    const [welcome, setWelcome] = useState<WelcomeState | null>(null);
 
     const isInstitutional = mode === 'institucional';
+    const locked = busy || welcome !== null;
     const tabId = (id: AccessMode) => `${baseId}-tab-${id}`;
     const panelId = (id: AccessMode) => `${baseId}-panel-${id}`;
 
@@ -704,8 +1128,17 @@ export function Login() {
         setNotice({ id: Date.now(), kind, text });
     }, []);
 
+    const dismissNotice = useCallback(() => setNotice(null), []);
+
+    const handleRetry = useCallback(() => {
+        setNotice(null);
+        if (mode === 'institucional') {
+            requestAnimationFrame(() => document.getElementById('login-password')?.focus());
+        }
+    }, [mode]);
+
     const switchMode = (next: AccessMode) => {
-        if (next === mode || busy) return;
+        if (next === mode || locked) return;
         setNotice(null);
         setMode(next);
     };
@@ -725,23 +1158,29 @@ export function Login() {
     };
 
     const authenticate = useCallback(
-        async (request: () => Promise<LoginResponse>, fallbackError: string): Promise<boolean> => {
+        async (request: () => Promise<LoginResponse>, fallbackError: string, audience: AccessMode): Promise<boolean> => {
             setBusy(true);
             setNotice(null);
             try {
                 const { token, user } = await request();
                 localStorage.setItem(TOKEN_KEY, token);
-                login(user);
-                navigate('/dashboard', { replace: true });
+                const name = getFirstName(user);
+                if (audience === 'partera') {
+                    announce(name ? `Bienvenida, ${name}. Estamos preparando su información.` : 'Bienvenida. Estamos preparando su información.');
+                }
+                // login() y la navegación se ejecutan al terminar el modal de bienvenida.
+                setWelcome({ user, name, audience });
                 return true;
             } catch (error) {
-                showNotice('error', getErrorMessage(error, fallbackError));
+                const message = getErrorMessage(error, fallbackError);
+                showNotice('error', message);
+                if (audience === 'partera') announce(`${message} Inténtelo de nuevo.`);
                 return false;
             } finally {
                 setBusy(false);
             }
         },
-        [login, navigate, showNotice],
+        [announce, showNotice],
     );
 
     const handleInstitutional = useCallback(
@@ -749,13 +1188,18 @@ export function Login() {
             authenticate(
                 async () => (await http.post<LoginResponse>('/auth/login-institucional', { email, password, rol })).data,
                 'Correo o contraseña incorrectos.',
+                'institucional',
             ),
         [authenticate],
     );
 
     const handlePin = useCallback(
         (pin: string) =>
-            authenticate(async () => (await http.post<LoginResponse>('/parteras/login-pin', { pin })).data, 'PIN incorrecto o no registrado.'),
+            authenticate(
+                async () => (await http.post<LoginResponse>('/parteras/login-pin', { pin })).data,
+                'PIN incorrecto o no registrado.',
+                'partera',
+            ),
         [authenticate],
     );
 
@@ -764,6 +1208,7 @@ export function Login() {
             authenticate(
                 async () => (await http.post<LoginResponse>('/parteras/login-pin', { pin: code })).data,
                 'Código QR no reconocido en el sistema.',
+                'partera',
             ),
         [authenticate],
     );
@@ -772,26 +1217,35 @@ export function Login() {
         showNotice('info', 'Para restablecer tu contraseña, solicita apoyo al administrador jurisdiccional.');
     }, [showNotice]);
 
+    const panelClass = (on: boolean, from: 'left' | 'right') =>
+        `flex w-full flex-col justify-center px-1 py-1 transition-[opacity,transform,visibility] duration-500 ${SLIDE} ${
+            on
+                ? 'visible relative min-h-full translate-x-0 opacity-100'
+                : `invisible pointer-events-none absolute inset-x-0 top-0 opacity-0 ${from === 'left' ? '-translate-x-8' : 'translate-x-8'}`
+        }`;
+
     return (
-        <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden p-3 text-white selection:bg-sky-400/40 sm:p-6">
+        <div className="relative isolate flex min-h-dvh items-center justify-center overflow-x-hidden px-3 py-[max(1rem,env(safe-area-inset-top))] text-white selection:bg-sky-400/40 sm:p-6">
             <style>{LOGIN_CSS}</style>
 
-            <div aria-hidden="true" className="fixed inset-0 -z-10 bg-slate-950">
+            {/* Fondo con profundidad: foto institucional + velo + orbes de luz */}
+            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-slate-950">
                 <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/fondo-login.png')" }} />
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-sky-950/80 to-slate-900/90" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.14),transparent_60%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(2,6,23,0.55))]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-950/92 via-sky-950/85 to-slate-900/92" />
+                <div className="lg-float-a absolute -left-28 -top-28 size-[30rem] rounded-full bg-sky-500/30 blur-3xl" />
+                <div className="lg-float-b absolute -bottom-36 -right-28 size-[34rem] rounded-full bg-blue-600/30 blur-3xl" />
+                <div className="lg-float-a absolute left-[38%] top-[30%] size-72 rounded-full bg-cyan-400/15 blur-3xl" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(2,6,23,0.6))]" />
             </div>
 
-            <div className="flex w-full max-w-md flex-col items-center md:max-w-4xl">
-                {/* Contenedor principal con transición ultra fluida en espejo */}
+            <div className="flex w-full max-w-md flex-col items-center md:max-w-4xl" inert={welcome !== null}>
                 <div
-                    className={`lg-card flex h-[min(36rem,calc(100dvh-6rem))] w-full flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-2xl shadow-black/50 backdrop-blur-xl md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${
-                        isInstitutional ? '' : 'md:[direction:rtl]'
+                    className={`lg-card ${GLASS} flex w-full flex-col overflow-hidden rounded-3xl md:h-[min(41rem,calc(100dvh-3rem))] ${
+                        isInstitutional ? 'md:flex-row' : 'md:flex-row-reverse'
                     }`}
                 >
                     {/* ── Panel lateral (marca / información) ── */}
-                    <aside className={`relative shrink-0 overflow-hidden border-b border-white/15 p-3.5 sm:p-4 md:border-b-0 md:p-8 transition-all duration-700 ${!isInstitutional ? 'md:[direction:ltr]' : ''}`}>
+                    <aside className="relative shrink-0 overflow-hidden border-b border-white/15 p-4 sm:p-5 md:w-5/12 md:border-b-0 md:p-8">
                         <div
                             aria-hidden="true"
                             className={`absolute inset-0 bg-gradient-to-br from-blue-600/35 via-sky-500/10 to-transparent transition-opacity duration-700 ${
@@ -805,30 +1259,34 @@ export function Login() {
                             }`}
                         />
 
-                        <div className="relative flex items-center gap-2.5 md:hidden">
+                        {/* Cabecera compacta (móvil / tablet) */}
+                        <div className="relative flex items-center gap-3 md:hidden">
                             <img
                                 src="/logo-jurisdiccion.png"
                                 alt="Jurisdicción Sanitaria No. 2 Istmo"
-                                className="size-10 shrink-0 rounded-full bg-white object-cover shadow-md ring-2 ring-white/40"
+                                draggable={false}
+                                className="size-11 shrink-0 rounded-full bg-white object-cover shadow-md ring-2 ring-white/40"
                             />
                             <div className="min-w-0 flex-1">
                                 <h1 className="truncate text-sm font-semibold leading-tight">Jurisdicción Sanitaria No. 2</h1>
                                 <p className="truncate text-[11px] text-sky-100/80">Istmo, Servicios de Salud de Oaxaca</p>
                             </div>
                             <div className="flex h-9 shrink-0 items-center rounded-lg bg-white/95 px-2 shadow-md">
-                                <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" className="h-4 w-auto" />
+                                <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-4 w-auto" />
                             </div>
                         </div>
 
-                        <div className="relative hidden h-full flex-col justify-between gap-5 md:flex">
+                        {/* Panel informativo (escritorio) */}
+                        <div className="relative hidden h-full flex-col justify-between gap-6 md:flex">
                             <div className="flex items-center gap-3">
                                 <img
                                     src="/logo-jurisdiccion.png"
                                     alt="Jurisdicción Sanitaria No. 2 Istmo"
-                                    className="size-16 shrink-0 rounded-full bg-white object-cover shadow-lg ring-2 ring-white/40"
+                                    draggable={false}
+                                    className="size-16 shrink-0 rounded-full bg-white object-cover shadow-xl ring-2 ring-white/40"
                                 />
-                                <div className="flex h-14 items-center rounded-xl bg-white/95 px-3 shadow-lg">
-                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" className="h-9 w-auto" />
+                                <div className="flex h-14 items-center rounded-xl bg-white/95 px-3 shadow-xl">
+                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-9 w-auto" />
                                 </div>
                             </div>
 
@@ -837,9 +1295,20 @@ export function Login() {
                                 <p className="text-sm text-sky-100/80">Istmo, Servicios de Salud de Oaxaca</p>
                             </div>
 
-                            <div key={mode} className="lg-fade space-y-2">
+                            <div key={mode} className="lg-fade space-y-3">
                                 <h2 className="text-lg font-medium">{MODE_COPY[mode].title}</h2>
                                 <p className="text-sm leading-relaxed text-sky-100/80">{MODE_COPY[mode].text}</p>
+                                <ul className="flex flex-wrap gap-2 pt-1">
+                                    {MODE_COPY[mode].chips.map(({ Icon, label }) => (
+                                        <li
+                                            key={label}
+                                            className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-sky-50 backdrop-blur-md"
+                                        >
+                                            <Icon className="size-3.5" aria-hidden="true" />
+                                            {label}
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
 
                             <p className="text-xs text-sky-100/60">Sistema de gestión de tamiz neonatal y parteras tradicionales</p>
@@ -847,13 +1316,12 @@ export function Login() {
                     </aside>
 
                     {/* ── Panel de formularios ── */}
-                    <section className={`flex min-h-0 flex-1 flex-col bg-slate-950/25 p-4 sm:p-6 md:border-l md:border-white/15 md:p-7 transition-all duration-700 ${!isInstitutional ? 'md:[direction:ltr] md:border-l-0 md:border-r' : ''}`}>
-                        <div
-                            role="tablist"
-                            aria-label="Tipo de acceso"
-                            onKeyDown={handleTabKeys}
-                            className={`${PILL_TRACK} mb-3 shrink-0`}
-                        >
+                    <section
+                        className={`flex min-h-0 flex-1 flex-col bg-slate-950/30 p-4 sm:p-6 md:border-white/15 md:p-8 ${
+                            isInstitutional ? 'md:border-l' : 'md:border-r'
+                        }`}
+                    >
+                        <div role="tablist" aria-label="Tipo de acceso" onKeyDown={handleTabKeys} className={`${PILL_TRACK} mb-4 shrink-0`}>
                             <span
                                 aria-hidden="true"
                                 className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-950/40 transition-transform duration-500 ${SLIDE} ${
@@ -872,66 +1340,70 @@ export function Login() {
                                         aria-controls={panelId(id)}
                                         tabIndex={selected ? 0 : -1}
                                         onClick={() => switchMode(id)}
-                                        className={`relative z-10 flex min-h-10 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium transition-colors ${FOCUS} ${
+                                        className={`relative z-10 flex min-h-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium transition-colors duration-300 ${FOCUS} ${
                                             selected ? 'text-white' : 'text-sky-100/70 hover:text-white'
                                         }`}
                                     >
-                                        <Icon className="size-4 shrink-0" aria-hidden="true" />
+                                        <Icon
+                                            className={`size-4 shrink-0 transition-transform duration-500 ${selected ? 'scale-110' : 'scale-100'}`}
+                                            aria-hidden="true"
+                                        />
                                         <span className="truncate">{label}</span>
                                     </button>
                                 );
                             })}
                         </div>
 
-                        <StatusSlot notice={notice} />
-
-                        <div className="-m-1 min-h-0 flex-1 overflow-hidden p-1">
+                        <div className="lg-quiet relative min-h-0 flex-1 md:overflow-y-auto">
                             <div
-                                className={`flex h-full w-[200%] transition-transform duration-500 ${SLIDE} ${
-                                    isInstitutional ? 'translate-x-0' : '-translate-x-1/2'
-                                }`}
+                                id={panelId('institucional')}
+                                role="tabpanel"
+                                aria-labelledby={tabId('institucional')}
+                                inert={!isInstitutional}
+                                className={panelClass(isInstitutional, 'left')}
                             >
-                                <div
-                                    id={panelId('institucional')}
-                                    role="tabpanel"
-                                    aria-labelledby={tabId('institucional')}
-                                    inert={!isInstitutional}
-                                    className={`lg-quiet h-full w-1/2 shrink-0 overflow-y-auto px-1 py-0.5 transition-opacity duration-300 ${
-                                        isInstitutional ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                                    }`}
-                                >
-                                    <InstitutionalForm busy={busy} onSubmit={handleInstitutional} onForgotPassword={handleForgotPassword} />
-                                </div>
+                                <InstitutionalForm busy={locked} onSubmit={handleInstitutional} onForgotPassword={handleForgotPassword} />
+                            </div>
 
-                                <div
-                                    id={panelId('partera')}
-                                    role="tabpanel"
-                                    aria-labelledby={tabId('partera')}
-                                    inert={isInstitutional}
-                                    className={`lg-quiet h-full w-1/2 shrink-0 overflow-y-auto px-1 py-0.5 transition-opacity duration-300 ${
-                                        isInstitutional ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                                    }`}
-                                >
-                                    <MidwifeAccess active={!isInstitutional} busy={busy} onPin={handlePin} onQr={handleQr} />
-                                </div>
+                            <div
+                                id={panelId('partera')}
+                                role="tabpanel"
+                                aria-labelledby={tabId('partera')}
+                                inert={isInstitutional}
+                                className={panelClass(!isInstitutional, 'right')}
+                            >
+                                <MidwifeAccess active={!isInstitutional} busy={locked} voice={voice} onPin={handlePin} onQr={handleQr} />
                             </div>
                         </div>
                     </section>
                 </div>
 
-                <p className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-0.5 text-center text-xs text-sky-100/70">
+                <p className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-0.5 text-center text-xs text-sky-100/70">
                     <span>Uso exclusivo de personal autorizado</span>
                     <a
                         href={`tel:${SUPPORT_PHONE.replace(/\s/g, '')}`}
-                        className={`rounded underline-offset-4 hover:text-white hover:underline ${FOCUS}`}
+                        className={`inline-flex min-h-8 items-center rounded underline-offset-4 hover:text-white hover:underline ${FOCUS}`}
                     >
                         Soporte: {SUPPORT_PHONE}
                     </a>
                 </p>
             </div>
+
+            {/* Capas flotantes fuera de la tarjeta (backdrop-filter crearía un contenedor para elementos fixed) */}
+            {notice && <FloatingAlert notice={notice} onRetry={handleRetry} onClose={dismissNotice} />}
+
+            {welcome && (
+                <WelcomeModal
+                    name={welcome.name}
+                    audience={welcome.audience}
+                    onDone={() => {
+                        login(welcome.user);
+                        navigate('/dashboard', { replace: true });
+                    }}
+                />
+            )}
         </div>
     );
 }
-
 
 export default Login;
