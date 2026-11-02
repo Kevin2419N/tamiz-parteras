@@ -136,9 +136,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {/* Fondo Inmersivo Absoluto con CSS Background para asegurar carga perfecta */}
             <div 
                 aria-hidden="true" 
-                className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950"
+                className="fixed inset-0 -z-50 h-screen w-screen overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950"
                 style={{ 
-                    backgroundImage: 'linear-gradient(to bottom right, rgba(8, 145, 178, 0.85), rgba(30, 64, 175, 0.85), rgba(2, 6, 23, 0.95)), url("/fondo-login.png")', 
+                    backgroundImage: `linear-gradient(to bottom right, rgba(8, 145, 178, 0.85), rgba(30, 64, 175, 0.85), rgba(2, 6, 23, 0.95)), url("${import.meta.env.BASE_URL}fondo-login.png")`, 
                     backgroundSize: 'cover', 
                     backgroundPosition: 'center', 
                     backgroundBlendMode: 'overlay' 
