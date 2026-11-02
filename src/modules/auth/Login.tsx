@@ -48,7 +48,6 @@ import type { User } from '../../types';
 const TOKEN_KEY = 'token_sso_parteras';
 const REMEMBER_KEY = 'tamiz_remember_email';
 const PIN_LENGTH = 4;
-const SUPPORT_PHONE = '800 123 4567';
 const WELCOME_MS = 3400;
 const NAME_KEYS = ['nombre', 'nombreCompleto', 'nombre_completo', 'name', 'fullName'] as const;
 const TITLE_TOKENS = /^(dr|dra|lic|mtro|mtra|enf|ing|c)\.?$/i;
@@ -123,16 +122,16 @@ const WELCOME_STAGES: ReadonlyArray<{ from: number; label: string }> = [
 /* Clases compartidas */
 const ACCENT = 'bg-gradient-to-r from-sky-500 to-blue-600';
 const FOCUS =
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900';
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-0 focus-visible:shadow-[0_0_22px_rgba(186,230,253,0.55)]';
 const SLIDE = 'ease-[cubic-bezier(0.65,0,0.35,1)]';
-const GLASS = 'lg-edge relative border border-white/20 bg-slate-950/40 shadow-2xl shadow-black/60 backdrop-blur-2xl';
-const LABEL = 'mb-1.5 block text-xs font-medium text-sky-50';
+const GLASS = 'lg-edge relative border border-white/30 bg-white/15 shadow-2xl shadow-sky-950/25 backdrop-blur-2xl';
+const LABEL = 'mb-1.5 block text-xs font-medium text-white/90';
 const INPUT =
-    'min-h-12 w-full rounded-xl border border-white/20 bg-white/10 pl-10 text-base text-white placeholder:text-white/45 transition duration-200 focus:border-sky-300 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-sky-300/40 disabled:opacity-60';
-const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-sky-200/80';
-const PRIMARY = `lg-sheen group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-950/50 transition duration-150 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
-const SECONDARY = `min-h-12 rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-medium text-white transition duration-150 hover:bg-white/20 active:scale-[0.98] ${FOCUS}`;
-const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/15 bg-black/25 p-1';
+    'min-h-12 w-full rounded-xl border border-white/30 bg-white/15 pl-10 text-base text-white placeholder:text-white/60 shadow-inner shadow-white/5 transition-all duration-200 hover:border-white/50 hover:bg-white/20 focus:border-white/80 focus:bg-white/25 focus:outline-none focus:ring-4 focus:ring-sky-200/30 focus:shadow-[0_0_26px_rgba(186,230,253,0.4)] disabled:opacity-60';
+const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/70 transition-colors duration-200 group-focus-within:text-white';
+const PRIMARY = `lg-sheen group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/30 ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-900/40 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(56,189,248,0.45)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
+const SECONDARY = `min-h-12 rounded-xl border border-white/30 bg-white/15 px-4 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:border-white/50 hover:bg-white/25 active:scale-[0.98] ${FOCUS}`;
+const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/25 bg-white/10 p-1 shadow-inner shadow-white/5 backdrop-blur-md';
 
 const LOGIN_CSS = `
 @keyframes lgFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -163,10 +162,11 @@ const LOGIN_CSS = `
 .lg-float-b{animation:lgFloatB 22s ease-in-out infinite}
 .lg-halo{animation:lgHalo 2.2s ease-out infinite}
 .lg-bar-shine{animation:lgBar 1.6s linear infinite}
+.lg-text{text-shadow:0 1px 2px rgba(15,23,42,.32)}
 .lg-quiet{scrollbar-width:none}
 .lg-quiet::-webkit-scrollbar{display:none}
 .lg-edge::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
-background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(255,255,255,.06) 38%,rgba(255,255,255,0) 62%,rgba(255,255,255,.28));
+background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(255,255,255,.08) 38%,rgba(255,255,255,0) 62%,rgba(255,255,255,.55));
 -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .lg-sheen::after{content:'';position:absolute;inset:0 auto 0 0;width:35%;pointer-events:none;
 background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:translateX(-160%) skewX(-15deg)}
@@ -359,7 +359,7 @@ function FloatingAlert({ notice, onRetry, onClose }: FloatingAlertProps) {
             <div key={notice.id} className="lg-alert-in pointer-events-auto w-full max-w-sm">
                 <div
                     role={isError ? 'alert' : 'status'}
-                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-950/60 p-4 shadow-2xl shadow-black/60 backdrop-blur-2xl ${
+                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-900/35 p-4 shadow-2xl shadow-slate-950/40 backdrop-blur-2xl ${
                         isError ? 'lg-shake-late border-rose-300/30' : 'border-sky-300/30'
                     }`}
                 >
@@ -429,7 +429,7 @@ function PinKey({ disabled, onPress, ariaLabel, muted = false, children }: PinKe
             aria-label={ariaLabel}
             onPointerDown={handlePointerDown}
             onClick={onPress}
-            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-b from-white/15 to-white/5 text-2xl font-semibold shadow-[0_2px_10px_rgba(2,6,23,0.35)] transition duration-100 hover:from-white/25 hover:to-white/10 active:scale-90 active:border-sky-300/60 active:from-sky-400/40 active:to-sky-500/20 active:shadow-inner disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
+            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/30 bg-gradient-to-b from-white/30 to-white/10 text-2xl font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition duration-100 hover:from-white/40 hover:to-white/20 active:scale-90 active:border-sky-300/60 active:from-sky-400/40 active:to-sky-500/20 active:shadow-inner disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
                 muted ? 'text-sky-100' : 'text-white'
             }`}
         >
@@ -481,7 +481,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
                 <label htmlFor="login-rol" className={LABEL}>Perfil de acceso</label>
-                <div className="relative">
+                <div className="group relative">
                     <UserCheck className={FIELD_ICON} aria-hidden="true" />
                     <select
                         id="login-rol"
@@ -496,13 +496,13 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
                             </option>
                         ))}
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-sky-200/80" aria-hidden="true" />
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/70" aria-hidden="true" />
                 </div>
             </div>
 
             <div>
                 <label htmlFor="login-email" className={LABEL}>Correo institucional</label>
-                <div className="relative">
+                <div className="group relative">
                     <Mail className={FIELD_ICON} aria-hidden="true" />
                     <input
                         id="login-email"
@@ -521,7 +521,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
 
             <div>
                 <label htmlFor="login-password" className={LABEL}>Contraseña</label>
-                <div className="relative">
+                <div className="group relative">
                     <Lock className={FIELD_ICON} aria-hidden="true" />
                     <input
                         id="login-password"
@@ -697,7 +697,7 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
 
     return (
         <div className="flex flex-col gap-3">
-            <div className="relative mx-auto aspect-square w-full max-w-[14rem] overflow-hidden rounded-3xl border border-white/20 bg-slate-950/70 shadow-inner shadow-black/50 sm:max-w-[15rem]">
+            <div className="relative mx-auto aspect-square w-full max-w-[14rem] overflow-hidden rounded-3xl border border-white/30 bg-slate-900/45 shadow-inner shadow-slate-950/30 sm:max-w-[15rem]">
                 <video
                     ref={videoRef}
                     muted
@@ -879,7 +879,7 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                 <div role="group" aria-label="Forma de acceso" className={`${PILL_TRACK} flex-1`}>
                     <span
                         aria-hidden="true"
-                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md shadow-sky-950/40 transition-transform duration-300 ${SLIDE} ${
+                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md shadow-sky-900/40 ring-1 ring-white/30 transition-transform duration-300 ${SLIDE} ${
                             method === 'pin' ? 'translate-x-0' : 'translate-x-full'
                         }`}
                     />
@@ -894,8 +894,8 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                             type="button"
                             aria-pressed={method === id}
                             onClick={() => changeMethod(id)}
-                            className={`relative z-10 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-1 text-sm font-medium transition-colors ${FOCUS} ${
-                                method === id ? 'text-white' : 'text-sky-100/70 hover:text-white'
+                            className={`relative z-10 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-1 text-sm font-medium transition-all duration-200 active:scale-[0.97] ${FOCUS} ${
+                                method === id ? 'text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'
                             }`}
                         >
                             <Icon className="size-4 shrink-0" aria-hidden="true" />
@@ -910,7 +910,7 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                         onClick={toggleVoice}
                         aria-pressed={speaking}
                         aria-label={speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
-                        className={`relative flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black/25 text-sky-100 transition hover:bg-white/10 hover:text-white active:scale-90 ${FOCUS} ${
+                        className={`relative flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/15 text-white transition duration-200 hover:bg-white/25 active:scale-90 ${FOCUS} ${
                             speaking ? 'border-sky-300/50 bg-sky-500/30' : ''
                         }`}
                     >
@@ -1032,7 +1032,7 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
         : 'Qué gusto verte por aquí. Estamos dejando todo listo para tu jornada.';
 
     return (
-        <div className="lg-veil fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md">
+        <div className="lg-veil fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 px-4 py-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md">
             <div
                 role="dialog"
                 aria-modal="true"
@@ -1069,7 +1069,7 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
                         aria-valuemin={0}
                         aria-valuemax={100}
                         aria-valuenow={progress}
-                        className="relative h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30"
+                        className="relative h-2.5 overflow-hidden rounded-full border border-white/25 bg-white/15"
                     >
                         <div
                             className={`relative h-full overflow-hidden rounded-full transition-colors duration-500 ${
@@ -1225,84 +1225,104 @@ export function Login() {
         }`;
 
     return (
-        <div className="relative isolate flex min-h-dvh items-center justify-center overflow-x-hidden px-3 py-[max(1rem,env(safe-area-inset-top))] text-white selection:bg-sky-400/40 sm:p-6">
+        <div className="lg-text fixed inset-0 isolate flex items-center justify-center overflow-hidden overscroll-none px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] text-white selection:bg-sky-300/40 sm:p-6">
             <style>{LOGIN_CSS}</style>
 
-            {/* Fondo con profundidad: foto institucional + velo + orbes de luz */}
-            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-slate-950">
-                <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/fondo-login.png')" }} />
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-950/92 via-sky-950/85 to-slate-900/92" />
-                <div className="lg-float-a absolute -left-28 -top-28 size-[30rem] rounded-full bg-sky-500/30 blur-3xl" />
-                <div className="lg-float-b absolute -bottom-36 -right-28 size-[34rem] rounded-full bg-blue-600/30 blur-3xl" />
-                <div className="lg-float-a absolute left-[38%] top-[30%] size-72 rounded-full bg-cyan-400/15 blur-3xl" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(2,6,23,0.6))]" />
+            {/* Fondo: imagen ajustada a la pantalla sin deformarse + velo luminoso */}
+            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-sky-600 via-blue-700 to-slate-900">
+                {/* Relleno desenfocado: solo en pantallas verticales, evita recortes agresivos */}
+                <img
+                    src="/fondo-login.png"
+                    alt=""
+                    draggable={false}
+                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                    className="absolute inset-0 hidden size-full scale-110 object-cover object-center opacity-80 blur-2xl portrait:block"
+                />
+                <img
+                    src="/fondo-login.png"
+                    alt=""
+                    draggable={false}
+                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                    className="absolute inset-0 size-full object-cover object-center portrait:object-contain portrait:[mask-image:linear-gradient(to_bottom,transparent,black_14%,black_86%,transparent)]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-sky-950/45 via-blue-900/30 to-slate-950/50" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(186,230,253,0.28),transparent_60%)]" />
+                <div className="lg-float-a absolute -left-28 -top-28 size-[30rem] rounded-full bg-white/20 blur-3xl" />
+                <div className="lg-float-b absolute -bottom-36 -right-28 size-[34rem] rounded-full bg-cyan-300/25 blur-3xl" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(2,6,23,0.35))]" />
             </div>
 
-            <div className="flex w-full max-w-md flex-col items-center md:max-w-4xl" inert={welcome !== null}>
+            <div className="flex h-full w-full max-w-md items-center justify-center md:max-w-4xl" inert={welcome !== null}>
                 <div
-                    className={`lg-card ${GLASS} flex w-full flex-col overflow-hidden rounded-3xl md:h-[min(41rem,calc(100dvh-3rem))] ${
+                    className={`lg-card ${GLASS} flex h-[42rem] max-h-full min-h-0 w-full flex-col overflow-hidden rounded-3xl md:h-[40rem] ${
                         isInstitutional ? 'md:flex-row' : 'md:flex-row-reverse'
                     }`}
                 >
+                    {/* Reflejo de luz del cristal */}
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/25 via-transparent to-sky-200/10" />
+
                     {/* ── Panel lateral (marca / información) ── */}
-                    <aside className="relative shrink-0 overflow-hidden border-b border-white/15 p-4 sm:p-5 md:w-5/12 md:border-b-0 md:p-8">
+                    <aside className="relative z-10 shrink-0 overflow-hidden border-b border-white/20 p-4 sm:p-5 md:w-5/12 md:border-b-0 md:p-8">
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-blue-600/35 via-sky-500/10 to-transparent transition-opacity duration-700 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-white/30 via-sky-200/10 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-100' : 'opacity-0'
                             }`}
                         />
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-cyan-400/30 via-sky-400/10 to-transparent transition-opacity duration-700 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-cyan-200/35 via-sky-200/10 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-0' : 'opacity-100'
                             }`}
                         />
 
-                        {/* Cabecera compacta (móvil / tablet) */}
-                        <div className="relative flex items-center gap-3 md:hidden">
-                            <img
-                                src="/logo-jurisdiccion.png"
-                                alt="Jurisdicción Sanitaria No. 2 Istmo"
-                                draggable={false}
-                                className="size-11 shrink-0 rounded-full bg-white object-cover shadow-md ring-2 ring-white/40"
-                            />
-                            <div className="min-w-0 flex-1">
-                                <h1 className="truncate text-sm font-semibold leading-tight">Jurisdicción Sanitaria No. 2</h1>
-                                <p className="truncate text-[11px] text-sky-100/80">Istmo, Servicios de Salud de Oaxaca</p>
-                            </div>
-                            <div className="flex h-9 shrink-0 items-center rounded-lg bg-white/95 px-2 shadow-md">
-                                <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-4 w-auto" />
-                            </div>
-                        </div>
-
-                        {/* Panel informativo (escritorio) */}
-                        <div className="relative hidden h-full flex-col justify-between gap-6 md:flex">
+                        {/* Cabecera compacta centrada (móvil / tablet) */}
+                        <div className="relative flex flex-col items-center gap-2.5 text-center md:hidden">
                             <div className="flex items-center gap-3">
                                 <img
                                     src="/logo-jurisdiccion.png"
                                     alt="Jurisdicción Sanitaria No. 2 Istmo"
                                     draggable={false}
-                                    className="size-16 shrink-0 rounded-full bg-white object-cover shadow-xl ring-2 ring-white/40"
+                                    className="size-10 shrink-0 rounded-full bg-white object-cover shadow-md ring-2 ring-white/50"
+                                />
+                                <span aria-hidden="true" className="h-6 w-px bg-white/40" />
+                                <div className="flex h-9 shrink-0 items-center rounded-lg bg-white/95 px-2.5 shadow-md">
+                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-4 w-auto" />
+                                </div>
+                            </div>
+                            <div>
+                                <h1 className="text-base font-semibold leading-tight tracking-tight">Jurisdicción Sanitaria No. 2</h1>
+                                <p className="mt-0.5 text-xs text-white/80 [@media(max-height:520px)]:hidden">Istmo, Servicios de Salud de Oaxaca</p>
+                            </div>
+                        </div>
+
+                        {/* Panel informativo centrado (escritorio) */}
+                        <div className="relative hidden h-full flex-col items-center justify-between gap-6 text-center md:flex">
+                            <div className="flex items-center gap-3">
+                                <img
+                                    src="/logo-jurisdiccion.png"
+                                    alt="Jurisdicción Sanitaria No. 2 Istmo"
+                                    draggable={false}
+                                    className="size-16 shrink-0 rounded-full bg-white object-cover shadow-xl ring-2 ring-white/50"
                                 />
                                 <div className="flex h-14 items-center rounded-xl bg-white/95 px-3 shadow-xl">
                                     <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-9 w-auto" />
                                 </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <h1 className="text-2xl font-semibold leading-tight">Jurisdicción Sanitaria No. 2</h1>
-                                <p className="text-sm text-sky-100/80">Istmo, Servicios de Salud de Oaxaca</p>
+                            <div className="space-y-1.5">
+                                <h1 className="text-2xl font-semibold leading-tight tracking-tight">Jurisdicción Sanitaria No. 2</h1>
+                                <p className="text-sm text-white/80">Istmo, Servicios de Salud de Oaxaca</p>
                             </div>
 
-                            <div key={mode} className="lg-fade space-y-3">
+                            <div key={mode} className="lg-fade flex flex-col items-center space-y-3">
                                 <h2 className="text-lg font-medium">{MODE_COPY[mode].title}</h2>
-                                <p className="text-sm leading-relaxed text-sky-100/80">{MODE_COPY[mode].text}</p>
-                                <ul className="flex flex-wrap gap-2 pt-1">
+                                <p className="mx-auto max-w-xs text-sm leading-relaxed text-white/80">{MODE_COPY[mode].text}</p>
+                                <ul className="flex flex-wrap justify-center gap-2 pt-1">
                                     {MODE_COPY[mode].chips.map(({ Icon, label }) => (
                                         <li
                                             key={label}
-                                            className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-sky-50 backdrop-blur-md"
+                                            className="flex items-center gap-1.5 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-md"
                                         >
                                             <Icon className="size-3.5" aria-hidden="true" />
                                             {label}
@@ -1311,20 +1331,22 @@ export function Login() {
                                 </ul>
                             </div>
 
-                            <p className="text-xs text-sky-100/60">Sistema de gestión de tamiz neonatal y parteras tradicionales</p>
+                            <p className="mx-auto max-w-[16rem] text-xs leading-snug text-white/70">
+                                Sistema de gestión de tamiz neonatal y parteras tradicionales
+                            </p>
                         </div>
                     </aside>
 
                     {/* ── Panel de formularios ── */}
                     <section
-                        className={`flex min-h-0 flex-1 flex-col bg-slate-950/30 p-4 sm:p-6 md:border-white/15 md:p-8 ${
+                        className={`relative z-10 flex min-h-0 flex-1 flex-col bg-white/5 p-4 sm:p-6 md:border-white/20 md:p-8 ${
                             isInstitutional ? 'md:border-l' : 'md:border-r'
                         }`}
                     >
                         <div role="tablist" aria-label="Tipo de acceso" onKeyDown={handleTabKeys} className={`${PILL_TRACK} mb-4 shrink-0`}>
                             <span
                                 aria-hidden="true"
-                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-950/40 transition-transform duration-500 ${SLIDE} ${
+                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-900/40 ring-1 ring-white/30 transition-transform duration-500 ${SLIDE} ${
                                     isInstitutional ? 'translate-x-0' : 'translate-x-full'
                                 }`}
                             />
@@ -1340,8 +1362,8 @@ export function Login() {
                                         aria-controls={panelId(id)}
                                         tabIndex={selected ? 0 : -1}
                                         onClick={() => switchMode(id)}
-                                        className={`relative z-10 flex min-h-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium transition-colors duration-300 ${FOCUS} ${
-                                            selected ? 'text-white' : 'text-sky-100/70 hover:text-white'
+                                        className={`relative z-10 flex min-h-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium transition-all duration-300 active:scale-[0.97] ${FOCUS} ${
+                                            selected ? 'text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'
                                         }`}
                                     >
                                         <Icon
@@ -1354,7 +1376,7 @@ export function Login() {
                             })}
                         </div>
 
-                        <div className="lg-quiet relative min-h-0 flex-1 md:overflow-y-auto">
+                        <div className="lg-quiet relative min-h-0 flex-1 overflow-y-auto">
                             <div
                                 id={panelId('institucional')}
                                 role="tabpanel"
@@ -1377,16 +1399,6 @@ export function Login() {
                         </div>
                     </section>
                 </div>
-
-                <p className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-0.5 text-center text-xs text-sky-100/70">
-                    <span>Uso exclusivo de personal autorizado</span>
-                    <a
-                        href={`tel:${SUPPORT_PHONE.replace(/\s/g, '')}`}
-                        className={`inline-flex min-h-8 items-center rounded underline-offset-4 hover:text-white hover:underline ${FOCUS}`}
-                    >
-                        Soporte: {SUPPORT_PHONE}
-                    </a>
-                </p>
             </div>
 
             {/* Capas flotantes fuera de la tarjeta (backdrop-filter crearía un contenedor para elementos fixed) */}
