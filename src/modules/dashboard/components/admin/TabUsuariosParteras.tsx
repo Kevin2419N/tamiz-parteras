@@ -22,21 +22,18 @@ const obtenerPin = (p: ParteraCredencial): string =>
 
 /* ============================================================================
  * COMPONENTES DE LA CREDENCIAL (FORMATO ID-1 / PVC)
- * Diseñados sobre una base de 324 × 514 px (proporción 54 : 85.6 mm).
+ * Base de diseño: 324 × 514 px (proporción 54 : 85.6 mm).
  * En pantalla se muestran a escala 1 y en impresión se reducen a 54 × 85.6 mm reales.
  * ========================================================================== */
 
-const CARD_SHADOW =
-    '0 24px 48px -12px rgba(0,0,0,0.60), 0 10px 20px -8px rgba(0,0,0,0.40), inset 0 0 0 1px rgba(255,255,255,0.9)';
-
 /** Cenefa floral del Istmo: de lado a lado, como faje textil en el borde inferior */
 const CenefaIstmo: React.FC = () => (
-    <div className="absolute bottom-0 inset-x-0 pointer-events-none">
+    <div className="absolute bottom-0 inset-x-0 z-30 pointer-events-none">
         <div className="h-[3px] w-full bg-gradient-to-r from-[#7A1B38] via-[#9D2449] to-[#7A1B38]" />
         <img
-            src="/istmo.png"
-            alt="Bordado istmeño"
-            className="w-full object-cover h-20 block"
+            src="/Flores-Istmo.png"
+            alt="Bordado floral del Istmo"
+            className="w-full object-cover h-28 block"
             draggable={false}
         />
     </div>
@@ -53,7 +50,7 @@ const AcabadoPVC: React.FC = () => (
             className="cred-gloss absolute inset-0 z-20 pointer-events-none"
             style={{
                 background:
-                    'linear-gradient(115deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0) 36%, rgba(255,255,255,0) 64%, rgba(255,255,255,0.18) 100%)'
+                    'linear-gradient(115deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 34%)'
             }}
         />
     </>
@@ -68,29 +65,26 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
 
     return (
         <div className="cred-slot">
-            <div
-                className="cred-card relative bg-white border border-slate-300 rounded-[19px] overflow-hidden text-slate-900 flex flex-col"
-                style={{ boxShadow: CARD_SHADOW }}
-            >
+            <div className="cred-card relative bg-white border border-slate-300 rounded-3xl overflow-hidden text-slate-900 flex flex-col shadow-2xl shadow-black/60">
                 <AcabadoPVC />
 
                 {/* Logos institucionales */}
-                <div className="flex items-center justify-center gap-3 px-4 pt-3">
+                <div className="flex items-center justify-center gap-3 px-4 pt-2.5">
                     <img
                         src="/logo-jurisdiccion.png"
                         alt="Jurisdicción Sanitaria"
-                        className="h-10 w-auto max-w-[46%] object-contain mix-blend-multiply"
+                        className="h-9 w-auto max-w-[46%] object-contain mix-blend-multiply"
                     />
-                    <div className="h-8 w-px bg-slate-300" />
+                    <div className="h-7 w-px bg-slate-300" />
                     <img
                         src="/Logo-Secretaria.png"
                         alt="Secretaría de Salud"
-                        className="h-10 w-auto max-w-[46%] object-contain mix-blend-multiply"
+                        className="h-9 w-auto max-w-[46%] object-contain mix-blend-multiply"
                     />
                 </div>
 
                 {/* Cintillo guinda */}
-                <div className="mx-4 mt-3 rounded-lg bg-[#9D2449] py-1.5 px-2 text-center shadow-sm">
+                <div className="mx-4 mt-2.5 rounded-lg bg-[#9D2449] py-1.5 px-2 text-center shadow-sm">
                     <span className="block text-[11px] font-black uppercase tracking-[0.08em] text-white leading-tight">
                         CREDENCIAL DE ACREDITACIÓN OFICIAL
                     </span>
@@ -100,9 +94,9 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                 </div>
 
                 {/* Datos de la partera */}
-                <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4 pb-[88px] text-center">
+                <div className="flex-1 flex flex-col items-center justify-center gap-1.5 px-4 pb-[120px] text-center">
                     <div className="rounded-full p-[3px] border-2 border-[#9D2449]/30 bg-white shadow-md">
-                        <div className="w-[92px] h-[92px] rounded-full bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-white flex items-center justify-center font-black text-[32px] tracking-wide ring-4 ring-white">
+                        <div className="w-[80px] h-[80px] rounded-full bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-white flex items-center justify-center font-black text-[28px] tracking-wide ring-4 ring-white">
                             {getInitials(partera.nombreCompleto)}
                         </div>
                     </div>
@@ -111,12 +105,12 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                         <h4 className={`${tamanoNombre} font-black text-slate-900 leading-[1.1] break-words`}>
                             {nombre}
                         </h4>
-                        <p className="text-[10px] font-semibold text-slate-500 mt-1 uppercase tracking-wider">
+                        <p className="text-[9px] font-semibold text-slate-500 mt-0.5 uppercase tracking-wider">
                             Partera Tradicional
                         </p>
                     </div>
 
-                    <div className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 max-w-full">
+                    <div className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1 max-w-full">
                         <span className="text-[8px] font-extrabold text-slate-400 tracking-widest">CURP</span>
                         <span className="font-mono text-[12px] font-bold tracking-wider text-slate-800 break-all">
                             {partera.curp || 'No registrada'}
@@ -129,11 +123,12 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                     </div>
 
                     {partera.lenguaMaterna && (
-                        <div className="flex items-center justify-center gap-1 text-slate-600">
-                            <Languages className="w-3.5 h-3.5 shrink-0 text-[#9D2449]" />
-                            <span className="text-[11px] font-medium">
-                                Lengua: <strong className="text-slate-900">{partera.lenguaMaterna}</strong>
-                            </span>
+                        <div className="flex flex-wrap items-center justify-center gap-x-1.5 rounded-full bg-[#9D2449]/10 border border-[#9D2449]/25 px-3 py-1 max-w-full">
+                            <Languages className="w-4 h-4 shrink-0 text-[#9D2449]" />
+                            <span className="text-[11px] font-semibold text-slate-600">Lengua:</span>
+                            <strong className="text-[13px] font-black text-[#9D2449] leading-tight">
+                                {partera.lenguaMaterna}
+                            </strong>
                         </div>
                     )}
                 </div>
@@ -149,10 +144,7 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
 
     return (
         <div className="cred-slot">
-            <div
-                className="cred-card relative bg-white border border-slate-300 rounded-[19px] overflow-hidden text-slate-900 flex flex-col"
-                style={{ boxShadow: CARD_SHADOW }}
-            >
+            <div className="cred-card relative bg-white border border-slate-300 rounded-3xl overflow-hidden text-slate-900 flex flex-col shadow-2xl shadow-black/60">
                 <AcabadoPVC />
 
                 {/* Cintillo guinda */}
@@ -163,7 +155,7 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
                     </span>
                 </div>
 
-                <div className="flex-1 flex flex-col items-center justify-evenly px-5 pb-[88px]">
+                <div className="flex-1 flex flex-col items-center justify-evenly px-5 pb-[120px]">
                     {/* PIN táctil */}
                     <div className="w-full rounded-xl border-2 border-amber-300 bg-gradient-to-b from-amber-50 to-amber-100 px-3 py-2 text-center shadow-sm">
                         <div className="flex items-center justify-center gap-1 text-amber-900">
@@ -181,10 +173,10 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
                             <img
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&ecc=M&data=${encodeURIComponent(pin)}`}
                                 alt="Código QR de acceso rápido"
-                                className="w-[128px] h-[128px] object-contain block"
+                                className="w-[124px] h-[124px] object-contain block"
                             />
                         </div>
-                        <span className="text-[8.5px] text-slate-500 font-mono mt-1.5 block font-extrabold uppercase tracking-widest">
+                        <span className="text-[8.5px] text-slate-500 font-mono mt-1 block font-extrabold uppercase tracking-widest">
                             Escanear para login
                         </span>
                     </div>
@@ -261,7 +253,7 @@ export const TabUsuariosParteras: React.FC = () => {
     // Estado para la Ventana Central de Confirmación de Éxito
     const [successModalData, setSuccessModalData] = useState<ParteraCredencial | null>(null);
 
-    // Modal para Ver y Generar Credencial QR (Doble Cara con istmo.png y tono Guinda)
+    // Modal para Ver y Generar Credencial QR (Doble Cara con Flores-Istmo.png y tono Guinda)
     const [selectedParteraQR, setSelectedParteraQR] = useState<ParteraCredencial | null>(null);
 
     const generateRandom4Pin = () => {
