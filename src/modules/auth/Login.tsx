@@ -120,18 +120,18 @@ const WELCOME_STAGES: ReadonlyArray<{ from: number; label: string }> = [
 ];
 
 /* Clases compartidas y Estilo Glass Luminoso Avanzado */
-const ACCENT = 'bg-gradient-to-r from-sky-400 to-blue-600';
+const ACCENT = 'bg-gradient-to-r from-cyan-400 to-blue-600';
 const FOCUS =
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0 focus-visible:shadow-[0_0_25px_rgba(255,255,255,0.7)]';
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-0 focus-visible:shadow-[0_0_25px_rgba(34,211,238,0.7)]';
 const SLIDE = 'ease-[cubic-bezier(0.65,0,0.35,1)]';
-const GLASS = 'lg-edge relative border border-white/35 bg-slate-900/30 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.45)] backdrop-blur-3xl';
+const GLASS = 'lg-edge relative border border-white/40 bg-slate-900/30 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.5)] backdrop-blur-3xl';
 const LABEL = 'mb-1.5 block text-xs font-medium text-white/95 tracking-wide';
 const INPUT =
-    'min-h-12 w-full rounded-xl border border-white/30 bg-white/10 pl-10 text-base text-white placeholder:text-white/60 shadow-inner shadow-white/5 transition-all duration-200 hover:border-white/50 hover:bg-white/15 focus:border-white focus:bg-white/20 focus:outline-none focus:ring-4 focus:ring-sky-200/40 focus:shadow-[0_0_30px_rgba(255,255,255,0.4)] disabled:opacity-60';
-const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/80 transition-colors duration-200 group-focus-within:text-white';
-const PRIMARY = `lg-sheen group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/40 ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-900/30 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(56,189,248,0.5)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
-const SECONDARY = `min-h-12 rounded-xl border border-white/30 bg-white/15 px-4 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:border-white/50 hover:bg-white/25 active:scale-[0.98] ${FOCUS}`;
-const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/25 bg-white/10 p-1 shadow-inner shadow-white/5 backdrop-blur-md';
+    'min-h-12 w-full rounded-xl border border-white/30 bg-white/10 pl-10 text-base text-white placeholder:text-white/60 shadow-inner shadow-white/5 transition-all duration-200 hover:border-white/60 hover:bg-white/15 focus:border-cyan-300 focus:bg-white/20 focus:outline-none focus:ring-4 focus:ring-cyan-300/30 focus:shadow-[0_0_25px_rgba(34,211,238,0.35)] disabled:opacity-60';
+const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/80 transition-colors duration-200 group-focus-within:text-cyan-300';
+const PRIMARY = `lg-sheen group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/40 ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-900/30 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(34,211,238,0.45)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
+const SECONDARY = `min-h-12 rounded-xl border border-white/30 bg-white/15 px-4 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:border-white/60 hover:bg-white/25 active:scale-[0.98] ${FOCUS}`;
+const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/30 bg-white/10 p-1 shadow-inner shadow-white/5 backdrop-blur-md';
 
 const LOGIN_CSS = `
 @keyframes lgFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -166,10 +166,10 @@ const LOGIN_CSS = `
 .lg-quiet{scrollbar-width:none}
 .lg-quiet::-webkit-scrollbar{display:none}
 .lg-edge::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
-background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,255,255,.25) 35%,rgba(255,255,255,0) 60%,rgba(255,255,255,.5));
+background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.3) 35%,rgba(255,255,255,0) 60%,rgba(255,255,255,.6));
 -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .lg-sheen::after{content:'';position:absolute;inset:0 auto 0 0;width:35%;pointer-events:none;
-background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:translateX(-160%) skewX(-15deg)}
+background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-160%) skewX(-15deg)}
 .lg-sheen:hover:not(:disabled)::after{animation:lgSheen .9s ease}
 @media (prefers-reduced-motion:reduce){
 .lg-fade,.lg-shake,.lg-shake-late,.lg-card,.lg-laser,.lg-pop,.lg-ripple,.lg-alert-in,.lg-veil,.lg-modal,.lg-float-a,.lg-float-b,.lg-halo,.lg-bar-shine{animation:none}
@@ -356,13 +356,13 @@ function FloatingAlert({ notice, onRetry, onClose }: FloatingAlertProps) {
             <div key={notice.id} className="lg-alert-in pointer-events-auto w-full max-w-sm">
                 <div
                     role={isError ? 'alert' : 'status'}
-                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-900/80 p-4 shadow-2xl shadow-slate-950/60 backdrop-blur-2xl ${
-                        isError ? 'lg-shake-late border-rose-300/40' : 'border-sky-300/40'
+                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-900/85 p-4 shadow-2xl shadow-slate-950/60 backdrop-blur-2xl ${
+                        isError ? 'lg-shake-late border-rose-300/40' : 'border-cyan-300/40'
                     }`}
                 >
                     <div
                         aria-hidden="true"
-                        className={`absolute -top-12 left-1/2 h-24 w-48 -translate-x-1/2 rounded-full blur-2xl ${isError ? 'bg-rose-500/30' : 'bg-sky-400/30'}`}
+                        className={`absolute -top-12 left-1/2 h-24 w-48 -translate-x-1/2 rounded-full blur-2xl ${isError ? 'bg-rose-500/30' : 'bg-cyan-400/30'}`}
                     />
                     <button
                         type="button"
@@ -375,14 +375,14 @@ function FloatingAlert({ notice, onRetry, onClose }: FloatingAlertProps) {
                     <div className="relative flex gap-3 pr-8">
                         <span
                             className={`flex size-11 shrink-0 items-center justify-center rounded-full ring-1 ${
-                                isError ? 'bg-rose-500/25 text-amber-300 ring-rose-300/50' : 'bg-sky-400/25 text-sky-200 ring-sky-300/50'
+                                isError ? 'bg-rose-500/25 text-amber-300 ring-rose-300/50' : 'bg-cyan-400/25 text-cyan-200 ring-cyan-300/50'
                             }`}
                         >
                             <Icon className="size-6" aria-hidden="true" />
                         </span>
                         <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-white">{isError ? 'No pudimos iniciar sesión' : 'Aviso'}</p>
-                            <p className="mt-0.5 text-sm leading-snug text-sky-50/90">{notice.text}</p>
+                            <p className="mt-0.5 text-sm leading-snug text-cyan-50/90">{notice.text}</p>
                         </div>
                     </div>
                     <div className="relative mt-3.5 flex justify-end">
@@ -426,8 +426,8 @@ function PinKey({ disabled, onPress, ariaLabel, muted = false, children }: PinKe
             aria-label={ariaLabel}
             onPointerDown={handlePointerDown}
             onClick={onPress}
-            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/30 bg-gradient-to-b from-white/25 to-white/10 text-2xl font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition duration-100 hover:from-white/35 hover:to-white/15 active:scale-90 active:border-sky-300/70 active:from-sky-400/45 active:to-sky-500/25 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
-                muted ? 'text-sky-100' : 'text-white'
+            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/35 bg-gradient-to-b from-white/30 to-white/10 text-2xl font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition duration-100 hover:from-white/40 hover:to-white/20 active:scale-90 active:border-cyan-300/75 active:from-cyan-400/45 active:to-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
+                muted ? 'text-cyan-100' : 'text-white'
             }`}
         >
             {ripple && (
@@ -436,7 +436,7 @@ function PinKey({ disabled, onPress, ariaLabel, muted = false, children }: PinKe
                     aria-hidden="true"
                     onAnimationEnd={() => setRipple(null)}
                     style={{ left: ripple.x, top: ripple.y }}
-                    className="lg-ripple pointer-events-none absolute size-28 rounded-full bg-sky-200/60"
+                    className="lg-ripple pointer-events-none absolute size-28 rounded-full bg-cyan-200/60"
                 />
             )}
             <span className="relative">{children}</span>
@@ -536,7 +536,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
                         aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                        className={`absolute right-1 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg text-sky-100 transition hover:bg-white/15 hover:text-white active:scale-90 ${FOCUS}`}
+                        className={`absolute right-1 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg text-cyan-100 transition hover:bg-white/15 hover:text-white active:scale-90 ${FOCUS}`}
                     >
                         {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                     </button>
@@ -544,19 +544,19 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm">
-                <label className="flex min-h-9 cursor-pointer select-none items-center gap-2 text-sky-50">
+                <label className="flex min-h-9 cursor-pointer select-none items-center gap-2 text-cyan-50">
                     <input
                         type="checkbox"
                         checked={remember}
                         onChange={(event) => setRemember(event.target.checked)}
-                        className="size-4 cursor-pointer rounded accent-sky-400"
+                        className="size-4 cursor-pointer rounded accent-cyan-400"
                     />
                     Recordar equipo
                 </label>
                 <button
                     type="button"
                     onClick={onForgotPassword}
-                    className={`min-h-9 rounded text-sky-200 underline-offset-4 transition-colors hover:text-white hover:underline ${FOCUS}`}
+                    className={`min-h-9 rounded text-cyan-200 underline-offset-4 transition-colors hover:text-white hover:underline ${FOCUS}`}
                 >
                     ¿Olvidaste tu contraseña?
                 </button>
@@ -580,7 +580,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Visor QR
+   Visor QR Profesional con Gráfico SVG de Alta Definición
    ═══════════════════════════════════════════════════════════════ */
 
 interface QrViewfinderProps {
@@ -690,11 +690,12 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
     };
 
     const live = state === 'scanning' || state === 'verifying' || state === 'success';
-    const frame = state === 'success' ? 'border-emerald-300' : rejected ? 'border-rose-300' : 'border-sky-300';
+    // Colores de alto contraste (Cian / Esmeralda / Rosa para errores)
+    const frame = state === 'success' ? 'border-emerald-400' : rejected ? 'border-rose-400' : 'border-cyan-400';
 
     return (
         <div className="flex flex-col gap-3">
-            <div className="relative mx-auto aspect-square w-full max-w-[13rem] overflow-hidden rounded-3xl border border-white/35 bg-slate-900/50 shadow-inner sm:max-w-[14rem]">
+            <div className="relative mx-auto aspect-square w-full max-w-[13rem] overflow-hidden rounded-3xl border border-white/40 bg-slate-950/60 shadow-inner sm:max-w-[14rem]">
                 <video
                     ref={videoRef}
                     muted
@@ -705,40 +706,47 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
                 <canvas ref={canvasRef} className="hidden" />
 
                 {!live && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-sky-900/50 to-slate-950/70">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-cyan-950/45 to-slate-950/75 p-6">
                         {state === 'denied' ? (
-                            <CameraOff className="size-11 text-sky-200/60" aria-hidden="true" />
+                            <CameraOff className="size-11 text-cyan-300/70" aria-hidden="true" />
                         ) : (
-                            <QrCode className="size-12 text-sky-200/50" aria-hidden="true" />
+                            /* Gráfico QR Profesional de Alta Definición con brillo intermitente */
+                            <div className="relative flex items-center justify-center p-3 rounded-2xl bg-white/5 border border-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.15)] animate-pulse">
+                                <svg className="size-16 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h1.5v1.5h-1.5zM6.75 16.5h1.5v1.5h-1.5zM16.5 6.75h1.5v1.5h-1.5zM13.5 13.5h1.5v1.5h-1.5zM16.5 16.5h1.5v1.5h-1.5zM13.5 19.5h3v-3h-3z" />
+                                </svg>
+                            </div>
                         )}
                     </div>
                 )}
 
-                <div className="pointer-events-none absolute inset-5" aria-hidden="true">
-                    <span className={`absolute left-0 top-0 size-7 rounded-tl-xl border-l-4 border-t-4 transition-colors duration-300 ${frame}`} />
-                    <span className={`absolute right-0 top-0 size-7 rounded-tr-xl border-r-4 border-t-4 transition-colors duration-300 ${frame}`} />
-                    <span className={`absolute bottom-0 left-0 size-7 rounded-bl-xl border-b-4 border-l-4 transition-colors duration-300 ${frame}`} />
-                    <span className={`absolute bottom-0 right-0 size-7 rounded-br-xl border-b-4 border-r-4 transition-colors duration-300 ${frame}`} />
+                {/* Esquinas de enfoque de alto contraste en Cian Neón */}
+                <div className="pointer-events-none absolute inset-4" aria-hidden="true">
+                    <span className={`absolute left-0 top-0 size-7 rounded-tl-xl border-l-4 border-t-4 transition-colors duration-300 shadow-[0_0_10px_rgba(34,211,238,0.5)] ${frame}`} />
+                    <span className={`absolute right-0 top-0 size-7 rounded-tr-xl border-r-4 border-t-4 transition-colors duration-300 shadow-[0_0_10px_rgba(34,211,238,0.5)] ${frame}`} />
+                    <span className={`absolute bottom-0 left-0 size-7 rounded-bl-xl border-b-4 border-l-4 transition-colors duration-300 shadow-[0_0_10px_rgba(34,211,238,0.5)] ${frame}`} />
+                    <span className={`absolute bottom-0 right-0 size-7 rounded-br-xl border-b-4 border-r-4 transition-colors duration-300 shadow-[0_0_10px_rgba(34,211,238,0.5)] ${frame}`} />
                     {state === 'scanning' && !rejected && (
-                        <span className="lg-laser absolute inset-x-0 top-0 h-0.5 rounded-full bg-gradient-to-r from-transparent via-sky-200 to-transparent shadow-[0_0_16px_4px_rgba(125,211,252,0.85)] motion-reduce:hidden" />
+                        <span className="lg-laser absolute inset-x-0 top-0 h-0.5 rounded-full bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_16px_4px_rgba(34,211,238,0.9)] motion-reduce:hidden" />
                     )}
                 </div>
 
                 {(state === 'starting' || state === 'verifying') && (
-                    <div className="lg-fade absolute inset-0 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
-                        <Loader2 className="size-9 animate-spin text-sky-200" aria-hidden="true" />
+                    <div className="lg-fade absolute inset-0 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
+                        <Loader2 className="size-9 animate-spin text-cyan-300" aria-hidden="true" />
                     </div>
                 )}
 
                 {state === 'success' && (
-                    <div className="lg-fade absolute inset-0 flex flex-col items-center justify-center gap-2 bg-emerald-950/80 text-emerald-100">
+                    <div className="lg-fade absolute inset-0 flex flex-col items-center justify-center gap-2 bg-emerald-950/85 text-emerald-100">
                         <CheckCircle2 className="lg-pop size-12 text-emerald-300" aria-hidden="true" />
                         <span className="text-sm font-medium">Credencial reconocida</span>
                     </div>
                 )}
             </div>
 
-            <p className="flex min-h-10 items-center justify-center text-center text-sm leading-snug text-sky-50/90" aria-live="polite">
+            <p className="flex min-h-10 items-center justify-center text-center text-sm leading-snug text-cyan-50/90 font-medium" aria-live="polite">
                 {state === 'idle' && 'Activa la cámara y acerca tu credencial con código QR.'}
                 {state === 'starting' && 'Abriendo la cámara…'}
                 {state === 'scanning' && !rejected && 'Centra el código QR de la partera dentro del marco.'}
@@ -908,10 +916,10 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                         aria-pressed={speaking}
                         aria-label={speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
                         className={`relative flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/35 bg-white/15 text-white transition duration-200 hover:bg-white/25 active:scale-90 ${FOCUS} ${
-                            speaking ? 'border-sky-300/60 bg-sky-500/40' : ''
+                            speaking ? 'border-cyan-300/70 bg-cyan-500/40' : ''
                         }`}
                     >
-                        {speaking && <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-2xl border border-sky-300/70" />}
+                        {speaking && <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-2xl border border-cyan-300/80" />}
                         {speaking ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
                     </button>
                 )}
@@ -931,14 +939,14 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                                     key={index}
                                     className={`size-5 rounded-full border-2 transition-all duration-200 ${
                                         index < digits.length
-                                            ? 'scale-110 border-sky-300 bg-sky-300 shadow-[0_0_18px_rgba(125,211,252,0.85)]'
+                                            ? 'scale-110 border-cyan-300 bg-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.85)]'
                                             : 'border-white/45 bg-transparent'
                                     }`}
                                 />
                             ))}
                         </div>
 
-                        <p className="flex h-5 items-center justify-center gap-2 text-sm text-sky-50/90" aria-live="polite">
+                        <p className="flex h-5 items-center justify-center gap-2 text-sm text-cyan-50/90 font-medium" aria-live="polite">
                             {busy ? (
                                 <>
                                     <Loader2 className="size-4 animate-spin" />
@@ -1036,20 +1044,20 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
                 aria-labelledby="welcome-title"
                 className={`${GLASS} lg-modal w-full max-w-sm overflow-hidden rounded-3xl p-6 text-center sm:p-8`}
             >
-                <div aria-hidden="true" className="absolute -top-16 left-1/2 h-40 w-64 -translate-x-1/2 rounded-full bg-sky-400/35 blur-3xl" />
+                <div aria-hidden="true" className="absolute -top-16 left-1/2 h-40 w-64 -translate-x-1/2 rounded-full bg-cyan-400/35 blur-3xl" />
 
                 <div className="relative mx-auto mb-5 flex size-24 items-center justify-center">
-                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-sky-300/60" />
-                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-sky-300/50 [animation-delay:1.1s]" />
+                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-cyan-300/60" />
+                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-cyan-300/50 [animation-delay:1.1s]" />
                     <img
                         src="/logo-jurisdiccion.png"
                         alt=""
                         draggable={false}
-                        className="relative size-20 rounded-full bg-white/90 backdrop-blur-sm object-cover shadow-xl ring-4 ring-white/40"
+                        className="relative size-20 rounded-full bg-white/90 backdrop-blur-sm object-cover shadow-xl ring-4 ring-white/40 p-0.5"
                     />
                     <span
                         className={`absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full ring-4 ring-slate-900/60 transition-colors duration-500 ${
-                            complete ? 'bg-emerald-400 text-emerald-950' : 'bg-sky-400 text-white'
+                            complete ? 'bg-emerald-400 text-emerald-950' : 'bg-cyan-400 text-white'
                         }`}
                     >
                         {complete ? <CheckCircle2 className="lg-pop size-5" /> : <HeartHandshake className="size-4" />}
@@ -1057,7 +1065,7 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
                 </div>
 
                 <h2 id="welcome-title" className="relative text-2xl font-semibold leading-tight text-white">{title}</h2>
-                <p className="relative mx-auto mt-2 max-w-xs text-sm leading-relaxed text-sky-50/90">{message}</p>
+                <p className="relative mx-auto mt-2 max-w-xs text-sm leading-relaxed text-cyan-50/90">{message}</p>
 
                 <div className="relative mt-6">
                     <div
@@ -1070,7 +1078,7 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
                     >
                         <div
                             className={`relative h-full overflow-hidden rounded-full transition-colors duration-500 ${
-                                complete ? 'bg-gradient-to-r from-emerald-400 to-emerald-300' : 'bg-gradient-to-r from-sky-400 to-cyan-300'
+                                complete ? 'bg-gradient-to-r from-emerald-400 to-emerald-300' : 'bg-gradient-to-r from-cyan-400 to-blue-300'
                             }`}
                             style={{ width: `${progress}%` }}
                         >
@@ -1079,7 +1087,7 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
                             )}
                         </div>
                     </div>
-                    <div className="mt-2.5 flex items-center justify-between gap-3 text-xs text-sky-50/90" aria-live="polite">
+                    <div className="mt-2.5 flex items-center justify-between gap-3 text-xs text-cyan-50/90" aria-live="polite">
                         <span key={stage.label} className="lg-fade flex min-w-0 items-center gap-1.5 truncate">
                             {complete ? (
                                 <CheckCircle2 className="size-3.5 shrink-0 text-emerald-300" aria-hidden="true" />
@@ -1221,11 +1229,11 @@ export function Login() {
         }`;
 
     return (
-        <div className="lg-text fixed inset-0 isolate flex items-center justify-center overflow-hidden overscroll-none px-3 py-3 text-white selection:bg-sky-300/40 sm:p-6">
+        <div className="lg-text fixed inset-0 isolate flex items-center justify-center overflow-hidden overscroll-none px-3 py-3 text-white selection:bg-cyan-300/40 sm:p-6">
             <style>{LOGIN_CSS}</style>
 
-            {/* Fondo vibrante, nítido y optimizado para lucir al máximo */}
-            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-sky-500 via-blue-700 to-slate-950">
+            {/* Fondo vibrante, nítido y optimizado */}
+            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950">
                 <img
                     src="/fondo-login.png"
                     alt=""
@@ -1233,10 +1241,10 @@ export function Login() {
                     onError={(event) => { event.currentTarget.style.display = 'none'; }}
                     className="absolute inset-0 size-full object-cover object-center opacity-85 brightness-105 contrast-105 blur-md"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-950/20 via-blue-900/10 to-slate-950/40" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(186,230,253,0.3),transparent_70%)]" />
-                <div className="lg-float-a absolute -left-20 -top-20 size-[32rem] rounded-full bg-sky-400/25 blur-3xl" />
-                <div className="lg-float-b absolute -bottom-28 -right-20 size-[36rem] rounded-full bg-cyan-400/25 blur-3xl" />
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/20 via-blue-900/10 to-slate-950/40" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(165,243,252,0.3),transparent_70%)]" />
+                <div className="lg-float-a absolute -left-20 -top-20 size-[32rem] rounded-full bg-cyan-400/25 blur-3xl" />
+                <div className="lg-float-b absolute -bottom-28 -right-20 size-[36rem] rounded-full bg-blue-400/25 blur-3xl" />
             </div>
 
             {/* Contenedor Fijo y Centrado */}
@@ -1246,20 +1254,20 @@ export function Login() {
                         isInstitutional ? 'md:flex-row' : 'md:flex-row-reverse'
                     }`}
                 >
-                    {/* Reflejo de luz superior del cristal (Efecto especular) */}
-                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-tr from-white/20 via-transparent to-sky-200/25" />
+                    {/* Reflejo de luz superior del cristal */}
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-tr from-white/20 via-transparent to-cyan-200/25" />
 
-                    {/* ── Panel lateral (Logotipos sin fondo blanco forzado y alta elegancia) ── */}
+                    {/* ── Panel lateral (Logotipos limpios y fluidos) ── */}
                     <aside className="relative z-10 shrink-0 overflow-hidden border-b border-white/20 p-4 sm:p-5 md:w-5/12 md:border-b-0 md:p-8 flex flex-col justify-between">
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-white/25 via-sky-200/10 to-transparent transition-opacity duration-700 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-white/25 via-cyan-200/10 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-100' : 'opacity-0'
                             }`}
                         />
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-cyan-200/25 via-sky-200/10 to-transparent transition-opacity duration-700 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-blue-200/25 via-cyan-200/10 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-0' : 'opacity-100'
                             }`}
                         />
@@ -1284,7 +1292,7 @@ export function Login() {
                             </div>
                         </div>
 
-                        {/* Versión escritorio centrada (Logotipos sin fondo blanco sólido, integrados con sutileza) */}
+                        {/* Versión escritorio centrada */}
                         <div className="relative hidden h-full flex-col items-center justify-between gap-4 text-center md:flex">
                             <div className="flex items-center gap-3.5 pt-2">
                                 <img
