@@ -22,11 +22,8 @@ const obtenerPin = (p: ParteraCredencial): string =>
 
 /* ============================================================================
  * COMPONENTES DE LA CREDENCIAL (FORMATO ID-1 / PVC)
- * Base de diseño: 324 × 514 px (proporción 54 : 85.6 mm).
- * Utilizan plantillas gráficas limpias de fondo para Frente y Reverso.
  * ========================================================================== */
 
-/** Ranura de cordón y brillo de PVC (solo decorativos en pantalla) */
 const AcabadoPVC: React.FC = () => (
     <>
         <div
@@ -53,7 +50,7 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
     return (
         <div className="cred-slot">
             <div className="cred-card relative bg-white border border-slate-300 rounded-3xl overflow-hidden text-slate-900 flex flex-col shadow-2xl shadow-black/60">
-                {/* Plantilla de fondo para el Frente */}
+                {/* Plantilla de fondo oficial para el Frente */}
                 <img
                     src="/plantilla-frente.png"
                     alt="Plantilla Frente"
@@ -141,7 +138,7 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
     return (
         <div className="cred-slot">
             <div className="cred-card relative bg-white border border-slate-300 rounded-3xl overflow-hidden text-slate-900 flex flex-col shadow-2xl shadow-black/60">
-                {/* Plantilla de fondo para el Reverso */}
+                {/* Plantilla de fondo oficial para el Reverso */}
                 <img
                     src="/plantilla-reverso.png"
                     alt="Plantilla Reverso"
