@@ -124,7 +124,7 @@ const ACCENT = 'bg-gradient-to-r from-sky-400 to-blue-600';
 const FOCUS =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0 focus-visible:shadow-[0_0_25px_rgba(255,255,255,0.7)]';
 const SLIDE = 'ease-[cubic-bezier(0.65,0,0.35,1)]';
-const GLASS = 'lg-edge relative border border-white/40 bg-white/[0.12] shadow-[0_25px_50px_-12px_rgba(15,23,42,0.35)] backdrop-blur-2xl';
+const GLASS = 'lg-edge relative border border-white/40 bg-slate-900/40 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.5)] backdrop-blur-2xl';
 const LABEL = 'mb-1.5 block text-xs font-medium text-white/95 tracking-wide';
 const INPUT =
     'min-h-12 w-full rounded-xl border border-white/35 bg-white/10 pl-10 text-base text-white placeholder:text-white/60 shadow-inner shadow-white/5 transition-all duration-200 hover:border-white/60 hover:bg-white/15 focus:border-white focus:bg-white/20 focus:outline-none focus:ring-4 focus:ring-sky-200/40 focus:shadow-[0_0_30px_rgba(255,255,255,0.4)] disabled:opacity-60';
@@ -356,7 +356,7 @@ function FloatingAlert({ notice, onRetry, onClose }: FloatingAlertProps) {
             <div key={notice.id} className="lg-alert-in pointer-events-auto w-full max-w-sm">
                 <div
                     role={isError ? 'alert' : 'status'}
-                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-900/60 p-4 shadow-2xl shadow-slate-950/50 backdrop-blur-2xl ${
+                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-900/80 p-4 shadow-2xl shadow-slate-950/60 backdrop-blur-2xl ${
                         isError ? 'lg-shake-late border-rose-300/40' : 'border-sky-300/40'
                     }`}
                 >
@@ -1224,7 +1224,7 @@ export function Login() {
         <div className="lg-text fixed inset-0 isolate flex items-center justify-center overflow-hidden overscroll-none px-3 py-3 text-white selection:bg-sky-300/40 sm:p-6">
             <style>{LOGIN_CSS}</style>
 
-            {/* Fondo optimizado y luminoso (sin estirarse de más, perfectamente centrado) */}
+            {/* Fondo optimizado y luminoso */}
             <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-slate-900">
                 <img
                     src="/fondo-login.png"
@@ -1240,7 +1240,7 @@ export function Login() {
             </div>
 
             {/* Contenedor Fijo y Centrado */}
-            <div className="flex h-full w-full max-w-md items-center justify-center md:max-w-4xl" inert={welcome !== null}>
+            <div className="flex h-full w-full max-w-md items-center justify-center md:max-w-4xl" inert={welcome !== null ? true : undefined}>
                 <div
                     className={`lg-card ${GLASS} flex max-h-[92vh] min-h-0 w-full flex-col overflow-hidden rounded-3xl md:h-[40rem] ${
                         isInstitutional ? 'md:flex-row' : 'md:flex-row-reverse'
@@ -1325,7 +1325,7 @@ export function Login() {
                         </div>
                     </aside>
 
-                    {/* ── Panel de formularios (Con scroll interno si es necesario, limpio de teléfonos) ── */}
+                    {/* ── Panel de formularios ── */}
                     <section
                         className={`relative z-10 flex min-h-0 flex-1 flex-col bg-white/[0.04] p-4 sm:p-6 md:border-white/25 md:p-8 overflow-y-auto lg-quiet ${
                             isInstitutional ? 'md:border-l' : 'md:border-r'
@@ -1369,7 +1369,7 @@ export function Login() {
                                 id={panelId('institucional')}
                                 role="tabpanel"
                                 aria-labelledby={tabId('institucional')}
-                                inert={!isInstitutional}
+                                inert={!isInstitutional ? true : undefined}
                                 className={panelClass(isInstitutional, 'left')}
                             >
                                 <InstitutionalForm busy={locked} onSubmit={handleInstitutional} onForgotPassword={handleForgotPassword} />
@@ -1379,7 +1379,7 @@ export function Login() {
                                 id={panelId('partera')}
                                 role="tabpanel"
                                 aria-labelledby={tabId('partera')}
-                                inert={isInstitutional}
+                                inert={isInstitutional ? true : undefined}
                                 className={panelClass(!isInstitutional, 'right')}
                             >
                                 <MidwifeAccess active={!isInstitutional} busy={locked} voice={voice} onPin={handlePin} onQr={handleQr} />
