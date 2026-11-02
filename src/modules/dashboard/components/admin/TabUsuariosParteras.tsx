@@ -25,9 +25,9 @@ const obtenerNombreCompleto = (p: ParteraCredencial): string => {
         return p.nombreCompleto;
     }
     const partes = [
-        (p as any).nombre,
-        (p as any).apellidoPaterno,
-        (p as any).apellidoMaterno
+        (p as any).nombre ?? (p as any).nombres,
+        (p as any).apellidoPaterno ?? (p as any).primerApellido ?? (p as any).apellido_paterno,
+        (p as any).apellidoMaterno ?? (p as any).segundoApellido ?? (p as any).apellido_materno
     ].filter(Boolean);
     if (partes.length > 0) {
         return partes.join(' ');
@@ -36,8 +36,16 @@ const obtenerNombreCompleto = (p: ParteraCredencial): string => {
 };
 
 /* ============================================================================
- * COMPONENTES DE LA CREDENCIAL (FORMATO ID-1 / PVC)
+ * COMPONENTES DE LA CREDENCIAL (FORMATO ID-1 / PVC · 324 x 514 px)
  * ========================================================================== */
+
+/** Lee la lengua materna sin importar cómo la entregue el backend. */
+const obtenerLengua = (p: ParteraCredencial): string => {
+    const q = p as any;
+    const valor =
+        p.lenguaMaterna ?? q.lengua_materna ?? q.lengua ?? q.idioma ?? q.lenguaIndigena ?? '';
+    return String(valor).trim();
+};
 
 const AcabadoPVC: React.FC = () => (
     <>
@@ -55,110 +63,116 @@ const AcabadoPVC: React.FC = () => (
     </>
 );
 
+/** Fondo común: gradiente marfil + cenefa floral a sangre completa (sin huecos). */
+const FondoCredencial: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
+    <>
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-white via-amber-50/20 to-rose-50/30" />
+        <img
+            src={src}
+            alt={alt}
+            draggable={false}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            className="absolute inset-0 z-[1] w-full h-full object-cover object-bottom pointer-events-none select-none"
+        />
+    </>
+);
+
 const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera }) => {
     const nombre = obtenerNombreCompleto(partera);
     const ubicacion = [partera.municipio || 'Juchitán de Zaragoza', partera.comunidad || 'Quinta Sección']
         .filter(Boolean)
         .join(' • ');
-    const tamanoNombre = nombre.length > 32 ? 'text-[11.5px]' : nombre.length > 20 ? 'text-[13.5px]' : 'text-[15.5px]';
+    const tamanoNombre = nombre.length > 32 ? 'text-[12px]' : nombre.length > 22 ? 'text-[14px]' : 'text-[17px]';
     const iniciales = getInitials(nombre);
     const fotoUrl = (partera as any).fotoUrl;
+    const lengua = obtenerLengua(partera);
     const folioControl = `JSN2-2026-${String(partera.id || '049').padStart(3, '0')}`;
 
     return (
         <div className="cred-slot">
-            <div className="cred-card relative bg-white border border-slate-300 rounded-3xl overflow-hidden text-slate-900 flex flex-col shadow-2xl shadow-black/60">
-                {/* Plantilla de fondo oficial para el Frente */}
-                <img
-                    src="/plantilla-frente.png"
-                    alt="Plantilla Frente"
-                    className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
-                    draggable={false}
-                />
-                
+            <div className="cred-card relative flex flex-col overflow-hidden rounded-3xl border border-slate-300 bg-white text-slate-900 shadow-2xl shadow-black/60">
+                <FondoCredencial src="/plantilla-frente.png" alt="Plantilla Frente" />
                 <AcabadoPVC />
 
-                {/* Contenido en Z-10 simétrico y estilizado */}
-                <div className="relative z-10 flex flex-col h-full justify-between p-3.5 pt-1 pb-6">
-                    
-                    {/* Logos institucionales */}
-                    <div className="pt-1">
-                        <div className="flex items-center justify-center gap-3 px-1">
-                            <img
-                                src="/logo-jurisdiccion.png"
-                                alt="Jurisdicción Sanitaria"
-                                className="h-10 w-auto max-w-[43%] object-contain mix-blend-multiply"
-                            />
-                            <div className="h-7 w-px bg-amber-400/80" />
-                            <img
-                                src="/Logo-Secretaria.png"
-                                alt="Medicina Tradicional"
-                                className="h-10 w-auto max-w-[43%] object-contain mix-blend-multiply"
-                            />
+                {/* Contenido: la zona inferior (~115px) queda libre para la cenefa floral */}
+                <div className="relative z-10 flex flex-1 flex-col px-4 pt-1.5 pb-[118px]">
+
+                    {/* Logos institucionales simétricos */}
+                    <div className="rounded-2xl bg-white/90 px-2 py-1.5 shadow-sm ring-1 ring-amber-200/60">
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                            <div className="flex h-10 items-center justify-center">
+                                <img
+                                    src="/logo-jurisdiccion.png"
+                                    alt="Jurisdicción Sanitaria"
+                                    className="h-full w-auto max-w-full object-contain"
+                                />
+                            </div>
+                            <div className="h-8 w-px bg-gradient-to-b from-transparent via-amber-400 to-transparent" />
+                            <div className="flex h-10 items-center justify-center">
+                                <img
+                                    src="/Logo-Secretaria.png"
+                                    alt="Medicina Tradicional"
+                                    className="h-full w-auto max-w-full object-contain"
+                                />
+                            </div>
                         </div>
-                        <div className="mx-auto w-4/5 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400 to-transparent mt-1.5" />
                     </div>
 
-                    {/* Rectángulo guinda institucional */}
-                    <div className="mx-1 mt-1 rounded-xl bg-gradient-to-r from-[#8B1E3F] via-[#9D2449] to-[#8B1E3F] py-1.5 px-2 text-center shadow-lg border border-amber-300/80 ring-1 ring-amber-300/30">
-                        <span className="block text-[9.5px] font-black uppercase tracking-[0.06em] text-white leading-tight">
+                    {/* Barra guinda institucional */}
+                    <div className="mt-2 rounded-xl border border-amber-300/90 bg-gradient-to-r from-[#8B1E3F] via-[#9D2449] to-[#8B1E3F] px-2 py-1.5 text-center shadow-md shadow-rose-950/30 ring-1 ring-amber-300/40 ring-offset-1 ring-offset-white/60">
+                        <span className="block text-[9.5px] font-black uppercase leading-tight tracking-[0.06em] text-white">
                             CREDENCIAL DE ACREDITACIÓN OFICIAL
                         </span>
-                        <span className="block text-[7.5px] font-bold text-amber-200 tracking-wider leading-tight mt-0.5">
+                        <span className="mt-0.5 block text-[7.5px] font-bold leading-tight tracking-wider text-amber-200">
                             Medicina Tradicional e Interculturalidad
                         </span>
                     </div>
 
-                    {/* Bloque central perfectamente centrado y simétrico */}
-                    <div className="flex flex-col items-center justify-center gap-1 text-center my-auto">
-                        
-                        {/* Avatar limpio y perfectamente centrado */}
-                        <div className="relative inline-block my-1">
-                            <div className="w-[62px] h-[62px] rounded-full border-[2.5px] border-amber-400 bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-white flex items-center justify-center font-black text-[20px] tracking-wide shadow-lg overflow-hidden ring-4 ring-rose-950/10">
-                                {fotoUrl ? (
-                                    <img src={fotoUrl} alt={nombre} className="w-full h-full object-cover" />
-                                ) : (
-                                    iniciales
-                                )}
-                            </div>
+                    {/* Bloque central: avatar + nombre en un mismo eje vertical */}
+                    <div className="flex flex-1 flex-col items-center justify-evenly text-center">
+
+                        <div className="h-[66px] w-[66px] shrink-0 overflow-hidden rounded-full border-[2.5px] border-amber-400 bg-gradient-to-br from-[#B02D55] to-[#6E1833] shadow-lg ring-4 ring-rose-950/10 flex items-center justify-center text-[21px] font-black tracking-wide text-white">
+                            {fotoUrl ? (
+                                <img src={fotoUrl} alt={nombre} className="h-full w-full object-cover" />
+                            ) : (
+                                iniciales
+                            )}
                         </div>
 
-                        <div>
-                            <h4 className={`${tamanoNombre} font-black text-slate-900 leading-[1.1] break-words`}>
+                        <div className="w-full px-1">
+                            <h4 className={`${tamanoNombre} font-black leading-[1.1] text-slate-900 break-words`}>
                                 {nombre}
                             </h4>
-                            <p className="text-[8px] font-extrabold text-rose-900 tracking-wider uppercase mt-0.5">
+                            <p className="mt-1 text-[8px] font-extrabold uppercase tracking-wider text-rose-900">
                                 Partera Tradicional Acreditada
                             </p>
                         </div>
 
-                        {/* CURP con alto contraste */}
-                        <div className="inline-flex items-center gap-1 bg-slate-900/5 border border-slate-300 rounded-lg px-2.5 py-0.5 max-w-full shadow-2xs mt-0.5">
-                            <span className="text-[7px] font-black text-rose-900 tracking-widest">CURP:</span>
-                            <span className="font-mono text-[9.5px] font-black tracking-wider text-slate-900 break-all">
+                        <div className="inline-flex max-w-full items-center gap-1 rounded-lg border border-slate-300 bg-white/80 px-2.5 py-0.5 shadow-sm">
+                            <span className="text-[7px] font-black tracking-widest text-rose-900">CURP:</span>
+                            <span className="break-all font-mono text-[9.5px] font-black tracking-wider text-slate-900">
                                 {partera.curp || 'No registrada'}
                             </span>
                         </div>
 
-                        <div className="flex items-center justify-center gap-1 text-[#9D2449] max-w-full mt-0.5">
-                            <MapPin className="w-3 h-3 shrink-0" />
+                        <div className="flex max-w-full items-center justify-center gap-1 text-[#9D2449]">
+                            <MapPin className="h-3 w-3 shrink-0" strokeWidth={2.5} />
                             <span className="text-[9px] font-extrabold leading-tight">{ubicacion}</span>
                         </div>
 
-                        {/* Lengua Materna en Letra Dorada Exclusiva */}
-                        {partera.lenguaMaterna && (
-                            <div className="flex flex-wrap items-center justify-center gap-x-1 mt-1 px-3 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/60 shadow-2xs">
+                        {/* Lengua materna: badge dorado */}
+                        {lengua && (
+                            <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-400/70 bg-gradient-to-r from-amber-100/80 via-yellow-50 to-amber-100/80 px-3 py-0.5 shadow-sm">
+                                <Languages className="h-3 w-3 shrink-0 text-amber-700" strokeWidth={2.5} />
                                 <span className="text-[8px] font-bold text-slate-700">Lengua:</span>
-                                <strong className="text-[9.5px] font-black bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-800 bg-clip-text text-transparent tracking-wide">
-                                    {partera.lenguaMaterna}
-                                </strong>
+                                <strong className="text-[9.5px] font-black tracking-wide text-amber-800">{lengua}</strong>
                             </div>
                         )}
 
-                        {/* Bloque inferior institucional */}
-                        <div className="w-full flex items-center justify-between px-2.5 mt-1.5 pt-1.5 border-t border-slate-200 text-[7.5px] font-mono text-slate-600">
+                        {/* Folio y vigencia */}
+                        <div className="flex w-[84%] items-center justify-between border-t border-amber-300/70 pt-1 font-mono text-[7.5px] text-slate-600">
                             <span>FOLIO: <strong className="text-slate-900">{folioControl}</strong></span>
-                            <span>VIGENCIA: <strong className="text-emerald-700 font-black">2026 - 2028</strong></span>
+                            <span>VIGENCIA: <strong className="font-black text-emerald-700">2026 - 2028</strong></span>
                         </div>
                     </div>
                 </div>
@@ -172,67 +186,60 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
 
     return (
         <div className="cred-slot">
-            <div className="cred-card relative bg-white border border-slate-300 rounded-3xl overflow-hidden text-slate-900 flex flex-col shadow-2xl shadow-black/60">
-                {/* Plantilla de fondo oficial para el Reverso */}
-                <img
-                    src="/plantilla-reverso.png"
-                    alt="Plantilla Reverso"
-                    className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
-                    draggable={false}
-                />
-                
+            <div className="cred-card relative flex flex-col overflow-hidden rounded-3xl border border-slate-300 bg-white text-slate-900 shadow-2xl shadow-black/60">
+                <FondoCredencial src="/plantilla-reverso.png" alt="Plantilla Reverso" />
                 <AcabadoPVC />
 
-                {/* Contenido en Z-10 completamente lleno, profesional y colorido */}
-                <div className="relative z-10 flex flex-col h-full justify-between p-3 pt-2 pb-6">
-                    
-                    {/* PIN táctil superior */}
-                    <div className="mx-2 rounded-xl border border-amber-400 bg-gradient-to-b from-amber-50 to-amber-100 py-1.5 px-3 text-center shadow-xs">
-                        <div className="flex items-center justify-center gap-1 text-amber-900">
-                            <Key className="w-3.5 h-3.5 text-amber-700" />
-                            <span className="text-[8.5px] font-black uppercase tracking-wider text-amber-950">PIN TÁCTIL DE ACCESO: {pin}</span>
+                <div className="relative z-10 flex flex-1 flex-col px-4 pt-1.5 pb-5">
+
+                    {/* PIN táctil */}
+                    <div className="rounded-xl border border-amber-400 bg-gradient-to-b from-amber-50 to-amber-100 px-3 py-1.5 text-center shadow-sm">
+                        <div className="flex items-center justify-center gap-1.5">
+                            <Key className="h-3.5 w-3.5 text-amber-700" strokeWidth={2.5} />
+                            <span className="text-[8.5px] font-black uppercase tracking-wider text-amber-950">
+                                PIN TÁCTIL DE ACCESO: {pin}
+                            </span>
                         </div>
                     </div>
 
-                    {/* Bloque central enriquecido para evitar espacios vacíos */}
-                    <div className="flex flex-col items-center justify-center flex-1 px-2 my-auto space-y-2">
-                        
-                        {/* Código QR con marco decorativo y elegante */}
-                        <div className="text-center bg-white/90 p-2.5 rounded-2xl border border-amber-400/60 shadow-md backdrop-blur-xs">
-                            <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-xs inline-block">
+                    {/* QR + insignias, centrados en el espacio disponible */}
+                    <div className="flex flex-1 flex-col items-center justify-center gap-3">
+
+                        <div className="rounded-2xl border border-amber-400/70 bg-white p-2 text-center shadow-lg shadow-slate-900/10 ring-1 ring-amber-200/60 ring-offset-2 ring-offset-white/70">
+                            <div className="inline-block rounded-xl border border-slate-200 bg-white p-1.5">
                                 <img
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&ecc=M&data=${encodeURIComponent(pin)}`}
                                     alt="Código QR de acceso rápido"
-                                    className="w-[78px] h-[78px] object-contain block"
+                                    className="block h-[92px] w-[92px] object-contain"
                                 />
                             </div>
-                            <span className="text-[7px] text-slate-700 font-mono mt-1 block font-extrabold uppercase tracking-widest">
+                            <span className="mt-1.5 block text-center font-mono text-[7px] font-extrabold uppercase tracking-widest text-slate-700">
                                 ESCANEAR PARA LOGIN
                             </span>
                         </div>
 
-                        {/* Insignia de seguridad y validación comunitaria */}
-                        <div className="w-full bg-rose-950/5 border border-rose-900/20 rounded-xl p-2 text-center space-y-0.5">
+                        <div className="w-full rounded-xl border border-rose-900/20 bg-white/80 px-2 py-1.5 text-center shadow-sm">
                             <div className="flex items-center justify-center gap-1 text-[#8B1E3F]">
-                                <Shield className="w-3 h-3" />
-                                <span className="text-[8px] font-black uppercase tracking-tight">Red de Salud Materna e Intercultural</span>
+                                <Shield className="h-3 w-3" strokeWidth={2.5} />
+                                <span className="text-[8px] font-black uppercase tracking-tight">
+                                    Red de Salud Materna e Intercultural
+                                </span>
                             </div>
-                            <p className="text-[7px] text-slate-600 font-medium leading-tight">
+                            <p className="mt-0.5 text-[7px] font-medium leading-tight text-slate-600">
                                 Jurisdicción Sanitaria No. 2 • Istmo de Tehuantepec, Oaxaca.
                             </p>
                         </div>
 
-                        {/* Sello verificado oficial */}
-                        <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-400 px-3 py-0.5 text-[8.5px] text-emerald-900 font-extrabold shadow-2xs">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <div className="inline-flex items-center gap-1 rounded-full border border-emerald-400 bg-emerald-50 px-3 py-0.5 text-[8.5px] font-extrabold text-emerald-900 shadow-sm">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                             <span>Credencial Oficial Verificada • SSO</span>
                         </div>
                     </div>
 
-                    {/* Botón inferior guinda con acentos dorados */}
-                    <div className="mx-1 rounded-xl bg-gradient-to-r from-[#8B1E3F] via-[#9D2449] to-[#8B1E3F] py-1.5 px-2 text-center shadow-md flex items-center justify-center gap-1.5 border border-amber-300/60">
-                        <Printer className="w-3.5 h-3.5 text-amber-200 shrink-0" />
-                        <span className="text-[9px] font-black tracking-tight text-white leading-tight">
+                    {/* Franja inferior guinda */}
+                    <div className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-300/70 bg-gradient-to-r from-[#8B1E3F] via-[#9D2449] to-[#8B1E3F] px-2 py-1.5 shadow-md">
+                        <Printer className="h-3.5 w-3.5 shrink-0 text-amber-200" />
+                        <span className="text-[9px] font-black leading-tight tracking-tight text-white">
                             Imprimir / Descargar Credencial Oficial
                         </span>
                     </div>
@@ -379,20 +386,22 @@ export const TabUsuariosParteras: React.FC = () => {
                 .lg-quiet::-webkit-scrollbar{display:none}
 
                 /* ===== Credencial ID-1 (base 324 x 514 px = 54 x 85.6 mm) ===== */
+                :root { --cred-w: 324px; --cred-h: 514px; --cred-print-scale: 0.6296; /* 54mm ÷ 324px a 96dpi */ }
                 #printable-credentials { --cred-scale: 1; }
                 @media (max-width: 420px) {
                     #printable-credentials { --cred-scale: 0.82; }
                 }
                 .cred-slot {
-                    width: calc(324px * var(--cred-scale, 1));
-                    height: calc(514px * var(--cred-scale, 1));
+                    width: calc(var(--cred-w) * var(--cred-scale, 1));
+                    height: calc(var(--cred-h) * var(--cred-scale, 1));
                     flex-shrink: 0;
                 }
                 .cred-card {
-                    width: 324px;
-                    height: 514px;
+                    width: var(--cred-w);
+                    height: var(--cred-h);
                     transform: scale(var(--cred-scale, 1));
                     transform-origin: top left;
+                    isolation: isolate;
                 }
                 #printable-credentials, #printable-credentials * {
                     -webkit-print-color-adjust: exact;
@@ -400,7 +409,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 }
 
                 /* ===== Impresión / PDF ===== */
-                @page credenciales { margin: 10mm; }
+                @page credenciales { size: A4 portrait; margin: 10mm; }
 
                 @media print {
                     body > *:not(.cred-portal) { display: none !important; }
@@ -437,7 +446,7 @@ export const TabUsuariosParteras: React.FC = () => {
                     .cred-noprint, .cred-hole, .cred-gloss { display: none !important; }
 
                     #printable-credentials {
-                        --cred-scale: 0.63;
+                        --cred-scale: var(--cred-print-scale);
                         display: flex !important;
                         flex-direction: row !important;
                         flex-wrap: nowrap !important;
@@ -449,8 +458,12 @@ export const TabUsuariosParteras: React.FC = () => {
                         break-inside: avoid;
                         page-break-inside: avoid;
                     }
-                    .cred-slot { width: 54mm !important; height: 85.6mm !important; }
-                    .cred-card { box-shadow: none !important; }
+                    .cred-slot { width: 54mm !important; height: 85.6mm !important; overflow: hidden; }
+                    .cred-card {
+                        box-shadow: none !important;
+                        border: 0.1mm solid #cbd5e1 !important;
+                        border-radius: 3mm !important;
+                    }
                 }
             `}} />
 
