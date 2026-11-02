@@ -133,15 +133,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="lg-text min-h-screen w-full overflow-x-hidden p-3 text-white selection:bg-cyan-300/40 sm:p-6">
             <style>{DASHBOARD_CSS}</style>
 
-            {/* Fondo Inmersivo Absoluto (Fondo-login.png + Gradiente + Nebulosas Animadas) */}
-            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950">
-                <img
-                    src="/fondo-login.png"
-                    alt=""
-                    draggable={false}
-                    className="absolute inset-0 size-full object-cover object-center opacity-90 brightness-105 contrast-105 blur-md scale-105 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/40 via-blue-950/30 to-slate-950/70 backdrop-blur-[2px]" />
+            {/* Fondo Inmersivo Absoluto con CSS Background para asegurar carga perfecta */}
+            <div 
+                aria-hidden="true" 
+                className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950"
+                style={{ 
+                    backgroundImage: 'linear-gradient(to bottom right, rgba(8, 145, 178, 0.85), rgba(30, 64, 175, 0.85), rgba(2, 6, 23, 0.95)), url("/fondo-login.png")', 
+                    backgroundSize: 'cover', 
+                    backgroundPosition: 'center', 
+                    backgroundBlendMode: 'overlay' 
+                }}
+            >
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/40 via-blue-950/30 to-slate-950/70 backdrop-blur-[3px]" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(165,243,252,0.3),transparent_70%)]" />
                 <div className="lg-float-a absolute -left-20 -top-20 size-[36rem] rounded-full bg-cyan-400/25 blur-3xl pointer-events-none" />
                 <div className="lg-float-b absolute -bottom-28 -right-20 size-[40rem] rounded-full bg-blue-500/25 blur-3xl pointer-events-none" />
