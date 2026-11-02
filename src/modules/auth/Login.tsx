@@ -119,19 +119,19 @@ const WELCOME_STAGES: ReadonlyArray<{ from: number; label: string }> = [
     { from: 100, label: 'Todo listo' },
 ];
 
-/* Clases compartidas y Estilo Glass Luminoso */
+/* Clases compartidas y Estilo Glass Luminoso Avanzado */
 const ACCENT = 'bg-gradient-to-r from-sky-400 to-blue-600';
 const FOCUS =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0 focus-visible:shadow-[0_0_25px_rgba(255,255,255,0.7)]';
 const SLIDE = 'ease-[cubic-bezier(0.65,0,0.35,1)]';
-const GLASS = 'lg-edge relative border border-white/40 bg-slate-900/40 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.5)] backdrop-blur-2xl';
+const GLASS = 'lg-edge relative border border-white/35 bg-slate-900/30 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.45)] backdrop-blur-3xl';
 const LABEL = 'mb-1.5 block text-xs font-medium text-white/95 tracking-wide';
 const INPUT =
-    'min-h-12 w-full rounded-xl border border-white/35 bg-white/10 pl-10 text-base text-white placeholder:text-white/60 shadow-inner shadow-white/5 transition-all duration-200 hover:border-white/60 hover:bg-white/15 focus:border-white focus:bg-white/20 focus:outline-none focus:ring-4 focus:ring-sky-200/40 focus:shadow-[0_0_30px_rgba(255,255,255,0.4)] disabled:opacity-60';
+    'min-h-12 w-full rounded-xl border border-white/30 bg-white/10 pl-10 text-base text-white placeholder:text-white/60 shadow-inner shadow-white/5 transition-all duration-200 hover:border-white/50 hover:bg-white/15 focus:border-white focus:bg-white/20 focus:outline-none focus:ring-4 focus:ring-sky-200/40 focus:shadow-[0_0_30px_rgba(255,255,255,0.4)] disabled:opacity-60';
 const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/80 transition-colors duration-200 group-focus-within:text-white';
 const PRIMARY = `lg-sheen group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/40 ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-900/30 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(56,189,248,0.5)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
-const SECONDARY = `min-h-12 rounded-xl border border-white/35 bg-white/15 px-4 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:border-white/60 hover:bg-white/25 active:scale-[0.98] ${FOCUS}`;
-const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/30 bg-white/10 p-1 shadow-inner shadow-white/5 backdrop-blur-md';
+const SECONDARY = `min-h-12 rounded-xl border border-white/30 bg-white/15 px-4 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:border-white/50 hover:bg-white/25 active:scale-[0.98] ${FOCUS}`;
+const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/25 bg-white/10 p-1 shadow-inner shadow-white/5 backdrop-blur-md';
 
 const LOGIN_CSS = `
 @keyframes lgFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -158,15 +158,15 @@ const LOGIN_CSS = `
 .lg-alert-in{animation:lgAlertIn .45s cubic-bezier(.22,1,.36,1) both}
 .lg-veil{animation:lgVeil .35s ease-out both}
 .lg-modal{animation:lgModal .55s cubic-bezier(.22,1,.36,1) both}
-.lg-float-a{animation:lgFloatA 20s ease-in-out infinite}
-.lg-float-b{animation:lgFloatB 25s ease-in-out infinite}
+.lg-float-a{animation:lgFloatA 22s ease-in-out infinite}
+.lg-float-b{animation:lgFloatB 28s ease-in-out infinite}
 .lg-halo{animation:lgHalo 2.2s ease-out infinite}
 .lg-bar-shine{animation:lgBar 1.6s linear infinite}
-.lg-text{text-shadow:0 1px 3px rgba(15,23,42,.25)}
+.lg-text{text-shadow:0 1px 3px rgba(15,23,42,.3)}
 .lg-quiet{scrollbar-width:none}
 .lg-quiet::-webkit-scrollbar{display:none}
 .lg-edge::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
-background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.2) 40%,rgba(255,255,255,0) 65%,rgba(255,255,255,.6));
+background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,255,255,.25) 35%,rgba(255,255,255,0) 60%,rgba(255,255,255,.5));
 -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .lg-sheen::after{content:'';position:absolute;inset:0 auto 0 0;width:35%;pointer-events:none;
 background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:translateX(-160%) skewX(-15deg)}
@@ -426,7 +426,7 @@ function PinKey({ disabled, onPress, ariaLabel, muted = false, children }: PinKe
             aria-label={ariaLabel}
             onPointerDown={handlePointerDown}
             onClick={onPress}
-            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/35 bg-gradient-to-b from-white/30 to-white/10 text-2xl font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition duration-100 hover:from-white/40 hover:to-white/20 active:scale-90 active:border-sky-300/70 active:from-sky-400/45 active:to-sky-500/25 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
+            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/30 bg-gradient-to-b from-white/25 to-white/10 text-2xl font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition duration-100 hover:from-white/35 hover:to-white/15 active:scale-90 active:border-sky-300/70 active:from-sky-400/45 active:to-sky-500/25 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
                 muted ? 'text-sky-100' : 'text-white'
             }`}
         >
@@ -1045,7 +1045,7 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
                         src="/logo-jurisdiccion.png"
                         alt=""
                         draggable={false}
-                        className="relative size-20 rounded-full bg-white object-cover shadow-xl ring-4 ring-white/40"
+                        className="relative size-20 rounded-full bg-white/90 backdrop-blur-sm object-cover shadow-xl ring-4 ring-white/40"
                     />
                     <span
                         className={`absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full ring-4 ring-slate-900/60 transition-colors duration-500 ${
@@ -1224,19 +1224,19 @@ export function Login() {
         <div className="lg-text fixed inset-0 isolate flex items-center justify-center overflow-hidden overscroll-none px-3 py-3 text-white selection:bg-sky-300/40 sm:p-6">
             <style>{LOGIN_CSS}</style>
 
-            {/* Fondo optimizado y luminoso */}
-            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-slate-900">
+            {/* Fondo vibrante, nítido y optimizado para lucir al máximo */}
+            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-sky-500 via-blue-700 to-slate-950">
                 <img
                     src="/fondo-login.png"
                     alt=""
                     draggable={false}
                     onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                    className="absolute inset-0 size-full object-cover object-center opacity-75 blur-xl"
+                    className="absolute inset-0 size-full object-cover object-center opacity-85 brightness-105 contrast-105 blur-md"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-950/30 via-blue-900/20 to-slate-950/40" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(224,242,254,0.35),transparent_65%)]" />
-                <div className="lg-float-a absolute -left-20 -top-20 size-[28rem] rounded-full bg-sky-300/30 blur-3xl" />
-                <div className="lg-float-b absolute -bottom-28 -right-20 size-[32rem] rounded-full bg-cyan-300/30 blur-3xl" />
+                <div className="absolute inset-0 bg-gradient-to-br from-sky-950/20 via-blue-900/10 to-slate-950/40" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(186,230,253,0.3),transparent_70%)]" />
+                <div className="lg-float-a absolute -left-20 -top-20 size-[32rem] rounded-full bg-sky-400/25 blur-3xl" />
+                <div className="lg-float-b absolute -bottom-28 -right-20 size-[36rem] rounded-full bg-cyan-400/25 blur-3xl" />
             </div>
 
             {/* Contenedor Fijo y Centrado */}
@@ -1246,20 +1246,20 @@ export function Login() {
                         isInstitutional ? 'md:flex-row' : 'md:flex-row-reverse'
                     }`}
                 >
-                    {/* Reflejo de luz superior del cristal */}
-                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/30 via-transparent to-sky-200/15" />
+                    {/* Reflejo de luz superior del cristal (Efecto especular) */}
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-tr from-white/20 via-transparent to-sky-200/25" />
 
-                    {/* ── Panel lateral (Marca institucional) ── */}
-                    <aside className="relative z-10 shrink-0 overflow-hidden border-b border-white/25 p-4 sm:p-5 md:w-5/12 md:border-b-0 md:p-8 flex flex-col justify-between">
+                    {/* ── Panel lateral (Logotipos sin fondo blanco forzado y alta elegancia) ── */}
+                    <aside className="relative z-10 shrink-0 overflow-hidden border-b border-white/20 p-4 sm:p-5 md:w-5/12 md:border-b-0 md:p-8 flex flex-col justify-between">
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-white/35 via-sky-200/15 to-transparent transition-opacity duration-700 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-white/25 via-sky-200/10 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-100' : 'opacity-0'
                             }`}
                         />
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-cyan-200/35 via-sky-200/15 to-transparent transition-opacity duration-700 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-cyan-200/25 via-sky-200/10 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-0' : 'opacity-100'
                             }`}
                         />
@@ -1271,11 +1271,11 @@ export function Login() {
                                     src="/logo-jurisdiccion.png"
                                     alt="Jurisdicción Sanitaria No. 2 Istmo"
                                     draggable={false}
-                                    className="size-10 shrink-0 rounded-full bg-white object-cover shadow-md ring-2 ring-white/60"
+                                    className="size-11 shrink-0 rounded-full bg-white/90 backdrop-blur-sm object-cover shadow-lg ring-2 ring-white/60 p-0.5"
                                 />
                                 <span aria-hidden="true" className="h-6 w-px bg-white/40" />
-                                <div className="flex h-9 shrink-0 items-center rounded-lg bg-white/95 px-2.5 shadow-md">
-                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-4 w-auto" />
+                                <div className="flex h-9 shrink-0 items-center rounded-xl bg-white/90 backdrop-blur-md px-3 shadow-lg">
+                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-4 w-auto object-contain" />
                                 </div>
                             </div>
                             <div>
@@ -1284,17 +1284,17 @@ export function Login() {
                             </div>
                         </div>
 
-                        {/* Versión escritorio centrada */}
+                        {/* Versión escritorio centrada (Logotipos sin fondo blanco sólido, integrados con sutileza) */}
                         <div className="relative hidden h-full flex-col items-center justify-between gap-4 text-center md:flex">
-                            <div className="flex items-center gap-3 pt-2">
+                            <div className="flex items-center gap-3.5 pt-2">
                                 <img
                                     src="/logo-jurisdiccion.png"
                                     alt="Jurisdicción Sanitaria No. 2 Istmo"
                                     draggable={false}
-                                    className="size-16 shrink-0 rounded-full bg-white object-cover shadow-xl ring-2 ring-white/60"
+                                    className="size-16 shrink-0 rounded-full bg-white/90 backdrop-blur-md object-cover shadow-xl ring-2 ring-white/60 p-0.5 transition-transform duration-300 hover:scale-105"
                                 />
-                                <div className="flex h-14 items-center rounded-xl bg-white/95 px-3 shadow-xl">
-                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-9 w-auto" />
+                                <div className="flex h-14 items-center rounded-2xl bg-white/90 backdrop-blur-md px-3.5 shadow-xl transition-transform duration-300 hover:scale-105">
+                                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-8 w-auto object-contain" />
                                 </div>
                             </div>
 
@@ -1310,7 +1310,7 @@ export function Login() {
                                     {MODE_COPY[mode].chips.map(({ Icon, label }) => (
                                         <li
                                             key={label}
-                                            className="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs text-white backdrop-blur-md shadow-sm"
+                                            className="flex items-center gap-1.5 rounded-full border border-white/35 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-md shadow-sm"
                                         >
                                             <Icon className="size-3.5" aria-hidden="true" />
                                             {label}
@@ -1319,7 +1319,7 @@ export function Login() {
                                 </ul>
                             </div>
 
-                            <p className="mx-auto max-w-[16rem] text-xs leading-snug text-white/80 pb-2">
+                            <p className="mx-auto max-w-[16rem] text-xs leading-snug text-white/85 pb-2">
                                 Sistema de gestión de tamiz neonatal y parteras tradicionales
                             </p>
                         </div>
@@ -1327,7 +1327,7 @@ export function Login() {
 
                     {/* ── Panel de formularios ── */}
                     <section
-                        className={`relative z-10 flex min-h-0 flex-1 flex-col bg-white/[0.04] p-4 sm:p-6 md:border-white/25 md:p-8 overflow-y-auto lg-quiet ${
+                        className={`relative z-10 flex min-h-0 flex-1 flex-col bg-white/[0.03] p-4 sm:p-6 md:border-white/20 md:p-8 overflow-y-auto lg-quiet ${
                             isInstitutional ? 'md:border-l' : 'md:border-r'
                         }`}
                     >
