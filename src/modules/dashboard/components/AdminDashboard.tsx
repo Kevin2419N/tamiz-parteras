@@ -16,6 +16,7 @@ import {
     X,
     Activity,
     Database,
+    Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -35,10 +36,10 @@ interface AdminDashboardProps {
 
 export type TabType = 'TAMIZ' | 'REFERENCIAS' | 'CALENDARIOS' | 'PARTERAS' | 'CUENTAS' | 'CLUES' | 'CONFIGURACION';
 
-/* Estilos homologados con el Login y Glassmorphism Avanzado */
+/* Estilos de UI/UX Homologados y Glassmorphism Avanzado */
 const ACCENT = 'bg-gradient-to-r from-cyan-400 to-blue-600';
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-0';
-const GLASS = 'lg-edge relative border border-white/40 bg-slate-900/40 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.6)] backdrop-blur-3xl';
+const GLASS = 'lg-edge relative border border-white/40 bg-slate-900/35 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.6)] backdrop-blur-3xl';
 const PRIMARY_BTN = `lg-sheen group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/40 ${ACCENT} px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(34,211,238,0.4)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] ${FOCUS}`;
 const SECONDARY_BTN = `flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all duration-200 hover:border-white/50 hover:bg-white/20 active:scale-[0.98] ${FOCUS}`;
 
@@ -132,7 +133,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="lg-text min-h-screen w-full overflow-x-hidden p-3 text-white selection:bg-cyan-300/40 sm:p-6">
             <style>{DASHBOARD_CSS}</style>
 
-            {/* Fondo Inmersivo y Coherente con el Login */}
+            {/* Fondo Inmersivo unificado con el Login (Imagen + Nebulosas) */}
             <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950">
                 <img
                     src="/fondo-login.png"
@@ -157,7 +158,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             src="/logo-jurisdiccion.png"
                             alt="Jurisdicción Sanitaria No. 2"
                             draggable={false}
-                            className="size-14 rounded-full bg-white/95 p-0.5 object-cover shadow-xl ring-2 ring-white/60"
+                            className="size-14 rounded-full bg-white/95 p-0.5 object-cover shadow-xl ring-2 ring-white/60 transition-transform duration-300 hover:scale-105"
                         />
                         <div className="space-y-0.5 text-center md:text-left">
                             <span className="text-[10px] font-black uppercase tracking-widest text-cyan-200 block">
@@ -170,8 +171,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {/* Logo Secretaría sin fondo blanco sólido */}
-                        <div className="flex h-12 items-center rounded-2xl bg-white/95 px-3.5 shadow-lg backdrop-blur-md">
+                        {/* Logo Secretaría sin fondo blanco sólido (integrado con sutileza) */}
+                        <div className="flex h-12 items-center rounded-2xl bg-white/95 px-3.5 shadow-lg backdrop-blur-md transition-transform duration-300 hover:scale-105">
                             <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-6 w-auto object-contain" />
                         </div>
                         {/* Botón menú móvil */}
@@ -191,7 +192,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     
                     <div className="relative flex flex-col lg:flex-row justify-between items-center gap-6">
                         
-                        {/* Perfil del Administrador */}
+                        {/* Perfil del Administrador con Foto Coqueta */}
                         <div className="flex items-center gap-4 text-center lg:text-left w-full lg:w-auto">
                             <div className="relative flex size-20 shrink-0 items-center justify-center mx-auto lg:mx-0">
                                 <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-cyan-300/60" />
@@ -222,8 +223,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                         {/* Tarjetas KPI y Botones de Acción */}
                         <div className="flex flex-wrap items-center justify-center gap-3 w-full lg:w-auto">
-                            <div className="flex items-center gap-3 bg-white/10 border border-white/20 px-4 py-2.5 rounded-2xl backdrop-blur-md">
-                                <Activity className="size-5 text-cyan-300" />
+                            <div className="flex items-center gap-3 bg-white/10 border border-white/20 px-4 py-2.5 rounded-2xl backdrop-blur-md shadow-inner">
+                                <Activity className="size-5 text-cyan-300 animate-pulse" />
                                 <div>
                                     <p className="text-[10px] uppercase font-bold text-cyan-200">Sincronización</p>
                                     <p className="text-xs font-black text-white">Óptimo (100%)</p>
@@ -247,9 +248,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                     
                     {/* Sidebar de Navegación Ejecutivo */}
-                    <aside className={`lg:col-span-3 ${sidebarOpen ? 'block' : 'hidden md:block'} space-y-2`}>
+                    <aside className={`lg:col-span-3 ${sidebarOpen ? 'block' : 'hidden md:block'} space-y-3`}>
                         <div className={`lg-card ${GLASS} rounded-3xl p-3.5 space-y-1.5`}>
-                            <p className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-cyan-300/80">
+                            <p className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-cyan-300/80 flex items-center gap-1.5">
+                                <Sparkles className="size-3.5 text-cyan-300" />
                                 Módulos Operativos
                             </p>
                             {navItems.map((item) => (
@@ -269,7 +271,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </div>
 
                         {/* Tarjeta informativa de Base de Datos */}
-                        <div className={`lg-card ${GLASS} rounded-2xl p-4 text-xs space-y-2 border border-white/20`}>
+                        <div className={`lg-card ${GLASS} rounded-2xl p-4 text-xs space-y-2 border border-white/20 shadow-xl`}>
                             <div className="flex items-center gap-2 text-cyan-300 font-bold">
                                 <Database className="size-4" />
                                 <span>Servidor PostgreSQL</span>
@@ -282,7 +284,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                     {/* Área de Trabajo Principal */}
                     <main className="lg:col-span-9 w-full">
-                        <div className={`lg-card ${GLASS} rounded-3xl p-4 sm:p-6 lg-fade min-h-[550px]`}>
+                        <div className={`lg-card ${GLASS} rounded-3xl p-4 sm:p-6 lg-fade min-h-[550px] shadow-2xl`}>
                             {activeTab === 'TAMIZ' && <TabTamizNeonatal />}
                             {activeTab === 'REFERENCIAS' && <TabReferencias />}
                             {activeTab === 'CALENDARIOS' && <TabCalendarios />}
