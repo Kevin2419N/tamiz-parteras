@@ -47,13 +47,6 @@ const obtenerLengua = (p: ParteraCredencial): string => {
     return String(valor).trim();
 };
 
-/** CURP resumida para la ficha del reverso: ZASJ••••••••RLN01 */
-const curpResumida = (curp?: string): string =>
-    curp && curp.length >= 10 ? `${curp.slice(0, 4)}••••••••${curp.slice(-4)}` : curp || 'No registrada';
-
-const folioInstitucional = (p: ParteraCredencial): string =>
-    `JSN2-2026-${String(p.id || '049').padStart(3, '0')}`;
-
 const GUINDA = '#5C1228';
 const GUINDA_PROFUNDO = '#4A0E1F';
 
@@ -143,13 +136,41 @@ const MicroTexto: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </p>
 );
 
+const AVATAR_DEFAULT = '/avatar-partera-default.png';
+
+/** Foto propia (fotoUrl) → ilustración oficial por defecto → iniciales si ninguna carga. */
+const AvatarPartera: React.FC<{ fotoUrl?: string; nombre: string }> = ({ fotoUrl, nombre }) => {
+    const [src, setSrc] = useState<string | null>(fotoUrl || AVATAR_DEFAULT);
+
+    useEffect(() => {
+        setSrc(fotoUrl || AVATAR_DEFAULT);
+    }, [fotoUrl]);
+
+    const alFallar = () => setSrc((actual) => (actual && actual !== AVATAR_DEFAULT ? AVATAR_DEFAULT : null));
+
+    return (
+        <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-amber-400 bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-[21px] font-black tracking-wide text-white shadow-lg ring-4 ring-rose-950/10">
+            {src ? (
+                <img
+                    src={src}
+                    alt={nombre}
+                    draggable={false}
+                    onError={alFallar}
+                    className="h-full w-full object-cover"
+                />
+            ) : (
+                getInitials(nombre)
+            )}
+        </div>
+    );
+};
+
 const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera }) => {
     const nombre = obtenerNombreCompleto(partera);
     const ubicacion = [partera.municipio || 'Juchitán de Zaragoza', partera.comunidad || 'Quinta Sección']
         .filter(Boolean)
         .join(' • ');
     const tamanoNombre = nombre.length > 32 ? 'text-[12px]' : nombre.length > 22 ? 'text-[14px]' : 'text-[17px]';
-    const iniciales = getInitials(nombre);
     const fotoUrl = (partera as any).fotoUrl;
     const lengua = obtenerLengua(partera);
 
@@ -199,13 +220,7 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                     {/* Identidad */}
                     <div className="flex flex-1 flex-col items-center justify-evenly text-center">
 
-                        <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-amber-400 bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-[21px] font-black tracking-wide text-white shadow-lg ring-4 ring-rose-950/10">
-                            {fotoUrl ? (
-                                <img src={fotoUrl} alt={nombre} className="h-full w-full object-cover" />
-                            ) : (
-                                iniciales
-                            )}
-                        </div>
+                        <AvatarPartera fotoUrl={fotoUrl} nombre={nombre} />
 
                         <div className="w-full px-1">
                             <h4 className={`${tamanoNombre} font-black leading-[1.1] text-slate-900 break-words`}>
@@ -282,29 +297,7 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
                             </span>
                         </div>
 
-                        {/* 3. Ficha de identidad segura */}
-                        <div className="w-full rounded-xl border border-amber-300/70 bg-white/85 px-2.5 py-1.5 shadow-sm">
-                            <div className="flex items-center justify-center gap-1 border-b border-amber-200/80 pb-1" style={{ color: GUINDA }}>
-                                <ShieldCheck className="h-3 w-3" strokeWidth={2.5} />
-                                <span className="text-[7.5px] font-black uppercase tracking-[0.12em]">Ficha de Identidad Segura</span>
-                            </div>
-                            <dl className="mt-1 space-y-0.5 font-mono text-[7.5px] text-slate-600">
-                                <div className="flex items-center justify-between gap-2">
-                                    <dt className="font-bold" style={{ color: GUINDA }}>CURP</dt>
-                                    <dd className="font-black text-slate-900">{curpResumida(partera.curp)}</dd>
-                                </div>
-                                <div className="flex items-center justify-between gap-2">
-                                    <dt className="font-bold" style={{ color: GUINDA }}>FOLIO</dt>
-                                    <dd className="font-black text-slate-900">{folioInstitucional(partera)}</dd>
-                                </div>
-                                <div className="flex items-center justify-between gap-2">
-                                    <dt className="font-bold" style={{ color: GUINDA }}>VIGENCIA</dt>
-                                    <dd className="font-black text-emerald-700">2026 - 2028</dd>
-                                </div>
-                            </dl>
-                        </div>
-
-                        {/* 4. Insignias */}
+                        {/* 3. Insignias */}
                         <div className="w-full rounded-xl border border-rose-900/20 bg-white/80 px-2 py-1.5 text-center shadow-sm">
                             <div className="flex items-center justify-center gap-1" style={{ color: GUINDA }}>
                                 <Shield className="h-3 w-3" strokeWidth={2.5} />
