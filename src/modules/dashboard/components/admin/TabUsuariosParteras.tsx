@@ -47,6 +47,16 @@ const obtenerLengua = (p: ParteraCredencial): string => {
     return String(valor).trim();
 };
 
+/** CURP resumida para la ficha del reverso: ZASJ••••••••RLN01 */
+const curpResumida = (curp?: string): string =>
+    curp && curp.length >= 10 ? `${curp.slice(0, 4)}••••••••${curp.slice(-4)}` : curp || 'No registrada';
+
+const folioInstitucional = (p: ParteraCredencial): string =>
+    `JSN2-2026-${String(p.id || '049').padStart(3, '0')}`;
+
+const GUINDA = '#5C1228';
+const GUINDA_PROFUNDO = '#4A0E1F';
+
 const AcabadoPVC: React.FC = () => (
     <>
         <div
@@ -63,18 +73,74 @@ const AcabadoPVC: React.FC = () => (
     </>
 );
 
-/** Fondo común: gradiente marfil + cenefa floral a sangre completa (sin huecos). */
-const FondoCredencial: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
-    <>
-        <div className="absolute inset-0 z-0 bg-gradient-to-b from-white via-amber-50/20 to-rose-50/30" />
+/**
+ * Fondo común: gradiente marfil + cenefa floral a sangre completa + marca de agua.
+ * `simetrico` replica la mitad izquierda de la plantilla en espejo a la derecha,
+ * garantizando simetría perfecta (se usa en el reverso).
+ */
+const FONDO_REVERSO = '/plantilla-reverso.png'; // cambia a '/plantilla-frente.png' si prefieres la misma cenefa
+
+const FondoCredencial: React.FC<{ src: string; alt: string; simetrico?: boolean; escala?: number }> = ({
+    src, alt, simetrico = false, escala = 1
+}) => {
+    const img = (
         <img
             src={src}
             alt={alt}
             draggable={false}
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-            className="absolute inset-0 z-[1] w-full h-full object-cover object-bottom pointer-events-none select-none"
+            className="h-full w-full object-cover object-bottom pointer-events-none select-none"
+            style={{ transform: `scale(${escala})`, transformOrigin: 'bottom center' }}
         />
-    </>
+    );
+    return (
+        <>
+            <div className="absolute inset-0 z-0 bg-gradient-to-b from-white via-amber-50/20 to-rose-50/30" />
+
+            {simetrico ? (
+                <>
+                    <div className="absolute inset-0 z-[1]" style={{ clipPath: 'inset(0 50% 0 0)' }}>{img}</div>
+                    <div className="absolute inset-0 z-[1]" style={{ clipPath: 'inset(0 50% 0 0)', transform: 'scaleX(-1)' }}>{img}</div>
+                </>
+            ) : (
+                <div className="absolute inset-0 z-[1]">{img}</div>
+            )}
+
+            {/* Marca de agua geométrica (greca escalonada) al 3% — se desvanece hacia las flores */}
+            <div
+                aria-hidden
+                className="absolute inset-0 z-[2] pointer-events-none"
+                style={{
+                    opacity: 0.03,
+                    backgroundImage:
+                        "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Cpath d='M3 22h8v-8h8v8h8v-8h8' fill='none' stroke='%235C1228' stroke-width='1.6'/%3E%3C/svg%3E\")",
+                    backgroundSize: '36px 36px',
+                    WebkitMaskImage: 'linear-gradient(to bottom, #000 0%, #000 50%, transparent 78%)',
+                    maskImage: 'linear-gradient(to bottom, #000 0%, #000 50%, transparent 78%)'
+                }}
+            />
+        </>
+    );
+};
+
+/** Barra guinda institucional con textura de seguridad y marco dorado. */
+const BarraGuinda: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
+    <div
+        className={`relative overflow-hidden rounded-xl border border-amber-400/90 text-center ${className}`}
+        style={{
+            backgroundImage: `repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 6px), linear-gradient(135deg, ${GUINDA} 0%, ${GUINDA_PROFUNDO} 100%)`,
+            boxShadow: '0 8px 16px -4px rgba(74,14,31,0.55), 0 2px 4px rgba(74,14,31,0.35), inset 0 1px 0 rgba(255,255,255,0.12)'
+        }}
+    >
+        <div className="pointer-events-none absolute inset-[2px] rounded-[9px] border border-amber-300/30" />
+        <div className="relative">{children}</div>
+    </div>
+);
+
+const MicroTexto: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <p className="text-center text-[5px] font-semibold uppercase leading-none tracking-[0.22em] text-slate-400/90">
+        {children}
+    </p>
 );
 
 const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera }) => {
@@ -86,7 +152,6 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
     const iniciales = getInitials(nombre);
     const fotoUrl = (partera as any).fotoUrl;
     const lengua = obtenerLengua(partera);
-    const folioControl = `JSN2-2026-${String(partera.id || '049').padStart(3, '0')}`;
 
     return (
         <div className="cred-slot">
@@ -94,18 +159,21 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                 <FondoCredencial src="/plantilla-frente.png" alt="Plantilla Frente" />
                 <AcabadoPVC />
 
-                {/* Contenido: la zona inferior (~115px) queda libre para la cenefa floral */}
-                <div className="relative z-10 flex flex-1 flex-col px-4 pt-1.5 pb-[118px]">
+                <div className="relative z-10 flex flex-1 flex-col px-4 pt-1.5 pb-[112px]">
 
-                    {/* Logos institucionales simétricos */}
-                    <div className="rounded-2xl bg-white/90 px-2 py-1.5 shadow-sm ring-1 ring-amber-200/60">
+                    {/* Logos institucionales */}
+                    <div className="rounded-2xl bg-white/90 px-2.5 py-1.5 shadow-sm ring-1 ring-amber-200/60">
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                            <div className="flex h-10 items-center justify-center">
+                            <div className="flex h-10 items-center justify-center gap-1.5">
                                 <img
                                     src="/logo-jurisdiccion.png"
                                     alt="Jurisdicción Sanitaria"
-                                    className="h-full w-auto max-w-full object-contain"
+                                    className="h-9 w-9 shrink-0 object-contain"
                                 />
+                                <div className="text-left font-extrabold leading-[1.1] tracking-tight" style={{ color: GUINDA }}>
+                                    <span className="block text-[8.5px]">Jurisdicción</span>
+                                    <span className="block text-[8.5px]">Sanitaria No. 2</span>
+                                </div>
                             </div>
                             <div className="h-8 w-px bg-gradient-to-b from-transparent via-amber-400 to-transparent" />
                             <div className="flex h-10 items-center justify-center">
@@ -119,19 +187,19 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                     </div>
 
                     {/* Barra guinda institucional */}
-                    <div className="mt-2 rounded-xl border border-amber-300/90 bg-gradient-to-r from-[#8B1E3F] via-[#9D2449] to-[#8B1E3F] px-2 py-1.5 text-center shadow-md shadow-rose-950/30 ring-1 ring-amber-300/40 ring-offset-1 ring-offset-white/60">
-                        <span className="block text-[9.5px] font-black uppercase leading-tight tracking-[0.06em] text-white">
+                    <BarraGuinda className="mt-2 px-2 py-2">
+                        <span className="block text-[9.5px] font-black uppercase leading-tight tracking-[0.07em] text-white">
                             CREDENCIAL DE ACREDITACIÓN OFICIAL
                         </span>
                         <span className="mt-0.5 block text-[7.5px] font-bold leading-tight tracking-wider text-amber-200">
                             Medicina Tradicional e Interculturalidad
                         </span>
-                    </div>
+                    </BarraGuinda>
 
-                    {/* Bloque central: avatar + nombre en un mismo eje vertical */}
+                    {/* Identidad */}
                     <div className="flex flex-1 flex-col items-center justify-evenly text-center">
 
-                        <div className="h-[66px] w-[66px] shrink-0 overflow-hidden rounded-full border-[2.5px] border-amber-400 bg-gradient-to-br from-[#B02D55] to-[#6E1833] shadow-lg ring-4 ring-rose-950/10 flex items-center justify-center text-[21px] font-black tracking-wide text-white">
+                        <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-amber-400 bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-[21px] font-black tracking-wide text-white shadow-lg ring-4 ring-rose-950/10">
                             {fotoUrl ? (
                                 <img src={fotoUrl} alt={nombre} className="h-full w-full object-cover" />
                             ) : (
@@ -160,20 +228,15 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                             <span className="text-[9px] font-extrabold leading-tight">{ubicacion}</span>
                         </div>
 
-                        {/* Lengua materna: badge dorado */}
                         {lengua && (
-                            <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-400/70 bg-gradient-to-r from-amber-100/80 via-yellow-50 to-amber-100/80 px-3 py-0.5 shadow-sm">
+                            <div className="mx-auto inline-flex max-w-full items-center justify-center gap-1.5 rounded-full border border-amber-400/70 bg-gradient-to-r from-amber-100/80 via-yellow-50 to-amber-100/80 px-3 py-0.5 shadow-sm">
                                 <Languages className="h-3 w-3 shrink-0 text-amber-700" strokeWidth={2.5} />
                                 <span className="text-[8px] font-bold text-slate-700">Lengua:</span>
                                 <strong className="text-[9.5px] font-black tracking-wide text-amber-800">{lengua}</strong>
                             </div>
                         )}
 
-                        {/* Folio y vigencia */}
-                        <div className="flex w-[84%] items-center justify-between border-t border-amber-300/70 pt-1 font-mono text-[7.5px] text-slate-600">
-                            <span>FOLIO: <strong className="text-slate-900">{folioControl}</strong></span>
-                            <span>VIGENCIA: <strong className="font-black text-emerald-700">2026 - 2028</strong></span>
-                        </div>
+                        <MicroTexto>Servicios de Salud de Oaxaca · Medicina Tradicional</MicroTexto>
                     </div>
                 </div>
             </div>
@@ -187,12 +250,12 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
     return (
         <div className="cred-slot">
             <div className="cred-card relative flex flex-col overflow-hidden rounded-3xl border border-slate-300 bg-white text-slate-900 shadow-2xl shadow-black/60">
-                <FondoCredencial src="/plantilla-reverso.png" alt="Plantilla Reverso" />
+                <FondoCredencial src={FONDO_REVERSO} alt="Plantilla Reverso" simetrico escala={1.08} />
                 <AcabadoPVC />
 
-                <div className="relative z-10 flex flex-1 flex-col px-4 pt-1.5 pb-5">
+                <div className="relative z-10 flex flex-1 flex-col px-4 pt-1.5 pb-4">
 
-                    {/* PIN táctil */}
+                    {/* 1. PIN táctil */}
                     <div className="rounded-xl border border-amber-400 bg-gradient-to-b from-amber-50 to-amber-100 px-3 py-1.5 text-center shadow-sm">
                         <div className="flex items-center justify-center gap-1.5">
                             <Key className="h-3.5 w-3.5 text-amber-700" strokeWidth={2.5} />
@@ -202,9 +265,10 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
                         </div>
                     </div>
 
-                    {/* QR + insignias, centrados en el espacio disponible */}
-                    <div className="flex flex-1 flex-col items-center justify-center gap-3">
+                    {/* Bloque central: se reparte el espacio para evitar vacíos */}
+                    <div className="flex flex-1 flex-col items-center justify-evenly px-5">
 
+                        {/* 2. QR */}
                         <div className="rounded-2xl border border-amber-400/70 bg-white p-2 text-center shadow-lg shadow-slate-900/10 ring-1 ring-amber-200/60 ring-offset-2 ring-offset-white/70">
                             <div className="inline-block rounded-xl border border-slate-200 bg-white p-1.5">
                                 <img
@@ -218,8 +282,31 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
                             </span>
                         </div>
 
+                        {/* 3. Ficha de identidad segura */}
+                        <div className="w-full rounded-xl border border-amber-300/70 bg-white/85 px-2.5 py-1.5 shadow-sm">
+                            <div className="flex items-center justify-center gap-1 border-b border-amber-200/80 pb-1" style={{ color: GUINDA }}>
+                                <ShieldCheck className="h-3 w-3" strokeWidth={2.5} />
+                                <span className="text-[7.5px] font-black uppercase tracking-[0.12em]">Ficha de Identidad Segura</span>
+                            </div>
+                            <dl className="mt-1 space-y-0.5 font-mono text-[7.5px] text-slate-600">
+                                <div className="flex items-center justify-between gap-2">
+                                    <dt className="font-bold" style={{ color: GUINDA }}>CURP</dt>
+                                    <dd className="font-black text-slate-900">{curpResumida(partera.curp)}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <dt className="font-bold" style={{ color: GUINDA }}>FOLIO</dt>
+                                    <dd className="font-black text-slate-900">{folioInstitucional(partera)}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <dt className="font-bold" style={{ color: GUINDA }}>VIGENCIA</dt>
+                                    <dd className="font-black text-emerald-700">2026 - 2028</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        {/* 4. Insignias */}
                         <div className="w-full rounded-xl border border-rose-900/20 bg-white/80 px-2 py-1.5 text-center shadow-sm">
-                            <div className="flex items-center justify-center gap-1 text-[#8B1E3F]">
+                            <div className="flex items-center justify-center gap-1" style={{ color: GUINDA }}>
                                 <Shield className="h-3 w-3" strokeWidth={2.5} />
                                 <span className="text-[8px] font-black uppercase tracking-tight">
                                     Red de Salud Materna e Intercultural
@@ -236,13 +323,19 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
                         </div>
                     </div>
 
-                    {/* Franja inferior guinda */}
-                    <div className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-300/70 bg-gradient-to-r from-[#8B1E3F] via-[#9D2449] to-[#8B1E3F] px-2 py-1.5 shadow-md">
-                        <Printer className="h-3.5 w-3.5 shrink-0 text-amber-200" />
-                        <span className="text-[9px] font-black leading-tight tracking-tight text-white">
-                            Imprimir / Descargar Credencial Oficial
-                        </span>
+                    <div className="mb-1.5">
+                        <MicroTexto>Documento personal e intransferible · Servicios de Salud de Oaxaca</MicroTexto>
                     </div>
+
+                    {/* Barra inferior */}
+                    <BarraGuinda className="px-2 py-1.5">
+                        <div className="flex items-center justify-center gap-1.5">
+                            <Printer className="h-3.5 w-3.5 shrink-0 text-amber-200" />
+                            <span className="text-[9px] font-black leading-tight tracking-tight text-white">
+                                Imprimir / Descargar Credencial Oficial
+                            </span>
+                        </div>
+                    </BarraGuinda>
                 </div>
             </div>
         </div>
