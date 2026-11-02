@@ -36,7 +36,7 @@ interface AdminDashboardProps {
 
 export type TabType = 'TAMIZ' | 'REFERENCIAS' | 'CALENDARIOS' | 'PARTERAS' | 'CUENTAS' | 'CLUES' | 'CONFIGURACION';
 
-/* Estilos de UI/UX Avanzados y Animaciones Nativas */
+/* Estilos de UI/UX Avanzados y Animaciones Nativas homologadas con el Login */
 const ACCENT = 'bg-gradient-to-r from-cyan-400 to-blue-600';
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-0';
 const GLASS = 'lg-edge relative border border-white/40 bg-slate-900/35 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.6)] backdrop-blur-3xl';
@@ -133,21 +133,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="lg-text min-h-screen w-full overflow-x-hidden p-3 text-white selection:bg-cyan-300/40 sm:p-6">
             <style>{DASHBOARD_CSS}</style>
 
-            {/* Fondo Inmersivo Absoluto con CSS Background para asegurar carga perfecta */}
-            <div 
-                aria-hidden="true" 
-                className="fixed inset-0 -z-50 h-screen w-screen overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950"
-                style={{ 
-                    backgroundImage: `linear-gradient(to bottom right, rgba(8, 145, 178, 0.85), rgba(30, 64, 175, 0.85), rgba(2, 6, 23, 0.95)), url("${import.meta.env.BASE_URL}fondo-login.png")`, 
-                    backgroundSize: 'cover', 
-                    backgroundPosition: 'center', 
-                    backgroundBlendMode: 'overlay' 
-                }}
-            >
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/40 via-blue-950/30 to-slate-950/70 backdrop-blur-[3px]" />
+            {/* Fondo Inmersivo idéntico al Login (Imagen fija + Degradados + Nebulosas Animadas) */}
+            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950">
+                <img
+                    src="/fondo-login.png"
+                    alt=""
+                    draggable={false}
+                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                    className="absolute inset-0 size-full object-cover object-center opacity-85 brightness-105 contrast-105 blur-md"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/20 via-blue-900/10 to-slate-950/40" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(165,243,252,0.3),transparent_70%)]" />
-                <div className="lg-float-a absolute -left-20 -top-20 size-[36rem] rounded-full bg-cyan-400/25 blur-3xl pointer-events-none" />
-                <div className="lg-float-b absolute -bottom-28 -right-20 size-[40rem] rounded-full bg-blue-500/25 blur-3xl pointer-events-none" />
+                <div className="lg-float-a absolute -left-20 -top-20 size-[32rem] rounded-full bg-cyan-400/25 blur-3xl pointer-events-none" />
+                <div className="lg-float-b absolute -bottom-28 -right-20 size-[36rem] rounded-full bg-blue-400/25 blur-3xl pointer-events-none" />
             </div>
 
             {/* Contenedor Principal con Estructura de Centro de Mando */}
