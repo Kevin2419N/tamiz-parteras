@@ -48,7 +48,7 @@ const obtenerLengua = (p: ParteraCredencial): string => {
 };
 
 const GUINDA = '#5C1228';
-const GUINDA_PROFUNDO = '#4A0E1F';
+const GUINDA_CLARO = '#7A1B38';
 
 const AcabadoPVC: React.FC = () => (
     <>
@@ -121,19 +121,13 @@ const BarraGuinda: React.FC<{ className?: string; children: React.ReactNode }> =
     <div
         className={`relative overflow-hidden rounded-xl border border-amber-400/90 text-center ${className}`}
         style={{
-            backgroundImage: `repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 6px), linear-gradient(135deg, ${GUINDA} 0%, ${GUINDA_PROFUNDO} 100%)`,
-            boxShadow: '0 8px 16px -4px rgba(74,14,31,0.55), 0 2px 4px rgba(74,14,31,0.35), inset 0 1px 0 rgba(255,255,255,0.12)'
+            backgroundImage: `repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 6px), linear-gradient(135deg, ${GUINDA} 0%, ${GUINDA_CLARO} 100%)`,
+            boxShadow: '0 8px 16px -4px rgba(92,18,40,0.6), 0 2px 4px rgba(92,18,40,0.4), inset 0 1px 0 rgba(255,255,255,0.12)'
         }}
     >
         <div className="pointer-events-none absolute inset-[2px] rounded-[9px] border border-amber-300/30" />
         <div className="relative">{children}</div>
     </div>
-);
-
-const MicroTexto: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <p className="text-center text-[5px] font-semibold uppercase leading-none tracking-[0.22em] text-slate-400/90">
-        {children}
-    </p>
 );
 
 const AVATAR_DEFAULT = '/avatar-partera-default.png';
@@ -149,7 +143,7 @@ const AvatarPartera: React.FC<{ fotoUrl?: string; nombre: string }> = ({ fotoUrl
     const alFallar = () => setSrc((actual) => (actual && actual !== AVATAR_DEFAULT ? AVATAR_DEFAULT : null));
 
     return (
-        <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-amber-400 bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-[21px] font-black tracking-wide text-white shadow-lg ring-4 ring-rose-950/10">
+        <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-amber-400 bg-white text-[21px] font-black tracking-wide text-[#5C1228] shadow-lg ring-4 ring-rose-950/10">
             {src ? (
                 <img
                     src={src}
@@ -192,8 +186,8 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                                     className="h-9 w-9 shrink-0 object-contain"
                                 />
                                 <div className="text-left font-extrabold leading-[1.1] tracking-tight" style={{ color: GUINDA }}>
-                                    <span className="block text-[8.5px]">Jurisdicción</span>
-                                    <span className="block text-[8.5px]">Sanitaria No. 2</span>
+                                    <span className="block text-[8.5px]">Jurisdicción Sanitaria</span>
+                                    <span className="block text-[8.5px]">No. 2 • Istmo</span>
                                 </div>
                             </div>
                             <div className="h-8 w-px bg-gradient-to-b from-transparent via-amber-400 to-transparent" />
@@ -250,14 +244,47 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                                 <strong className="text-[9.5px] font-black tracking-wide text-amber-800">{lengua}</strong>
                             </div>
                         )}
-
-                        <MicroTexto>Servicios de Salud de Oaxaca · Medicina Tradicional</MicroTexto>
                     </div>
                 </div>
             </div>
         </div>
     );
 };
+
+/** Franja de Certificación Digital (reverso): guinda oscuro, acentos dorados, código de barras sutil. */
+const FranjaCertificacion: React.FC = () => (
+    <div
+        className="relative z-10 flex shrink-0 items-center gap-2.5 px-4 py-2.5"
+        style={{
+            backgroundImage: `repeating-linear-gradient(135deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 6px), linear-gradient(180deg, ${GUINDA} 0%, #4E0F22 100%)`,
+            borderTop: '1.5px solid rgba(251,191,36,0.9)',
+            boxShadow: '0 -6px 14px -4px rgba(92,18,40,0.45), inset 0 1px 0 rgba(253,230,138,0.35)'
+        }}
+    >
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-400/90 bg-black/15">
+            <ShieldCheck className="h-4 w-4 text-amber-300" strokeWidth={2.2} />
+        </div>
+
+        <div className="min-w-0 flex-1 text-center leading-tight">
+            <span className="block text-[7px] font-black uppercase tracking-[0.14em] text-amber-200">
+                Registro Oficial Intercultural
+            </span>
+            <span className="mt-0.5 block text-[6.5px] font-bold uppercase tracking-[0.12em] text-white/90">
+                <span className="text-amber-300">•</span> Jurisdicción Sanitaria No. 2 <span className="text-amber-300">•</span>
+            </span>
+        </div>
+
+        {/* Código de barras decorativo */}
+        <div
+            aria-hidden
+            className="h-6 w-8 shrink-0 rounded-[2px] opacity-70"
+            style={{
+                backgroundImage:
+                    'repeating-linear-gradient(90deg, #FCD34D 0 1px, transparent 1px 2px, #FCD34D 2px 4px, transparent 4px 5px, #FCD34D 5px 6px, transparent 6px 8px)'
+            }}
+        />
+    </div>
+);
 
 const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }) => {
     const pin = obtenerPin(partera);
@@ -268,7 +295,7 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
                 <FondoCredencial src={FONDO_REVERSO} alt="Plantilla Reverso" simetrico escala={1.08} />
                 <AcabadoPVC />
 
-                <div className="relative z-10 flex flex-1 flex-col px-4 pt-1.5 pb-4">
+                <div className="relative z-10 flex flex-1 flex-col px-4 pt-1.5 pb-3">
 
                     {/* 1. PIN táctil */}
                     <div className="rounded-xl border border-amber-400 bg-gradient-to-b from-amber-50 to-amber-100 px-3 py-1.5 text-center shadow-sm">
@@ -315,21 +342,9 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
                             <span>Credencial Oficial Verificada • SSO</span>
                         </div>
                     </div>
-
-                    <div className="mb-1.5">
-                        <MicroTexto>Documento personal e intransferible · Servicios de Salud de Oaxaca</MicroTexto>
-                    </div>
-
-                    {/* Barra inferior */}
-                    <BarraGuinda className="px-2 py-1.5">
-                        <div className="flex items-center justify-center gap-1.5">
-                            <Printer className="h-3.5 w-3.5 shrink-0 text-amber-200" />
-                            <span className="text-[9px] font-black leading-tight tracking-tight text-white">
-                                Imprimir / Descargar Credencial Oficial
-                            </span>
-                        </div>
-                    </BarraGuinda>
                 </div>
+
+                <FranjaCertificacion />
             </div>
         </div>
     );
@@ -490,8 +505,10 @@ export const TabUsuariosParteras: React.FC = () => {
                     isolation: isolate;
                 }
                 #printable-credentials, #printable-credentials * {
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                    color-adjust: exact !important;
+                    forced-color-adjust: none;
                 }
 
                 /* ===== Impresión / PDF ===== */
@@ -549,7 +566,17 @@ export const TabUsuariosParteras: React.FC = () => {
                         box-shadow: none !important;
                         border: 0.1mm solid #cbd5e1 !important;
                         border-radius: 3mm !important;
+                        -webkit-font-smoothing: antialiased;
+                        text-rendering: geometricPrecision;
                     }
+                    /* Fondos, gradientes, bordes dorados e imágenes a color pleno */
+                    .cred-card, .cred-card * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        color-adjust: exact !important;
+                        filter: none !important;
+                    }
+                    .cred-card img { image-rendering: -webkit-optimize-contrast; }
                 }
             `}} />
 
