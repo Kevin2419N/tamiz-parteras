@@ -20,6 +20,21 @@ const getInitials = (name: string) => {
 const obtenerPin = (p: ParteraCredencial): string =>
     String(p.pinCuatroDigitos || (p as any).pin || '----');
 
+const obtenerNombreCompleto = (p: ParteraCredencial): string => {
+    if (p.nombreCompleto && p.nombreCompleto.trim().length > 3) {
+        return p.nombreCompleto;
+    }
+    const partes = [
+        (p as any).nombre,
+        (p as any).apellidoPaterno,
+        (p as any).apellidoMaterno
+    ].filter(Boolean);
+    if (partes.length > 0) {
+        return partes.join(' ');
+    }
+    return 'Partera Acreditada';
+};
+
 /* ============================================================================
  * COMPONENTES DE LA CREDENCIAL (FORMATO ID-1 / PVC)
  * ========================================================================== */
@@ -41,11 +56,11 @@ const AcabadoPVC: React.FC = () => (
 );
 
 const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera }) => {
-    const nombre = partera.nombreCompleto || (partera as any).nombre || 'Partera Acreditada';
+    const nombre = obtenerNombreCompleto(partera);
     const ubicacion = [partera.municipio || 'Juchitán de Zaragoza', partera.comunidad || 'Quinta Sección']
         .filter(Boolean)
         .join(' • ');
-    const tamanoNombre = nombre.length > 34 ? 'text-[14px]' : nombre.length > 22 ? 'text-[16px]' : 'text-[19px]';
+    const tamanoNombre = nombre.length > 32 ? 'text-[13px]' : nombre.length > 20 ? 'text-[15px]' : 'text-[18px]';
     const iniciales = getInitials(nombre);
     const fotoUrl = (partera as any).fotoUrl;
 
@@ -64,27 +79,27 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
 
                 {/* Contenido en Z-10 para flotar perfectamente sobre la plantilla */}
                 <div className="relative z-10 flex flex-col h-full justify-between p-4 pt-3 pb-8">
-                    {/* Logos institucionales */}
-                    <div className="flex items-center justify-center gap-2 px-1 pt-1">
+                    {/* Logos institucionales más grandes y con mayor presencia */}
+                    <div className="flex items-center justify-center gap-2.5 px-1 pt-1.5">
                         <img
                             src="/logo-jurisdiccion.png"
                             alt="Jurisdicción Sanitaria"
-                            className="h-7 w-auto max-w-[46%] object-contain mix-blend-multiply"
+                            className="h-8 w-auto max-w-[45%] object-contain mix-blend-multiply"
                         />
-                        <div className="h-5 w-px bg-slate-300" />
+                        <div className="h-6 w-px bg-slate-300" />
                         <img
                             src="/Logo-Secretaria.png"
                             alt="Medicina Tradicional"
-                            className="h-7 w-auto max-w-[46%] object-contain mix-blend-multiply"
+                            className="h-8 w-auto max-w-[45%] object-contain mix-blend-multiply"
                         />
                     </div>
 
-                    {/* Rectángulo guinda institucional */}
-                    <div className="mx-1 rounded-lg bg-[#9D2449] py-1 px-2 text-center shadow-md border border-rose-900/30">
-                        <span className="block text-[9.5px] font-black uppercase tracking-[0.05em] text-white leading-tight">
+                    {/* Rectángulo guinda institucional con detalles dorados */}
+                    <div className="mx-1 rounded-xl bg-gradient-to-r from-[#8B1E3F] via-[#9D2449] to-[#8B1E3F] py-1.5 px-2 text-center shadow-lg border border-amber-300/60 ring-1 ring-amber-300/20">
+                        <span className="block text-[10px] font-black uppercase tracking-[0.06em] text-white leading-tight">
                             CREDENCIAL DE ACREDITACIÓN OFICIAL
                         </span>
-                        <span className="block text-[7.5px] font-medium text-rose-100 leading-tight mt-0.5">
+                        <span className="block text-[8px] font-bold text-amber-200 tracking-wider leading-tight mt-0.5">
                             Medicina Tradicional e Interculturalidad
                         </span>
                     </div>
@@ -92,7 +107,7 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                     {/* Datos principales de la partera */}
                     <div className="flex flex-col items-center justify-center gap-1 text-center my-auto">
                         <div className="relative inline-block my-0.5">
-                            <div className="w-[66px] h-[66px] rounded-full border-2 border-[#9D2449]/40 bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-white flex items-center justify-center font-black text-[22px] tracking-wide shadow-md overflow-hidden">
+                            <div className="w-[66px] h-[66px] rounded-full border-2 border-amber-400/70 bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-white flex items-center justify-center font-black text-[22px] tracking-wide shadow-md overflow-hidden">
                                 {fotoUrl ? (
                                     <img src={fotoUrl} alt={nombre} className="w-full h-full object-cover" />
                                 ) : (
@@ -100,7 +115,7 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                                 )}
                             </div>
                             {/* Insignia circular superpuesta con iniciales */}
-                            <div className="absolute -bottom-1 -right-1 bg-[#9D2449] text-white text-[9px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                            <div className="absolute -bottom-1 -right-1 bg-[#9D2449] text-amber-200 text-[9px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-md">
                                 {iniciales.slice(0, 2)}
                             </div>
                         </div>
@@ -110,13 +125,14 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                                 {nombre}
                             </h4>
                             <p className="text-[9px] font-bold text-slate-600 mt-0.5 tracking-tight">
-                                Medicina Tradicional e Intercultural
+                                Partera Tradicional Acreditada
                             </p>
                         </div>
 
-                        <div className="inline-flex items-center gap-1 bg-slate-50/90 border border-slate-200 rounded-md px-2 py-0.5 max-w-full shadow-2xs mt-0.5">
-                            <span className="text-[7.5px] font-extrabold text-slate-400 tracking-widest">CURP:</span>
-                            <span className="font-mono text-[10px] font-bold tracking-wider text-slate-800 break-all">
+                        {/* CURP con mayor protagonismo visual */}
+                        <div className="inline-flex items-center gap-1.5 bg-slate-900/5 border border-slate-300 rounded-lg px-2.5 py-0.5 max-w-full shadow-xs mt-0.5">
+                            <span className="text-[8px] font-black text-rose-900 tracking-widest">CURP:</span>
+                            <span className="font-mono text-[10.5px] font-black tracking-wider text-slate-900 break-all">
                                 {partera.curp || 'No registrada'}
                             </span>
                         </div>
@@ -126,10 +142,11 @@ const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera })
                             <span className="text-[10px] font-extrabold leading-tight">{ubicacion}</span>
                         </div>
 
+                        {/* Lengua Materna en Letra Dorada Exclusiva */}
                         {partera.lenguaMaterna && (
-                            <div className="flex flex-wrap items-center justify-center gap-x-1 mt-0.5">
-                                <span className="text-[9.5px] font-bold text-slate-500">Lengua:</span>
-                                <strong className="text-[10px] font-black text-[#9D2449] leading-tight">
+                            <div className="flex flex-wrap items-center justify-center gap-x-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-400/40 shadow-2xs">
+                                <span className="text-[9px] font-bold text-slate-600">Lengua:</span>
+                                <strong className="text-[10.5px] font-black bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-800 bg-clip-text text-transparent tracking-wide">
                                     {partera.lenguaMaterna}
                                 </strong>
                             </div>
@@ -159,39 +176,39 @@ const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }
 
                 {/* Contenido en Z-10 para flotar perfectamente sobre la plantilla */}
                 <div className="relative z-10 flex flex-col h-full justify-between p-3 pt-3 pb-8">
-                    {/* PIN táctil superior compacto */}
-                    <div className="mx-2 rounded-xl border border-amber-300 bg-gradient-to-b from-amber-50 to-amber-100 py-1.5 px-3 text-center shadow-xs">
+                    {/* PIN táctil superior compacto con acento dorado */}
+                    <div className="mx-2 rounded-xl border border-amber-400 bg-gradient-to-b from-amber-50 to-amber-100 py-1.5 px-3 text-center shadow-sm">
                         <div className="flex items-center justify-center gap-1 text-amber-900">
-                            <Key className="w-3 h-3" />
-                            <span className="text-[8.5px] font-black uppercase tracking-wider">PIN TÁCTIL DE ACCESO: {pin}</span>
+                            <Key className="w-3 h-3 text-amber-700" />
+                            <span className="text-[8.5px] font-black uppercase tracking-wider text-amber-950">PIN TÁCTIL DE ACCESO: {pin}</span>
                         </div>
                     </div>
 
                     <div className="flex flex-col items-center justify-center flex-1 px-2 my-auto">
-                        {/* Código QR centrado */}
-                        <div className="text-center">
-                            <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm inline-block">
+                        {/* Código QR centrado con marco profesional */}
+                        <div className="text-center bg-white/80 p-2.5 rounded-2xl border border-amber-300/50 shadow-md backdrop-blur-xs">
+                            <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-xs inline-block">
                                 <img
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&ecc=M&data=${encodeURIComponent(pin)}`}
                                     alt="Código QR de acceso rápido"
-                                    className="w-[105px] h-[105px] object-contain block"
+                                    className="w-[95px] h-[95px] object-contain block"
                                 />
                             </div>
-                            <span className="text-[8px] text-slate-500 font-mono mt-1 block font-extrabold uppercase tracking-widest">
+                            <span className="text-[8px] text-slate-600 font-mono mt-1 block font-extrabold uppercase tracking-widest">
                                 ESCANEAR PARA LOGIN
                             </span>
                         </div>
 
-                        {/* Sello verificado */}
-                        <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50/90 border border-emerald-200 px-2.5 py-0.5 text-[9.5px] text-emerald-800 font-extrabold shadow-2xs mt-2">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        {/* Sello verificado con detalle elegante */}
+                        <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50/90 border border-emerald-300 px-3 py-1 text-[9.5px] text-emerald-900 font-extrabold shadow-2xs mt-2.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                             <span>Credencial Oficial Verificada • SSO</span>
                         </div>
                     </div>
 
-                    {/* Botón inferior guinda "Imprimir / Descargar Credencial Oficial" */}
-                    <div className="mx-1 rounded-xl bg-[#9D2449] py-1.5 px-2 text-center shadow-md flex items-center justify-center gap-1.5 border border-rose-900/30">
-                        <Printer className="w-3.5 h-3.5 text-rose-100 shrink-0" />
+                    {/* Botón inferior guinda con toques dorados "Imprimir / Descargar Credencial Oficial" */}
+                    <div className="mx-1 rounded-xl bg-gradient-to-r from-[#8B1E3F] via-[#9D2449] to-[#8B1E3F] py-1.5 px-2 text-center shadow-md flex items-center justify-center gap-1.5 border border-amber-300/50">
+                        <Printer className="w-3.5 h-3.5 text-amber-200 shrink-0" />
                         <span className="text-[9.5px] font-black tracking-tight text-white leading-tight">
                             Imprimir / Descargar Credencial Oficial
                         </span>
@@ -464,7 +481,7 @@ export const TabUsuariosParteras: React.FC = () => {
                     </div>
                 ) : (
                     parteras.map((p) => {
-                        const nombrePartera = p.nombreCompleto || (p as any).nombre || 'Partera Acreditada';
+                        const nombrePartera = obtenerNombreCompleto(p);
                         return (
                             <div key={p.id || p.curp} className="p-4 bg-slate-900/50 rounded-2xl border border-white/20 shadow-lg backdrop-blur-xl space-y-3">
                                 <div className="flex items-start justify-between gap-3">
@@ -496,7 +513,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                     {p.lenguaMaterna && (
                                         <div className="text-[11px] text-rose-200/80 flex items-center gap-1.5">
                                             <Languages className="w-3 h-3 text-rose-400" />
-                                            <span>Lengua: <strong className="text-white">{p.lenguaMaterna}</strong></span>
+                                            <span>Lengua: <strong className="text-amber-300">{p.lenguaMaterna}</strong></span>
                                         </div>
                                     )}
                                 </div>
@@ -545,7 +562,7 @@ export const TabUsuariosParteras: React.FC = () => {
                             </tr>
                         ) : (
                             parteras.map((p) => {
-                                const nombrePartera = p.nombreCompleto || (p as any).nombre || 'Partera Acreditada';
+                                const nombrePartera = obtenerNombreCompleto(p);
                                 return (
                                     <tr key={p.id || p.curp} className="hover:bg-white/10 transition-colors">
                                         <td className="py-4 px-5">
@@ -830,7 +847,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                 ¡Partera Registrada con Éxito!
                             </h3>
                             <p className="text-xs text-rose-100/80 leading-relaxed">
-                                Se ha completado el alta oficial de <strong className="text-white">{successModalData.nombreCompleto || (successModalData as any).nombre}</strong> en el sistema de la Jurisdicción Sanitaria No. 2.
+                                Se ha completado el alta oficial de <strong className="text-white">{obtenerNombreCompleto(successModalData)}</strong> en el sistema de la Jurisdicción Sanitaria No. 2.
                             </p>
                         </div>
 
