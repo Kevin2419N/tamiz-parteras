@@ -119,19 +119,19 @@ const WELCOME_STAGES: ReadonlyArray<{ from: number; label: string }> = [
     { from: 100, label: 'Todo listo' },
 ];
 
-/* Clases compartidas */
-const ACCENT = 'bg-gradient-to-r from-sky-500 to-blue-600';
+/* Clases compartidas y Estilo Glass Luminoso */
+const ACCENT = 'bg-gradient-to-r from-sky-400 to-blue-600';
 const FOCUS =
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-0 focus-visible:shadow-[0_0_22px_rgba(186,230,253,0.55)]';
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0 focus-visible:shadow-[0_0_25px_rgba(255,255,255,0.7)]';
 const SLIDE = 'ease-[cubic-bezier(0.65,0,0.35,1)]';
-const GLASS = 'lg-edge relative border border-white/30 bg-white/15 shadow-2xl shadow-sky-950/25 backdrop-blur-2xl';
-const LABEL = 'mb-1.5 block text-xs font-medium text-white/90';
+const GLASS = 'lg-edge relative border border-white/40 bg-white/[0.12] shadow-[0_25px_50px_-12px_rgba(15,23,42,0.35)] backdrop-blur-2xl';
+const LABEL = 'mb-1.5 block text-xs font-medium text-white/95 tracking-wide';
 const INPUT =
-    'min-h-12 w-full rounded-xl border border-white/30 bg-white/15 pl-10 text-base text-white placeholder:text-white/60 shadow-inner shadow-white/5 transition-all duration-200 hover:border-white/50 hover:bg-white/20 focus:border-white/80 focus:bg-white/25 focus:outline-none focus:ring-4 focus:ring-sky-200/30 focus:shadow-[0_0_26px_rgba(186,230,253,0.4)] disabled:opacity-60';
-const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/70 transition-colors duration-200 group-focus-within:text-white';
-const PRIMARY = `lg-sheen group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/30 ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-900/40 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(56,189,248,0.45)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
-const SECONDARY = `min-h-12 rounded-xl border border-white/30 bg-white/15 px-4 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:border-white/50 hover:bg-white/25 active:scale-[0.98] ${FOCUS}`;
-const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/25 bg-white/10 p-1 shadow-inner shadow-white/5 backdrop-blur-md';
+    'min-h-12 w-full rounded-xl border border-white/35 bg-white/10 pl-10 text-base text-white placeholder:text-white/60 shadow-inner shadow-white/5 transition-all duration-200 hover:border-white/60 hover:bg-white/15 focus:border-white focus:bg-white/20 focus:outline-none focus:ring-4 focus:ring-sky-200/40 focus:shadow-[0_0_30px_rgba(255,255,255,0.4)] disabled:opacity-60';
+const FIELD_ICON = 'pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/80 transition-colors duration-200 group-focus-within:text-white';
+const PRIMARY = `lg-sheen group relative flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/40 ${ACCENT} px-5 text-base font-semibold text-white shadow-lg shadow-sky-900/30 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(56,189,248,0.5)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${FOCUS}`;
+const SECONDARY = `min-h-12 rounded-xl border border-white/35 bg-white/15 px-4 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:border-white/60 hover:bg-white/25 active:scale-[0.98] ${FOCUS}`;
+const PILL_TRACK = 'relative grid grid-cols-2 rounded-2xl border border-white/30 bg-white/10 p-1 shadow-inner shadow-white/5 backdrop-blur-md';
 
 const LOGIN_CSS = `
 @keyframes lgFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -143,8 +143,8 @@ const LOGIN_CSS = `
 @keyframes lgAlertIn{from{opacity:0;transform:translateY(-18px) scale(.95)}to{opacity:1;transform:none}}
 @keyframes lgVeil{from{opacity:0}to{opacity:1}}
 @keyframes lgModal{from{opacity:0;transform:translateY(24px) scale(.94)}to{opacity:1;transform:none}}
-@keyframes lgFloatA{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(5%,7%,0)}}
-@keyframes lgFloatB{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-6%,-5%,0)}}
+@keyframes lgFloatA{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(4%,6%,0)}}
+@keyframes lgFloatB{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-5%,-4%,0)}}
 @keyframes lgSheen{from{transform:translateX(-160%) skewX(-15deg)}to{transform:translateX(420%) skewX(-15deg)}}
 @keyframes lgHalo{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.7);opacity:0}}
 @keyframes lgBar{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
@@ -158,18 +158,18 @@ const LOGIN_CSS = `
 .lg-alert-in{animation:lgAlertIn .45s cubic-bezier(.22,1,.36,1) both}
 .lg-veil{animation:lgVeil .35s ease-out both}
 .lg-modal{animation:lgModal .55s cubic-bezier(.22,1,.36,1) both}
-.lg-float-a{animation:lgFloatA 18s ease-in-out infinite}
-.lg-float-b{animation:lgFloatB 22s ease-in-out infinite}
+.lg-float-a{animation:lgFloatA 20s ease-in-out infinite}
+.lg-float-b{animation:lgFloatB 25s ease-in-out infinite}
 .lg-halo{animation:lgHalo 2.2s ease-out infinite}
 .lg-bar-shine{animation:lgBar 1.6s linear infinite}
-.lg-text{text-shadow:0 1px 2px rgba(15,23,42,.32)}
+.lg-text{text-shadow:0 1px 3px rgba(15,23,42,.25)}
 .lg-quiet{scrollbar-width:none}
 .lg-quiet::-webkit-scrollbar{display:none}
 .lg-edge::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
-background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(255,255,255,.08) 38%,rgba(255,255,255,0) 62%,rgba(255,255,255,.55));
+background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.2) 40%,rgba(255,255,255,0) 65%,rgba(255,255,255,.6));
 -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .lg-sheen::after{content:'';position:absolute;inset:0 auto 0 0;width:35%;pointer-events:none;
-background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:translateX(-160%) skewX(-15deg)}
+background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:translateX(-160%) skewX(-15deg)}
 .lg-sheen:hover:not(:disabled)::after{animation:lgSheen .9s ease}
 @media (prefers-reduced-motion:reduce){
 .lg-fade,.lg-shake,.lg-shake-late,.lg-card,.lg-laser,.lg-pop,.lg-ripple,.lg-alert-in,.lg-veil,.lg-modal,.lg-float-a,.lg-float-b,.lg-halo,.lg-bar-shine{animation:none}
@@ -202,11 +202,10 @@ function writeRememberedEmail(email: string | null): void {
         if (email) localStorage.setItem(REMEMBER_KEY, email);
         else localStorage.removeItem(REMEMBER_KEY);
     } catch {
-        /* almacenamiento no disponible (modo privado) */
+        /* almacenamiento no disponible */
     }
 }
 
-/** Primer nombre del usuario, ignorando títulos (Dr., Lic., etc.). Vacío si el modelo no trae nombre. */
 function getFirstName(user: User): string {
     const record = user as unknown as Record<string, unknown>;
     for (const key of NAME_KEYS) {
@@ -229,7 +228,6 @@ function isSpeechSupported(): boolean {
     return typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
 }
 
-/** es-MX primero; es-US / es-419 como respaldo latino. Nunca voces de España. */
 function scoreVoice(voice: SpeechSynthesisVoice): number {
     const lang = voice.lang.replace('_', '-').toLowerCase();
     let score: number;
@@ -308,7 +306,6 @@ function useMexicanVoice() {
         [supported],
     );
 
-    /** La partera activó la voz al menos una vez: a partir de aquí se narran avisos importantes. */
     const engage = useCallback(() => {
         engagedRef.current = true;
     }, []);
@@ -329,7 +326,7 @@ function useMexicanVoice() {
 type VoiceApi = ReturnType<typeof useMexicanVoice>;
 
 /* ═══════════════════════════════════════════════════════════════
-   Alerta flotante (reemplaza cualquier alert() del navegador)
+   Alerta flotante
    ═══════════════════════════════════════════════════════════════ */
 
 interface FloatingAlertProps {
@@ -359,33 +356,33 @@ function FloatingAlert({ notice, onRetry, onClose }: FloatingAlertProps) {
             <div key={notice.id} className="lg-alert-in pointer-events-auto w-full max-w-sm">
                 <div
                     role={isError ? 'alert' : 'status'}
-                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-900/35 p-4 shadow-2xl shadow-slate-950/40 backdrop-blur-2xl ${
-                        isError ? 'lg-shake-late border-rose-300/30' : 'border-sky-300/30'
+                    className={`lg-edge relative overflow-hidden rounded-2xl border bg-slate-900/60 p-4 shadow-2xl shadow-slate-950/50 backdrop-blur-2xl ${
+                        isError ? 'lg-shake-late border-rose-300/40' : 'border-sky-300/40'
                     }`}
                 >
                     <div
                         aria-hidden="true"
-                        className={`absolute -top-12 left-1/2 h-24 w-48 -translate-x-1/2 rounded-full blur-2xl ${isError ? 'bg-rose-500/30' : 'bg-sky-400/25'}`}
+                        className={`absolute -top-12 left-1/2 h-24 w-48 -translate-x-1/2 rounded-full blur-2xl ${isError ? 'bg-rose-500/30' : 'bg-sky-400/30'}`}
                     />
                     <button
                         type="button"
                         onClick={onClose}
                         aria-label="Cerrar aviso"
-                        className={`absolute right-2 top-2 flex size-9 items-center justify-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white ${FOCUS}`}
+                        className={`absolute right-2 top-2 flex size-9 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/15 hover:text-white ${FOCUS}`}
                     >
                         <X className="size-4" />
                     </button>
                     <div className="relative flex gap-3 pr-8">
                         <span
                             className={`flex size-11 shrink-0 items-center justify-center rounded-full ring-1 ${
-                                isError ? 'bg-rose-500/20 text-amber-300 ring-rose-300/40' : 'bg-sky-400/20 text-sky-200 ring-sky-300/40'
+                                isError ? 'bg-rose-500/25 text-amber-300 ring-rose-300/50' : 'bg-sky-400/25 text-sky-200 ring-sky-300/50'
                             }`}
                         >
                             <Icon className="size-6" aria-hidden="true" />
                         </span>
                         <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-white">{isError ? 'No pudimos iniciar sesión' : 'Aviso'}</p>
-                            <p className="mt-0.5 text-sm leading-snug text-sky-50/85">{notice.text}</p>
+                            <p className="mt-0.5 text-sm leading-snug text-sky-50/90">{notice.text}</p>
                         </div>
                     </div>
                     <div className="relative mt-3.5 flex justify-end">
@@ -401,7 +398,7 @@ function FloatingAlert({ notice, onRetry, onClose }: FloatingAlertProps) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Tecla del PIN con animación de pulsación (ripple + escala + háptico)
+   Tecla del PIN
    ═══════════════════════════════════════════════════════════════ */
 
 interface PinKeyProps {
@@ -429,7 +426,7 @@ function PinKey({ disabled, onPress, ariaLabel, muted = false, children }: PinKe
             aria-label={ariaLabel}
             onPointerDown={handlePointerDown}
             onClick={onPress}
-            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/30 bg-gradient-to-b from-white/30 to-white/10 text-2xl font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition duration-100 hover:from-white/40 hover:to-white/20 active:scale-90 active:border-sky-300/60 active:from-sky-400/40 active:to-sky-500/20 active:shadow-inner disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
+            className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center overflow-hidden rounded-2xl border border-white/35 bg-gradient-to-b from-white/30 to-white/10 text-2xl font-semibold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition duration-100 hover:from-white/40 hover:to-white/20 active:scale-90 active:border-sky-300/70 active:from-sky-400/45 active:to-sky-500/25 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 ${FOCUS} ${
                 muted ? 'text-sky-100' : 'text-white'
             }`}
         >
@@ -496,7 +493,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
                             </option>
                         ))}
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/70" aria-hidden="true" />
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/80" aria-hidden="true" />
                 </div>
             </div>
 
@@ -539,7 +536,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
                         aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                        className={`absolute right-1 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg text-sky-100/80 transition hover:bg-white/10 hover:text-white active:scale-90 ${FOCUS}`}
+                        className={`absolute right-1 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg text-sky-100 transition hover:bg-white/15 hover:text-white active:scale-90 ${FOCUS}`}
                     >
                         {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                     </button>
@@ -552,7 +549,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
                         type="checkbox"
                         checked={remember}
                         onChange={(event) => setRemember(event.target.checked)}
-                        className="size-4 cursor-pointer rounded accent-sky-500"
+                        className="size-4 cursor-pointer rounded accent-sky-400"
                     />
                     Recordar equipo
                 </label>
@@ -583,7 +580,7 @@ function InstitutionalForm({ busy, onSubmit, onForgotPassword }: InstitutionalFo
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Visor QR con línea láser
+   Visor QR
    ═══════════════════════════════════════════════════════════════ */
 
 interface QrViewfinderProps {
@@ -697,7 +694,7 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
 
     return (
         <div className="flex flex-col gap-3">
-            <div className="relative mx-auto aspect-square w-full max-w-[14rem] overflow-hidden rounded-3xl border border-white/30 bg-slate-900/45 shadow-inner shadow-slate-950/30 sm:max-w-[15rem]">
+            <div className="relative mx-auto aspect-square w-full max-w-[13rem] overflow-hidden rounded-3xl border border-white/35 bg-slate-900/50 shadow-inner sm:max-w-[14rem]">
                 <video
                     ref={videoRef}
                     muted
@@ -708,11 +705,11 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
                 <canvas ref={canvasRef} className="hidden" />
 
                 {!live && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-slate-900/60 to-sky-950/60">
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-sky-900/50 to-slate-950/70">
                         {state === 'denied' ? (
                             <CameraOff className="size-11 text-sky-200/60" aria-hidden="true" />
                         ) : (
-                            <QrCode className="size-12 text-sky-200/40" aria-hidden="true" />
+                            <QrCode className="size-12 text-sky-200/50" aria-hidden="true" />
                         )}
                     </div>
                 )}
@@ -741,7 +738,7 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
                 )}
             </div>
 
-            <p className="flex min-h-10 items-center justify-center text-center text-sm leading-snug text-sky-100/85" aria-live="polite">
+            <p className="flex min-h-10 items-center justify-center text-center text-sm leading-snug text-sky-50/90" aria-live="polite">
                 {state === 'idle' && 'Activa la cámara y acerca tu credencial con código QR.'}
                 {state === 'starting' && 'Abriendo la cámara…'}
                 {state === 'scanning' && !rejected && 'Centra el código QR de la partera dentro del marco.'}
@@ -776,7 +773,7 @@ function QrViewfinder({ onDetect, onUsePin }: QrViewfinderProps) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Acceso de parteras (PIN / QR + voz)
+   Acceso de parteras
    ═══════════════════════════════════════════════════════════════ */
 
 interface MidwifeAccessProps {
@@ -879,7 +876,7 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                 <div role="group" aria-label="Forma de acceso" className={`${PILL_TRACK} flex-1`}>
                     <span
                         aria-hidden="true"
-                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md shadow-sky-900/40 ring-1 ring-white/30 transition-transform duration-300 ${SLIDE} ${
+                        className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-md shadow-sky-950/30 ring-1 ring-white/40 transition-transform duration-300 ${SLIDE} ${
                             method === 'pin' ? 'translate-x-0' : 'translate-x-full'
                         }`}
                     />
@@ -895,7 +892,7 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                             aria-pressed={method === id}
                             onClick={() => changeMethod(id)}
                             className={`relative z-10 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-1 text-sm font-medium transition-all duration-200 active:scale-[0.97] ${FOCUS} ${
-                                method === id ? 'text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'
+                                method === id ? 'text-white' : 'text-white/80 hover:bg-white/15 hover:text-white'
                             }`}
                         >
                             <Icon className="size-4 shrink-0" aria-hidden="true" />
@@ -910,11 +907,11 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                         onClick={toggleVoice}
                         aria-pressed={speaking}
                         aria-label={speaking ? 'Detener la voz' : 'Escuchar instrucciones'}
-                        className={`relative flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/15 text-white transition duration-200 hover:bg-white/25 active:scale-90 ${FOCUS} ${
-                            speaking ? 'border-sky-300/50 bg-sky-500/30' : ''
+                        className={`relative flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/35 bg-white/15 text-white transition duration-200 hover:bg-white/25 active:scale-90 ${FOCUS} ${
+                            speaking ? 'border-sky-300/60 bg-sky-500/40' : ''
                         }`}
                     >
-                        {speaking && <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-2xl border border-sky-300/60" />}
+                        {speaking && <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-2xl border border-sky-300/70" />}
                         {speaking ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
                     </button>
                 )}
@@ -934,14 +931,14 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
                                     key={index}
                                     className={`size-5 rounded-full border-2 transition-all duration-200 ${
                                         index < digits.length
-                                            ? 'scale-110 border-sky-300 bg-sky-300 shadow-[0_0_16px_rgba(125,211,252,0.75)]'
-                                            : 'border-white/40 bg-transparent'
+                                            ? 'scale-110 border-sky-300 bg-sky-300 shadow-[0_0_18px_rgba(125,211,252,0.85)]'
+                                            : 'border-white/45 bg-transparent'
                                     }`}
                                 />
                             ))}
                         </div>
 
-                        <p className="flex h-5 items-center justify-center gap-2 text-sm text-sky-100/80" aria-live="polite">
+                        <p className="flex h-5 items-center justify-center gap-2 text-sm text-sky-50/90" aria-live="polite">
                             {busy ? (
                                 <>
                                     <Loader2 className="size-4 animate-spin" />
@@ -978,7 +975,7 @@ function MidwifeAccess({ active, busy, voice, onPin, onQr }: MidwifeAccessProps)
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Modal de bienvenida con barra de sincronización
+   Modal de bienvenida
    ═══════════════════════════════════════════════════════════════ */
 
 interface WelcomeModalProps {
@@ -1032,35 +1029,35 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
         : 'Qué gusto verte por aquí. Estamos dejando todo listo para tu jornada.';
 
     return (
-        <div className="lg-veil fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 px-4 py-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md">
+        <div className="lg-veil fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md">
             <div
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="welcome-title"
                 className={`${GLASS} lg-modal w-full max-w-sm overflow-hidden rounded-3xl p-6 text-center sm:p-8`}
             >
-                <div aria-hidden="true" className="absolute -top-16 left-1/2 h-40 w-64 -translate-x-1/2 rounded-full bg-sky-400/25 blur-3xl" />
+                <div aria-hidden="true" className="absolute -top-16 left-1/2 h-40 w-64 -translate-x-1/2 rounded-full bg-sky-400/35 blur-3xl" />
 
                 <div className="relative mx-auto mb-5 flex size-24 items-center justify-center">
-                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-sky-300/50" />
-                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-sky-300/40 [animation-delay:1.1s]" />
+                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-sky-300/60" />
+                    <span aria-hidden="true" className="lg-halo absolute inset-0 rounded-full border border-sky-300/50 [animation-delay:1.1s]" />
                     <img
                         src="/logo-jurisdiccion.png"
                         alt=""
                         draggable={false}
-                        className="relative size-20 rounded-full bg-white object-cover shadow-xl ring-4 ring-white/30"
+                        className="relative size-20 rounded-full bg-white object-cover shadow-xl ring-4 ring-white/40"
                     />
                     <span
                         className={`absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full ring-4 ring-slate-900/60 transition-colors duration-500 ${
-                            complete ? 'bg-emerald-400 text-emerald-950' : 'bg-sky-500 text-white'
+                            complete ? 'bg-emerald-400 text-emerald-950' : 'bg-sky-400 text-white'
                         }`}
                     >
                         {complete ? <CheckCircle2 className="lg-pop size-5" /> : <HeartHandshake className="size-4" />}
                     </span>
                 </div>
 
-                <h2 id="welcome-title" className="relative text-2xl font-semibold leading-tight">{title}</h2>
-                <p className="relative mx-auto mt-2 max-w-xs text-sm leading-relaxed text-sky-100/85">{message}</p>
+                <h2 id="welcome-title" className="relative text-2xl font-semibold leading-tight text-white">{title}</h2>
+                <p className="relative mx-auto mt-2 max-w-xs text-sm leading-relaxed text-sky-50/90">{message}</p>
 
                 <div className="relative mt-6">
                     <div
@@ -1069,7 +1066,7 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
                         aria-valuemin={0}
                         aria-valuemax={100}
                         aria-valuenow={progress}
-                        className="relative h-2.5 overflow-hidden rounded-full border border-white/25 bg-white/15"
+                        className="relative h-2.5 overflow-hidden rounded-full border border-white/30 bg-white/15"
                     >
                         <div
                             className={`relative h-full overflow-hidden rounded-full transition-colors duration-500 ${
@@ -1078,11 +1075,11 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
                             style={{ width: `${progress}%` }}
                         >
                             {!complete && (
-                                <span className="lg-bar-shine absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent motion-reduce:hidden" />
+                                <span className="lg-bar-shine absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/70 to-transparent motion-reduce:hidden" />
                             )}
                         </div>
                     </div>
-                    <div className="mt-2.5 flex items-center justify-between gap-3 text-xs text-sky-100/80" aria-live="polite">
+                    <div className="mt-2.5 flex items-center justify-between gap-3 text-xs text-sky-50/90" aria-live="polite">
                         <span key={stage.label} className="lg-fade flex min-w-0 items-center gap-1.5 truncate">
                             {complete ? (
                                 <CheckCircle2 className="size-3.5 shrink-0 text-emerald-300" aria-hidden="true" />
@@ -1104,7 +1101,7 @@ function WelcomeModal({ name, audience, onDone }: WelcomeModalProps) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Pantalla de Login
+   Pantalla de Login Principal
    ═══════════════════════════════════════════════════════════════ */
 
 export function Login() {
@@ -1168,7 +1165,6 @@ export function Login() {
                 if (audience === 'partera') {
                     announce(name ? `Bienvenida, ${name}. Estamos preparando su información.` : 'Bienvenida. Estamos preparando su información.');
                 }
-                // login() y la navegación se ejecutan al terminar el modal de bienvenida.
                 setWelcome({ user, name, audience });
                 return true;
             } catch (error) {
@@ -1225,65 +1221,57 @@ export function Login() {
         }`;
 
     return (
-        <div className="lg-text fixed inset-0 isolate flex items-center justify-center overflow-hidden overscroll-none px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] text-white selection:bg-sky-300/40 sm:p-6">
+        <div className="lg-text fixed inset-0 isolate flex items-center justify-center overflow-hidden overscroll-none px-3 py-3 text-white selection:bg-sky-300/40 sm:p-6">
             <style>{LOGIN_CSS}</style>
 
-            {/* Fondo: imagen ajustada a la pantalla sin deformarse + velo luminoso */}
-            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-sky-600 via-blue-700 to-slate-900">
-                {/* Relleno desenfocado: solo en pantallas verticales, evita recortes agresivos */}
+            {/* Fondo optimizado y luminoso (sin estirarse de más, perfectamente centrado) */}
+            <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-slate-900">
                 <img
                     src="/fondo-login.png"
                     alt=""
                     draggable={false}
                     onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                    className="absolute inset-0 hidden size-full scale-110 object-cover object-center opacity-80 blur-2xl portrait:block"
+                    className="absolute inset-0 size-full object-cover object-center opacity-75 blur-xl"
                 />
-                <img
-                    src="/fondo-login.png"
-                    alt=""
-                    draggable={false}
-                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                    className="absolute inset-0 size-full object-cover object-center portrait:object-contain portrait:[mask-image:linear-gradient(to_bottom,transparent,black_14%,black_86%,transparent)]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-950/45 via-blue-900/30 to-slate-950/50" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(186,230,253,0.28),transparent_60%)]" />
-                <div className="lg-float-a absolute -left-28 -top-28 size-[30rem] rounded-full bg-white/20 blur-3xl" />
-                <div className="lg-float-b absolute -bottom-36 -right-28 size-[34rem] rounded-full bg-cyan-300/25 blur-3xl" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(2,6,23,0.35))]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-sky-950/30 via-blue-900/20 to-slate-950/40" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(224,242,254,0.35),transparent_65%)]" />
+                <div className="lg-float-a absolute -left-20 -top-20 size-[28rem] rounded-full bg-sky-300/30 blur-3xl" />
+                <div className="lg-float-b absolute -bottom-28 -right-20 size-[32rem] rounded-full bg-cyan-300/30 blur-3xl" />
             </div>
 
+            {/* Contenedor Fijo y Centrado */}
             <div className="flex h-full w-full max-w-md items-center justify-center md:max-w-4xl" inert={welcome !== null}>
                 <div
-                    className={`lg-card ${GLASS} flex h-[42rem] max-h-full min-h-0 w-full flex-col overflow-hidden rounded-3xl md:h-[40rem] ${
+                    className={`lg-card ${GLASS} flex max-h-[92vh] min-h-0 w-full flex-col overflow-hidden rounded-3xl md:h-[40rem] ${
                         isInstitutional ? 'md:flex-row' : 'md:flex-row-reverse'
                     }`}
                 >
-                    {/* Reflejo de luz del cristal */}
-                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/25 via-transparent to-sky-200/10" />
+                    {/* Reflejo de luz superior del cristal */}
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/30 via-transparent to-sky-200/15" />
 
-                    {/* ── Panel lateral (marca / información) ── */}
-                    <aside className="relative z-10 shrink-0 overflow-hidden border-b border-white/20 p-4 sm:p-5 md:w-5/12 md:border-b-0 md:p-8">
+                    {/* ── Panel lateral (Marca institucional) ── */}
+                    <aside className="relative z-10 shrink-0 overflow-hidden border-b border-white/25 p-4 sm:p-5 md:w-5/12 md:border-b-0 md:p-8 flex flex-col justify-between">
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-white/30 via-sky-200/10 to-transparent transition-opacity duration-700 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-white/35 via-sky-200/15 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-100' : 'opacity-0'
                             }`}
                         />
                         <div
                             aria-hidden="true"
-                            className={`absolute inset-0 bg-gradient-to-br from-cyan-200/35 via-sky-200/10 to-transparent transition-opacity duration-700 ${
+                            className={`absolute inset-0 bg-gradient-to-br from-cyan-200/35 via-sky-200/15 to-transparent transition-opacity duration-700 ${
                                 isInstitutional ? 'opacity-0' : 'opacity-100'
                             }`}
                         />
 
-                        {/* Cabecera compacta centrada (móvil / tablet) */}
+                        {/* Versión móvil/tablet compacta */}
                         <div className="relative flex flex-col items-center gap-2.5 text-center md:hidden">
                             <div className="flex items-center gap-3">
                                 <img
                                     src="/logo-jurisdiccion.png"
                                     alt="Jurisdicción Sanitaria No. 2 Istmo"
                                     draggable={false}
-                                    className="size-10 shrink-0 rounded-full bg-white object-cover shadow-md ring-2 ring-white/50"
+                                    className="size-10 shrink-0 rounded-full bg-white object-cover shadow-md ring-2 ring-white/60"
                                 />
                                 <span aria-hidden="true" className="h-6 w-px bg-white/40" />
                                 <div className="flex h-9 shrink-0 items-center rounded-lg bg-white/95 px-2.5 shadow-md">
@@ -1291,19 +1279,19 @@ export function Login() {
                                 </div>
                             </div>
                             <div>
-                                <h1 className="text-base font-semibold leading-tight tracking-tight">Jurisdicción Sanitaria No. 2</h1>
-                                <p className="mt-0.5 text-xs text-white/80 [@media(max-height:520px)]:hidden">Istmo, Servicios de Salud de Oaxaca</p>
+                                <h1 className="text-base font-semibold leading-tight tracking-tight text-white">Jurisdicción Sanitaria No. 2</h1>
+                                <p className="mt-0.5 text-xs text-white/90">Istmo, Servicios de Salud de Oaxaca</p>
                             </div>
                         </div>
 
-                        {/* Panel informativo centrado (escritorio) */}
-                        <div className="relative hidden h-full flex-col items-center justify-between gap-6 text-center md:flex">
-                            <div className="flex items-center gap-3">
+                        {/* Versión escritorio centrada */}
+                        <div className="relative hidden h-full flex-col items-center justify-between gap-4 text-center md:flex">
+                            <div className="flex items-center gap-3 pt-2">
                                 <img
                                     src="/logo-jurisdiccion.png"
                                     alt="Jurisdicción Sanitaria No. 2 Istmo"
                                     draggable={false}
-                                    className="size-16 shrink-0 rounded-full bg-white object-cover shadow-xl ring-2 ring-white/50"
+                                    className="size-16 shrink-0 rounded-full bg-white object-cover shadow-xl ring-2 ring-white/60"
                                 />
                                 <div className="flex h-14 items-center rounded-xl bg-white/95 px-3 shadow-xl">
                                     <img src="/Logo-Secretaria.png" alt="Secretaría de Salud" draggable={false} className="h-9 w-auto" />
@@ -1311,18 +1299,18 @@ export function Login() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <h1 className="text-2xl font-semibold leading-tight tracking-tight">Jurisdicción Sanitaria No. 2</h1>
-                                <p className="text-sm text-white/80">Istmo, Servicios de Salud de Oaxaca</p>
+                                <h1 className="text-2xl font-semibold leading-tight tracking-tight text-white">Jurisdicción Sanitaria No. 2</h1>
+                                <p className="text-sm text-white/90">Istmo, Servicios de Salud de Oaxaca</p>
                             </div>
 
                             <div key={mode} className="lg-fade flex flex-col items-center space-y-3">
-                                <h2 className="text-lg font-medium">{MODE_COPY[mode].title}</h2>
-                                <p className="mx-auto max-w-xs text-sm leading-relaxed text-white/80">{MODE_COPY[mode].text}</p>
+                                <h2 className="text-lg font-medium text-white">{MODE_COPY[mode].title}</h2>
+                                <p className="mx-auto max-w-xs text-sm leading-relaxed text-white/90">{MODE_COPY[mode].text}</p>
                                 <ul className="flex flex-wrap justify-center gap-2 pt-1">
                                     {MODE_COPY[mode].chips.map(({ Icon, label }) => (
                                         <li
                                             key={label}
-                                            className="flex items-center gap-1.5 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-md"
+                                            className="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs text-white backdrop-blur-md shadow-sm"
                                         >
                                             <Icon className="size-3.5" aria-hidden="true" />
                                             {label}
@@ -1331,22 +1319,22 @@ export function Login() {
                                 </ul>
                             </div>
 
-                            <p className="mx-auto max-w-[16rem] text-xs leading-snug text-white/70">
+                            <p className="mx-auto max-w-[16rem] text-xs leading-snug text-white/80 pb-2">
                                 Sistema de gestión de tamiz neonatal y parteras tradicionales
                             </p>
                         </div>
                     </aside>
 
-                    {/* ── Panel de formularios ── */}
+                    {/* ── Panel de formularios (Con scroll interno si es necesario, limpio de teléfonos) ── */}
                     <section
-                        className={`relative z-10 flex min-h-0 flex-1 flex-col bg-white/5 p-4 sm:p-6 md:border-white/20 md:p-8 ${
+                        className={`relative z-10 flex min-h-0 flex-1 flex-col bg-white/[0.04] p-4 sm:p-6 md:border-white/25 md:p-8 overflow-y-auto lg-quiet ${
                             isInstitutional ? 'md:border-l' : 'md:border-r'
                         }`}
                     >
                         <div role="tablist" aria-label="Tipo de acceso" onKeyDown={handleTabKeys} className={`${PILL_TRACK} mb-4 shrink-0`}>
                             <span
                                 aria-hidden="true"
-                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-900/40 ring-1 ring-white/30 transition-transform duration-500 ${SLIDE} ${
+                                className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl ${ACCENT} shadow-lg shadow-sky-950/40 ring-1 ring-white/40 transition-transform duration-500 ${SLIDE} ${
                                     isInstitutional ? 'translate-x-0' : 'translate-x-full'
                                 }`}
                             />
@@ -1363,7 +1351,7 @@ export function Login() {
                                         tabIndex={selected ? 0 : -1}
                                         onClick={() => switchMode(id)}
                                         className={`relative z-10 flex min-h-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium transition-all duration-300 active:scale-[0.97] ${FOCUS} ${
-                                            selected ? 'text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'
+                                            selected ? 'text-white' : 'text-white/80 hover:bg-white/15 hover:text-white'
                                         }`}
                                     >
                                         <Icon
@@ -1401,7 +1389,6 @@ export function Login() {
                 </div>
             </div>
 
-            {/* Capas flotantes fuera de la tarjeta (backdrop-filter crearía un contenedor para elementos fixed) */}
             {notice && <FloatingAlert notice={notice} onRetry={handleRetry} onClose={dismissNotice} />}
 
             {welcome && (
