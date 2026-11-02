@@ -1,7 +1,210 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Key, QrCode, UserCheck, Printer, CheckCircle2, Loader2, AlertCircle, User, Sparkles, Phone as PhoneIcon } from 'lucide-react';
 import type { ParteraCredencial } from './types';
 import { http } from '../../../../services/http';
+
+/* ============================================================================
+ * UTILIDADES
+ * ========================================================================== */
+
+const getInitials = (name: string) => {
+    if (!name || typeof name !== 'string') return 'PT';
+    const words = name.split(' ').filter(Boolean);
+    if (words.length >= 2) {
+        return `${words[0][0]}${words[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+};
+
+const obtenerPin = (p: ParteraCredencial): string =>
+    String(p.pinCuatroDigitos || (p as any).pin || '----');
+
+/* ============================================================================
+ * COMPONENTES DE LA CREDENCIAL (FORMATO ID-1 / PVC)
+ * Diseñados sobre una base de 324 × 514 px (proporción 54 : 85.6 mm).
+ * En pantalla se muestran a escala 1 y en impresión se reducen a 54 × 85.6 mm reales.
+ * ========================================================================== */
+
+const CARD_SHADOW =
+    '0 24px 48px -12px rgba(0,0,0,0.60), 0 10px 20px -8px rgba(0,0,0,0.40), inset 0 0 0 1px rgba(255,255,255,0.9)';
+
+/** Cenefa floral del Istmo: de lado a lado, como faje textil en el borde inferior */
+const CenefaIstmo: React.FC = () => (
+    <div className="absolute bottom-0 inset-x-0 pointer-events-none">
+        <div className="h-[3px] w-full bg-gradient-to-r from-[#7A1B38] via-[#9D2449] to-[#7A1B38]" />
+        <img
+            src="/istmo.png"
+            alt="Bordado istmeño"
+            className="w-full object-cover h-20 block"
+            draggable={false}
+        />
+    </div>
+);
+
+/** Ranura de cordón y brillo de PVC (solo decorativos en pantalla) */
+const AcabadoPVC: React.FC = () => (
+    <>
+        <div
+            className="cred-hole mx-auto mt-2.5 h-2 w-14 rounded-full bg-slate-200 shrink-0"
+            style={{ boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.35)' }}
+        />
+        <div
+            className="cred-gloss absolute inset-0 z-20 pointer-events-none"
+            style={{
+                background:
+                    'linear-gradient(115deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0) 36%, rgba(255,255,255,0) 64%, rgba(255,255,255,0.18) 100%)'
+            }}
+        />
+    </>
+);
+
+const CredencialFrente: React.FC<{ partera: ParteraCredencial }> = ({ partera }) => {
+    const nombre = partera.nombreCompleto || 'Sin nombre';
+    const ubicacion = [partera.municipio || 'Juchitán de Zaragoza', partera.comunidad]
+        .filter(Boolean)
+        .join(' • ');
+    const tamanoNombre = nombre.length > 34 ? 'text-[16px]' : nombre.length > 24 ? 'text-[19px]' : 'text-[22px]';
+
+    return (
+        <div className="cred-slot">
+            <div
+                className="cred-card relative bg-white border border-slate-300 rounded-[19px] overflow-hidden text-slate-900 flex flex-col"
+                style={{ boxShadow: CARD_SHADOW }}
+            >
+                <AcabadoPVC />
+
+                {/* Logos institucionales */}
+                <div className="flex items-center justify-center gap-3 px-4 pt-3">
+                    <img
+                        src="/logo-jurisdiccion.png"
+                        alt="Jurisdicción Sanitaria"
+                        className="h-10 w-auto max-w-[46%] object-contain mix-blend-multiply"
+                    />
+                    <div className="h-8 w-px bg-slate-300" />
+                    <img
+                        src="/Logo-Secretaria.png"
+                        alt="Secretaría de Salud"
+                        className="h-10 w-auto max-w-[46%] object-contain mix-blend-multiply"
+                    />
+                </div>
+
+                {/* Cintillo guinda */}
+                <div className="mx-4 mt-3 rounded-lg bg-[#9D2449] py-1.5 px-2 text-center shadow-sm">
+                    <span className="block text-[11px] font-black uppercase tracking-[0.08em] text-white leading-tight">
+                        CREDENCIAL DE ACREDITACIÓN OFICIAL
+                    </span>
+                    <span className="block text-[8.5px] font-medium text-rose-100 leading-tight mt-0.5">
+                        Medicina Tradicional e Interculturalidad
+                    </span>
+                </div>
+
+                {/* Datos de la partera */}
+                <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4 pb-[88px] text-center">
+                    <div className="rounded-full p-[3px] border-2 border-[#9D2449]/30 bg-white shadow-md">
+                        <div className="w-[92px] h-[92px] rounded-full bg-gradient-to-br from-[#B02D55] to-[#6E1833] text-white flex items-center justify-center font-black text-[32px] tracking-wide ring-4 ring-white">
+                            {getInitials(partera.nombreCompleto)}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 className={`${tamanoNombre} font-black text-slate-900 leading-[1.1] break-words`}>
+                            {nombre}
+                        </h4>
+                        <p className="text-[10px] font-semibold text-slate-500 mt-1 uppercase tracking-wider">
+                            Partera Tradicional
+                        </p>
+                    </div>
+
+                    <div className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 max-w-full">
+                        <span className="text-[8px] font-extrabold text-slate-400 tracking-widest">CURP</span>
+                        <span className="font-mono text-[12px] font-bold tracking-wider text-slate-800 break-all">
+                            {partera.curp || 'No registrada'}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-1 text-[#9D2449] max-w-full">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-[12px] font-extrabold leading-tight">{ubicacion}</span>
+                    </div>
+
+                    {partera.lenguaMaterna && (
+                        <div className="flex items-center justify-center gap-1 text-slate-600">
+                            <Languages className="w-3.5 h-3.5 shrink-0 text-[#9D2449]" />
+                            <span className="text-[11px] font-medium">
+                                Lengua: <strong className="text-slate-900">{partera.lenguaMaterna}</strong>
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                <CenefaIstmo />
+            </div>
+        </div>
+    );
+};
+
+const CredencialReverso: React.FC<{ partera: ParteraCredencial }> = ({ partera }) => {
+    const pin = obtenerPin(partera);
+
+    return (
+        <div className="cred-slot">
+            <div
+                className="cred-card relative bg-white border border-slate-300 rounded-[19px] overflow-hidden text-slate-900 flex flex-col"
+                style={{ boxShadow: CARD_SHADOW }}
+            >
+                <AcabadoPVC />
+
+                {/* Cintillo guinda */}
+                <div className="mx-4 mt-4 rounded-lg bg-[#9D2449] py-2 px-2 text-center shadow-sm flex items-center justify-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-rose-100 shrink-0" />
+                    <span className="text-[11px] font-black uppercase tracking-[0.08em] text-white leading-tight">
+                        ÁREA DE AUTENTICACIÓN DIGITAL
+                    </span>
+                </div>
+
+                <div className="flex-1 flex flex-col items-center justify-evenly px-5 pb-[88px]">
+                    {/* PIN táctil */}
+                    <div className="w-full rounded-xl border-2 border-amber-300 bg-gradient-to-b from-amber-50 to-amber-100 px-3 py-2 text-center shadow-sm">
+                        <div className="flex items-center justify-center gap-1 text-amber-900">
+                            <Key className="w-3 h-3" />
+                            <span className="text-[9px] font-black uppercase tracking-wider">PIN TÁCTIL DE ACCESO</span>
+                        </div>
+                        <span className="block font-mono font-black text-[28px] leading-tight text-[#9D2449] tracking-[0.4em] pl-[0.4em]">
+                            {pin}
+                        </span>
+                    </div>
+
+                    {/* Código QR */}
+                    <div className="text-center">
+                        <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm inline-block">
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&ecc=M&data=${encodeURIComponent(pin)}`}
+                                alt="Código QR de acceso rápido"
+                                className="w-[128px] h-[128px] object-contain block"
+                            />
+                        </div>
+                        <span className="text-[8.5px] text-slate-500 font-mono mt-1.5 block font-extrabold uppercase tracking-widest">
+                            Escanear para login
+                        </span>
+                    </div>
+
+                    {/* Sello */}
+                    <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[10px] text-emerald-800 font-extrabold">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Credencial Oficial Verificada • SSO</span>
+                    </div>
+                </div>
+
+                <CenefaIstmo />
+            </div>
+        </div>
+    );
+};
+
+/* ============================================================================
+ * COMPONENTE PRINCIPAL
+ * ========================================================================== */
 
 export const TabUsuariosParteras: React.FC = () => {
     // Estado del padrón de parteras
@@ -122,15 +325,6 @@ export const TabUsuariosParteras: React.FC = () => {
         }
     };
 
-    const getInitials = (name: string) => {
-        if (!name || typeof name !== 'string') return 'PT';
-        const words = name.split(' ').filter(Boolean);
-        if (words.length >= 2) {
-            return `${words[0][0]}${words[1][0]}`.toUpperCase();
-        }
-        return name.slice(0, 2).toUpperCase();
-    };
-
     return (
         <div className="space-y-6 text-white">
 
@@ -143,15 +337,81 @@ export const TabUsuariosParteras: React.FC = () => {
                 .lg-pop{animation:lgPop .45s cubic-bezier(0.34,1.56,0.64,1) both}
                 .lg-quiet{scrollbar-width:none}
                 .lg-quiet::-webkit-scrollbar{display:none}
+
+                /* ===== Credencial ID-1 (base 324 x 514 px = 54 x 85.6 mm) ===== */
+                #printable-credentials { --cred-scale: 1; }
+                @media (max-width: 420px) {
+                    #printable-credentials { --cred-scale: 0.82; }
+                }
+                .cred-slot {
+                    width: calc(324px * var(--cred-scale, 1));
+                    height: calc(514px * var(--cred-scale, 1));
+                    flex-shrink: 0;
+                }
+                .cred-card {
+                    width: 324px;
+                    height: 514px;
+                    transform: scale(var(--cred-scale, 1));
+                    transform-origin: top left;
+                }
+                #printable-credentials, #printable-credentials * {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+
+                /* ===== Impresión / PDF ===== */
+                @page credenciales { margin: 10mm; }
+
                 @media print {
-                    body * { visibility: hidden; }
-                    #printable-credentials, #printable-credentials * { visibility: visible; }
-                    #printable-credentials {
-                        position: fixed; left: 50%; top: 50%;
-                        transform: translate(-50%, -50%);
-                        display: flex; gap: 20px;
-                        box-shadow: none !important;
+                    /* Oculta TODO lo que no sea el portal de credenciales (evita páginas en blanco) */
+                    body > *:not(.cred-portal) { display: none !important; }
+                    html, body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: #fff !important;
+                        height: auto !important;
+                        min-height: 0 !important;
+                        overflow: visible !important;
                     }
+                    .cred-portal {
+                        page: credenciales;
+                        position: static !important;
+                        display: block !important;
+                        inset: auto !important;
+                        padding: 0 !important;
+                        background: transparent !important;
+                        backdrop-filter: none !important;
+                        overflow: visible !important;
+                    }
+                    .cred-dialog {
+                        background: transparent !important;
+                        border: 0 !important;
+                        box-shadow: none !important;
+                        backdrop-filter: none !important;
+                        border-radius: 0 !important;
+                        padding: 0 !important;
+                        max-width: none !important;
+                        width: auto !important;
+                        animation: none !important;
+                        transform: none !important;
+                    }
+                    .cred-noprint, .cred-hole, .cred-gloss { display: none !important; }
+
+                    #printable-credentials {
+                        --cred-scale: 0.63;
+                        display: flex !important;
+                        flex-direction: row !important;
+                        flex-wrap: nowrap !important;
+                        justify-content: flex-start !important;
+                        align-items: flex-start !important;
+                        gap: 8mm !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
+                    }
+                    .cred-slot { width: 54mm !important; height: 85.6mm !important; }
+                    .cred-card { box-shadow: none !important; }
                 }
             `}} />
 
@@ -611,124 +871,47 @@ export const TabUsuariosParteras: React.FC = () => {
                 </div>
             )}
 
-            {/* CREDENCIAL OFICIAL DOBLE CARA CON istmo.png EXTENDIDO A TODO EL ANCHO Y DATOS REALES */}
-            {selectedParteraQR && (
-                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 overflow-y-auto">
-                    <div className="bg-slate-900/90 border border-rose-500/50 rounded-[32px] p-5 sm:p-6 shadow-2xl shadow-slate-950/90 max-w-4xl w-full space-y-5 text-center relative backdrop-blur-3xl lg-modal">
-                        
-                        <div className="flex items-center justify-between border-b border-white/20 pb-3">
-                            <div className="flex items-center gap-2 text-rose-300 text-xs font-bold">
-                                <ShieldCheck className="w-4 h-4 text-rose-400" />
-                                <span>Previsualización Oficial de Credencial de Identidad (Frente y Reverso)</span>
+            {/* CREDENCIAL OFICIAL DOBLE CARA (FORMATO ID-1) — montada en document.body para imprimir limpio */}
+            {selectedParteraQR && typeof document !== 'undefined' &&
+                createPortal(
+                    <div className="cred-portal fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 overflow-y-auto">
+                        <div className="cred-dialog bg-slate-900/90 border border-rose-500/50 rounded-[32px] p-5 sm:p-6 shadow-2xl shadow-slate-950/90 max-w-4xl w-full space-y-5 text-center relative backdrop-blur-3xl lg-modal my-auto">
+
+                            <div className="cred-noprint flex items-center justify-between border-b border-white/20 pb-3">
+                                <div className="flex items-center gap-2 text-rose-300 text-xs font-bold text-left">
+                                    <ShieldCheck className="w-4 h-4 text-rose-400 shrink-0" />
+                                    <span>Previsualización Oficial de Credencial de Identidad (Frente y Reverso)</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedParteraQR(null)}
+                                    className="p-2 text-rose-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
                             </div>
+
+                            {/* CONTENEDOR IMPRIMIBLE DOBLE CARA */}
+                            <div
+                                id="printable-credentials"
+                                className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center py-2"
+                            >
+                                <CredencialFrente partera={selectedParteraQR} />
+                                <CredencialReverso partera={selectedParteraQR} />
+                            </div>
+
                             <button
                                 type="button"
-                                onClick={() => setSelectedParteraQR(null)}
-                                className="p-2 text-rose-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                                onClick={() => window.print()}
+                                className="cred-noprint w-full max-w-sm mx-auto py-3.5 bg-gradient-to-r from-[#9D2449] to-[#7A1B38] hover:brightness-110 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-rose-950/40 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all border border-white/40"
                             >
-                                <X className="w-5 h-5" />
+                                <Printer className="w-4 h-4" />
+                                <span>Imprimir / Descargar Credenciales Oficiales (Doble Cara)</span>
                             </button>
                         </div>
-
-                        {/* CONTENEDOR IMPRIMIBLE DOBLE CARA */}
-                        <div id="printable-credentials" className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center py-2">
-                            
-                            {/* --- FRENTE DE LA CREDENCIAL --- */}
-                            <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 w-full max-w-[340px] h-[520px] shadow-2xl text-slate-900 relative flex flex-col justify-between overflow-hidden">
-                                
-                                {/* Encabezado Institucional */}
-                                <div className="flex items-center justify-between border-b-2 border-[#9D2449]/20 pb-2">
-                                    <img src="/logo-jurisdiccion.png" alt="Jurisdicción" className="h-7 w-auto object-contain mix-blend-multiply" />
-                                    <div className="text-center">
-                                        <span className="text-[8px] font-black uppercase text-[#9D2449] tracking-wider block">SSO OAXACA</span>
-                                        <span className="text-[7px] font-bold text-slate-600 block">JURISDICCIÓN SANITARIA NO. 2</span>
-                                    </div>
-                                    <img src="/Logo-Secretaria.png" alt="Secretaría" className="h-7 w-auto object-contain mix-blend-multiply" />
-                                </div>
-
-                                <div className="bg-[#9D2449] text-white py-1.5 px-2 rounded-xl shadow-xs border border-rose-900">
-                                    <span className="text-[10px] font-black uppercase tracking-wider block">
-                                        CREDENCIAL DE ACREDITACIÓN OFICIAL
-                                    </span>
-                                    <span className="text-[8px] font-medium text-rose-200 block">Medicina Tradicional e Interculturalidad</span>
-                                </div>
-
-                                {/* Datos de la Partera (Datos Reales Dinámicos) */}
-                                <div className="space-y-2 relative z-10 my-auto pb-6">
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9D2449] to-[#6E1833] text-white mx-auto flex items-center justify-center font-black text-xl shadow-md border-2 border-white">
-                                        {getInitials(selectedParteraQR.nombreCompleto)}
-                                    </div>
-                                    <h4 className="text-sm font-black text-slate-900 leading-tight pt-0.5">
-                                        {selectedParteraQR.nombreCompleto || 'Sin nombre'}
-                                    </h4>
-                                    <div className="inline-block bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">
-                                        <span className="text-[11px] text-slate-700 font-mono font-bold tracking-wide">
-                                            CURP: {selectedParteraQR.curp || 'No registrada'}
-                                        </span>
-                                    </div>
-                                    <p className="text-[11px] font-bold text-[#9D2449]">
-                                        {selectedParteraQR.municipio || 'Juchitán de Zaragoza'} {selectedParteraQR.comunidad ? `• ${selectedParteraQR.comunidad}` : ''}
-                                    </p>
-                                    {selectedParteraQR.lenguaMaterna && (
-                                        <p className="text-[10px] text-slate-500 font-medium">Lengua: <strong className="text-slate-800">{selectedParteraQR.lenguaMaterna}</strong></p>
-                                    )}
-                                </div>
-
-                                {/* Cintillo Floral Istmeño (Estirado de esquina a esquina en la parte inferior) */}
-                                <div className="absolute bottom-0 inset-x-0 h-16 pointer-events-none overflow-hidden flex items-end">
-                                    <img src="/istmo.png" alt="Bordado Istmeño" className="w-full h-full object-cover object-bottom" />
-                                </div>
-                            </div>
-
-                            {/* --- REVERSO DE LA CREDENCIAL --- */}
-                            <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 w-full max-w-[340px] h-[520px] shadow-2xl text-slate-900 relative flex flex-col justify-between overflow-hidden">
-                                
-                                <div className="text-center pt-1">
-                                    <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block">ÁREA DE AUTENTICACIÓN DIGITAL</span>
-                                </div>
-
-                                <div className="bg-amber-100/90 text-amber-950 font-bold px-3 py-1.5 rounded-xl border border-amber-300 mx-auto text-xs flex items-center gap-1.5 shadow-2xs">
-                                    <Key className="w-3.5 h-3.5 text-amber-700" />
-                                    <span>PIN TÁCTIL: <strong className="font-mono font-black text-sm text-[#9D2449]">{selectedParteraQR.pinCuatroDigitos || (selectedParteraQR as any).pin || '0000'}</strong></span>
-                                </div>
-
-                                <div className="bg-slate-50 p-2 rounded-2xl border border-slate-200/80 max-w-[140px] mx-auto shadow-2xs my-auto">
-                                    <div className="w-24 h-24 mx-auto bg-white border border-slate-200 rounded-xl flex items-center justify-center p-1 shadow-inner">
-                                        <img
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                                                selectedParteraQR.pinCuatroDigitos || (selectedParteraQR as any).pin || '0000'
-                                            )}`}
-                                            alt="Código QR de Acceso Rápido"
-                                            className="w-full h-full object-contain"
-                                        />
-                                    </div>
-                                    <span className="text-[8px] text-slate-500 font-mono mt-1 block font-extrabold uppercase">Escanear para Login</span>
-                                </div>
-
-                                <div className="flex items-center justify-center gap-1 text-[10px] text-emerald-800 font-extrabold pb-6">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span>Credencial Oficial Verificada • SSO</span>
-                                </div>
-
-                                {/* Cintillo Floral Istmeño (Estirado de esquina a esquina en la parte inferior) */}
-                                <div className="absolute bottom-0 inset-x-0 h-16 pointer-events-none overflow-hidden flex items-end">
-                                    <img src="/istmo.png" alt="Bordado Istmeño" className="w-full h-full object-cover object-bottom" />
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => window.print()}
-                            className="w-full max-w-sm mx-auto py-3.5 bg-gradient-to-r from-[#9D2449] to-[#7A1B38] hover:brightness-110 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-rose-950/40 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all border border-white/40"
-                        >
-                            <Printer className="w-4 h-4" />
-                            <span>Imprimir / Descargar Credenciales Oficiales (Doble Cara)</span>
-                        </button>
-                    </div>
-                </div>
-            )}
+                    </div>,
+                    document.body
+                )}
         </div>
     );
 };
