@@ -36,7 +36,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 const ret = await worker.recognize(file);
                 const textoDetectado = ret.data.text || '';
                 
-                // DEBUG: Ver qué texto lee exactamente la IA en la consola del navegador (F12)
+                // Depuración en consola del navegador (F12)
                 console.log("=== TEXTO CRUDO DETECTADO POR IA ===");
                 console.log(textoDetectado);
                 console.log("=====================================");
@@ -46,29 +46,30 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 setScanProgress(90);
                 setCurrentStep('Procesamiento completado con éxito...');
 
-                // Patrones de búsqueda flexibles para tarjetas Guthrie con escritura a mano o sellos
+                // Expresiones regulares adaptadas a la estructura de la tarjeta Guthrie
                 const matchFolio = textoDetectado.match(/(?:FOLIO|TARJETA|GT|NO|NUM)[\s:-]*([A-Z0-9-]{4,15})/i) || textoDetectado.match(/\b([0-9]{5,12})\b/);
                 const matchCurp = textoDetectado.match(/[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}/i);
                 const matchClues = textoDetectado.match(/[A-Z]{5}[0-9]{5}/i);
 
-                const scannedData: any = {
-                    folioTarjeta: matchFolio ? (matchFolio[1] || matchFolio[0]) : '',
-                    folio_tarjeta: matchFolio ? (matchFolio[1] || matchFolio[0]) : '',
-                    madreCurp: matchCurp ? matchCurp[0] : '',
-                    madre_curp: matchCurp ? matchCurp[0] : '',
-                    cluesUnidad: matchClues ? matchClues[0] : '',
-                    clues_unidad: matchClues ? matchClues[0] : '',
+                // Mapeo directo con los nombres que usa TabCapturaGuthrie.tsx
+                const extractedFolio = matchFolio ? (matchFolio[1] || matchFolio[0]) : '';
+                const extractedCurp = matchCurp ? matchCurp[0] : '';
+                const extractedClues = matchClues ? matchClues[0] : '';
+
+                const scannedData: Partial<GuthrieFormData> = {
+                    folio: extractedFolio,
+                    clues: extractedClues,
+                    curpMadre: extractedCurp,
                 };
 
-                // DEBUG: Ver los datos finales que se enviarán al formulario principal
-                console.log("=== DATOS EXTRAÍDOS PARA EL FORMULARIO ===", scannedData);
+                console.log("=== DATOS MAPEADOS AL FORMULARIO ===", scannedData);
 
                 setScanProgress(100);
                 setCurrentStep('¡Datos extraídos con éxito!');
 
                 setTimeout(() => {
                     setIsScanning(false);
-                    onScanComplete(scannedData as Partial<GuthrieFormData>);
+                    onScanComplete(scannedData);
                     onClose();
                 }, 500);
             }
