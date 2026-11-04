@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, Upload, Sparkles, X, RefreshCw, FileText } from 'lucide-react';
 import type { GuthrieFormData } from './types';
-import { http } from '../../../../services/http'; // <--- Ruta correcta desde capturista hacia src/services/http
+import { http } from '../../../../services/http';
 
 interface ModalEscaneoIAProps {
     isOpen: boolean;
@@ -17,12 +17,11 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
 
     if (!isOpen) return null;
 
-    // Procesamiento de la imagen real seleccionada por el capturista y conexión con backend
     const processImageScan = async (imgSrc: string, file?: File) => {
         setSelectedImage(imgSrc);
         setIsScanning(true);
-        setScanProgress(15);
-        setCurrentStep('Preparando imagen para análisis de Inteligencia Artificial...');
+        setScanProgress(20);
+        setCurrentStep('Preparando imagen para análisis OCR en servidor...');
 
         try {
             let scannedData: Record<string, any> = {};
@@ -31,66 +30,39 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 const formData = new FormData();
                 formData.append('tarjetaImage', file);
 
-                setScanProgress(40);
-                setCurrentStep('Enviando imagen al servidor OCR / IA (LESP SSO)...');
+                setScanProgress(50);
+                setCurrentStep('Enviando imagen al servidor de la Jurisdicción...');
 
-                try {
-                    // Petición real al endpoint especificado en el backend consolidado
-                    const res = await http.post('/api/v1/captura/escanear-tarjeta-ia', formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    });
+                const res = await http.post('/api/v1/captura/escanear-tarjeta-ia', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
 
-                    setScanProgress(85);
-                    setCurrentStep('Extrayendo datos de la tarjeta Guthrie con éxito...');
+                setScanProgress(90);
+                setCurrentStep('Extrayendo datos de la tarjeta Guthrie con éxito...');
 
-                    // Mapeo de la respuesta del backend
-                    const data = res.data?.data_extracted || res.data;
-                    scannedData = {
-                        folioTarjeta: data.folio_tarjeta || data.folioTarjeta || '',
-                        cluesUnidad: data.clues_unidad || data.cluesUnidad || '',
-                        unidadMedicaNombre: data.unidad_medica_nombre || data.unidadMedicaNombre || '',
-                        rnNombres: data.rn_nombres || data.rnNombres || 'RN',
-                        rnApellidoPaterno: data.rn_apellido_paterno || data.rnApellidoPaterno || '',
-                        rnApellidoMaterno: data.rn_apellido_materno || data.rnApellidoMaterno || '',
-                        rnPesoGramos: data.rn_peso_gramos || data.rnPesoGramos ? Number(data.rn_peso_gramos || data.rnPesoGramos) : undefined,
-                        rnTallaCm: data.rn_talla_cm || data.rnTallaCm ? Number(data.rn_talla_cm || data.rnTallaCm) : undefined,
-                        madreNombres: data.madre_nombres || data.madreNombres || '',
-                        madreApellidoPaterno: data.madre_apellido_paterno || data.madreApellidoPaterno || '',
-                        madreApellidoMaterno: data.madre_apellido_materno || data.madreApellidoMaterno || '',
-                        madreCurp: data.madre_curp || data.madreCurp || '',
-                    };
-                } catch (apiError) {
-                    console.warn('Backend OCR no disponible o error de red, ejecutando respaldo visual IA:', apiError);
-                    // Simulación visual de respaldo si la API no responde en desarrollo local
-                    const steps = [
-                        { pct: 50, text: 'Analizando encuadre y código Folio Guthrie (Offline)...' },
-                        { pct: 75, text: 'Extrayendo datos del Recién Nacido (Peso, Talla, Fecha)...' },
-                        { pct: 100, text: 'Sincronizando Clave CLUES de Unidad Médica...' }
-                    ];
-
-                    for (let i = 0; i < steps.length; i++) {
-                        await new Promise((resolve) => setTimeout(resolve, 400));
-                        setScanProgress(steps[i].pct);
-                        setCurrentStep(steps[i].text);
-                    }
-                }
+                const data = res.data?.data_extracted || res.data;
+                scannedData = {
+                    folioTarjeta: data.folio_tarjeta || data.folioTarjeta || '',
+                    cluesUnidad: data.clues_unidad || data.cluesUnidad || '',
+                    madreCurp: data.madre_curp || data.madreCurp || '',
+                };
             }
 
             setScanProgress(100);
-            setCurrentStep('¡Escaneo completado con éxito!');
+            setCurrentStep('¡Escaneo y lectura completados!');
 
             setTimeout(() => {
                 setIsScanning(false);
                 onScanComplete(scannedData as Partial<GuthrieFormData>);
                 onClose();
-            }, 500);
+            }, 400);
 
         } catch (error) {
-            console.error('Error general al procesar escaneo OCR:', error);
+            console.error('Error al conectar con el servidor OCR:', error);
             setIsScanning(false);
-            alert('Ocurrió un error al procesar la imagen con el servicio de IA.');
+            alert('No se pudo conectar con el servicio OCR del servidor. Verifica que el backend esté activo.');
         }
     };
 
@@ -109,8 +81,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
     return (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div className="bg-white border-2 border-[#9D2449] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-6 relative overflow-hidden">
-
-                {/* Header Modal */}
                 <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-[#9D2449] text-white rounded-2xl shadow-md">
@@ -135,7 +105,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                     </button>
                 </div>
 
-                {/* Si está escaneando: Animación Láser + Progreso */}
                 {isScanning ? (
                     <div className="py-8 space-y-6 text-center">
                         <div className="relative w-full max-w-md mx-auto h-56 rounded-2xl overflow-hidden border-2 border-[#9D2449] shadow-inner bg-slate-950 flex items-center justify-center">
@@ -146,15 +115,13 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                                     className="w-full h-full object-cover opacity-80 filter brightness-90"
                                 />
                             )}
-                            {/* Barra Láser de Escaneo */}
                             <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent shadow-[0_0_15px_#f43f5e] animate-bounce top-1/3" />
                             <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-mono font-bold flex items-center gap-1.5 border border-rose-500/40">
                                 <RefreshCw className="w-3 h-3 animate-spin text-rose-400" />
-                                <span>PROCESANDO OCR (IA)...</span>
+                                <span>PROCESANDO OCR EN SERVIDOR...</span>
                             </div>
                         </div>
 
-                        {/* Barra de Progreso */}
                         <div className="space-y-2 max-w-md mx-auto">
                             <div className="flex justify-between text-xs font-bold text-slate-700">
                                 <span>{currentStep}</span>
@@ -169,10 +136,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                         </div>
                     </div>
                 ) : (
-                    /* Modal State: Selector de Imagen Real */
                     <div className="space-y-6">
-
-                        {/* Dropzone de Carga / Cámara */}
                         <div className="border-2 border-dashed border-[#9D2449]/40 bg-rose-50/40 rounded-2xl p-8 text-center space-y-4 hover:border-[#9D2449] transition-all">
                             <div className="w-16 h-16 bg-[#9D2449]/10 text-[#9D2449] rounded-2xl flex items-center justify-center mx-auto border border-[#9D2449]/20 shadow-sm">
                                 <Camera className="w-8 h-8" />
@@ -182,7 +146,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                                     Tome una foto o seleccione la imagen de la tarjeta Guthrie
                                 </h3>
                                 <p className="text-xs text-slate-600 font-medium mt-1">
-                                    El sistema detectará automáticamente el Folio, Datos del Recién Nacido, Datos de la Madre y CLUES.
+                                    El servidor analizará la tarjeta para extraer automáticamente el Folio y datos generales.
                                 </p>
                             </div>
                             <label className="inline-flex items-center gap-2 px-5 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all active:scale-95">
@@ -197,11 +161,10 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                             </label>
                         </div>
 
-                        {/* Footer explicativo */}
                         <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-[11px] text-slate-600 font-medium">
                             <FileText className="w-4 h-4 text-[#9D2449] shrink-0" />
                             <span>
-                                Reconocimiento Óptico de Caracteres (OCR) homologado para formatos físicos SSO-2026.
+                                Motor de reconocimiento óptico de caracteres (OCR) conectado al servidor de la Jurisdicción.
                             </span>
                         </div>
                     </div>
