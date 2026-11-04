@@ -35,24 +35,33 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 
                 const ret = await worker.recognize(file);
                 const textoDetectado = ret.data.text || '';
+                
+                // DEBUG: Ver qué texto lee exactamente la IA en la consola del navegador (F12)
+                console.log("=== TEXTO CRUDO DETECTADO POR IA ===");
+                console.log(textoDetectado);
+                console.log("=====================================");
+
                 await worker.terminate();
 
                 setScanProgress(90);
                 setCurrentStep('Procesamiento completado con éxito...');
 
-                const matchFolio = textoDetectado.match(/(?:FOLIO|TARJETA|GT)[\s:-]*([A-Z0-9-]{4,15})/i);
-                const matchCurp = textoDetectado.match(/[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}/);
-                const matchClues = textoDetectado.match(/[A-Z]{5}[0-9]{5}/);
+                // Patrones de búsqueda flexibles para tarjetas Guthrie con escritura a mano o sellos
+                const matchFolio = textoDetectado.match(/(?:FOLIO|TARJETA|GT|NO|NUM)[\s:-]*([A-Z0-9-]{4,15})/i) || textoDetectado.match(/\b([0-9]{5,12})\b/);
+                const matchCurp = textoDetectado.match(/[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}/i);
+                const matchClues = textoDetectado.match(/[A-Z]{5}[0-9]{5}/i);
 
-                // Usamos any para evitar conflictos con los nombres de las propiedades en types.ts
                 const scannedData: any = {
-                    folioTarjeta: matchFolio ? matchFolio[1] : '',
-                    folio_tarjeta: matchFolio ? matchFolio[1] : '',
+                    folioTarjeta: matchFolio ? (matchFolio[1] || matchFolio[0]) : '',
+                    folio_tarjeta: matchFolio ? (matchFolio[1] || matchFolio[0]) : '',
                     madreCurp: matchCurp ? matchCurp[0] : '',
                     madre_curp: matchCurp ? matchCurp[0] : '',
                     cluesUnidad: matchClues ? matchClues[0] : '',
                     clues_unidad: matchClues ? matchClues[0] : '',
                 };
+
+                // DEBUG: Ver los datos finales que se enviarán al formulario principal
+                console.log("=== DATOS EXTRAÍDOS PARA EL FORMULARIO ===", scannedData);
 
                 setScanProgress(100);
                 setCurrentStep('¡Datos extraídos con éxito!');
