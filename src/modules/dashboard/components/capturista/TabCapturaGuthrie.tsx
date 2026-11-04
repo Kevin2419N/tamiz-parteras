@@ -190,59 +190,40 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         }
     };
 
+    // Estilos de cristal reutilizables para inputs y selects
+    const inputGlassStyle = "w-full px-3.5 py-2.5 bg-white/10 border border-white/30 rounded-xl text-white text-xs font-semibold placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
+    const selectGlassStyle = "w-full px-3.5 py-2.5 bg-slate-900/60 border border-white/30 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
+    const cardGlassStyle = "p-6 bg-white/10 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(15,23,42,0.5)] space-y-4";
+
     return (
         <div className="space-y-6 text-white w-full">
 
             <style>{`
                 @media print {
-                    @page {
-                        size: portrait;
-                        margin: 4mm;
-                    }
-                    body {
-                        background: #fff !important;
-                        color: #000 !important;
-                        font-size: 8.5px !important;
-                    }
-                    .no-print {
-                        display: none !important;
-                    }
+                    @page { size: portrait; margin: 4mm; }
+                    body { background: #fff !important; color: #000 !important; font-size: 8.5px !important; }
+                    .no-print { display: none !important; }
                     .printable-guthrie-card {
-                        border: 2px solid #9D2449 !important;
-                        border-radius: 6px !important;
-                        padding: 8px !important;
-                        box-shadow: none !important;
-                        background: white !important;
-                        margin: 0 !important;
-                        width: 100% !important;
-                        color: #000 !important;
+                        border: 2px solid #9D2449 !important; border-radius: 6px !important;
+                        padding: 8px !important; box-shadow: none !important; background: white !important;
+                        margin: 0 !important; width: 100% !important; color: #000 !important;
                     }
-                    .printable-guthrie-card input,
-                    .printable-guthrie-card select,
-                    .printable-guthrie-card textarea {
-                        border: 1px solid #475569 !important;
-                        background: #fff !important;
-                        color: #000 !important;
-                        padding: 2px 4px !important;
-                        font-size: 8.5px !important;
-                        height: auto !important;
+                    .printable-guthrie-card input, .printable-guthrie-card select, .printable-guthrie-card textarea {
+                        border: 1px solid #475569 !important; background: #fff !important; color: #000 !important;
+                        padding: 2px 4px !important; font-size: 8.5px !important; height: auto !important;
                     }
-                    .print-2col-layout {
-                        display: grid !important;
-                        grid-template-columns: 1fr 1fr !important;
-                        gap: 8px !important;
-                    }
+                    .print-2col-layout { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
                 }
             `}</style>
 
             {/* BARRA SUPERIOR CON BOTÓN DE ESCANEO OCR / IA */}
-            <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4"}>
                 <div className="flex items-center gap-3.5 text-center sm:text-left">
-                    <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-400/30 text-cyan-300 backdrop-blur-md shadow-lg">
+                    <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-400/40 text-cyan-300 backdrop-blur-md shadow-lg">
                         <FileText className="w-6 h-6" />
                     </div>
                     <div>
-                        <span className="text-[10px] font-black text-cyan-300 uppercase tracking-widest block">
+                        <span className="text-[10px] font-black text-cyan-200 uppercase tracking-widest block">
                             SECRETARÍA DE SALUD DE OAXACA • SERVICIOS DE SALUD DE OAXACA
                         </span>
                         <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
@@ -290,14 +271,14 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
             <form onSubmit={handleSubmit} className="printable-guthrie-card space-y-6">
 
                 {/* ENCABEZADO CON FOLIO DE TARJETA */}
-                <div className="p-5 bg-slate-900/60 rounded-3xl border border-white/20 backdrop-blur-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4 py-4"}>
                     <div>
-                        <span className="text-[10px] font-black text-cyan-300 uppercase tracking-wider block">SECRETARÍA DE SALUD • SISTEMA NACIONAL DE SALUD • OAXACA</span>
+                        <span className="text-[10px] font-black text-cyan-200 uppercase tracking-wider block">SECRETARÍA DE SALUD • SISTEMA NACIONAL DE SALUD • OAXACA</span>
                         <h3 className="text-sm font-black text-white">Cédula Oficial de Muestra Neonatal — SSO Oaxaca</h3>
                     </div>
-                    <div className="px-4 py-2.5 bg-slate-950 rounded-2xl border border-cyan-400/30 text-right shadow-inner">
+                    <div className="px-4 py-2.5 bg-slate-900/80 rounded-2xl border border-cyan-400/40 text-right shadow-inner">
                         <span className="text-[9px] uppercase font-bold text-cyan-200 block">FOLIO TARJETA GUTHRIE</span>
-                        <span className="font-mono text-lg text-cyan-400 font-black tracking-wider">
+                        <span className="font-mono text-lg text-cyan-300 font-black tracking-wider">
                             {formData.folio || 'PENDIENTE'}
                         </span>
                     </div>
@@ -310,8 +291,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                     <div className="space-y-6">
 
                         {/* SECCIÓN A: UNIDAD MÉDICA Y MUESTRA */}
-                        <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl space-y-4">
-                            <div className="flex items-center gap-2.5 border-b border-white/10 pb-3 text-cyan-300">
+                        <div className={cardGlassStyle}>
+                            <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
                                 <Building2 className="w-4 h-4" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN A • Unidad Médica (CLUES) y Muestra</h3>
                             </div>
@@ -325,7 +306,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         placeholder="Ej. 5458349"
                                         value={formData.folio}
                                         onChange={(e) => setFormData({ ...formData, folio: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/20 rounded-xl font-mono text-sm font-black text-cyan-400 focus:outline-none focus:border-cyan-400"
+                                        className={inputGlassStyle + " font-mono text-cyan-300 font-black"}
                                     />
                                 </div>
 
@@ -337,11 +318,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         required
                                         value={formData.unidadMedica}
                                         onChange={handleCluesChange}
-                                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-white/20 rounded-xl font-bold text-white focus:outline-none focus:border-cyan-400"
+                                        className={selectGlassStyle}
                                     >
-                                        <option value="">Seleccione una unidad médica...</option>
+                                        <option value="" className="bg-slate-900 text-white">Seleccione una unidad médica...</option>
                                         {catalogCLUES.map((u) => (
-                                            <option key={u.clues} value={`${u.clues} ${u.nombre}`}>
+                                            <option key={u.clues} value={`${u.clues} ${u.nombre}`} className="bg-slate-900 text-white">
                                                 {u.clues} - {u.nombre}
                                             </option>
                                         ))}
@@ -349,12 +330,12 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 text-[11px] font-bold">
-                                    <div className="p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
-                                        <span className="text-cyan-200/70 block text-[10px]">Jurisdicción:</span>
+                                    <div className="p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-md">
+                                        <span className="text-cyan-200/80 block text-[10px]">Jurisdicción:</span>
                                         <span className="text-white font-black">{formData.jurisdiccion}</span>
                                     </div>
-                                    <div className="p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
-                                        <span className="text-cyan-200/70 block text-[10px]">Estado:</span>
+                                    <div className="p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-md">
+                                        <span className="text-cyan-200/80 block text-[10px]">Estado:</span>
                                         <span className="text-white font-black">{formData.estado}</span>
                                     </div>
                                 </div>
@@ -368,7 +349,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Nombre(s)"
                                             value={formData.nombreResponsableToma}
                                             onChange={(e) => setFormData({ ...formData, nombreResponsableToma: e.target.value })}
-                                            className="px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-semibold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                         <input
                                             type="text"
@@ -376,7 +357,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ap. Paterno"
                                             value={formData.apellidoPaternoResponsableToma}
                                             onChange={(e) => setFormData({ ...formData, apellidoPaternoResponsableToma: e.target.value })}
-                                            className="px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-semibold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                         <input
                                             type="text"
@@ -384,7 +365,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ap. Materno"
                                             value={formData.apellidoMaternoResponsableToma}
                                             onChange={(e) => setFormData({ ...formData, apellidoMaternoResponsableToma: e.target.value })}
-                                            className="px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-semibold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                 </div>
@@ -394,12 +375,12 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     <select
                                         value={formData.tecnicaToma}
                                         onChange={(e) => setFormData({ ...formData, tecnicaToma: e.target.value as any })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-white/20 rounded-xl font-bold text-white focus:outline-none focus:border-cyan-400"
+                                        className={selectGlassStyle}
                                     >
-                                        <option value="1A_MUESTRA">1a Muestra</option>
-                                        <option value="2A_PREMATUREZ">2a Muestra por Prematurez</option>
-                                        <option value="2A_INADECUADA">2a Muestra por Inadecuada</option>
-                                        <option value="2A_SOSPECHOSO">2a Muestra por ser Sospechoso a:</option>
+                                        <option value="1A_MUESTRA" className="bg-slate-900 text-white">1a Muestra</option>
+                                        <option value="2A_PREMATUREZ" className="bg-slate-900 text-white">2a Muestra por Prematurez</option>
+                                        <option value="2A_INADECUADA" className="bg-slate-900 text-white">2a Muestra por Inadecuada</option>
+                                        <option value="2A_SOSPECHOSO" className="bg-slate-900 text-white">2a Muestra por ser Sospechoso a:</option>
                                     </select>
                                     {formData.tecnicaToma === '2A_SOSPECHOSO' && (
                                         <input
@@ -408,12 +389,12 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Especifique patología sospechosa..."
                                             value={formData.sospechosoEspecificar}
                                             onChange={(e) => setFormData({ ...formData, sospechosoEspecificar: e.target.value })}
-                                            className="w-full mt-2 px-3.5 py-2 bg-slate-950/80 border border-rose-400/50 rounded-xl text-rose-200 font-bold"
+                                            className={inputGlassStyle + " mt-2 border-rose-400/50 text-rose-200"}
                                         />
                                     )}
                                 </div>
 
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-2.5 backdrop-blur-md">
+                                <div className="p-4 bg-white/10 rounded-2xl border border-white/20 space-y-2.5 backdrop-blur-md">
                                     <span className="text-[11px] font-bold text-cyan-300 flex items-center gap-1.5">
                                         <FlaskConical className="w-4 h-4" /> Reporte de Laboratorio:
                                     </span>
@@ -444,7 +425,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         placeholder="Responsable del Laboratorio (Q.F.B.)"
                                         value={formData.responsableLaboratorio}
                                         onChange={(e) => setFormData({ ...formData, responsableLaboratorio: e.target.value })}
-                                        className="w-full px-3 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-xs font-semibold text-white placeholder:text-cyan-200/40"
+                                        className={inputGlassStyle}
                                     />
                                 </div>
 
@@ -452,8 +433,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                         </div>
 
                         {/* SECCIÓN B: DATOS DEL RECIÉN NACIDO */}
-                        <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl space-y-4">
-                            <div className="flex items-center gap-2.5 border-b border-white/10 pb-3 text-cyan-300">
+                        <div className={cardGlassStyle}>
+                            <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
                                 <Baby className="w-4 h-4" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN B • Datos del Recién Nacido (RN)</h3>
                             </div>
@@ -468,7 +449,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Nombre(s)"
                                             value={formData.nombreRN}
                                             onChange={(e) => setFormData({ ...formData, nombreRN: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                     <div>
@@ -479,7 +460,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ap. Paterno"
                                             value={formData.apellidoPaternoRN}
                                             onChange={(e) => setFormData({ ...formData, apellidoPaternoRN: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                     <div>
@@ -490,7 +471,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ap. Materno"
                                             value={formData.apellidoMaternoRN}
                                             onChange={(e) => setFormData({ ...formData, apellidoMaternoRN: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                 </div>
@@ -504,14 +485,14 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 required
                                                 value={formData.fechaNacimiento}
                                                 onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
-                                                className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                                className={inputGlassStyle + " text-[11px]" }
                                             />
                                             <input
                                                 type="time"
                                                 required
                                                 value={formData.horaNacimiento}
                                                 onChange={(e) => setFormData({ ...formData, horaNacimiento: e.target.value })}
-                                                className="w-20 px-1.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                                className={inputGlassStyle + " w-20 text-[11px]"}
                                             />
                                         </div>
                                     </div>
@@ -524,14 +505,14 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 required
                                                 value={formData.fechaToma}
                                                 onChange={(e) => setFormData({ ...formData, fechaToma: e.target.value })}
-                                                className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                                className={inputGlassStyle + " text-[11px]"}
                                             />
                                             <input
                                                 type="time"
                                                 required
                                                 value={formData.horaToma}
                                                 onChange={(e) => setFormData({ ...formData, horaToma: e.target.value })}
-                                                className="w-20 px-1.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                                className={inputGlassStyle + " w-20 text-[11px]"}
                                             />
                                         </div>
                                     </div>
@@ -543,11 +524,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         <select
                                             value={formData.sexo}
                                             onChange={(e) => setFormData({ ...formData, sexo: e.target.value as any })}
-                                            className="w-full px-2.5 py-2 bg-slate-950 border border-white/20 rounded-xl text-white font-bold text-xs"
+                                            className={selectGlassStyle}
                                         >
-                                            <option value="MASCULINO">Masculino</option>
-                                            <option value="FEMENINO">Femenino</option>
-                                            <option value="AMBIGUEDAD">Ambigüedad</option>
+                                            <option value="MASCULINO" className="bg-slate-900 text-white">Masculino</option>
+                                            <option value="FEMENINO" className="bg-slate-900 text-white">Femenino</option>
+                                            <option value="AMBIGUEDAD" className="bg-slate-900 text-white">Ambigüedad</option>
                                         </select>
                                     </div>
 
@@ -559,7 +540,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ej. 3200"
                                             value={formData.pesoGramos}
                                             onChange={(e) => setFormData({ ...formData, pesoGramos: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white font-bold text-xs"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
 
@@ -571,7 +552,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ej. 50"
                                             value={formData.tallaCm}
                                             onChange={(e) => setFormData({ ...formData, tallaCm: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white font-bold text-xs"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                 </div>
@@ -581,11 +562,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     <select
                                         value={formData.edadGestacional}
                                         onChange={(e) => setFormData({ ...formData, edadGestacional: e.target.value as any })}
-                                        className="w-full px-3 py-2 bg-slate-950 border border-white/20 rounded-xl font-bold text-white text-xs"
+                                        className={selectGlassStyle}
                                     >
-                                        <option value="PRETERMINO_MENOR_37">1. Pre-término &lt; 37 SDG</option>
-                                        <option value="TERMINO_37_41">2. Término 37-41.6 SDG</option>
-                                        <option value="POSTERMINO_MAYOR_42">3. Post-término &gt; 42 SDG</option>
+                                        <option value="PRETERMINO_MENOR_37" className="bg-slate-900 text-white">1. Pre-término &lt; 37 SDG</option>
+                                        <option value="TERMINO_37_41" className="bg-slate-900 text-white">2. Término 37-41.6 SDG</option>
+                                        <option value="POSTERMINO_MAYOR_42" className="bg-slate-900 text-white">3. Post-término &gt; 42 SDG</option>
                                     </select>
                                 </div>
 
@@ -595,10 +576,10 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         <select
                                             value={formData.producto}
                                             onChange={(e) => setFormData({ ...formData, producto: e.target.value as any })}
-                                            className="w-full px-3 py-2 bg-slate-950 border border-white/20 rounded-xl font-bold text-white text-xs"
+                                            className={selectGlassStyle}
                                         >
-                                            <option value="UNICO">1. Único</option>
-                                            <option value="GEMELAR">2. Múltiple / Gemelar</option>
+                                            <option value="UNICO" className="bg-slate-900 text-white">1. Único</option>
+                                            <option value="GEMELAR" className="bg-slate-900 text-white">2. Múltiple / Gemelar</option>
                                         </select>
                                     </div>
                                     {formData.producto === 'GEMELAR' && (
@@ -610,7 +591,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 placeholder="Ej. Gemelo 1"
                                                 value={formData.numeroGemelo}
                                                 onChange={(e) => setFormData({ ...formData, numeroGemelo: e.target.value })}
-                                                className="w-full px-3 py-2 bg-slate-950/80 border border-rose-400/50 rounded-xl text-white font-bold text-xs"
+                                                className={inputGlassStyle + " border-rose-400/50"}
                                             />
                                         </div>
                                     )}
@@ -646,7 +627,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 placeholder="¿Cuál malformación?"
                                                 value={formData.malformacionesDetalle}
                                                 onChange={(e) => setFormData({ ...formData, malformacionesDetalle: e.target.value })}
-                                                className="flex-1 px-3 py-1.5 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                                className={inputGlassStyle + " flex-1"}
                                             />
                                         )}
                                     </div>
@@ -657,11 +638,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     <select
                                         value={formData.condicionesRN}
                                         onChange={(e) => setFormData({ ...formData, condicionesRN: e.target.value as any })}
-                                        className="w-full px-3 py-2 bg-slate-950 border border-white/20 rounded-xl font-bold text-white text-xs"
+                                        className={selectGlassStyle}
                                     >
-                                        <option value="SANO">1. Sano</option>
-                                        <option value="ENFERMO">2. Enfermo</option>
-                                        <option value="UCIN">3. Cuidados Intensivos (UCIN)</option>
+                                        <option value="SANO" className="bg-slate-900 text-white">1. Sano</option>
+                                        <option value="ENFERMO" className="bg-slate-900 text-white">2. Enfermo</option>
+                                        <option value="UCIN" className="bg-slate-900 text-white">3. Cuidados Intensivos (UCIN)</option>
                                     </select>
                                 </div>
 
@@ -670,12 +651,12 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     <select
                                         value={formData.alimentacion}
                                         onChange={(e) => setFormData({ ...formData, alimentacion: e.target.value as any })}
-                                        className="w-full px-3 py-2 bg-slate-950 border border-white/20 rounded-xl font-bold text-white text-xs"
+                                        className={selectGlassStyle}
                                     >
-                                        <option value="LECHE_MATERNA">1. Leche Materna</option>
-                                        <option value="FORMULA">2. Fórmula Láctea</option>
-                                        <option value="MIXTA">3. Mixta</option>
-                                        <option value="AYUNO">4. Ayuno</option>
+                                        <option value="LECHE_MATERNA" className="bg-slate-900 text-white">1. Leche Materna</option>
+                                        <option value="FORMULA" className="bg-slate-900 text-white">2. Fórmula Láctea</option>
+                                        <option value="MIXTA" className="bg-slate-900 text-white">3. Mixta</option>
+                                        <option value="AYUNO" className="bg-slate-900 text-white">4. Ayuno</option>
                                     </select>
                                 </div>
 
@@ -688,8 +669,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                     <div className="space-y-6">
 
                         {/* SECCIÓN C: DATOS DE LA MADRE O TUTORA */}
-                        <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl space-y-4">
-                            <div className="flex items-center gap-2.5 border-b border-white/10 pb-3 text-cyan-300">
+                        <div className={cardGlassStyle}>
+                            <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
                                 <HeartPulse className="w-4 h-4" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN C • Datos de la Madre o Tutora</h3>
                             </div>
@@ -705,7 +686,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Nombre(s)"
                                             value={formData.nombreMadre}
                                             onChange={(e) => setFormData({ ...formData, nombreMadre: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                     <div>
@@ -716,7 +697,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ap. Paterno"
                                             value={formData.apellidoPaternoMadre}
                                             onChange={(e) => setFormData({ ...formData, apellidoPaternoMadre: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                     <div>
@@ -727,7 +708,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ap. Materno"
                                             value={formData.apellidoMaternoMadre}
                                             onChange={(e) => setFormData({ ...formData, apellidoMaternoMadre: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                 </div>
@@ -740,7 +721,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         placeholder="EJ. GOSM980412MOCMNN08"
                                         value={formData.curpMadre}
                                         onChange={(e) => setFormData({ ...formData, curpMadre: e.target.value.toUpperCase() })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/20 rounded-xl font-mono font-bold text-xs uppercase text-cyan-400"
+                                        className={inputGlassStyle + " font-mono font-bold uppercase text-cyan-300"}
                                     />
                                 </div>
 
@@ -753,7 +734,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Calle / Avenida"
                                             value={formData.calle}
                                             onChange={(e) => setFormData({ ...formData, calle: e.target.value })}
-                                            className="col-span-2 px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                            className={inputGlassStyle + " col-span-2"}
                                         />
                                         <div className="flex gap-1">
                                             <input
@@ -762,14 +743,14 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 placeholder="Ext"
                                                 value={formData.numExterior}
                                                 onChange={(e) => setFormData({ ...formData, numExterior: e.target.value })}
-                                                className="w-1/2 px-1 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs text-center"
+                                                className={inputGlassStyle + " w-1/2 text-center px-1"}
                                             />
                                             <input
                                                 type="text"
                                                 placeholder="Int"
                                                 value={formData.numInterior}
                                                 onChange={(e) => setFormData({ ...formData, numInterior: e.target.value })}
-                                                className="w-1/2 px-1 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs text-center"
+                                                className={inputGlassStyle + " w-1/2 text-center px-1"}
                                             />
                                         </div>
                                     </div>
@@ -784,7 +765,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Colonia"
                                             value={formData.coloniaLocalidad}
                                             onChange={(e) => setFormData({ ...formData, coloniaLocalidad: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                     <div>
@@ -795,7 +776,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Municipio"
                                             value={formData.municipioMadre}
                                             onChange={(e) => setFormData({ ...formData, municipioMadre: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                     <div>
@@ -807,7 +788,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="70000"
                                             value={formData.codigoPostalMadre}
                                             onChange={(e) => setFormData({ ...formData, codigoPostalMadre: e.target.value })}
-                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl font-mono font-bold text-center text-white text-xs"
+                                            className={inputGlassStyle + " font-mono font-bold text-center"}
                                         />
                                     </div>
                                 </div>
@@ -820,7 +801,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="971..."
                                             value={formData.telefonoFijo}
                                             onChange={(e) => setFormData({ ...formData, telefonoFijo: e.target.value })}
-                                            className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                     <div>
@@ -832,7 +813,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="971..."
                                             value={formData.telefonoCelular}
                                             onChange={(e) => setFormData({ ...formData, telefonoCelular: e.target.value })}
-                                            className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                     <div>
@@ -842,12 +823,12 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="correo@..."
                                             value={formData.emailMadre}
                                             onChange={(e) => setFormData({ ...formData, emailMadre: e.target.value })}
-                                            className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                            className={inputGlassStyle}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
+                                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/20">
                                     <div>
                                         <label className="block text-[11px] font-bold text-cyan-100 mb-1">Edad Madre *</label>
                                         <input
@@ -856,7 +837,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ej. 26"
                                             value={formData.edadMadre}
                                             onChange={(e) => setFormData({ ...formData, edadMadre: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold text-center"
+                                            className={inputGlassStyle + " text-center"}
                                         />
                                     </div>
                                     <div>
@@ -867,7 +848,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ej. I"
                                             value={formData.gestas}
                                             onChange={(e) => setFormData({ ...formData, gestas: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold text-center"
+                                            className={inputGlassStyle + " text-center"}
                                         />
                                     </div>
                                 </div>
@@ -902,7 +883,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 placeholder="¿Cuál enfermedad?"
                                                 value={formData.enfermedadTiroideaDetalle}
                                                 onChange={(e) => setFormData({ ...formData, enfermedadTiroideaDetalle: e.target.value })}
-                                                className="flex-1 px-3 py-1.5 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                                className={inputGlassStyle + " flex-1"}
                                             />
                                         )}
                                     </div>
@@ -912,8 +893,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                         </div>
 
                         {/* SECCIÓN D: OBSERVACIONES Y CONTROL DE CALIDAD */}
-                        <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl space-y-4">
-                            <div className="flex items-center gap-2.5 border-b border-white/10 pb-3 text-cyan-300">
+                        <div className={cardGlassStyle}>
+                            <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
                                 <ClipboardList className="w-4 h-4" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN D • Observaciones / Control de Calidad de Toma</h3>
                             </div>
@@ -928,11 +909,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         placeholder="Escriba aquí cualquier observación sobre la muestra..."
                                         value={formData.observacionesMuestra || ''}
                                         onChange={(e) => setFormData({ ...formData, observacionesMuestra: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 resize-none"
+                                        className={inputGlassStyle + " resize-none"}
                                     />
                                 </div>
 
-                                <div className="p-4 bg-amber-950/40 border border-amber-400/30 rounded-2xl flex items-start gap-3 text-amber-100 backdrop-blur-md">
+                                <div className="p-4 bg-amber-950/40 border border-amber-400/40 rounded-2xl flex items-start gap-3 text-amber-100 backdrop-blur-md shadow-lg">
                                     <Clock className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
                                     <div className="text-[11px] space-y-0.5">
                                         <span className="font-black text-amber-300 uppercase tracking-wider text-[10px] block">
@@ -951,11 +932,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 </div>
 
                 {/* BOTONES INFERIORES DE ACCIÓN */}
-                <div className="no-print p-5 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4 py-4"}>
                     <button
                         type="button"
                         onClick={handleReset}
-                        className="w-full sm:w-auto px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
+                        className="w-full sm:w-auto px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/30"
                     >
                         <RotateCcw className="w-4 h-4 text-cyan-300" />
                         <span>Limpiar Campos</span>
@@ -965,7 +946,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="w-full sm:w-auto px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20 shadow-md"
+                            className="w-full sm:w-auto px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/30 shadow-md"
                         >
                             <Printer className="w-4 h-4 text-cyan-300" />
                             <span>Imprimir Cédula (1 Hoja)</span>
