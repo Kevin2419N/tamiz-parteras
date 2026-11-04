@@ -171,7 +171,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 estatus_muestra: 'REGISTRADO'
             };
 
-            await http.post('/api/tamiz/muestras', payload);
+            // RUTA CORREGIDA (Se quitó el /api duplicado para que coincida con /api/v1/tamiz/muestras)
+            await http.post('/tamiz/muestras', payload);
 
             onSaveSuccess(formData);
             setSavedNotification(true);
@@ -190,7 +191,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         }
     };
 
-    // Estilos de cristal reutilizables para inputs y selects
     const inputGlassStyle = "w-full px-3.5 py-2.5 bg-white/10 border border-white/30 rounded-xl text-white text-xs font-semibold placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
     const selectGlassStyle = "w-full px-3.5 py-2.5 bg-slate-900/60 border border-white/30 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
     const cardGlassStyle = "p-6 bg-white/10 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(15,23,42,0.5)] space-y-4";
@@ -216,7 +216,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 }
             `}</style>
 
-            {/* BARRA SUPERIOR CON BOTÓN DE ESCANEO OCR / IA */}
             <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4"}>
                 <div className="flex items-center gap-3.5 text-center sm:text-left">
                     <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-400/40 text-cyan-300 backdrop-blur-md shadow-lg">
@@ -244,7 +243,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 )}
             </div>
 
-            {/* TOAST AL GUARDAR */}
             {savedNotification && (
                 <div className="p-4 bg-emerald-950/80 border-2 border-emerald-400 rounded-2xl flex items-center justify-between shadow-2xl backdrop-blur-md text-emerald-100">
                     <div className="flex items-center gap-3">
@@ -267,10 +265,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 </div>
             )}
 
-            {/* FORMULARIO OFICIAL COMPLETO */}
             <form onSubmit={handleSubmit} className="printable-guthrie-card space-y-6">
 
-                {/* ENCABEZADO CON FOLIO DE TARJETA */}
                 <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4 py-4"}>
                     <div>
                         <span className="text-[10px] font-black text-cyan-200 uppercase tracking-wider block">SECRETARÍA DE SALUD • SISTEMA NACIONAL DE SALUD • OAXACA</span>
@@ -284,13 +280,10 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                     </div>
                 </div>
 
-                {/* MAQUETACIÓN EN 2 COLUMNAS */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print-2col-layout">
 
-                    {/* COLUMNA IZQUIERDA: SECCIONES A Y B */}
                     <div className="space-y-6">
 
-                        {/* SECCIÓN A: UNIDAD MÉDICA Y MUESTRA */}
                         <div className={cardGlassStyle}>
                             <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
                                 <Building2 className="w-4 h-4" />
@@ -432,7 +425,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                             </div>
                         </div>
 
-                        {/* SECCIÓN B: DATOS DEL RECIÉN NACIDO */}
                         <div className={cardGlassStyle}>
                             <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
                                 <Baby className="w-4 h-4" />
@@ -485,7 +477,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 required
                                                 value={formData.fechaNacimiento}
                                                 onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
-                                                className={inputGlassStyle + " text-[11px]" }
+                                                className={inputGlassStyle + " text-[11px]"}
                                             />
                                             <input
                                                 type="time"
@@ -665,10 +657,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                     </div>
 
-                    {/* COLUMNA DERECHA: SECCIONES C Y D */}
                     <div className="space-y-6">
 
-                        {/* SECCIÓN C: DATOS DE LA MADRE O TUTORA */}
                         <div className={cardGlassStyle}>
                             <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
                                 <HeartPulse className="w-4 h-4" />
@@ -892,7 +882,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                             </div>
                         </div>
 
-                        {/* SECCIÓN D: OBSERVACIONES Y CONTROL DE CALIDAD */}
                         <div className={cardGlassStyle}>
                             <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
                                 <ClipboardList className="w-4 h-4" />
@@ -931,7 +920,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                 </div>
 
-                {/* BOTONES INFERIORES DE ACCIÓN */}
                 <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4 py-4"}>
                     <button
                         type="button"
