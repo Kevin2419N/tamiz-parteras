@@ -33,7 +33,8 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 setScanProgress(50);
                 setCurrentStep('Enviando imagen al servidor de la Jurisdicción...');
 
-                const res = await http.post('/api/v1/captura/escanear-tarjeta-ia', formData, {
+                // Ruta limpia sin duplicar /api/v1
+                const res = await http.post('/captura/escanear-tarjeta-ia', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
