@@ -12,10 +12,12 @@ import {
     FlaskConical,
     Clock,
     ClipboardList,
-    Loader2
+    Loader2,
+    Sparkles,
+    ShieldCheck
 } from 'lucide-react';
 import type { GuthrieFormData, UnidadCLUES } from './types';
-import { http } from '../../../../services/http'; // <--- Instancia de Axios centralizada
+import { http } from '../../../../services/http';
 
 interface TabCapturaGuthrieProps {
     initialData?: Partial<GuthrieFormData>;
@@ -39,7 +41,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
     ];
 
     const defaultForm: GuthrieFormData = {
-        // Sección A: Encabezado y Muestra
         folio: '',
         unidadMedica: '',
         clues: '',
@@ -54,7 +55,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         calidadMuestraLab: 'ADECUADA',
         responsableLaboratorio: '',
 
-        // Sección B: Datos del Recién Nacido
         nombreRN: '',
         apellidoPaternoRN: '',
         apellidoMaternoRN: '',
@@ -73,7 +73,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         condicionesRN: 'SANO',
         alimentacion: 'LECHE_MATERNA',
 
-        // Sección C: Datos de la Madre
         nombreMadre: '',
         apellidoPaternoMadre: '',
         apellidoMaternoMadre: '',
@@ -127,7 +126,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         setIsSubmitting(true);
 
         try {
-            // Estructura de datos requerida por el backend en PostgreSQL
             const payload = {
                 folio_tarjeta: formData.folio,
                 clues_unidad: formData.clues,
@@ -138,7 +136,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 tecnica_toma: formData.tecnicaToma,
                 tecnica_toma_especificar: formData.sospechosoEspecificar,
 
-                // Recién Nacido
                 rn_nombres: formData.nombreRN,
                 rn_apellido_paterno: formData.apellidoPaternoRN,
                 rn_apellido_materno: formData.apellidoMaternoRN,
@@ -154,7 +151,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 rn_condicion_toma: formData.condicionesRN,
                 rn_alimentacion: formData.alimentacion,
 
-                // Madre
                 madre_nombres: formData.nombreMadre,
                 madre_apellido_paterno: formData.apellidoPaternoMadre,
                 madre_apellido_materno: formData.apellidoMaternoMadre,
@@ -175,7 +171,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 estatus_muestra: 'REGISTRADO'
             };
 
-            // Petición real al backend
             await http.post('/api/tamiz/muestras', payload);
 
             onSaveSuccess(formData);
@@ -196,9 +191,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 text-white w-full">
 
-            {/* REGLAS DE IMPRESIÓN CSS PARA 1 PÁGINA A4/CARTA */}
             <style>{`
                 @media print {
                     @page {
@@ -221,6 +215,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                         background: white !important;
                         margin: 0 !important;
                         width: 100% !important;
+                        color: #000 !important;
                     }
                     .printable-guthrie-card input,
                     .printable-guthrie-card select,
@@ -240,52 +235,50 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 }
             `}</style>
 
-            {/* BARRA SUPERIOR DE ACCIÓN OCR / IA */}
-            <div className="no-print bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-rose-50 text-[#9D2449] rounded-2xl border border-rose-200">
+            {/* BARRA SUPERIOR CON BOTÓN DE ESCANEO OCR / IA */}
+            <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5 text-center sm:text-left">
+                    <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-400/30 text-cyan-300 backdrop-blur-md shadow-lg">
                         <FileText className="w-6 h-6" />
                     </div>
                     <div>
-                        <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
+                        <span className="text-[10px] font-black text-cyan-300 uppercase tracking-widest block">
                             SECRETARÍA DE SALUD DE OAXACA • SERVICIOS DE SALUD DE OAXACA
                         </span>
-                        <h2 className="text-base sm:text-lg font-black text-slate-900">
+                        <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
                             Cédula Digital de Tamiz Neonatal (Formato Papel Filtro SSO)
                         </h2>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
-                    {onOpenAIScan && (
-                        <button
-                            type="button"
-                            onClick={onOpenAIScan}
-                            className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold border border-slate-300 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                        >
-                            <Camera className="w-4 h-4 text-[#9D2449]" />
-                            <span>Subir Foto de Tarjeta (OCR)</span>
-                        </button>
-                    )}
-                </div>
+                {onOpenAIScan && (
+                    <button
+                        type="button"
+                        onClick={onOpenAIScan}
+                        className="px-5 py-3 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs rounded-2xl shadow-lg shadow-cyan-950/50 transition-all flex items-center gap-2.5 cursor-pointer active:scale-95 border border-white/40 shrink-0"
+                    >
+                        <Sparkles className="w-4 h-4 text-cyan-200 animate-pulse" />
+                        <span>Subir Foto de Tarjeta (OCR con IA)</span>
+                    </button>
+                )}
             </div>
 
             {/* TOAST AL GUARDAR */}
             {savedNotification && (
-                <div className="no-print bg-emerald-50 border-2 border-emerald-500 rounded-2xl p-4 flex items-center justify-between shadow-md text-emerald-900">
+                <div className="p-4 bg-emerald-950/80 border-2 border-emerald-400 rounded-2xl flex items-center justify-between shadow-2xl backdrop-blur-md text-emerald-100">
                     <div className="flex items-center gap-3">
-                        <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                        <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
                         <div>
                             <p className="font-extrabold text-sm">¡Tarjeta de Tamiz Guthrie Sincronizada con Backend (PostgreSQL)!</p>
-                            <p className="text-xs text-emerald-700 font-medium">
-                                Folio <span className="font-mono font-bold">{formData.folio}</span> registrado correctamente en el servidor.
+                            <p className="text-xs text-emerald-200/80 font-medium">
+                                Folio <span className="font-mono font-bold text-white">{formData.folio}</span> registrado correctamente en el servidor.
                             </p>
                         </div>
                     </div>
                     <button
                         type="button"
                         onClick={() => window.print()}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer border border-emerald-400/40"
                     >
                         <Printer className="w-4 h-4" />
                         <span>Imprimir Comprobante</span>
@@ -293,23 +286,18 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 </div>
             )}
 
-            {/* FORMULARIO OFICIAL COMPLETO MAQUETADO EN 2 COLUMNAS */}
-            <form onSubmit={handleSubmit} className="printable-guthrie-card space-y-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+            {/* FORMULARIO OFICIAL COMPLETO */}
+            <form onSubmit={handleSubmit} className="printable-guthrie-card space-y-6">
 
-                {/* HEADER CON FOLIO DE TARJETA RED ROJO */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-[#9D2449] pb-4">
+                {/* ENCABEZADO CON FOLIO DE TARJETA */}
+                <div className="p-5 bg-slate-900/60 rounded-3xl border border-white/20 backdrop-blur-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                     <div>
-                        <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
-                            SECRETARÍA DE SALUD • SISTEMA NACIONAL DE SALUD • OAXACA
-                        </span>
-                        <h2 className="text-lg font-black text-slate-900">
-                            Cédula Oficial de Muestra Neonatal — SSO Oaxaca
-                        </h2>
+                        <span className="text-[10px] font-black text-cyan-300 uppercase tracking-wider block">SECRETARÍA DE SALUD • SISTEMA NACIONAL DE SALUD • OAXACA</span>
+                        <h3 className="text-sm font-black text-white">Cédula Oficial de Muestra Neonatal — SSO Oaxaca</h3>
                     </div>
-
-                    <div className="bg-rose-50 border-2 border-rose-300 px-4 py-2 rounded-2xl text-right">
-                        <span className="text-[10px] font-black uppercase text-rose-700 block">FOLIO TARJETA GUTHRIE</span>
-                        <span className="font-mono text-xl text-rose-600 font-black tracking-wider">
+                    <div className="px-4 py-2.5 bg-slate-950 rounded-2xl border border-cyan-400/30 text-right shadow-inner">
+                        <span className="text-[9px] uppercase font-bold text-cyan-200 block">FOLIO TARJETA GUTHRIE</span>
+                        <span className="font-mono text-lg text-cyan-400 font-black tracking-wider">
                             {formData.folio || 'PENDIENTE'}
                         </span>
                     </div>
@@ -318,38 +306,38 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 {/* MAQUETACIÓN EN 2 COLUMNAS */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print-2col-layout">
 
-                    {/* COLUMNA IZQUIERDA: SECCIONES A Y B (UNIDAD, TÉCNICA Y RECIÉN NACIDO) */}
+                    {/* COLUMNA IZQUIERDA: SECCIONES A Y B */}
                     <div className="space-y-6">
 
                         {/* SECCIÓN A: UNIDAD MÉDICA Y MUESTRA */}
-                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-[#9D2449]">
+                        <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl space-y-4">
+                            <div className="flex items-center gap-2.5 border-b border-white/10 pb-3 text-cyan-300">
                                 <Building2 className="w-4 h-4" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN A • Unidad Médica (CLUES) y Muestra</h3>
                             </div>
 
-                            <div className="space-y-3 text-xs">
+                            <div className="space-y-3 text-xs font-semibold">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">Folio de Tarjeta *</label>
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Folio de Tarjeta *</label>
                                     <input
                                         type="text"
                                         required
                                         placeholder="Ej. 5458349"
                                         value={formData.folio}
                                         onChange={(e) => setFormData({ ...formData, folio: e.target.value })}
-                                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl font-mono text-sm font-black text-rose-600 focus:outline-none focus:border-[#9D2449]"
+                                        className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/20 rounded-xl font-mono text-sm font-black text-cyan-400 focus:outline-none focus:border-cyan-400"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">
                                         Unidad Médica * (Catálogo de Unidades Médicas CLUES)
                                     </label>
                                     <select
                                         required
                                         value={formData.unidadMedica}
                                         onChange={handleCluesChange}
-                                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-white/20 rounded-xl font-bold text-white focus:outline-none focus:border-cyan-400"
                                     >
                                         <option value="">Seleccione una unidad médica...</option>
                                         {catalogCLUES.map((u) => (
@@ -360,28 +348,27 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </select>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
-                                    <div className="p-2 bg-white rounded-lg border border-slate-200">
-                                        <span className="text-slate-500 block">Jurisdicción:</span>
-                                        <span className="text-slate-900 font-black">{formData.jurisdiccion}</span>
+                                <div className="grid grid-cols-2 gap-3 text-[11px] font-bold">
+                                    <div className="p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
+                                        <span className="text-cyan-200/70 block text-[10px]">Jurisdicción:</span>
+                                        <span className="text-white font-black">{formData.jurisdiccion}</span>
                                     </div>
-                                    <div className="p-2 bg-white rounded-lg border border-slate-200">
-                                        <span className="text-slate-500 block">Estado:</span>
-                                        <span className="text-slate-900 font-black">{formData.estado}</span>
+                                    <div className="p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
+                                        <span className="text-cyan-200/70 block text-[10px]">Estado:</span>
+                                        <span className="text-white font-black">{formData.estado}</span>
                                     </div>
                                 </div>
 
-                                {/* DATOS DEL RESPONSABLE DE LA TOMA */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">Responsable de la Toma (Nombre y Apellidos) *</label>
-                                    <div className="grid grid-cols-3 gap-1.5">
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Responsable de la Toma (Nombre y Apellidos) *</label>
+                                    <div className="grid grid-cols-3 gap-2">
                                         <input
                                             type="text"
                                             required
                                             placeholder="Nombre(s)"
                                             value={formData.nombreResponsableToma}
                                             onChange={(e) => setFormData({ ...formData, nombreResponsableToma: e.target.value })}
-                                            className="px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-semibold"
+                                            className="px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-semibold placeholder:text-cyan-200/40"
                                         />
                                         <input
                                             type="text"
@@ -389,7 +376,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ap. Paterno"
                                             value={formData.apellidoPaternoResponsableToma}
                                             onChange={(e) => setFormData({ ...formData, apellidoPaternoResponsableToma: e.target.value })}
-                                            className="px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-semibold"
+                                            className="px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-semibold placeholder:text-cyan-200/40"
                                         />
                                         <input
                                             type="text"
@@ -397,18 +384,17 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Ap. Materno"
                                             value={formData.apellidoMaternoResponsableToma}
                                             onChange={(e) => setFormData({ ...formData, apellidoMaternoResponsableToma: e.target.value })}
-                                            className="px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-semibold"
+                                            className="px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-semibold placeholder:text-cyan-200/40"
                                         />
                                     </div>
                                 </div>
 
-                                {/* TÉCNICA DE TOMA */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">Técnica de Toma *</label>
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Técnica de Toma *</label>
                                     <select
                                         value={formData.tecnicaToma}
                                         onChange={(e) => setFormData({ ...formData, tecnicaToma: e.target.value as any })}
-                                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900"
+                                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-white/20 rounded-xl font-bold text-white focus:outline-none focus:border-cyan-400"
                                     >
                                         <option value="1A_MUESTRA">1a Muestra</option>
                                         <option value="2A_PREMATUREZ">2a Muestra por Prematurez</option>
@@ -422,34 +408,33 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                             placeholder="Especifique patología sospechosa..."
                                             value={formData.sospechosoEspecificar}
                                             onChange={(e) => setFormData({ ...formData, sospechosoEspecificar: e.target.value })}
-                                            className="w-full mt-1.5 px-3 py-1.5 bg-white border border-rose-300 rounded-lg text-rose-800 font-bold"
+                                            className="w-full mt-2 px-3.5 py-2 bg-slate-950/80 border border-rose-400/50 rounded-xl text-rose-200 font-bold"
                                         />
                                     )}
                                 </div>
 
-                                {/* REPORTE DE LABORATORIO */}
-                                <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
-                                    <span className="text-[10px] font-bold text-[#9D2449] flex items-center gap-1">
-                                        <FlaskConical className="w-3.5 h-3.5" /> Reporte de Laboratorio:
+                                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-2.5 backdrop-blur-md">
+                                    <span className="text-[11px] font-bold text-cyan-300 flex items-center gap-1.5">
+                                        <FlaskConical className="w-4 h-4" /> Reporte de Laboratorio:
                                     </span>
                                     <div className="flex items-center gap-4">
-                                        <label className="inline-flex items-center gap-1 font-bold text-[10px]">
+                                        <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
                                             <input
                                                 type="radio"
                                                 name="calidadLab"
                                                 checked={formData.calidadMuestraLab === 'ADECUADA'}
                                                 onChange={() => setFormData({ ...formData, calidadMuestraLab: 'ADECUADA' })}
-                                                className="accent-[#9D2449]"
+                                                className="accent-cyan-400"
                                             />
                                             Calidad: Adecuada
                                         </label>
-                                        <label className="inline-flex items-center gap-1 font-bold text-[10px]">
+                                        <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
                                             <input
                                                 type="radio"
                                                 name="calidadLab"
                                                 checked={formData.calidadMuestraLab === 'INADECUADA'}
                                                 onChange={() => setFormData({ ...formData, calidadMuestraLab: 'INADECUADA' })}
-                                                className="accent-[#9D2449]"
+                                                className="accent-cyan-400"
                                             />
                                             Calidad: Inadecuada
                                         </label>
@@ -459,7 +444,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         placeholder="Responsable del Laboratorio (Q.F.B.)"
                                         value={formData.responsableLaboratorio}
                                         onChange={(e) => setFormData({ ...formData, responsableLaboratorio: e.target.value })}
-                                        className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-semibold"
+                                        className="w-full px-3 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-xs font-semibold text-white placeholder:text-cyan-200/40"
                                     />
                                 </div>
 
@@ -467,86 +452,86 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                         </div>
 
                         {/* SECCIÓN B: DATOS DEL RECIÉN NACIDO */}
-                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-[#9D2449]">
+                        <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl space-y-4">
+                            <div className="flex items-center gap-2.5 border-b border-white/10 pb-3 text-cyan-300">
                                 <Baby className="w-4 h-4" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN B • Datos del Recién Nacido (RN)</h3>
                             </div>
 
-                            <div className="space-y-3 text-xs">
-                                <div className="grid grid-cols-3 gap-1.5">
+                            <div className="space-y-3 text-xs font-semibold">
+                                <div className="grid grid-cols-3 gap-2">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Nombre(s) RN *</label>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Nombre(s) RN *</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Nombre(s)"
                                             value={formData.nombreRN}
                                             onChange={(e) => setFormData({ ...formData, nombreRN: e.target.value })}
-                                            className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Ap. Paterno *</label>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Ap. Paterno *</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Ap. Paterno"
                                             value={formData.apellidoPaternoRN}
                                             onChange={(e) => setFormData({ ...formData, apellidoPaternoRN: e.target.value })}
-                                            className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Ap. Materno *</label>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Ap. Materno *</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Ap. Materno"
                                             value={formData.apellidoMaternoRN}
                                             onChange={(e) => setFormData({ ...formData, apellidoMaternoRN: e.target.value })}
-                                            className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-[9px] font-bold text-slate-700 mb-1">Fecha / Hora Nacimiento *</label>
-                                        <div className="flex gap-1">
+                                        <label className="block text-[10px] font-bold text-cyan-100 mb-1">Fecha / Hora Nacimiento *</label>
+                                        <div className="flex gap-1.5">
                                             <input
                                                 type="date"
                                                 required
                                                 value={formData.fechaNacimiento}
                                                 onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
-                                                className="w-full px-1.5 py-1 bg-white border border-slate-300 rounded-lg text-[10px]"
+                                                className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
                                             />
                                             <input
                                                 type="time"
                                                 required
                                                 value={formData.horaNacimiento}
                                                 onChange={(e) => setFormData({ ...formData, horaNacimiento: e.target.value })}
-                                                className="w-20 px-1 py-1 bg-white border border-slate-300 rounded-lg text-[10px]"
+                                                className="w-20 px-1.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-[9px] font-bold text-slate-700 mb-1">Fecha / Hora Toma Muestra *</label>
-                                        <div className="flex gap-1">
+                                        <label className="block text-[10px] font-bold text-cyan-100 mb-1">Fecha / Hora Toma Muestra *</label>
+                                        <div className="flex gap-1.5">
                                             <input
                                                 type="date"
                                                 required
                                                 value={formData.fechaToma}
                                                 onChange={(e) => setFormData({ ...formData, fechaToma: e.target.value })}
-                                                className="w-full px-1.5 py-1 bg-white border border-slate-300 rounded-lg text-[10px]"
+                                                className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
                                             />
                                             <input
                                                 type="time"
                                                 required
                                                 value={formData.horaToma}
                                                 onChange={(e) => setFormData({ ...formData, horaToma: e.target.value })}
-                                                className="w-20 px-1 py-1 bg-white border border-slate-300 rounded-lg text-[10px]"
+                                                className="w-20 px-1.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
                                             />
                                         </div>
                                     </div>
@@ -554,50 +539,49 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                                 <div className="grid grid-cols-3 gap-2">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Sexo *</label>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Sexo *</label>
                                         <select
                                             value={formData.sexo}
                                             onChange={(e) => setFormData({ ...formData, sexo: e.target.value as any })}
-                                            className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                            className="w-full px-2.5 py-2 bg-slate-950 border border-white/20 rounded-xl text-white font-bold text-xs"
                                         >
                                             <option value="MASCULINO">Masculino</option>
                                             <option value="FEMENINO">Femenino</option>
-                                            <option value="AMBIGUEDAD">Ambigüedad de genitales</option>
+                                            <option value="AMBIGUEDAD">Ambigüedad</option>
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Peso (g) *</label>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Peso (g) *</label>
                                         <input
                                             type="number"
                                             required
                                             placeholder="Ej. 3200"
                                             value={formData.pesoGramos}
                                             onChange={(e) => setFormData({ ...formData, pesoGramos: e.target.value })}
-                                            className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white font-bold text-xs"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Talla (cm) *</label>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Talla (cm) *</label>
                                         <input
                                             type="number"
                                             required
                                             placeholder="Ej. 50"
                                             value={formData.tallaCm}
                                             onChange={(e) => setFormData({ ...formData, tallaCm: e.target.value })}
-                                            className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white font-bold text-xs"
                                         />
                                     </div>
                                 </div>
 
-                                {/* EDAD GESTACIONAL (SDG) */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">Edad Gestacional *</label>
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Edad Gestacional *</label>
                                     <select
                                         value={formData.edadGestacional}
                                         onChange={(e) => setFormData({ ...formData, edadGestacional: e.target.value as any })}
-                                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                        className="w-full px-3 py-2 bg-slate-950 border border-white/20 rounded-xl font-bold text-white text-xs"
                                     >
                                         <option value="PRETERMINO_MENOR_37">1. Pre-término &lt; 37 SDG</option>
                                         <option value="TERMINO_37_41">2. Término 37-41.6 SDG</option>
@@ -605,14 +589,13 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </select>
                                 </div>
 
-                                {/* PRODUCTO (GEMELARIDAD) */}
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Producto *</label>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Producto *</label>
                                         <select
                                             value={formData.producto}
                                             onChange={(e) => setFormData({ ...formData, producto: e.target.value as any })}
-                                            className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                            className="w-full px-3 py-2 bg-slate-950 border border-white/20 rounded-xl font-bold text-white text-xs"
                                         >
                                             <option value="UNICO">1. Único</option>
                                             <option value="GEMELAR">2. Múltiple / Gemelar</option>
@@ -620,40 +603,39 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </div>
                                     {formData.producto === 'GEMELAR' && (
                                         <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">No. de Gemelo *</label>
+                                            <label className="block text-[11px] font-bold text-cyan-100 mb-1">No. de Gemelo *</label>
                                             <input
                                                 type="text"
                                                 required
                                                 placeholder="Ej. Gemelo 1"
                                                 value={formData.numeroGemelo}
                                                 onChange={(e) => setFormData({ ...formData, numeroGemelo: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-rose-300 rounded-lg font-bold"
+                                                className="w-full px-3 py-2 bg-slate-950/80 border border-rose-400/50 rounded-xl text-white font-bold text-xs"
                                             />
                                         </div>
                                     )}
                                 </div>
 
-                                {/* MALFORMACIONES CONGÉNITAS */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">Malformaciones Congénitas *</label>
-                                    <div className="flex items-center gap-3">
-                                        <label className="inline-flex items-center gap-1 font-bold text-[10px]">
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Malformaciones Congénitas *</label>
+                                    <div className="flex items-center gap-4">
+                                        <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
                                             <input
                                                 type="radio"
                                                 name="malform"
                                                 checked={formData.malformaciones === 'NO'}
                                                 onChange={() => setFormData({ ...formData, malformaciones: 'NO' })}
-                                                className="accent-[#9D2449]"
+                                                className="accent-cyan-400"
                                             />
                                             1. No
                                         </label>
-                                        <label className="inline-flex items-center gap-1 font-bold text-[10px]">
+                                        <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
                                             <input
                                                 type="radio"
                                                 name="malform"
                                                 checked={formData.malformaciones === 'SI'}
                                                 onChange={() => setFormData({ ...formData, malformaciones: 'SI' })}
-                                                className="accent-[#9D2449]"
+                                                className="accent-cyan-400"
                                             />
                                             2. Sí
                                         </label>
@@ -664,19 +646,18 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 placeholder="¿Cuál malformación?"
                                                 value={formData.malformacionesDetalle}
                                                 onChange={(e) => setFormData({ ...formData, malformacionesDetalle: e.target.value })}
-                                                className="flex-1 px-2 py-1 bg-white border border-slate-300 rounded-lg text-[10px]"
+                                                className="flex-1 px-3 py-1.5 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
                                             />
                                         )}
                                     </div>
                                 </div>
 
-                                {/* CONDICIONES RN */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">Condiciones del RN al Tomar la Muestra *</label>
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Condiciones del RN al Tomar la Muestra *</label>
                                     <select
                                         value={formData.condicionesRN}
                                         onChange={(e) => setFormData({ ...formData, condicionesRN: e.target.value as any })}
-                                        className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                        className="w-full px-3 py-2 bg-slate-950 border border-white/20 rounded-xl font-bold text-white text-xs"
                                     >
                                         <option value="SANO">1. Sano</option>
                                         <option value="ENFERMO">2. Enfermo</option>
@@ -684,13 +665,12 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </select>
                                 </div>
 
-                                {/* ALIMENTACIÓN RN */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">Alimentación del RN *</label>
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Alimentación del RN *</label>
                                     <select
                                         value={formData.alimentacion}
                                         onChange={(e) => setFormData({ ...formData, alimentacion: e.target.value as any })}
-                                        className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                                        className="w-full px-3 py-2 bg-slate-950 border border-white/20 rounded-xl font-bold text-white text-xs"
                                     >
                                         <option value="LECHE_MATERNA">1. Leche Materna</option>
                                         <option value="FORMULA">2. Fórmula Láctea</option>
@@ -704,251 +684,243 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                     </div>
 
-                    {/* COLUMNA DERECHA: SECCIÓN C (DATOS DE LA MADRE O TUTORA) Y SECCIÓN D (OBSERVACIONES) */}
+                    {/* COLUMNA DERECHA: SECCIONES C Y D */}
                     <div className="space-y-6">
 
                         {/* SECCIÓN C: DATOS DE LA MADRE O TUTORA */}
-                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                            <div>
-                                <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-[#9D2449] mb-4">
-                                    <HeartPulse className="w-4 h-4" />
-                                    <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN C • Datos de la Madre o Tutora</h3>
-                                </div>
+                        <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl space-y-4">
+                            <div className="flex items-center gap-2.5 border-b border-white/10 pb-3 text-cyan-300">
+                                <HeartPulse className="w-4 h-4" />
+                                <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN C • Datos de la Madre o Tutora</h3>
+                            </div>
 
-                                <div className="space-y-3.5 text-xs">
+                            <div className="space-y-3.5 text-xs font-semibold">
 
-                                    {/* NOMBRES Y APELLIDOS MADRE */}
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">Nombre(s) *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Nombre(s)"
-                                                value={formData.nombreMadre}
-                                                onChange={(e) => setFormData({ ...formData, nombreMadre: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">Ap. Paterno *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Ap. Paterno"
-                                                value={formData.apellidoPaternoMadre}
-                                                onChange={(e) => setFormData({ ...formData, apellidoPaternoMadre: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">Ap. Materno *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Ap. Materno"
-                                                value={formData.apellidoMaternoMadre}
-                                                onChange={(e) => setFormData({ ...formData, apellidoMaternoMadre: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* CURP MADRE */}
+                                <div className="grid grid-cols-3 gap-2">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">CURP Madre (18 Caracteres)</label>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Nombre(s) *</label>
                                         <input
                                             type="text"
-                                            maxLength={18}
-                                            placeholder="EJ. GOSM980412MOCMNN08"
-                                            value={formData.curpMadre}
-                                            onChange={(e) => setFormData({ ...formData, curpMadre: e.target.value.toUpperCase() })}
-                                            className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg font-mono font-bold text-xs uppercase"
+                                            required
+                                            placeholder="Nombre(s)"
+                                            value={formData.nombreMadre}
+                                            onChange={(e) => setFormData({ ...formData, nombreMadre: e.target.value })}
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
                                         />
                                     </div>
-
-                                    {/* DOMICILIO DETALLADO: CALLE, EXT, INT */}
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Calle y Números *</label>
-                                        <div className="grid grid-cols-3 gap-1.5">
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Calle / Avenida"
-                                                value={formData.calle}
-                                                onChange={(e) => setFormData({ ...formData, calle: e.target.value })}
-                                                className="col-span-2 px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
-                                            />
-                                            <div className="flex gap-1">
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    placeholder="Ext"
-                                                    value={formData.numExterior}
-                                                    onChange={(e) => setFormData({ ...formData, numExterior: e.target.value })}
-                                                    className="w-1/2 px-1 py-1.5 bg-white border border-slate-300 rounded-lg font-medium text-center"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Int"
-                                                    value={formData.numInterior}
-                                                    onChange={(e) => setFormData({ ...formData, numInterior: e.target.value })}
-                                                    className="w-1/2 px-1 py-1.5 bg-white border border-slate-300 rounded-lg font-medium text-center"
-                                                />
-                                            </div>
-                                        </div>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Ap. Paterno *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ap. Paterno"
+                                            value={formData.apellidoPaternoMadre}
+                                            onChange={(e) => setFormData({ ...formData, apellidoPaternoMadre: e.target.value })}
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
+                                        />
                                     </div>
-
-                                    {/* COLONIA, MUNICIPIO LIBRE, C.P. */}
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">Colonia / Localidad *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Colonia"
-                                                value={formData.coloniaLocalidad}
-                                                onChange={(e) => setFormData({ ...formData, coloniaLocalidad: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">Municipio / Delegación *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Municipio"
-                                                value={formData.municipioMadre}
-                                                onChange={(e) => setFormData({ ...formData, municipioMadre: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">Código Postal *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                maxLength={5}
-                                                placeholder="70000"
-                                                value={formData.codigoPostalMadre}
-                                                onChange={(e) => setFormData({ ...formData, codigoPostalMadre: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-mono font-bold text-center"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* TELÉFONO FIJO, CELULAR, EMAIL */}
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        <div>
-                                            <label className="block text-[9px] font-bold text-slate-700 mb-1">Tel. Fijo</label>
-                                            <input
-                                                type="tel"
-                                                placeholder="971..."
-                                                value={formData.telefonoFijo}
-                                                onChange={(e) => setFormData({ ...formData, telefonoFijo: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[9px] font-bold text-slate-700 mb-1">Tel. Celular *</label>
-                                            <input
-                                                type="tel"
-                                                required
-                                                maxLength={10}
-                                                placeholder="971..."
-                                                value={formData.telefonoCelular}
-                                                onChange={(e) => setFormData({ ...formData, telefonoCelular: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[9px] font-bold text-slate-700 mb-1">E-mail Madre</label>
-                                            <input
-                                                type="email"
-                                                placeholder="correo@..."
-                                                value={formData.emailMadre}
-                                                onChange={(e) => setFormData({ ...formData, emailMadre: e.target.value })}
-                                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ANTECEDENTES: EDAD, GESTAS, ENFERMEDAD TIROIDEA */}
-                                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">Edad Madre *</label>
-                                            <input
-                                                type="number"
-                                                required
-                                                placeholder="Ej. 26"
-                                                value={formData.edadMadre}
-                                                onChange={(e) => setFormData({ ...formData, edadMadre: e.target.value })}
-                                                className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-center"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-700 mb-1">Gestas (No.) *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Ej. I"
-                                                value={formData.gestas}
-                                                onChange={(e) => setFormData({ ...formData, gestas: e.target.value })}
-                                                className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-center"
-                                            />
-                                        </div>
-                                    </div>
-
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-700 mb-1">Enfermedad Tiroidea / Metabólica *</label>
-                                        <div className="flex items-center gap-4">
-                                            <label className="inline-flex items-center gap-1 font-bold text-[10px]">
-                                                <input
-                                                    type="radio"
-                                                    name="tiroidea"
-                                                    checked={formData.enfermedadTiroideaMetabolica === 'NO'}
-                                                    onChange={() => setFormData({ ...formData, enfermedadTiroideaMetabolica: 'NO' })}
-                                                    className="accent-[#9D2449]"
-                                                />
-                                                1. No
-                                            </label>
-                                            <label className="inline-flex items-center gap-1 font-bold text-[10px]">
-                                                <input
-                                                    type="radio"
-                                                    name="tiroidea"
-                                                    checked={formData.enfermedadTiroideaMetabolica === 'SI'}
-                                                    onChange={() => setFormData({ ...formData, enfermedadTiroideaMetabolica: 'SI' })}
-                                                    className="accent-[#9D2449]"
-                                                />
-                                                2. Sí
-                                            </label>
-                                            {formData.enfermedadTiroideaMetabolica === 'SI' && (
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    placeholder="¿Cuál enfermedad?"
-                                                    value={formData.enfermedadTiroideaDetalle}
-                                                    onChange={(e) => setFormData({ ...formData, enfermedadTiroideaDetalle: e.target.value })}
-                                                    className="flex-1 px-2 py-1 bg-white border border-slate-300 rounded-lg text-[10px]"
-                                                />
-                                            )}
-                                        </div>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Ap. Materno *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ap. Materno"
+                                            value={formData.apellidoMaternoMadre}
+                                            onChange={(e) => setFormData({ ...formData, apellidoMaternoMadre: e.target.value })}
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold placeholder:text-cyan-200/40"
+                                        />
                                     </div>
-
                                 </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">CURP Madre (18 Caracteres)</label>
+                                    <input
+                                        type="text"
+                                        maxLength={18}
+                                        placeholder="EJ. GOSM980412MOCMNN08"
+                                        value={formData.curpMadre}
+                                        onChange={(e) => setFormData({ ...formData, curpMadre: e.target.value.toUpperCase() })}
+                                        className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/20 rounded-xl font-mono font-bold text-xs uppercase text-cyan-400"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Calle y Números *</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Calle / Avenida"
+                                            value={formData.calle}
+                                            onChange={(e) => setFormData({ ...formData, calle: e.target.value })}
+                                            className="col-span-2 px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                        />
+                                        <div className="flex gap-1">
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Ext"
+                                                value={formData.numExterior}
+                                                onChange={(e) => setFormData({ ...formData, numExterior: e.target.value })}
+                                                className="w-1/2 px-1 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs text-center"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Int"
+                                                value={formData.numInterior}
+                                                onChange={(e) => setFormData({ ...formData, numInterior: e.target.value })}
+                                                className="w-1/2 px-1 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs text-center"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Colonia / Localidad *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Colonia"
+                                            value={formData.coloniaLocalidad}
+                                            onChange={(e) => setFormData({ ...formData, coloniaLocalidad: e.target.value })}
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Municipio *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Municipio"
+                                            value={formData.municipioMadre}
+                                            onChange={(e) => setFormData({ ...formData, municipioMadre: e.target.value })}
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Código Postal *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            maxLength={5}
+                                            placeholder="70000"
+                                            value={formData.codigoPostalMadre}
+                                            onChange={(e) => setFormData({ ...formData, codigoPostalMadre: e.target.value })}
+                                            className="w-full px-2.5 py-2 bg-slate-950/80 border border-white/20 rounded-xl font-mono font-bold text-center text-white text-xs"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-cyan-100 mb-1">Tel. Fijo</label>
+                                        <input
+                                            type="tel"
+                                            placeholder="971..."
+                                            value={formData.telefonoFijo}
+                                            onChange={(e) => setFormData({ ...formData, telefonoFijo: e.target.value })}
+                                            className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-cyan-100 mb-1">Tel. Celular *</label>
+                                        <input
+                                            type="tel"
+                                            required
+                                            maxLength={10}
+                                            placeholder="971..."
+                                            value={formData.telefonoCelular}
+                                            onChange={(e) => setFormData({ ...formData, telefonoCelular: e.target.value })}
+                                            className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-cyan-100 mb-1">E-mail Madre</label>
+                                        <input
+                                            type="email"
+                                            placeholder="correo@..."
+                                            value={formData.emailMadre}
+                                            onChange={(e) => setFormData({ ...formData, emailMadre: e.target.value })}
+                                            className="w-full px-2 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Edad Madre *</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            placeholder="Ej. 26"
+                                            value={formData.edadMadre}
+                                            onChange={(e) => setFormData({ ...formData, edadMadre: e.target.value })}
+                                            className="w-full px-3 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold text-center"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-cyan-100 mb-1">Gestas (No.) *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ej. I"
+                                            value={formData.gestas}
+                                            onChange={(e) => setFormData({ ...formData, gestas: e.target.value })}
+                                            className="w-full px-3 py-2 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs font-bold text-center"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">Enfermedad Tiroidea / Metabólica *</label>
+                                    <div className="flex items-center gap-4">
+                                        <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="tiroidea"
+                                                checked={formData.enfermedadTiroideaMetabolica === 'NO'}
+                                                onChange={() => setFormData({ ...formData, enfermedadTiroideaMetabolica: 'NO' })}
+                                                className="accent-cyan-400"
+                                            />
+                                            1. No
+                                        </label>
+                                        <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="tiroidea"
+                                                checked={formData.enfermedadTiroideaMetabolica === 'SI'}
+                                                onChange={() => setFormData({ ...formData, enfermedadTiroideaMetabolica: 'SI' })}
+                                                className="accent-cyan-400"
+                                            />
+                                            2. Sí
+                                        </label>
+                                        {formData.enfermedadTiroideaMetabolica === 'SI' && (
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="¿Cuál enfermedad?"
+                                                value={formData.enfermedadTiroideaDetalle}
+                                                onChange={(e) => setFormData({ ...formData, enfermedadTiroideaDetalle: e.target.value })}
+                                                className="flex-1 px-3 py-1.5 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
-                        {/* SECCIÓN D: OBSERVACIONES Y CONTROL DE CALIDAD DE TOMA */}
-                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-[#9D2449]">
+                        {/* SECCIÓN D: OBSERVACIONES Y CONTROL DE CALIDAD */}
+                        <div className="p-6 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl space-y-4">
+                            <div className="flex items-center gap-2.5 border-b border-white/10 pb-3 text-cyan-300">
                                 <ClipboardList className="w-4 h-4" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN D • Observaciones / Control de Calidad de Toma</h3>
                             </div>
 
-                            <div className="space-y-3.5 text-xs">
+                            <div className="space-y-3.5 text-xs font-semibold">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">
                                         Observaciones de la Muestra / Notas del Capturista
                                     </label>
                                     <textarea
@@ -956,19 +928,18 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         placeholder="Escriba aquí cualquier observación sobre la muestra..."
                                         value={formData.observacionesMuestra || ''}
                                         onChange={(e) => setFormData({ ...formData, observacionesMuestra: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-medium focus:outline-none focus:border-[#9D2449] resize-none text-xs"
+                                        className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/20 rounded-xl text-white text-xs placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 resize-none"
                                     />
                                 </div>
 
-                                {/* RECUADRO DE AVISO INSTITUCIONAL LÍMITE DE ENVÍO (<72 HRS) */}
-                                <div className="p-3 bg-amber-50/90 border border-amber-300 rounded-xl flex items-start gap-2.5 text-slate-700 shadow-sm">
-                                    <Clock className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                                <div className="p-4 bg-amber-950/40 border border-amber-400/30 rounded-2xl flex items-start gap-3 text-amber-100 backdrop-blur-md">
+                                    <Clock className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
                                     <div className="text-[11px] space-y-0.5">
-                                        <span className="font-extrabold text-amber-900 block uppercase tracking-tight text-[10px]">
+                                        <span className="font-black text-amber-300 uppercase tracking-wider text-[10px] block">
                                             AVISO INSTITUCIONAL • TIEMPO LÍMITE DE ENVÍO
                                         </span>
-                                        <p className="font-medium text-slate-700 leading-tight">
-                                            Las muestras en papel filtro deben remitirse al LESP en un periodo <strong className="text-amber-900 font-extrabold">no mayor a 72 horas</strong> posterior a la toma para garantizar la viabilidad diagnóstica.
+                                        <p className="font-medium text-amber-100/90 leading-tight">
+                                            Las muestras en papel filtro deben remitirse al LESP en un periodo <strong className="text-white underline">no mayor a 72 horas</strong> posterior a la toma para garantizar la viabilidad diagnóstica.
                                         </p>
                                     </div>
                                 </div>
@@ -979,14 +950,14 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                 </div>
 
-                {/* BOTONES PRINCIPALES DE IMPRESIÓN Y GUARDADO (NO-PRINT) */}
-                <div className="no-print flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-100 p-4 rounded-3xl border border-slate-200 shadow-sm pt-4">
+                {/* BOTONES INFERIORES DE ACCIÓN */}
+                <div className="no-print p-5 bg-slate-900/60 rounded-3xl border border-white/25 backdrop-blur-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <button
                         type="button"
                         onClick={handleReset}
-                        className="w-full sm:w-auto px-5 py-3 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full sm:w-auto px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
                     >
-                        <RotateCcw className="w-4 h-4" />
+                        <RotateCcw className="w-4 h-4 text-cyan-300" />
                         <span>Limpiar Campos</span>
                     </button>
 
@@ -994,21 +965,21 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="w-full sm:w-auto px-5 py-3 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                            className="w-full sm:w-auto px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20 shadow-md"
                         >
-                            <Printer className="w-4 h-4 text-slate-600" />
+                            <Printer className="w-4 h-4 text-cyan-300" />
                             <span>Imprimir Cédula (1 Hoja)</span>
                         </button>
 
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full sm:w-auto px-8 py-3.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-sm font-black rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2.5 active:scale-95 disabled:opacity-50 cursor-pointer"
+                            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white text-xs font-extrabold rounded-2xl shadow-lg shadow-cyan-950/40 transition-all flex items-center justify-center gap-2.5 active:scale-95 disabled:opacity-50 cursor-pointer border border-white/40"
                         >
                             {isSubmitting ? (
-                                <Loader2 className="w-5 h-5 animate-spin text-rose-200" />
+                                <Loader2 className="w-4 h-4 animate-spin text-white" />
                             ) : (
-                                <CheckCircle2 className="w-5 h-5 text-rose-200" />
+                                <CheckCircle2 className="w-4 h-4 text-cyan-200" />
                             )}
                             <span>{isSubmitting ? 'Guardando en PostgreSQL...' : 'Guardar Tarjeta Guthrie'}</span>
                         </button>
