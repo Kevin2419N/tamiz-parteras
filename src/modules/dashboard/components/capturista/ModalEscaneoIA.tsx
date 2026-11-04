@@ -36,7 +36,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 const ret = await worker.recognize(file);
                 const textoDetectado = ret.data.text || '';
                 
-                // Depuración en consola del navegador (F12)
                 console.log("=== TEXTO CRUDO DETECTADO POR IA ===");
                 console.log(textoDetectado);
                 console.log("=====================================");
@@ -46,13 +45,12 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 setScanProgress(90);
                 setCurrentStep('Procesamiento completado con éxito...');
 
-                // Expresiones regulares adaptadas a la estructura de la tarjeta Guthrie
-                const matchFolio = textoDetectado.match(/(?:FOLIO|TARJETA|GT|NO|NUM)[\s:-]*([A-Z0-9-]{4,15})/i) || textoDetectado.match(/\b([0-9]{5,12})\b/);
+                // MEJORA: Buscamos específicamente bloques de 5 a 8 dígitos numéricos para el folio
+                const matchFolio = textoDetectado.match(/\b\d{5,8}\b/);
                 const matchCurp = textoDetectado.match(/[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}/i);
                 const matchClues = textoDetectado.match(/[A-Z]{5}[0-9]{5}/i);
 
-                // Mapeo directo con los nombres que usa TabCapturaGuthrie.tsx
-                const extractedFolio = matchFolio ? (matchFolio[1] || matchFolio[0]) : '';
+                const extractedFolio = matchFolio ? matchFolio[0] : '';
                 const extractedCurp = matchCurp ? matchCurp[0] : '';
                 const extractedClues = matchClues ? matchClues[0] : '';
 
