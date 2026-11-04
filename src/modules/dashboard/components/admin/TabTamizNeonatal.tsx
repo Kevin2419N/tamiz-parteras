@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, X, Droplet, ShieldCheck, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { Search, Eye, X, Droplet, ShieldCheck, MapPin, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import type { MuestraGuthrie } from './types';
 import { http } from '../../../../services/http';
 
@@ -45,47 +45,61 @@ export const TabTamizNeonatal: React.FC = () => {
     const getEstatusBadge = (estatus: MuestraGuthrie['estatus']) => {
         switch (estatus) {
             case 'SOSPECHOSO':
-                return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">SOSPECHOSO (ALERTA)</span>;
+                return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-500/25 text-rose-300 border border-rose-400/40 animate-pulse shadow-sm">SOSPECHOSO (ALERTA)</span>;
             case 'NORMAL':
-                return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">NORMAL</span>;
+                return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 shadow-sm">NORMAL</span>;
             case 'EN_TRANSITO':
-                return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-300">EN TRÁNSITO</span>;
+                return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-500/25 text-blue-300 border border-blue-400/40 shadow-sm">EN TRÁNSITO</span>;
             case 'REGISTRADO':
             default:
-                return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-300">REGISTRADO</span>;
+                return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-cyan-200 border border-white/20 shadow-sm">REGISTRADO</span>;
         }
     };
 
     return (
-        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+        <div className="space-y-6 text-white w-full">
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes lgFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+                @keyframes lgModal{from{opacity:0;transform:scale(0.95) translateY(20px)}to{opacity:1;transform:none}}
+                .lg-fade{animation:lgFade .35s ease both}
+                .lg-modal{animation:lgModal .4s cubic-bezier(0.16,1,0.3,1) both}
+                .lg-quiet{scrollbar-width:none}
+                .lg-quiet::-webkit-scrollbar{display:none}
+            `}} />
+
             {/* ENCABEZADO Y BUSCADOR */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                        <Droplet className="w-5 h-5 text-[#9D2449]" />
-                        <span>Supervisión de Tamiz Neonatal (Muestras Guthrie)</span>
-                    </h2>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        Panel de auditoría y seguimiento de tamizaje metabólico en la Jurisdicción No. 2 - Istmo.
-                    </p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/20 pb-5">
+                <div className="flex items-center gap-3.5">
+                    <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-400/30 text-cyan-300 backdrop-blur-md shadow-lg shadow-cyan-950/40">
+                        <Droplet className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                            Supervisión de Tamiz Neonatal (Muestras Guthrie)
+                        </h2>
+                        <p className="text-xs text-cyan-100/80 font-medium mt-0.5">
+                            Panel de auditoría y seguimiento de tamizaje metabólico en la Jurisdicción No. 2 - Istmo.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="relative w-full md:w-72">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <Search className="w-4 h-4 text-cyan-300 absolute left-3.5 top-3" />
                     <input
                         type="text"
                         placeholder="Buscar por folio, bebé, madre o municipio..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#9D2449]"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-900/60 border border-white/20 rounded-2xl text-xs font-medium text-white placeholder:text-cyan-200/50 focus:outline-none focus:border-cyan-400 backdrop-blur-md shadow-inner"
                     />
                 </div>
             </div>
 
             {/* MENSAJE DE ERROR SI FALLA LA API */}
             {errorMessage && (
-                <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
-                    <AlertCircle className="w-5 h-5 text-[#9D2449] shrink-0" />
+                <div className="p-4 bg-rose-950/60 border border-rose-300/40 rounded-2xl flex items-center gap-3 text-rose-100 text-xs font-bold backdrop-blur-md">
+                    <AlertCircle className="w-5 h-5 text-rose-300 shrink-0" />
                     <span>{errorMessage}</span>
                 </div>
             )}
@@ -93,48 +107,48 @@ export const TabTamizNeonatal: React.FC = () => {
             {/* VISTA MÓVIL (< md): TARJETAS COMPACTAS */}
             <div className="space-y-3 md:hidden">
                 {cargando ? (
-                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-[#9D2449]" />
+                    <div className="p-8 text-center text-xs text-cyan-200 font-medium bg-slate-900/40 rounded-2xl border border-white/20 flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
                         <span>Cargando muestras desde PostgreSQL (Render)...</span>
                     </div>
                 ) : filteredMuestras.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-slate-400 font-medium bg-slate-50 rounded-2xl border border-slate-200">
+                    <div className="p-8 text-center text-xs text-cyan-200/70 bg-slate-900/40 rounded-2xl border border-white/20">
                         No se encontraron registros de muestras Guthrie.
                     </div>
                 ) : (
                     filteredMuestras.map((m) => (
-                        <div key={m.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                        <div key={m.id} className="p-4 bg-slate-900/60 rounded-2xl border border-white/20 space-y-3 backdrop-blur-md">
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <span className="text-[10px] font-black text-[#9D2449] tracking-wider uppercase block">{m.folio}</span>
-                                    <h3 className="text-xs font-black text-slate-900">{m.nombreRecienNacido}</h3>
-                                    <p className="text-[11px] text-slate-500 font-medium">Madre: {m.nombreMadre}</p>
+                                    <span className="text-[10px] font-black text-cyan-300 tracking-wider uppercase block">{m.folio}</span>
+                                    <h3 className="text-xs font-black text-white">{m.nombreRecienNacido}</h3>
+                                    <p className="text-[11px] text-cyan-100/80 font-medium">Madre: {m.nombreMadre}</p>
                                 </div>
                                 <div>{getEstatusBadge(m.estatus)}</div>
                             </div>
 
-                            <div className="text-xs space-y-1 text-slate-600 bg-white p-3 rounded-xl border border-slate-100">
+                            <div className="text-xs space-y-1 text-cyan-50 bg-white/5 p-3 rounded-xl border border-white/10">
                                 <div className="flex justify-between">
-                                    <span className="font-bold text-slate-800">Fecha Toma:</span>
+                                    <span className="font-bold text-cyan-200">Fecha Toma:</span>
                                     <span>{m.fechaToma}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="font-bold text-slate-800 flex items-center gap-1">
-                                        <MapPin className="w-3 h-3 text-[#9D2449]" />
+                                    <span className="font-bold text-cyan-200 flex items-center gap-1">
+                                        <MapPin className="w-3 h-3 text-cyan-400" />
                                         {m.municipio}:
                                     </span>
                                     <span className="truncate max-w-[140px]">{m.unidadMedica}</span>
                                 </div>
-                                <div className="flex justify-between pt-1 border-t border-slate-100">
-                                    <span className="font-bold text-slate-800">Gota talar:</span>
-                                    <span className="font-black text-rose-700">{m.numeroGotas} / 5 Gotas</span>
+                                <div className="flex justify-between pt-1 border-t border-white/10">
+                                    <span className="font-bold text-cyan-200">Gota talar:</span>
+                                    <span className="font-black text-rose-300">{m.numeroGotas} / 5 Gotas</span>
                                 </div>
                             </div>
 
                             <button
                                 type="button"
                                 onClick={() => setSelectedMuestra(m)}
-                                className="w-full py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                className="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/30"
                             >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span>Auditar Expediente</span>
@@ -145,92 +159,98 @@ export const TabTamizNeonatal: React.FC = () => {
             </div>
 
             {/* VISTA ESCRITORIO (>= md): TABLA DENSA */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-slate-50 text-[11px] font-black uppercase text-slate-600 border-b border-slate-200">
-                            <th className="py-3 px-4">Folio Guthrie</th>
-                            <th className="py-3 px-4">Recién Nacido / Madre</th>
-                            <th className="py-3 px-4">Fecha Toma</th>
-                            <th className="py-3 px-4">Unidad / Municipio</th>
-                            <th className="py-3 px-4 text-center">Gota Talar</th>
-                            <th className="py-3 px-4">Estatus</th>
-                            <th className="py-3 px-4 text-right">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                        {cargando ? (
-                            <tr>
-                                <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
-                                        <span>Cargando muestras desde PostgreSQL (Render)...</span>
-                                    </div>
-                                </td>
+            <div className="w-full rounded-3xl border border-white/30 bg-slate-900/40 shadow-2xl backdrop-blur-3xl overflow-hidden">
+                <div className="w-full overflow-x-auto lg-quiet">
+                    <table className="w-full text-left border-collapse min-w-[850px]">
+                        <thead>
+                            <tr className="bg-white/5 text-cyan-200 font-bold uppercase text-[11px] tracking-wider border-b border-white/20">
+                                <th className="py-4 px-5">Folio Guthrie</th>
+                                <th className="py-4 px-5">Recién Nacido / Madre</th>
+                                <th className="py-4 px-5">Fecha Toma</th>
+                                <th className="py-4 px-5">Unidad / Municipio</th>
+                                <th className="py-4 px-5 text-center">Gota Talar</th>
+                                <th className="py-4 px-5">Estatus</th>
+                                <th className="py-4 px-5 text-right">Acción</th>
                             </tr>
-                        ) : filteredMuestras.length === 0 ? (
-                            <tr>
-                                <td colSpan={7} className="py-8 text-center text-slate-400 font-normal">
-                                    No se encontraron registros de muestras Guthrie.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredMuestras.map((m) => (
-                                <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
-                                    <td className="py-3.5 px-4 font-black text-slate-900">{m.folio}</td>
-                                    <td className="py-3.5 px-4">
-                                        <div className="font-bold text-slate-900">{m.nombreRecienNacido}</div>
-                                        <div className="text-[11px] text-slate-500 font-medium">Madre: {m.nombreMadre}</div>
-                                    </td>
-                                    <td className="py-3.5 px-4 text-slate-600">{m.fechaToma}</td>
-                                    <td className="py-3.5 px-4">
-                                        <div className="font-bold text-slate-800">{m.unidadMedica}</div>
-                                        <div className="text-[11px] text-slate-500">{m.municipio}</div>
-                                    </td>
-                                    <td className="py-3.5 px-4 text-center font-black text-rose-700">{m.numeroGotas} / 5</td>
-                                    <td className="py-3.5 px-4">{getEstatusBadge(m.estatus)}</td>
-                                    <td className="py-3.5 px-4 text-right">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedMuestra(m)}
-                                            className="px-3 py-1.5 bg-slate-100 hover:bg-[#9D2449] hover:text-white text-slate-700 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
-                                        >
-                                            <Eye className="w-3.5 h-3.5" />
-                                            <span>Auditar</span>
-                                        </button>
+                        </thead>
+                        <tbody className="divide-y divide-white/10 text-xs font-semibold text-cyan-50/90">
+                            {cargando ? (
+                                <tr>
+                                    <td colSpan={7} className="py-12 text-center text-cyan-200 font-medium">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+                                            <span>Cargando muestras desde PostgreSQL (Render)...</span>
+                                        </div>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : filteredMuestras.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="py-12 text-center text-cyan-200/70 font-normal">
+                                        No se encontraron registros de muestras Guthrie.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredMuestras.map((m) => (
+                                    <tr key={m.id} className="hover:bg-white/10 transition-colors">
+                                        <td className="py-4 px-5 font-black text-white">{m.folio}</td>
+                                        <td className="py-4 px-5">
+                                            <div className="font-bold text-white">{m.nombreRecienNacido}</div>
+                                            <div className="text-[11px] text-cyan-200/80 font-medium">Madre: {m.nombreMadre}</div>
+                                        </td>
+                                        <td className="py-4 px-5 text-cyan-100">{m.fechaToma}</td>
+                                        <td className="py-4 px-5">
+                                            <div className="font-bold text-white">{m.unidadMedica}</div>
+                                            <div className="text-[11px] text-cyan-200/70">{m.municipio}</div>
+                                        </td>
+                                        <td className="py-4 px-5 text-center font-black text-rose-300 font-mono">{m.numeroGotas} / 5</td>
+                                        <td className="py-4 px-5">{getEstatusBadge(m.estatus)}</td>
+                                        <td className="py-4 px-5 text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedMuestra(m)}
+                                                className="px-4 py-2 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 border border-white/30 shadow-md ml-auto"
+                                            >
+                                                <Eye className="w-3.5 h-3.5 text-cyan-200" />
+                                                <span>Auditar</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* MODAL DETALLE DE MUESTRA (AUDITORÍA) */}
             {selectedMuestra && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                    <div className="bg-slate-900/95 border border-white/40 rounded-[32px] max-w-md w-full p-6 space-y-4 shadow-2xl shadow-slate-950/90 backdrop-blur-3xl lg-modal">
+                        <div className="flex items-center justify-between border-b border-white/20 pb-4">
                             <div>
-                                <span className="text-[10px] font-black text-[#9D2449] uppercase">Ficha Técnica Guthrie</span>
-                                <h3 className="text-base font-black text-slate-900">{selectedMuestra.folio}</h3>
+                                <span className="text-[10px] font-black text-cyan-300 uppercase tracking-wider">Ficha Técnica Guthrie</span>
+                                <h3 className="text-base font-black text-white">{selectedMuestra.folio}</h3>
                             </div>
-                            <button type="button" onClick={() => setSelectedMuestra(null)} className="p-1 text-slate-400 hover:text-slate-700">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedMuestra(null)}
+                                className="p-2 text-cyan-200/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                            >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         <div className="space-y-3 text-xs">
-                            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
-                                <p className="font-bold text-slate-900">Recién Nacido: {selectedMuestra.nombreRecienNacido}</p>
-                                <p className="text-slate-600">Madre: {selectedMuestra.nombreMadre}</p>
-                                <p className="text-slate-600">Fecha Toma: {selectedMuestra.fechaToma}</p>
-                                <p className="text-slate-600">Unidad: {selectedMuestra.unidadMedica} ({selectedMuestra.municipio})</p>
+                            <div className="p-3.5 bg-white/5 rounded-2xl border border-white/10 space-y-1 backdrop-blur-md">
+                                <p className="font-bold text-white">Recién Nacido: <span className="text-cyan-200">{selectedMuestra.nombreRecienNacido}</span></p>
+                                <p className="text-cyan-100/90">Madre: {selectedMuestra.nombreMadre}</p>
+                                <p className="text-cyan-100/90">Fecha Toma: {selectedMuestra.fechaToma}</p>
+                                <p className="text-cyan-100/90">Unidad: {selectedMuestra.unidadMedica} ({selectedMuestra.municipio})</p>
                             </div>
 
-                            <div className="p-3 bg-rose-50 rounded-2xl border border-rose-200 text-rose-950 font-medium">
-                                <p className="font-bold text-[#9D2449] mb-0.5">Observaciones Clínicas:</p>
-                                <p>{selectedMuestra.observaciones}</p>
+                            <div className="p-3.5 bg-rose-950/40 rounded-2xl border border-rose-300/30 text-rose-100 font-medium backdrop-blur-md">
+                                <p className="font-bold text-rose-300 mb-0.5 uppercase tracking-wider text-[10px]">Observaciones Clínicas:</p>
+                                <p className="leading-relaxed">{selectedMuestra.observaciones}</p>
                             </div>
                         </div>
 
@@ -238,10 +258,10 @@ export const TabTamizNeonatal: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setSelectedMuestra(null)}
-                                className="w-full py-2.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
+                                className="w-full py-3 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-cyan-950/40 transition-all cursor-pointer border border-white/40 flex items-center justify-center gap-2"
                             >
-                                <ShieldCheck className="w-4 h-4 inline mr-1" />
-                                Validar Dictamen Jurisdiccional
+                                <ShieldCheck className="w-4 h-4 text-cyan-200" />
+                                <span>Validar Dictamen Jurisdiccional</span>
                             </button>
                         </div>
                     </div>
