@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Key, QrCode, UserCheck, Printer, CheckCircle2, Loader2, AlertCircle, User, Sparkles, Phone as PhoneIcon, Shield } from 'lucide-react';
+import { Heart, Plus, X, ShieldCheck, MapPin, Languages, Key, QrCode, UserCheck, Printer, CheckCircle2, Loader2, AlertCircle, User, Sparkles, Phone as PhoneIcon, Shield, Search } from 'lucide-react';
 import type { ParteraCredencial } from './types';
 import { http } from '../../../../services/http';
 
@@ -336,6 +336,7 @@ export const TabUsuariosParteras: React.FC = () => {
     const [parteras, setParteras] = useState<ParteraCredencial[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [busqueda, setBusqueda] = useState<string>('');
 
     useEffect(() => {
         const cargarParteras = async () => {
@@ -445,6 +446,15 @@ export const TabUsuariosParteras: React.FC = () => {
         }
     };
 
+    // Filtrar parteras según la búsqueda
+    const parterasFiltradas = parteras.filter((p) => {
+        const nombre = obtenerNombreCompleto(p).toLowerCase();
+        const curp = (p.curp || '').toLowerCase();
+        const municipio = (p.municipio || '').toLowerCase();
+        const termino = busqueda.toLowerCase();
+        return nombre.includes(termino) || curp.includes(termino) || municipio.includes(termino);
+    });
+
     return (
         <div className="space-y-6 text-white">
 
@@ -549,7 +559,7 @@ export const TabUsuariosParteras: React.FC = () => {
                 }
             `}} />
 
-            {/* CABECERA INSTITUCIONAL ESTILIZADA */}
+            {/* CABECERA INSTITUCIONAL */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/20 pb-5">
                 <div className="flex items-center gap-3.5">
                     <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-400/30 text-cyan-300 backdrop-blur-md shadow-lg shadow-cyan-950/40">
@@ -565,17 +575,32 @@ export const TabUsuariosParteras: React.FC = () => {
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => {
-                        generateRandom4Pin();
-                        setShowRegisterModal(true);
-                    }}
-                    className="px-5 py-3 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-cyan-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto active:scale-95 border border-white/40"
-                >
-                    <Plus className="w-4 h-4 text-cyan-200" />
-                    <span>+ Registrar Nueva Partera</span>
-                </button>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    {/* Barra de búsqueda rápida añadida para mayor agilidad */}
+                    <div className="relative flex-1 sm:w-64">
+                        <Search className="w-4 h-4 text-cyan-300 absolute left-3.5 top-3" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre o CURP..."
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                            className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/60 border border-white/20 rounded-2xl text-xs text-white placeholder:text-cyan-200/50 focus:outline-none focus:border-cyan-400 backdrop-blur-md font-medium"
+                        />
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            generateRandom4Pin();
+                            setShowRegisterModal(true);
+                        }}
+                        className="px-4 py-2.5 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-cyan-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 border border-white/40 shrink-0"
+                    >
+                        <Plus className="w-4 h-4 text-cyan-200" />
+                        <span className="hidden sm:inline">+ Registrar Partera</span>
+                        <span className="sm:hidden">+ Nueva</span>
+                    </button>
+                </div>
             </div>
 
             {errorMessage && (
@@ -584,70 +609,6 @@ export const TabUsuariosParteras: React.FC = () => {
                     <span>{errorMessage}</span>
                 </div>
             )}
-
-            {/* VISTA MÓVIL (< md) */}
-            <div className="space-y-3 md:hidden">
-                {cargando ? (
-                    <div className="p-8 text-center text-xs text-cyan-100/70 font-medium bg-slate-900/40 rounded-2xl border border-white/20 backdrop-blur-md flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
-                        <span>Cargando padrón desde PostgreSQL...</span>
-                    </div>
-                ) : !Array.isArray(parteras) || parteras.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-cyan-100/70 font-medium bg-slate-900/40 rounded-2xl border border-white/20 backdrop-blur-md">
-                        No hay parteras registradas en el padrón.
-                    </div>
-                ) : (
-                    parteras.map((p) => {
-                        const nombrePartera = obtenerNombreCompleto(p);
-                        return (
-                            <div key={p.id || p.curp} className="p-4 bg-slate-900/50 rounded-2xl border border-white/20 shadow-lg backdrop-blur-xl space-y-3">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
-                                            {getInitials(nombrePartera)}
-                                        </div>
-                                        <div>
-                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 inline-block mb-1">
-                                                {p.estatusAcreditacion || 'ACREDITADA'}
-                                            </span>
-                                            <h3 className="text-xs font-black text-white leading-tight">
-                                                {nombrePartera}
-                                            </h3>
-                                            <p className="text-[10px] text-cyan-200/70 font-mono mt-0.5">CURP: {p.curp}</p>
-                                        </div>
-                                    </div>
-                                    <div className="bg-amber-500/20 text-amber-200 font-mono font-black text-xs px-2.5 py-1 rounded-xl flex items-center gap-1 border border-amber-300/40 shrink-0 backdrop-blur-md">
-                                        <Key className="w-3 h-3 text-amber-300" />
-                                        <span>PIN: {p.pinCuatroDigitos || (p as any).pin}</span>
-                                    </div>
-                                </div>
-
-                                <div className="text-xs space-y-1.5 text-cyan-50/90 bg-white/5 p-3 rounded-xl border border-white/10">
-                                    <div className="flex items-center gap-1.5 text-white font-bold">
-                                        <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-                                        <span>{p.municipio} {p.comunidad ? `(${p.comunidad})` : ''}</span>
-                                    </div>
-                                    {p.lenguaMaterna && (
-                                        <div className="text-[11px] text-cyan-200/80 flex items-center gap-1.5">
-                                            <Languages className="w-3 h-3 text-cyan-400" />
-                                            <span>Lengua: <strong className="text-amber-300">{p.lenguaMaterna}</strong></span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedParteraQR(p)}
-                                    className="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 border border-white/30"
-                                >
-                                    <QrCode className="w-4 h-4 text-cyan-200" />
-                                    <span>Ver Credencial Oficial (Doble Cara)</span>
-                                </button>
-                            </div>
-                        );
-                    })
-                )}
-            </div>
 
             {/* TABLA PRINCIPAL DE ESCRITORIO */}
             <div className="hidden md:block overflow-x-auto rounded-3xl border border-white/30 bg-slate-900/40 shadow-2xl backdrop-blur-3xl">
@@ -671,14 +632,14 @@ export const TabUsuariosParteras: React.FC = () => {
                                     </div>
                                 </td>
                             </tr>
-                        ) : !Array.isArray(parteras) || parteras.length === 0 ? (
+                        ) : !Array.isArray(parterasFiltradas) || parterasFiltradas.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="py-12 text-center text-cyan-200/70 font-normal">
-                                    No hay parteras registradas en el padrón.
+                                    No se encontraron parteras registradas con ese criterio.
                                 </td>
                             </tr>
                         ) : (
-                            parteras.map((p) => {
+                            parterasFiltradas.map((p) => {
                                 const nombrePartera = obtenerNombreCompleto(p);
                                 return (
                                     <tr key={p.id || p.curp} className="hover:bg-white/10 transition-colors">
@@ -777,7 +738,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 placeholder="Ej. María Elena"
                                                 value={nombres}
                                                 onChange={(e) => setNombres(e.target.value)}
-                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
                                             />
                                         </div>
                                         <div>
@@ -788,7 +749,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 placeholder="Ej. Velasco"
                                                 value={apellidoPaterno}
                                                 onChange={(e) => setApellidoPaterno(e.target.value)}
-                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
                                             />
                                         </div>
                                         <div>
@@ -799,7 +760,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 placeholder="Ej. Morales"
                                                 value={apellidoMaterno}
                                                 onChange={(e) => setApellidoMaterno(e.target.value)}
-                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
                                             />
                                         </div>
                                     </div>
@@ -821,7 +782,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 placeholder="VEMA650810MOCMNS09"
                                                 value={newCurp}
                                                 onChange={(e) => setNewCurp(e.target.value.toUpperCase())}
-                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white uppercase font-mono placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/30 rounded-xl text-white uppercase font-mono placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
                                             />
                                         </div>
 
@@ -853,7 +814,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 placeholder="Ej. Juchitán de Zaragoza"
                                                 value={newMunicipio}
                                                 onChange={(e) => setNewMunicipio(e.target.value)}
-                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-semibold"
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-semibold"
                                             />
                                         </div>
 
@@ -864,7 +825,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 placeholder="Ej. Sección Segunda"
                                                 value={newComunidad}
                                                 onChange={(e) => setNewComunidad(e.target.value)}
-                                                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
+                                                className="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/30 rounded-xl text-white placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 font-medium"
                                             />
                                         </div>
                                     </div>
@@ -881,7 +842,7 @@ export const TabUsuariosParteras: React.FC = () => {
                                                 placeholder="971 123 4567"
                                                 value={newTelefono}
                                                 onChange={(e) => setNewTelefono(e.target.value.replace(/\D/g, ''))}
-                                                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-950/60 border border-white/30 rounded-xl text-white font-mono placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 font-medium"
+                                                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-950/80 border border-white/30 rounded-xl text-white font-mono placeholder:text-cyan-200/40 focus:outline-none focus:border-cyan-400 font-medium"
                                             />
                                         </div>
                                     </div>
