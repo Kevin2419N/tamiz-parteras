@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, Upload, Sparkles, X, RefreshCw, FileText } from 'lucide-react';
 import type { GuthrieFormData } from './types';
-import { http } from '../../../../services/http';
+import { createWorker } from 'tesseract.js';
 
 interface ModalEscaneoIAProps {
     isOpen: boolean;
@@ -20,50 +20,53 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
     const processImageScan = async (imgSrc: string, file?: File) => {
         setSelectedImage(imgSrc);
         setIsScanning(true);
-        setScanProgress(20);
-        setCurrentStep('Preparando imagen para análisis OCR en servidor...');
+        setScanProgress(15);
+        setCurrentStep('Inicializando motor de Inteligencia Artificial local...');
 
         try {
-            let scannedData: Record<string, any> = {};
-
             if (file) {
-                const formData = new FormData();
-                formData.append('tarjetaImage', file);
+                setScanProgress(35);
+                setCurrentStep('Analizando tarjeta Guthrie con OCR...');
 
-                setScanProgress(50);
-                setCurrentStep('Enviando imagen al servidor de la Jurisdicción...');
-
-                // Ruta limpia sin duplicar /api/v1
-                const res = await http.post('/captura/escanear-tarjeta-ia', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                const worker = await createWorker('spa');
+                
+                setScanProgress(70);
+                setCurrentStep('Extrayendo folios, CLUES y CURP...');
+                
+                const ret = await worker.recognize(file);
+                const textoDetectado = ret.data.text || '';
+                await worker.terminate();
 
                 setScanProgress(90);
-                setCurrentStep('Extrayendo datos de la tarjeta Guthrie con éxito...');
+                setCurrentStep('Procesamiento completado con éxito...');
 
-                const data = res.data?.data_extracted || res.data;
-                scannedData = {
-                    folioTarjeta: data.folio_tarjeta || data.folioTarjeta || '',
-                    cluesUnidad: data.clues_unidad || data.cluesUnidad || '',
-                    madreCurp: data.madre_curp || data.madreCurp || '',
+                const matchFolio = textoDetectado.match(/(?:FOLIO|TARJETA|GT)[\s:-]*([A-Z0-9-]{4,15})/i);
+                const matchCurp = textoDetectado.match(/[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}/);
+                const matchClues = textoDetectado.match(/[A-Z]{5}[0-9]{5}/);
+
+                // Usamos any para evitar conflictos con los nombres de las propiedades en types.ts
+                const scannedData: any = {
+                    folioTarjeta: matchFolio ? matchFolio[1] : '',
+                    folio_tarjeta: matchFolio ? matchFolio[1] : '',
+                    madreCurp: matchCurp ? matchCurp[0] : '',
+                    madre_curp: matchCurp ? matchCurp[0] : '',
+                    cluesUnidad: matchClues ? matchClues[0] : '',
+                    clues_unidad: matchClues ? matchClues[0] : '',
                 };
+
+                setScanProgress(100);
+                setCurrentStep('¡Datos extraídos con éxito!');
+
+                setTimeout(() => {
+                    setIsScanning(false);
+                    onScanComplete(scannedData as Partial<GuthrieFormData>);
+                    onClose();
+                }, 500);
             }
-
-            setScanProgress(100);
-            setCurrentStep('¡Escaneo y lectura completados!');
-
-            setTimeout(() => {
-                setIsScanning(false);
-                onScanComplete(scannedData as Partial<GuthrieFormData>);
-                onClose();
-            }, 400);
-
         } catch (error) {
-            console.error('Error al conectar con el servidor OCR:', error);
+            console.error('Error al procesar OCR local:', error);
             setIsScanning(false);
-            alert('No se pudo conectar con el servicio OCR del servidor. Verifica que el backend esté activo.');
+            alert('Ocurrió un error al leer la imagen de la tarjeta con el escáner local.');
         }
     };
 
@@ -119,7 +122,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                             <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent shadow-[0_0_15px_#f43f5e] animate-bounce top-1/3" />
                             <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-mono font-bold flex items-center gap-1.5 border border-rose-500/40">
                                 <RefreshCw className="w-3 h-3 animate-spin text-rose-400" />
-                                <span>PROCESANDO OCR EN SERVIDOR...</span>
+                                <span>PROCESANDO IA LOCAL...</span>
                             </div>
                         </div>
 
@@ -147,7 +150,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                                     Tome una foto o seleccione la imagen de la tarjeta Guthrie
                                 </h3>
                                 <p className="text-xs text-slate-600 font-medium mt-1">
-                                    El servidor analizará la tarjeta para extraer automáticamente el Folio y datos generales.
+                                    El sistema analizará el texto de la tarjeta instantáneamente en su dispositivo.
                                 </p>
                             </div>
                             <label className="inline-flex items-center gap-2 px-5 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all active:scale-95">
@@ -165,7 +168,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                         <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-[11px] text-slate-600 font-medium">
                             <FileText className="w-4 h-4 text-[#9D2449] shrink-0" />
                             <span>
-                                Motor de reconocimiento óptico de caracteres (OCR) conectado al servidor de la Jurisdicción.
+                                Motor de reconocimiento óptico ejecutándose en tiempo real mediante Tesseract.js.
                             </span>
                         </div>
                     </div>
