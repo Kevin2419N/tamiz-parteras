@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, Phone, Lock, Building2, Loader2, AlertCircle, Search } from 'lucide-react';
+import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, Phone, Lock, Building2, Loader2, AlertCircle, Search, KeyRound } from 'lucide-react';
 import type { UsuarioSSO, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 import { http } from '../../../../services/http';
@@ -140,9 +140,9 @@ export const TabCuentasPersonal: React.FC = () => {
 
     const getRoleBadgeLabel = (r: UsuarioSSO['rol']) => {
         switch (r) {
-            case 'ADMIN_JURISDICCIONAL': return 'Admin. Jurisdiccional';
-            case 'CAPTURISTA_TAMIZ': return 'Capturista Tamiz';
-            case 'MEDICO_UNIDAD': return 'Médico Unidad';
+            case 'ADMIN_JURISDICCIONAL': return 'Administrador Jurisdiccional';
+            case 'CAPTURISTA_TAMIZ': return 'Capturista de Tamiz';
+            case 'MEDICO_UNIDAD': return 'Médico de Unidad';
             default: return r;
         }
     };
@@ -172,8 +172,6 @@ export const TabCuentasPersonal: React.FC = () => {
                 @keyframes lgModal{from{opacity:0;transform:scale(0.95) translateY(20px)}to{opacity:1;transform:none}}
                 .lg-fade{animation:lgFade .35s ease both}
                 .lg-modal{animation:lgModal .4s cubic-bezier(0.16,1,0.3,1) both}
-                .lg-quiet{scrollbar-width:none}
-                .lg-quiet::-webkit-scrollbar{display:none}
             `}} />
 
             {/* CABECERA PRINCIPAL */}
@@ -200,7 +198,7 @@ export const TabCuentasPersonal: React.FC = () => {
                             placeholder="Buscar por nombre o CURP..."
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
-                            className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/60 border border-white/20 rounded-2xl text-xs text-white placeholder:text-cyan-200/50 focus:outline-none focus:border-cyan-400 backdrop-blur-md font-medium"
+                            className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/60 border border-white/20 rounded-2xl text-xs text-white placeholder:text-cyan-200/50 focus:outline-none focus:border-cyan-400 backdrop-blur-md font-medium shadow-inner"
                         />
                     </div>
 
@@ -226,85 +224,115 @@ export const TabCuentasPersonal: React.FC = () => {
                 </div>
             )}
 
-            {/* TABLA PRO DE CUENTAS SSO (OPTIMIZADA SIN DESBORDE) */}
-            <div className="w-full rounded-3xl border border-white/30 bg-slate-900/40 shadow-2xl backdrop-blur-3xl overflow-hidden">
-                <div className="w-full overflow-x-auto lg-quiet">
-                    <table className="w-full text-left border-collapse text-xs font-semibold min-w-[800px]">
-                        <thead>
-                            <tr className="bg-white/5 text-cyan-200 font-bold uppercase text-[11px] tracking-wider border-b border-white/20">
-                                <th className="py-4 px-4 w-[28%]">Servidor Público / CURP</th>
-                                <th className="py-4 px-4 w-[22%]">Correo Institucional</th>
-                                <th className="py-4 px-4 w-[16%]">Rol</th>
-                                <th className="py-4 px-4 w-[20%]">Adscripción / CLUES</th>
-                                <th className="py-4 px-4 w-[14%] text-center">PIN / Estatus</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/10 text-cyan-50/90">
-                            {cargando ? (
-                                <tr>
-                                    <td colSpan={5} className="py-12 text-center text-cyan-200 font-medium">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
-                                            <span>Cargando cuentas desde PostgreSQL (Render)...</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : usuariosFiltrados.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="py-12 text-center text-cyan-200/70 font-normal">
-                                        No se encontraron cuentas de personal registradas con ese criterio.
-                                    </td>
-                                </tr>
-                            ) : (
-                                usuariosFiltrados.map((u: any) => {
-                                    const nombreCompleto = u.nombre || [u.nombres, u.apellido_paterno, u.apellido_materno].filter(Boolean).join(' ') || 'Servidor Público';
-                                    const correoInst = u.correo_institucional || u.email || 'No registrado';
-                                    const unidadAdscripcion = u.unidad_asignada || u.unidadAsignada || 'Jurisdicción Sanitaria No. 2';
-                                    const cluesCodigo = u.clues || 'OASSA000000';
-                                    const pinCode = u.password || u.pin_temporal || u.pinTemporal || '******';
+            {/* SECCIÓN DE TARJETAS DE USUARIOS (GRID EJECUTIVO) */}
+            <div className="w-full">
+                {cargando ? (
+                    <div className="p-16 text-center text-xs text-cyan-200 font-medium bg-slate-900/40 rounded-3xl border border-white/20 backdrop-blur-3xl flex items-center justify-center gap-3 shadow-2xl">
+                        <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                        <span>Sincronizando cuentas con PostgreSQL (Render)...</span>
+                    </div>
+                ) : usuariosFiltrados.length === 0 ? (
+                    <div className="p-16 text-center text-xs text-cyan-200/70 bg-slate-900/40 rounded-3xl border border-white/20 backdrop-blur-3xl shadow-2xl">
+                        No se encontraron cuentas de personal registradas con ese criterio de búsqueda.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        {usuariosFiltrados.map((u: any) => {
+                            const nombreCompleto = u.nombre || [u.nombres, u.apellido_paterno, u.apellido_materno].filter(Boolean).join(' ') || 'Servidor Público';
+                            const correoInst = u.correo_institucional || u.email || 'No registrado';
+                            const unidadAdscripcion = u.unidad_asignada || u.unidadAsignada || 'Jurisdicción Sanitaria No. 2';
+                            const cluesCodigo = u.clues || 'OASSA000000';
+                            const pinCode = u.password || u.pin_temporal || u.pinTemporal || '******';
+                            const estatusUser = u.estatus || 'ACTIVO';
 
-                                    return (
-                                        <tr key={u.id} className="hover:bg-white/10 transition-colors">
-                                            <td className="py-3.5 px-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
-                                                        {getInitials(nombreCompleto)}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="font-black text-white text-xs truncate">{nombreCompleto}</div>
-                                                        {u.curp && <div className="text-[10px] font-mono text-cyan-200/80 truncate">CURP: {u.curp}</div>}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-3.5 px-4 font-mono text-[11px] text-cyan-100 truncate max-w-[200px]" title={correoInst}>
+                            return (
+                                <div key={u.id} className="p-5 bg-slate-900/60 border border-white/20 rounded-3xl shadow-2xl backdrop-blur-3xl hover:border-cyan-400/50 transition-all space-y-4 group">
+                                    
+                                    {/* CABECERA DE LA TARJETA */}
+                                    <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3.5">
+                                        <div className="flex items-center gap-3.5">
+                                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-lg shadow-cyan-950/50 border border-white/30">
+                                                {getInitials(nombreCompleto)}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-black text-white text-sm tracking-tight group-hover:text-cyan-300 transition-colors">
+                                                    {nombreCompleto}
+                                                </h3>
+                                                {u.curp && (
+                                                    <p className="text-[11px] font-mono text-cyan-200/80 mt-0.5">
+                                                        CURP: <span className="font-bold text-white">{u.curp}</span>
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider ${
+                                            estatusUser === 'ACTIVO'
+                                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                                                : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                                        }`}>
+                                            {estatusUser}
+                                        </span>
+                                    </div>
+
+                                    {/* CUERPO DE DATOS DE LA TARJETA */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                        
+                                        {/* Correo institucional */}
+                                        <div className="p-3 bg-white/5 rounded-2xl border border-white/10 space-y-1 backdrop-blur-md">
+                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+                                                <Mail className="w-3.5 h-3.5 text-cyan-400" />
+                                                Correo Institucional
+                                            </span>
+                                            <p className="font-mono text-[11px] text-white font-bold truncate" title={correoInst}>
                                                 {correoInst}
-                                            </td>
-                                            <td className="py-3.5 px-4">
-                                                <span className="bg-cyan-500/20 text-cyan-200 font-black px-2.5 py-1 rounded-full border border-cyan-400/30 text-[10px] inline-block truncate max-w-full">
-                                                    {getRoleBadgeLabel(u.rol)}
+                                            </p>
+                                        </div>
+
+                                        {/* Rol asignado */}
+                                        <div className="p-3 bg-white/5 rounded-2xl border border-white/10 space-y-1 backdrop-blur-md">
+                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+                                                <Shield className="w-3.5 h-3.5 text-cyan-400" />
+                                                Rol en el Sistema
+                                            </span>
+                                            <p className="text-[11px] text-cyan-100 font-bold truncate">
+                                                {getRoleBadgeLabel(u.rol)}
+                                            </p>
+                                        </div>
+
+                                        {/* Unidad Adscripción y CLUES */}
+                                        <div className="p-3 bg-white/5 rounded-2xl border border-white/10 space-y-1 backdrop-blur-md sm:col-span-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+                                                    <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                                                    Unidad Médica Adscrita
                                                 </span>
-                                            </td>
-                                            <td className="py-3.5 px-4">
-                                                <div className="font-bold text-white truncate max-w-[220px]" title={unidadAdscripcion}>{unidadAdscripcion}</div>
-                                                <div className="text-[10px] font-mono text-cyan-200/70">CLUES: {cluesCodigo}</div>
-                                            </td>
-                                            <td className="py-3.5 px-4 text-center">
-                                                <div className="flex flex-col items-center gap-1">
-                                                    <span className="bg-slate-950/80 text-cyan-200 font-mono font-bold text-[11px] px-2.5 py-1 rounded-xl border border-white/20 shadow-sm">
-                                                        {pinCode}
-                                                    </span>
-                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                                                        {u.estatus || 'ACTIVO'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                                <span className="font-mono text-[10px] font-extrabold text-cyan-200 bg-slate-950 px-2 py-0.5 rounded-lg border border-cyan-400/30">
+                                                    CLUES: {cluesCodigo}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-white font-bold truncate" title={unidadAdscripcion}>
+                                                {unidadAdscripcion}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* PIE DE TARJETA: PIN TEMPORAL */}
+                                    <div className="pt-2.5 border-t border-white/10 flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2 text-cyan-200/80">
+                                            <KeyRound className="w-4 h-4 text-cyan-400" />
+                                            <span className="text-[11px] font-medium">Contraseña o PIN Temporal de Acceso:</span>
+                                        </div>
+                                        <span className="font-mono bg-slate-950/90 text-cyan-300 font-black text-xs px-3.5 py-1.5 rounded-xl border border-cyan-400/40 shadow-inner">
+                                            {pinCode}
+                                        </span>
+                                    </div>
+
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* MODAL CREAR USUARIO INSTITUCIONAL SSO */}
