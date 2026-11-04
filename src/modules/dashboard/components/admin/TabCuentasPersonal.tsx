@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, Phone, Lock, Building2, Loader2, AlertCircle, Search, Sparkles } from 'lucide-react';
+import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, Phone, Lock, Building2, Loader2, AlertCircle, Search } from 'lucide-react';
 import type { UsuarioSSO, UnidadCLUES } from './types';
 import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 import { http } from '../../../../services/http';
@@ -140,9 +140,9 @@ export const TabCuentasPersonal: React.FC = () => {
 
     const getRoleBadgeLabel = (r: UsuarioSSO['rol']) => {
         switch (r) {
-            case 'ADMIN_JURISDICCIONAL': return 'Administrador Jurisdiccional';
-            case 'CAPTURISTA_TAMIZ': return 'Capturista de Tamiz';
-            case 'MEDICO_UNIDAD': return 'Médico de Unidad';
+            case 'ADMIN_JURISDICCIONAL': return 'Admin. Jurisdiccional';
+            case 'CAPTURISTA_TAMIZ': return 'Capturista Tamiz';
+            case 'MEDICO_UNIDAD': return 'Médico Unidad';
             default: return r;
         }
     };
@@ -165,7 +165,7 @@ export const TabCuentasPersonal: React.FC = () => {
     });
 
     return (
-        <div className="space-y-6 text-white">
+        <div className="space-y-6 text-white w-full">
 
             <style dangerouslySetInnerHTML={{ __html: `
                 @keyframes lgFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -197,7 +197,7 @@ export const TabCuentasPersonal: React.FC = () => {
                         <Search className="w-4 h-4 text-cyan-300 absolute left-3.5 top-3" />
                         <input
                             type="text"
-                            placeholder="Buscar por nombre, CURP o correo..."
+                            placeholder="Buscar por nombre o CURP..."
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
                             className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/60 border border-white/20 rounded-2xl text-xs text-white placeholder:text-cyan-200/50 focus:outline-none focus:border-cyan-400 backdrop-blur-md font-medium"
@@ -226,82 +226,85 @@ export const TabCuentasPersonal: React.FC = () => {
                 </div>
             )}
 
-            {/* TABLA PRO DE CUENTAS SSO */}
-            <div className="hidden md:block overflow-x-auto rounded-3xl border border-white/30 bg-slate-900/40 shadow-2xl backdrop-blur-3xl">
-                <table className="w-full text-left border-collapse text-xs font-semibold">
-                    <thead>
-                        <tr className="bg-white/5 text-cyan-200 font-bold uppercase text-[11px] tracking-wider border-b border-white/20">
-                            <th className="py-4 px-5">Servidor Público / CURP</th>
-                            <th className="py-4 px-5">Correo Institucional</th>
-                            <th className="py-4 px-5">Rol en el Sistema</th>
-                            <th className="py-4 px-5">Unidad Médica / Adscripción CLUES</th>
-                            <th className="py-4 px-5 text-center">PIN Temporal</th>
-                            <th className="py-4 px-5 text-center">Estatus</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/10 text-cyan-50/90">
-                        {cargando ? (
-                            <tr>
-                                <td colSpan={6} className="py-12 text-center text-cyan-200 font-medium">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
-                                        <span>Cargando cuentas desde PostgreSQL (Render)...</span>
-                                    </div>
-                                </td>
+            {/* TABLA PRO DE CUENTAS SSO (OPTIMIZADA SIN DESBORDE) */}
+            <div className="w-full rounded-3xl border border-white/30 bg-slate-900/40 shadow-2xl backdrop-blur-3xl overflow-hidden">
+                <div className="w-full overflow-x-auto lg-quiet">
+                    <table className="w-full text-left border-collapse text-xs font-semibold min-w-[800px]">
+                        <thead>
+                            <tr className="bg-white/5 text-cyan-200 font-bold uppercase text-[11px] tracking-wider border-b border-white/20">
+                                <th className="py-4 px-4 w-[28%]">Servidor Público / CURP</th>
+                                <th className="py-4 px-4 w-[22%]">Correo Institucional</th>
+                                <th className="py-4 px-4 w-[16%]">Rol</th>
+                                <th className="py-4 px-4 w-[20%]">Adscripción / CLUES</th>
+                                <th className="py-4 px-4 w-[14%] text-center">PIN / Estatus</th>
                             </tr>
-                        ) : usuariosFiltrados.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="py-12 text-center text-cyan-200/70 font-normal">
-                                    No se encontraron cuentas de personal registradas con ese criterio.
-                                </td>
-                            </tr>
-                        ) : (
-                            usuariosFiltrados.map((u: any) => {
-                                const nombreCompleto = u.nombre || [u.nombres, u.apellido_paterno, u.apellido_materno].filter(Boolean).join(' ') || 'Servidor Público';
-                                const correoInst = u.correo_institucional || u.email || 'No registrado';
-                                const unidadAdscripcion = u.unidad_asignada || u.unidadAsignada || 'Jurisdicción Sanitaria No. 2';
-                                const cluesCodigo = u.clues || 'OASSA000000';
-                                const pinCode = u.password || u.pin_temporal || u.pinTemporal || '******';
+                        </thead>
+                        <tbody className="divide-y divide-white/10 text-cyan-50/90">
+                            {cargando ? (
+                                <tr>
+                                    <td colSpan={5} className="py-12 text-center text-cyan-200 font-medium">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+                                            <span>Cargando cuentas desde PostgreSQL (Render)...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : usuariosFiltrados.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-12 text-center text-cyan-200/70 font-normal">
+                                        No se encontraron cuentas de personal registradas con ese criterio.
+                                    </td>
+                                </tr>
+                            ) : (
+                                usuariosFiltrados.map((u: any) => {
+                                    const nombreCompleto = u.nombre || [u.nombres, u.apellido_paterno, u.apellido_materno].filter(Boolean).join(' ') || 'Servidor Público';
+                                    const correoInst = u.correo_institucional || u.email || 'No registrado';
+                                    const unidadAdscripcion = u.unidad_asignada || u.unidadAsignada || 'Jurisdicción Sanitaria No. 2';
+                                    const cluesCodigo = u.clues || 'OASSA000000';
+                                    const pinCode = u.password || u.pin_temporal || u.pinTemporal || '******';
 
-                                return (
-                                    <tr key={u.id} className="hover:bg-white/10 transition-colors">
-                                        <td className="py-4 px-5">
-                                            <div className="flex items-center gap-3.5">
-                                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
-                                                    {getInitials(nombreCompleto)}
+                                    return (
+                                        <tr key={u.id} className="hover:bg-white/10 transition-colors">
+                                            <td className="py-3.5 px-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
+                                                        {getInitials(nombreCompleto)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="font-black text-white text-xs truncate">{nombreCompleto}</div>
+                                                        {u.curp && <div className="text-[10px] font-mono text-cyan-200/80 truncate">CURP: {u.curp}</div>}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <div className="font-black text-white text-xs">{nombreCompleto}</div>
-                                                    {u.curp && <div className="text-[10px] font-mono text-cyan-200/80">CURP: {u.curp}</div>}
+                                            </td>
+                                            <td className="py-3.5 px-4 font-mono text-[11px] text-cyan-100 truncate max-w-[200px]" title={correoInst}>
+                                                {correoInst}
+                                            </td>
+                                            <td className="py-3.5 px-4">
+                                                <span className="bg-cyan-500/20 text-cyan-200 font-black px-2.5 py-1 rounded-full border border-cyan-400/30 text-[10px] inline-block truncate max-w-full">
+                                                    {getRoleBadgeLabel(u.rol)}
+                                                </span>
+                                            </td>
+                                            <td className="py-3.5 px-4">
+                                                <div className="font-bold text-white truncate max-w-[220px]" title={unidadAdscripcion}>{unidadAdscripcion}</div>
+                                                <div className="text-[10px] font-mono text-cyan-200/70">CLUES: {cluesCodigo}</div>
+                                            </td>
+                                            <td className="py-3.5 px-4 text-center">
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <span className="bg-slate-950/80 text-cyan-200 font-mono font-bold text-[11px] px-2.5 py-1 rounded-xl border border-white/20 shadow-sm">
+                                                        {pinCode}
+                                                    </span>
+                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                                                        {u.estatus || 'ACTIVO'}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-5 text-cyan-100 font-mono text-[11px]">{correoInst}</td>
-                                        <td className="py-4 px-5">
-                                            <span className="bg-cyan-500/20 text-cyan-200 font-black px-3 py-1 rounded-full border border-cyan-400/30 text-[10px] inline-block">
-                                                {getRoleBadgeLabel(u.rol)}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-5">
-                                            <div className="font-bold text-white">{unidadAdscripcion}</div>
-                                            <div className="text-[10px] font-mono text-cyan-200/70">CLUES: {cluesCodigo}</div>
-                                        </td>
-                                        <td className="py-4 px-5 text-center">
-                                            <span className="bg-slate-950/80 text-cyan-200 font-mono font-bold text-xs px-3 py-1.5 rounded-xl border border-white/20 inline-block shadow-sm">
-                                                {pinCode}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-5 text-center">
-                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                                                {u.estatus || 'ACTIVO'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* MODAL CREAR USUARIO INSTITUCIONAL SSO */}
