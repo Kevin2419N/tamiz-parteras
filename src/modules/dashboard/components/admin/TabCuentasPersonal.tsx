@@ -5,13 +5,11 @@ import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 import { http } from '../../../../services/http';
 
 export const TabCuentasPersonal: React.FC = () => {
-    // Estado de los usuarios institucionales
     const [usuarios, setUsuarios] = useState<UsuarioSSO[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [busqueda, setBusqueda] = useState<string>('');
 
-    // Catálogo dinámico de CLUES
     const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
 
     useEffect(() => {
@@ -21,7 +19,6 @@ export const TabCuentasPersonal: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Carga oficial de usuarios desde PostgreSQL (Render) -> Ruta sincronizada a /admin/usuarios-sso
     useEffect(() => {
         const cargarUsuarios = async () => {
             setCargando(true);
@@ -42,7 +39,6 @@ export const TabCuentasPersonal: React.FC = () => {
         cargarUsuarios();
     }, []);
 
-    // Form modal state (Desglose en 3 campos)
     const [showModal, setShowModal] = useState(false);
     const [nombres, setNombres] = useState('');
     const [apellidoPaterno, setApellidoPaterno] = useState('');
@@ -57,14 +53,12 @@ export const TabCuentasPersonal: React.FC = () => {
     const [showPinText, setShowPinText] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Initialize selected CLUES when modal opens or cluesList updates
     useEffect(() => {
         if (cluesList.length > 0 && !selectedCluesId) {
             setSelectedCluesId(cluesList[0].id);
         }
     }, [cluesList, selectedCluesId]);
 
-    // Normalizador para correo electrónico institucional
     const cleanStringForEmail = (str: string) => {
         return str
             .toLowerCase()
@@ -73,7 +67,6 @@ export const TabCuentasPersonal: React.FC = () => {
             .replace(/[^a-z0-9]/g, "");
     };
 
-    // Autogenerar Correo Institucional en tiempo real
     const handleNombreChange = (val: string) => {
         setNombres(val);
         generateAutoEmail(val, apellidoPaterno);
@@ -129,7 +122,6 @@ export const TabCuentasPersonal: React.FC = () => {
             setUsuarios([newUser, ...usuarios]);
             setShowModal(false);
 
-            // Reset form
             setNombres('');
             setApellidoPaterno('');
             setApellidoMaterno('');
@@ -156,6 +148,7 @@ export const TabCuentasPersonal: React.FC = () => {
     };
 
     const getInitials = (name: string) => {
+        if (!name) return 'SS';
         const words = name.replace(/^(Dr\.|Dra\.|Lic\.|Enf\.)\s+/, '').split(' ').filter(Boolean);
         if (words.length >= 2) {
             return `${words[0][0]}${words[1][0]}`.toUpperCase();
@@ -163,11 +156,10 @@ export const TabCuentasPersonal: React.FC = () => {
         return name.slice(0, 2).toUpperCase();
     };
 
-    // Filtrar usuarios según la búsqueda
-    const usuariosFiltrados = usuarios.filter((u) => {
+    const usuariosFiltrados = usuarios.filter((u: any) => {
         const nombre = (u.nombre || '').toLowerCase();
         const curp = (u.curp || '').toLowerCase();
-        const correo = (u.email || '').toLowerCase();
+        const correo = (u.correo_institucional || u.email || '').toLowerCase();
         const termino = busqueda.toLowerCase();
         return nombre.includes(termino) || curp.includes(termino) || correo.includes(termino);
     });
@@ -201,7 +193,6 @@ export const TabCuentasPersonal: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
-                    {/* Barra de búsqueda rápida */}
                     <div className="relative flex-1 sm:w-64">
                         <Search className="w-4 h-4 text-cyan-300 absolute left-3.5 top-3" />
                         <input
@@ -228,7 +219,6 @@ export const TabCuentasPersonal: React.FC = () => {
                 </div>
             </div>
 
-            {/* MENSAJE DE ERROR SI FALLA LA API */}
             {errorMessage && (
                 <div className="p-4 bg-rose-950/60 border border-rose-300/40 rounded-2xl flex items-center gap-3 text-rose-100 text-xs font-bold backdrop-blur-md">
                     <AlertCircle className="w-5 h-5 text-rose-300 shrink-0" />
@@ -236,7 +226,7 @@ export const TabCuentasPersonal: React.FC = () => {
                 </div>
             )}
 
-            {/* TABLA PRO DE CUENTAS SSO (ESCRITORIO >= md) */}
+            {/* TABLA PRO DE CUENTAS SSO */}
             <div className="hidden md:block overflow-x-auto rounded-3xl border border-white/30 bg-slate-900/40 shadow-2xl backdrop-blur-3xl">
                 <table className="w-full text-left border-collapse text-xs font-semibold">
                     <thead>
@@ -266,41 +256,49 @@ export const TabCuentasPersonal: React.FC = () => {
                                 </td>
                             </tr>
                         ) : (
-                            usuariosFiltrados.map((u) => (
-                                <tr key={u.id} className="hover:bg-white/10 transition-colors">
-                                    <td className="py-4 px-5">
-                                        <div className="flex items-center gap-3.5">
-                                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
-                                                {getInitials(u.nombre)}
+                            usuariosFiltrados.map((u: any) => {
+                                const nombreCompleto = u.nombre || [u.nombres, u.apellido_paterno, u.apellido_materno].filter(Boolean).join(' ') || 'Servidor Público';
+                                const correoInst = u.correo_institucional || u.email || 'No registrado';
+                                const unidadAdscripcion = u.unidad_asignada || u.unidadAsignada || 'Jurisdicción Sanitaria No. 2';
+                                const cluesCodigo = u.clues || 'OASSA000000';
+                                const pinCode = u.password || u.pin_temporal || u.pinTemporal || '******';
+
+                                return (
+                                    <tr key={u.id} className="hover:bg-white/10 transition-colors">
+                                        <td className="py-4 px-5">
+                                            <div className="flex items-center gap-3.5">
+                                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
+                                                    {getInitials(nombreCompleto)}
+                                                </div>
+                                                <div>
+                                                    <div className="font-black text-white text-xs">{nombreCompleto}</div>
+                                                    {u.curp && <div className="text-[10px] font-mono text-cyan-200/80">CURP: {u.curp}</div>}
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="font-black text-white text-xs">{u.nombre}</div>
-                                                {u.curp && <div className="text-[10px] font-mono text-cyan-200/80">CURP: {u.curp}</div>}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-4 px-5 text-cyan-100 font-mono text-[11px]">{u.email}</td>
-                                    <td className="py-4 px-5">
-                                        <span className="bg-cyan-500/20 text-cyan-200 font-black px-3 py-1 rounded-full border border-cyan-400/30 text-[10px] inline-block">
-                                            {getRoleBadgeLabel(u.rol)}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-5">
-                                        <div className="font-bold text-white">{u.unidadAsignada}</div>
-                                        {u.clues && <div className="text-[10px] font-mono text-cyan-200/70">CLUES: {u.clues}</div>}
-                                    </td>
-                                    <td className="py-4 px-5 text-center">
-                                        <span className="bg-slate-950/80 text-cyan-200 font-mono font-bold text-xs px-3 py-1.5 rounded-xl border border-white/20 inline-block shadow-sm">
-                                            {u.pinTemporal || '******'}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-5 text-center">
-                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                                            {u.estatus}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))
+                                        </td>
+                                        <td className="py-4 px-5 text-cyan-100 font-mono text-[11px]">{correoInst}</td>
+                                        <td className="py-4 px-5">
+                                            <span className="bg-cyan-500/20 text-cyan-200 font-black px-3 py-1 rounded-full border border-cyan-400/30 text-[10px] inline-block">
+                                                {getRoleBadgeLabel(u.rol)}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-5">
+                                            <div className="font-bold text-white">{unidadAdscripcion}</div>
+                                            <div className="text-[10px] font-mono text-cyan-200/70">CLUES: {cluesCodigo}</div>
+                                        </td>
+                                        <td className="py-4 px-5 text-center">
+                                            <span className="bg-slate-950/80 text-cyan-200 font-mono font-bold text-xs px-3 py-1.5 rounded-xl border border-white/20 inline-block shadow-sm">
+                                                {pinCode}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-5 text-center">
+                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                                                {u.estatus || 'ACTIVO'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
@@ -311,7 +309,6 @@ export const TabCuentasPersonal: React.FC = () => {
                 <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6">
                     <div className="bg-slate-900/95 border border-white/40 rounded-[32px] max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl shadow-slate-950/90 backdrop-blur-3xl overflow-y-auto max-h-[90vh] lg-modal">
 
-                        {/* CABECERA DEL MODAL */}
                         <div className="flex items-center justify-between border-b border-white/20 pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-cyan-500/20 rounded-2xl border border-cyan-400/30 text-cyan-300 backdrop-blur-md">
@@ -331,7 +328,6 @@ export const TabCuentasPersonal: React.FC = () => {
                             </button>
                         </div>
 
-                        {/* BADGE DE SEGURIDAD Y VALIDACIÓN SSO */}
                         <div className="p-3.5 bg-cyan-950/30 border border-cyan-800/40 rounded-2xl flex items-start gap-3 text-xs text-cyan-100 backdrop-blur-md">
                             <ShieldCheck className="w-5 h-5 shrink-0 text-cyan-400 mt-0.5" />
                             <div className="space-y-0.5">
@@ -342,10 +338,8 @@ export const TabCuentasPersonal: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* FORMULARIO */}
                         <form onSubmit={handleCreateUser} className="space-y-4 text-xs font-semibold">
 
-                            {/* NOMBRES DESGLOSADOS EN 3 CAMPOS */}
                             <div className="bg-white/5 p-3.5 rounded-2xl border border-white/10 space-y-3 backdrop-blur-md">
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-black uppercase text-cyan-300 tracking-wider">
@@ -391,10 +385,7 @@ export const TabCuentasPersonal: React.FC = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                                {/* COLUMNA 1 */}
                                 <div className="space-y-3.5">
-                                    {/* CURP */}
                                     <div>
                                         <label className="block text-cyan-100 font-bold mb-1 flex items-center justify-between text-[11px]">
                                             <span>CURP (18 Caracteres)</span>
@@ -413,7 +404,6 @@ export const TabCuentasPersonal: React.FC = () => {
                                         />
                                     </div>
 
-                                    {/* Correo Electrónico Institucional (Autogenerado) */}
                                     <div>
                                         <label className="block text-cyan-100 font-bold mb-1 flex items-center justify-between text-[11px]">
                                             <span>Correo Institucional (Autogenerado)</span>
@@ -432,7 +422,6 @@ export const TabCuentasPersonal: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Teléfono de Contacto */}
                                     <div>
                                         <label className="block text-cyan-100 font-bold mb-1 text-[11px]">Teléfono de Contacto</label>
                                         <div className="relative">
@@ -448,7 +437,6 @@ export const TabCuentasPersonal: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Municipio / Localidad */}
                                     <div>
                                         <label className="block text-cyan-100 font-bold mb-1 text-[11px]">Municipio / Localidad (Texto Libre)</label>
                                         <input
@@ -461,9 +449,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* COLUMNA 2 */}
                                 <div className="space-y-3.5">
-                                    {/* Rol Asignado */}
                                     <div>
                                         <label className="block text-cyan-100 font-bold mb-1 text-[11px]">Rol Asignado en el Sistema *</label>
                                         <select
@@ -477,7 +463,6 @@ export const TabCuentasPersonal: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    {/* Unidad Médica / CLUES */}
                                     <div>
                                         <label className="block text-cyan-100 font-bold mb-1 flex items-center justify-between text-[11px]">
                                             <span>Unidad Médica de Adscripción / CLUES *</span>
@@ -496,7 +481,6 @@ export const TabCuentasPersonal: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    {/* Contraseña Temporal / PIN */}
                                     <div>
                                         <label className="block text-cyan-100 font-bold mb-1 flex items-center justify-between text-[11px]">
                                             <span>Contraseña Temporal / PIN *</span>
@@ -528,7 +512,6 @@ export const TabCuentasPersonal: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* RESUMEN VISUAL DE UNIDAD SELECCIONADA */}
                                     {(() => {
                                         const currentUnit = cluesList.find((u) => u.id === selectedCluesId);
                                         if (!currentUnit) return null;
@@ -550,7 +533,6 @@ export const TabCuentasPersonal: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* BOTONES DE ACCIÓN DEL MODAL */}
                             <div className="flex gap-3 pt-3 border-t border-white/20">
                                 <button
                                     type="button"
