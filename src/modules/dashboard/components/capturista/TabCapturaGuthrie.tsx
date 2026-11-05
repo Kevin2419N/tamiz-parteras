@@ -171,7 +171,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 estatus_muestra: 'REGISTRADO'
             };
 
-            // RUTA CORREGIDA (Se quitó el /api duplicado para que coincida con /api/v1/tamiz/muestras)
+            // RUTA CORRECTA: Se conecta limpiamente con el prefijo /api/v1 configurado en Vercel
             await http.post('/tamiz/muestras', payload);
 
             onSaveSuccess(formData);
