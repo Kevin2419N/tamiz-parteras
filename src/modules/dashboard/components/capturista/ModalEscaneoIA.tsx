@@ -1,6 +1,6 @@
 /* spell-checker: disable */
 import React, { useState } from 'react';
-import { Camera, Upload, Sparkles, X, RefreshCw, FileText, Cpu, CheckCircle2 } from 'lucide-react';
+import { Camera, Upload, Sparkles, X, RefreshCw, FileText, Cpu } from 'lucide-react';
 import type { GuthrieFormData } from './types';
 import { createWorker } from 'tesseract.js';
 
@@ -101,7 +101,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
     return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl z-50 flex items-center justify-center p-4 animate-fadeIn">
             
-            {/* Estilos de Animación Láser Personalizados */}
             <style>{`
                 @keyframes scanLaser {
                     0% { top: 0%; opacity: 0.8; }
@@ -113,14 +112,11 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 }
             `}</style>
 
-            {/* Contenedor Principal de Cristal (Glassmorphism) */}
-            <div className="relative border border-white/40 bg-slate-900/70 max-w-xl w-full p-6 sm:p-8 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-3xl space-y-6 text-white overflow-hidden">
+            <div className="relative border border-cyan-400/40 bg-slate-900/80 max-w-xl w-full p-6 sm:p-8 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-3xl space-y-6 text-white overflow-hidden">
                 
-                {/* Destellos de Luz Decorativos */}
                 <div className="absolute -top-24 -left-24 size-48 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
 
-                {/* Cabecera del Modal */}
                 <div className="relative z-10 flex items-center justify-between border-b border-white/15 pb-4">
                     <div className="flex items-center gap-3.5">
                         <div className="p-3 bg-gradient-to-tr from-cyan-400 to-blue-600 text-white rounded-2xl shadow-lg shadow-cyan-950/50 border border-white/30">
@@ -145,10 +141,8 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                     </button>
                 </div>
 
-                {/* Contenido Dinámico: Escaneando vs Carga de Archivo */}
                 {isScanning ? (
                     <div className="relative z-10 py-4 space-y-6 text-center">
-                        {/* Visor de Imagen con Láser Futurista */}
                         <div className="relative w-full max-w-sm mx-auto h-64 rounded-2xl overflow-hidden border-2 border-cyan-400/50 shadow-2xl bg-slate-950/90 flex items-center justify-center">
                             {selectedImage && (
                                 <img
@@ -158,18 +152,15 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                                 />
                             )}
                             
-                            {/* Láser de Escaneo Óptico */}
                             <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#22d3ee] laser-beam z-20" />
                             <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none" />
 
-                            {/* Badge de Estado */}
                             <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full text-cyan-300 text-[10px] font-mono font-extrabold flex items-center gap-2 border border-cyan-400/40 shadow-lg">
                                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" />
                                 <span>PROCESANDO IA LOCAL...</span>
                             </div>
                         </div>
 
-                        {/* Barra de Progreso Avanzada */}
                         <div className="space-y-2.5 max-w-sm mx-auto">
                             <div className="flex justify-between text-xs font-bold text-cyan-100">
                                 <span className="flex items-center gap-1.5 truncate">
@@ -188,7 +179,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                     </div>
                 ) : (
                     <div className="relative z-10 space-y-6">
-                        {/* Zona de Arribo y Selección de Archivo con Estética Glass */}
                         <div className="border-2 border-dashed border-cyan-400/40 bg-white/5 rounded-3xl p-8 text-center space-y-4 hover:border-cyan-400 hover:bg-white/10 transition-all backdrop-blur-md">
                             <div className="w-16 h-16 bg-cyan-500/20 text-cyan-300 rounded-2xl flex items-center justify-center mx-auto border border-cyan-400/30 shadow-lg shadow-cyan-950/50">
                                 <Camera className="w-8 h-8" />
@@ -214,7 +204,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                             </label>
                         </div>
 
-                        {/* Nota Informativa Inferior */}
                         <div className="p-4 bg-white/5 border border-white/15 rounded-2xl flex items-center gap-3 text-xs text-cyan-100/90 backdrop-blur-md">
                             <FileText className="w-4 h-4 text-cyan-300 shrink-0" />
                             <span>
