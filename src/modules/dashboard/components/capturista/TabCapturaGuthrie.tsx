@@ -7,14 +7,12 @@ import {
     CheckCircle2,
     Printer,
     RotateCcw,
-    Camera,
     FileText,
     FlaskConical,
     Clock,
     ClipboardList,
     Loader2,
     Sparkles,
-    ShieldCheck,
     CheckCircle
 } from 'lucide-react';
 import type { GuthrieFormData, UnidadCLUES } from './types';
@@ -32,14 +30,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
     onOpenAIScan
 }) => {
 
-    const catalogCLUES: UnidadCLUES[] = [
-        { clues: 'OCIMB000683', nombre: 'Centro de Salud Urbano Juchitán', jurisdiccion: '02 Istmo', estado: 'Oaxaca' },
-        { clues: 'OASHG001245', nombre: 'Hospital General Sto. Domingo Tehuantepec', jurisdiccion: '02 Istmo', estado: 'Oaxaca' },
-        { clues: 'OASCS002190', nombre: 'Centro de Salud Salina Cruz', jurisdiccion: '02 Istmo', estado: 'Oaxaca' },
-        { clues: 'OASIX003410', nombre: 'Centro de Salud Cd. Ixtepec', jurisdiccion: '02 Istmo', estado: 'Oaxaca' },
-        { clues: 'OASBA004120', nombre: 'CESSA San Blas Atempa', jurisdiccion: '02 Istmo', estado: 'Oaxaca' },
-        { clues: 'OASIX003411', nombre: 'Hospital General Ixtaltepec', jurisdiccion: '02 Istmo', estado: 'Oaxaca' },
-    ];
+    const [catalogCLUES, setCatalogCLUES] = useState<UnidadCLUES[]>([]);
+    const [cargandoClues, setCargandoClues] = useState<boolean>(false);
 
     const defaultForm: GuthrieFormData = {
         folio: '',
@@ -100,6 +92,23 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        const fetchUnidadesMedicas = async () => {
+            setCargandoClues(true);
+            try {
+                const response = await http.get('/clues');
+                setCatalogCLUES(response.data || []);
+            } catch (error) {
+                console.error('Error al cargar el catálogo CLUES desde el servidor:', error);
+                setCatalogCLUES([]);
+            } finally {
+                setCargandoClues(false);
+            }
+        };
+
+        fetchUnidadesMedicas();
+    }, []);
+
+    useEffect(() => {
         if (initialData) {
             setFormData(prev => ({
                 ...prev,
@@ -116,8 +125,8 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 ...prev,
                 unidadMedica: `${found.clues} ${found.nombre}`,
                 clues: found.clues,
-                jurisdiccion: found.jurisdiccion,
-                estado: found.estado
+                jurisdiccion: found.jurisdiccion || '02 Istmo',
+                estado: found.estado || 'Oaxaca'
             }));
         }
     };
@@ -198,7 +207,6 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
     return (
         <div className="space-y-6 text-white w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 animate-fadeIn">
 
-            {/* Animaciones CSS personalizadas */}
             <style>{`
                 @keyframes slideDown {
                     from { opacity: 0; transform: translateY(-20px); }
@@ -252,7 +260,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 )}
             </div>
 
-            {/* ALERTA FLOTANTE DE ÉXITO ELEGANTE (CON ANIMACIÓN) */}
+            {/* ALERTA FLOTANTE DE ÉXITO */}
             {savedNotification && (
                 <div className="animate-slideDown p-4 sm:p-5 bg-gradient-to-r from-emerald-950/90 via-slate-900/90 to-cyan-950/90 border-2 border-emerald-400/80 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_30px_rgba(52,211,153,0.3)] backdrop-blur-2xl text-emerald-100 z-50">
                     <div className="flex items-center gap-3.5 text-center sm:text-left">
@@ -327,8 +335,9 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                 </div>
 
                                 <div>
-                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1">
-                                        Unidad Médica * (Catálogo CLUES)
+                                    <label className="block text-[11px] font-bold text-cyan-100 mb-1 flex items-center justify-between">
+                                        <span>Unidad Médica * (Catálogo CLUES Real)</span>
+                                        {cargandoClues && <span className="text-[10px] text-cyan-300 animate-pulse">Cargando unidades...</span>}
                                     </label>
                                     <select
                                         required
@@ -336,7 +345,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                         onChange={handleCluesChange}
                                         className={selectGlassStyle}
                                     >
-                                        <option value="" className="bg-slate-900 text-white">Seleccione una unidad médica...</option>
+                                        <option value="" className="bg-slate-900 text-white">Seleccione una unidad médica institucional...</option>
                                         {catalogCLUES.map((u) => (
                                             <option key={u.clues} value={`${u.clues} ${u.nombre}`} className="bg-slate-900 text-white">
                                                 {u.clues} - {u.nombre}
