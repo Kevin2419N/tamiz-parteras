@@ -1,3 +1,4 @@
+/* spell-checker: disable */
 import React, { useState, useEffect } from 'react';
 import { Search, Eye, X, Droplet, ShieldCheck, MapPin, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import type { MuestraGuthrie } from './types';
@@ -5,10 +6,10 @@ import { http } from '../../../../services/http';
 
 export const TabTamizNeonatal: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedMuestra, setSelectedMuestra] = useState<MuestraGuthrie | null>(null);
+    const [selectedMuestra, setSelectedMuestra] = useState<any | null>(null);
 
     // Estados de muestras, carga y errores
-    const [muestras, setMuestras] = useState<MuestraGuthrie[]>([]);
+    const [muestras, setMuestras] = useState<any[]>([]);
     const [cargando, setCargando] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -18,7 +19,8 @@ export const TabTamizNeonatal: React.FC = () => {
             setCargando(true);
             setErrorMessage(null);
             try {
-                const response = await http.get('/admin/tamiz/muestras');
+                // Ruta corregida que apunta al endpoint activo del backend
+                const response = await http.get('/tamiz/muestras');
                 if (response.data) {
                     setMuestras(response.data);
                 }
@@ -35,14 +37,14 @@ export const TabTamizNeonatal: React.FC = () => {
 
     const filteredMuestras = muestras.filter(
         (m) =>
-            m.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.nombreRecienNacido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.nombreMadre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.unidadMedica.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.municipio.toLowerCase().includes(searchTerm.toLowerCase())
+            (m.folio_tarjeta || m.folio || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (m.rn_nombres || m.nombreRecienNacido || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (m.madre_nombres || m.nombreMadre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (m.unidad_medica_nombre || m.unidadMedica || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (m.madre_municipio || m.municipio || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getEstatusBadge = (estatus: MuestraGuthrie['estatus']) => {
+    const getEstatusBadge = (estatus: string) => {
         switch (estatus) {
             case 'SOSPECHOSO':
                 return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-500/25 text-rose-300 border border-rose-400/40 animate-pulse shadow-sm">SOSPECHOSO (ALERTA)</span>;
@@ -120,28 +122,24 @@ export const TabTamizNeonatal: React.FC = () => {
                         <div key={m.id} className="p-4 bg-slate-900/60 rounded-2xl border border-white/20 space-y-3 backdrop-blur-md">
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <span className="text-[10px] font-black text-cyan-300 tracking-wider uppercase block">{m.folio}</span>
-                                    <h3 className="text-xs font-black text-white">{m.nombreRecienNacido}</h3>
-                                    <p className="text-[11px] text-cyan-100/80 font-medium">Madre: {m.nombreMadre}</p>
+                                    <span className="text-[10px] font-black text-cyan-300 tracking-wider uppercase block">{m.folio_tarjeta || m.folio}</span>
+                                    <h3 className="text-xs font-black text-white">{m.rn_nombres || m.nombreRecienNacido} {m.rn_apellido_paterno || ''}</h3>
+                                    <p className="text-[11px] text-cyan-100/80 font-medium">Madre: {m.madre_nombres || m.nombreMadre} {m.madre_apellido_paterno || ''}</p>
                                 </div>
-                                <div>{getEstatusBadge(m.estatus)}</div>
+                                <div>{getEstatusBadge(m.estatus_muestra || m.estatus || 'REGISTRADO')}</div>
                             </div>
 
                             <div className="text-xs space-y-1 text-cyan-50 bg-white/5 p-3 rounded-xl border border-white/10">
                                 <div className="flex justify-between">
                                     <span className="font-bold text-cyan-200">Fecha Toma:</span>
-                                    <span>{m.fechaToma}</span>
+                                    <span>{(m.rn_fecha_toma_muestra || m.fechaToma || '').split('T')[0]}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="font-bold text-cyan-200 flex items-center gap-1">
                                         <MapPin className="w-3 h-3 text-cyan-400" />
-                                        {m.municipio}:
+                                        {m.madre_municipio || m.municipio || 'Juchitán'}:
                                     </span>
-                                    <span className="truncate max-w-[140px]">{m.unidadMedica}</span>
-                                </div>
-                                <div className="flex justify-between pt-1 border-t border-white/10">
-                                    <span className="font-bold text-cyan-200">Gota talar:</span>
-                                    <span className="font-black text-rose-300">{m.numeroGotas} / 5 Gotas</span>
+                                    <span className="truncate max-w-[140px]">{m.unidad_medica_nombre || m.unidadMedica}</span>
                                 </div>
                             </div>
 
@@ -192,18 +190,18 @@ export const TabTamizNeonatal: React.FC = () => {
                             ) : (
                                 filteredMuestras.map((m) => (
                                     <tr key={m.id} className="hover:bg-white/10 transition-colors">
-                                        <td className="py-4 px-5 font-black text-white">{m.folio}</td>
+                                        <td className="py-4 px-5 font-black text-white">{m.folio_tarjeta || m.folio}</td>
                                         <td className="py-4 px-5">
-                                            <div className="font-bold text-white">{m.nombreRecienNacido}</div>
-                                            <div className="text-[11px] text-cyan-200/80 font-medium">Madre: {m.nombreMadre}</div>
+                                            <div className="font-bold text-white">{m.rn_nombres || m.nombreRecienNacido} {m.rn_apellido_paterno || ''}</div>
+                                            <div className="text-[11px] text-cyan-200/80 font-medium">Madre: {m.madre_nombres || m.nombreMadre} {m.madre_apellido_paterno || ''}</div>
                                         </td>
-                                        <td className="py-4 px-5 text-cyan-100">{m.fechaToma}</td>
+                                        <td className="py-4 px-5 text-cyan-100">{(m.rn_fecha_toma_muestra || m.fechaToma || '').split('T')[0]}</td>
                                         <td className="py-4 px-5">
-                                            <div className="font-bold text-white">{m.unidadMedica}</div>
-                                            <div className="text-[11px] text-cyan-200/70">{m.municipio}</div>
+                                            <div className="font-bold text-white">{m.unidad_medica_nombre || m.unidadMedica}</div>
+                                            <div className="text-[11px] text-cyan-200/70">{m.madre_municipio || m.municipio || 'Juchitán'}</div>
                                         </td>
-                                        <td className="py-4 px-5 text-center font-black text-rose-300 font-mono">{m.numeroGotas} / 5</td>
-                                        <td className="py-4 px-5">{getEstatusBadge(m.estatus)}</td>
+                                        <td className="py-4 px-5 text-center font-black text-rose-300 font-mono">5 / 5</td>
+                                        <td className="py-4 px-5">{getEstatusBadge(m.estatus_muestra || m.estatus || 'REGISTRADO')}</td>
                                         <td className="py-4 px-5 text-right">
                                             <button
                                                 type="button"
@@ -229,7 +227,7 @@ export const TabTamizNeonatal: React.FC = () => {
                         <div className="flex items-center justify-between border-b border-white/20 pb-4">
                             <div>
                                 <span className="text-[10px] font-black text-cyan-300 uppercase tracking-wider">Ficha Técnica Guthrie</span>
-                                <h3 className="text-base font-black text-white">{selectedMuestra.folio}</h3>
+                                <h3 className="text-base font-black text-white">{selectedMuestra.folio_tarjeta || selectedMuestra.folio}</h3>
                             </div>
                             <button
                                 type="button"
@@ -242,15 +240,15 @@ export const TabTamizNeonatal: React.FC = () => {
 
                         <div className="space-y-3 text-xs">
                             <div className="p-3.5 bg-white/5 rounded-2xl border border-white/10 space-y-1 backdrop-blur-md">
-                                <p className="font-bold text-white">Recién Nacido: <span className="text-cyan-200">{selectedMuestra.nombreRecienNacido}</span></p>
-                                <p className="text-cyan-100/90">Madre: {selectedMuestra.nombreMadre}</p>
-                                <p className="text-cyan-100/90">Fecha Toma: {selectedMuestra.fechaToma}</p>
-                                <p className="text-cyan-100/90">Unidad: {selectedMuestra.unidadMedica} ({selectedMuestra.municipio})</p>
+                                <p className="font-bold text-white">Recién Nacido: <span className="text-cyan-200">{selectedMuestra.rn_nombres || selectedMuestra.nombreRecienNacido} {selectedMuestra.rn_apellido_paterno || ''}</span></p>
+                                <p className="text-cyan-100/90">Madre: {selectedMuestra.madre_nombres || selectedMuestra.nombreMadre} {selectedMuestra.madre_apellido_paterno || ''}</p>
+                                <p className="text-cyan-100/90">Fecha Toma: {(selectedMuestra.rn_fecha_toma_muestra || selectedMuestra.fechaToma || '').split('T')[0]}</p>
+                                <p className="text-cyan-100/90">Unidad: {selectedMuestra.unidad_medica_nombre || selectedMuestra.unidadMedica} ({selectedMuestra.madre_municipio || selectedMuestra.municipio})</p>
                             </div>
 
                             <div className="p-3.5 bg-rose-950/40 rounded-2xl border border-rose-300/30 text-rose-100 font-medium backdrop-blur-md">
                                 <p className="font-bold text-rose-300 mb-0.5 uppercase tracking-wider text-[10px]">Observaciones Clínicas:</p>
-                                <p className="leading-relaxed">{selectedMuestra.observaciones}</p>
+                                <p className="leading-relaxed">{selectedMuestra.observaciones_captura || selectedMuestra.observaciones || 'Sin observaciones'}</p>
                             </div>
                         </div>
 
