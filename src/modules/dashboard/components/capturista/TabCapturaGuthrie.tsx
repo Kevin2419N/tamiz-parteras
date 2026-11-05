@@ -14,7 +14,8 @@ import {
     ClipboardList,
     Loader2,
     Sparkles,
-    ShieldCheck
+    ShieldCheck,
+    CheckCircle
 } from 'lucide-react';
 import type { GuthrieFormData, UnidadCLUES } from './types';
 import { http } from '../../../../services/http';
@@ -171,12 +172,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 estatus_muestra: 'REGISTRADO'
             };
 
-            // RUTA CORRECTA: Se conecta limpiamente con el prefijo /api/v1 configurado en Vercel
             await http.post('/tamiz/muestras', payload);
 
             onSaveSuccess(formData);
             setSavedNotification(true);
-            setTimeout(() => setSavedNotification(false), 5000);
+            setTimeout(() => setSavedNotification(false), 6000);
         } catch (error: any) {
             console.error('Error al guardar la tarjeta Guthrie en el servidor:', error);
             alert('Error al sincronizar el registro con el servidor PostgreSQL.');
@@ -191,14 +191,22 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
         }
     };
 
-    const inputGlassStyle = "w-full px-3.5 py-2.5 bg-white/10 border border-white/30 rounded-xl text-white text-xs font-semibold placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
-    const selectGlassStyle = "w-full px-3.5 py-2.5 bg-slate-900/60 border border-white/30 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
-    const cardGlassStyle = "p-6 bg-white/10 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(15,23,42,0.5)] space-y-4";
+    const inputGlassStyle = "w-full px-3.5 py-2.5 bg-white/5 border border-white/30 rounded-xl text-white text-xs font-semibold placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
+    const selectGlassStyle = "w-full px-3.5 py-2.5 bg-slate-900/40 border border-white/30 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
+    const cardGlassStyle = "p-4 sm:p-6 bg-white/5 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(15,23,42,0.5)] space-y-4";
 
     return (
-        <div className="space-y-6 text-white w-full">
+        <div className="space-y-6 text-white w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 animate-fadeIn">
 
+            {/* Animaciones CSS personalizadas */}
             <style>{`
+                @keyframes slideDown {
+                    from { opacity: 0; transform: translateY(-20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-slideDown {
+                    animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
                 @media print {
                     @page { size: portrait; margin: 4mm; }
                     body { background: #fff !important; color: #000 !important; font-size: 8.5px !important; }
@@ -216,16 +224,17 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 }
             `}</style>
 
-            <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4"}>
-                <div className="flex items-center gap-3.5 text-center sm:text-left">
-                    <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-400/40 text-cyan-300 backdrop-blur-md shadow-lg">
+            {/* BARRA SUPERIOR CON ESCANEO IA */}
+            <div className={cardGlassStyle + " flex flex-col md:flex-row items-center justify-between gap-4"}>
+                <div className="flex items-center gap-3.5 text-center md:text-left">
+                    <div className="p-3 bg-cyan-500/20 rounded-2xl border border-cyan-400/40 text-cyan-300 backdrop-blur-md shadow-lg shrink-0">
                         <FileText className="w-6 h-6" />
                     </div>
                     <div>
-                        <span className="text-[10px] font-black text-cyan-200 uppercase tracking-widest block">
+                        <span className="text-[9px] sm:text-[10px] font-black text-cyan-200 uppercase tracking-widest block">
                             SECRETARÍA DE SALUD DE OAXACA • SERVICIOS DE SALUD DE OAXACA
                         </span>
-                        <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                        <h2 className="text-sm sm:text-lg font-black text-white tracking-tight">
                             Cédula Digital de Tamiz Neonatal (Formato Papel Filtro SSO)
                         </h2>
                     </div>
@@ -235,7 +244,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                     <button
                         type="button"
                         onClick={onOpenAIScan}
-                        className="px-5 py-3 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs rounded-2xl shadow-lg shadow-cyan-950/50 transition-all flex items-center gap-2.5 cursor-pointer active:scale-95 border border-white/40 shrink-0"
+                        className="w-full md:w-auto px-5 py-3 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs rounded-2xl shadow-lg shadow-cyan-950/50 transition-all flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 border border-white/40 shrink-0"
                     >
                         <Sparkles className="w-4 h-4 text-cyan-200 animate-pulse" />
                         <span>Subir Foto de Tarjeta (OCR con IA)</span>
@@ -243,38 +252,50 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                 )}
             </div>
 
+            {/* ALERTA FLOTANTE DE ÉXITO ELEGANTE (CON ANIMACIÓN) */}
             {savedNotification && (
-                <div className="p-4 bg-emerald-950/80 border-2 border-emerald-400 rounded-2xl flex items-center justify-between shadow-2xl backdrop-blur-md text-emerald-100">
-                    <div className="flex items-center gap-3">
-                        <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+                <div className="animate-slideDown p-4 sm:p-5 bg-gradient-to-r from-emerald-950/90 via-slate-900/90 to-cyan-950/90 border-2 border-emerald-400/80 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_30px_rgba(52,211,153,0.3)] backdrop-blur-2xl text-emerald-100 z-50">
+                    <div className="flex items-center gap-3.5 text-center sm:text-left">
+                        <div className="p-3 bg-emerald-500/20 border border-emerald-400/50 rounded-2xl text-emerald-300 shadow-lg shrink-0">
+                            <CheckCircle className="w-7 h-7 animate-bounce" />
+                        </div>
                         <div>
-                            <p className="font-extrabold text-sm">¡Tarjeta de Tamiz Guthrie Sincronizada con Backend (PostgreSQL)!</p>
-                            <p className="text-xs text-emerald-200/80 font-medium">
-                                Folio <span className="font-mono font-bold text-white">{formData.folio}</span> registrado correctamente en el servidor.
+                            <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-300 block">
+                                ESTADO DE REGISTRO INSTITUCIONAL
+                            </span>
+                            <h3 className="font-black text-base sm:text-lg text-white">
+                                ¡Guardado con Éxito! Prueba de Tamiz Registrada
+                            </h3>
+                            <p className="text-xs text-emerald-200/90 font-medium">
+                                El folio <span className="font-mono font-bold text-cyan-300">{formData.folio}</span> se sincronizó correctamente con la base de datos PostgreSQL.
                             </p>
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => window.print()}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer border border-emerald-400/40"
-                    >
-                        <Printer className="w-4 h-4" />
-                        <span>Imprimir Comprobante</span>
-                    </button>
+                    <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                        <button
+                            type="button"
+                            onClick={() => window.print()}
+                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md cursor-pointer border border-emerald-400/40 transition-all active:scale-95"
+                        >
+                            <Printer className="w-4 h-4" />
+                            <span>Imprimir Comprobante</span>
+                        </button>
+                    </div>
                 </div>
             )}
 
+            {/* FORMULARIO RESPONSIVO */}
             <form onSubmit={handleSubmit} className="printable-guthrie-card space-y-6">
 
+                {/* ENCABEZADO FOLIO */}
                 <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4 py-4"}>
-                    <div>
-                        <span className="text-[10px] font-black text-cyan-200 uppercase tracking-wider block">SECRETARÍA DE SALUD • SISTEMA NACIONAL DE SALUD • OAXACA</span>
-                        <h3 className="text-sm font-black text-white">Cédula Oficial de Muestra Neonatal — SSO Oaxaca</h3>
+                    <div className="text-center sm:text-left">
+                        <span className="text-[9px] sm:text-[10px] font-black text-cyan-200 uppercase tracking-wider block">SECRETARÍA DE SALUD • SISTEMA NACIONAL DE SALUD • OAXACA</span>
+                        <h3 className="text-xs sm:text-sm font-black text-white">Cédula Oficial de Muestra Neonatal — SSO Oaxaca</h3>
                     </div>
-                    <div className="px-4 py-2.5 bg-slate-900/80 rounded-2xl border border-cyan-400/40 text-right shadow-inner">
+                    <div className="px-4 py-2.5 bg-slate-900/40 rounded-2xl border border-cyan-400/40 text-center sm:text-right shadow-inner backdrop-blur-md w-full sm:w-auto">
                         <span className="text-[9px] uppercase font-bold text-cyan-200 block">FOLIO TARJETA GUTHRIE</span>
-                        <span className="font-mono text-lg text-cyan-300 font-black tracking-wider">
+                        <span className="font-mono text-base sm:text-lg text-cyan-300 font-black tracking-wider">
                             {formData.folio || 'PENDIENTE'}
                         </span>
                     </div>
@@ -282,11 +303,13 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print-2col-layout">
 
+                    {/* COLUMNA IZQUIERDA: SECCIÓN A Y B */}
                     <div className="space-y-6">
 
+                        {/* SECCIÓN A */}
                         <div className={cardGlassStyle}>
                             <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
-                                <Building2 className="w-4 h-4" />
+                                <Building2 className="w-4 h-4 shrink-0" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN A • Unidad Médica (CLUES) y Muestra</h3>
                             </div>
 
@@ -305,7 +328,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                                 <div>
                                     <label className="block text-[11px] font-bold text-cyan-100 mb-1">
-                                        Unidad Médica * (Catálogo de Unidades Médicas CLUES)
+                                        Unidad Médica * (Catálogo CLUES)
                                     </label>
                                     <select
                                         required
@@ -323,11 +346,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 text-[11px] font-bold">
-                                    <div className="p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-md">
+                                    <div className="p-3 bg-white/5 rounded-xl border border-white/20 backdrop-blur-md">
                                         <span className="text-cyan-200/80 block text-[10px]">Jurisdicción:</span>
                                         <span className="text-white font-black">{formData.jurisdiccion}</span>
                                     </div>
-                                    <div className="p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-md">
+                                    <div className="p-3 bg-white/5 rounded-xl border border-white/20 backdrop-blur-md">
                                         <span className="text-cyan-200/80 block text-[10px]">Estado:</span>
                                         <span className="text-white font-black">{formData.estado}</span>
                                     </div>
@@ -335,7 +358,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                                 <div>
                                     <label className="block text-[11px] font-bold text-cyan-100 mb-1">Responsable de la Toma (Nombre y Apellidos) *</label>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                         <input
                                             type="text"
                                             required
@@ -387,11 +410,11 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     )}
                                 </div>
 
-                                <div className="p-4 bg-white/10 rounded-2xl border border-white/20 space-y-2.5 backdrop-blur-md">
+                                <div className="p-4 bg-white/5 rounded-2xl border border-white/20 space-y-2.5 backdrop-blur-md">
                                     <span className="text-[11px] font-bold text-cyan-300 flex items-center gap-1.5">
-                                        <FlaskConical className="w-4 h-4" /> Reporte de Laboratorio:
+                                        <FlaskConical className="w-4 h-4 shrink-0" /> Reporte de Laboratorio:
                                     </span>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex flex-wrap items-center gap-4">
                                         <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
                                             <input
                                                 type="radio"
@@ -425,14 +448,15 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                             </div>
                         </div>
 
+                        {/* SECCIÓN B */}
                         <div className={cardGlassStyle}>
                             <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
-                                <Baby className="w-4 h-4" />
+                                <Baby className="w-4 h-4 shrink-0" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN B • Datos del Recién Nacido (RN)</h3>
                             </div>
 
                             <div className="space-y-3 text-xs font-semibold">
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <div>
                                         <label className="block text-[11px] font-bold text-cyan-100 mb-1">Nombre(s) RN *</label>
                                         <input
@@ -468,7 +492,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-[10px] font-bold text-cyan-100 mb-1">Fecha / Hora Nacimiento *</label>
                                         <div className="flex gap-1.5">
@@ -484,7 +508,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 required
                                                 value={formData.horaNacimiento}
                                                 onChange={(e) => setFormData({ ...formData, horaNacimiento: e.target.value })}
-                                                className={inputGlassStyle + " w-20 text-[11px]"}
+                                                className={inputGlassStyle + " w-24 sm:w-20 text-[11px]"}
                                             />
                                         </div>
                                     </div>
@@ -504,13 +528,13 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 required
                                                 value={formData.horaToma}
                                                 onChange={(e) => setFormData({ ...formData, horaToma: e.target.value })}
-                                                className={inputGlassStyle + " w-20 text-[11px]"}
+                                                className={inputGlassStyle + " w-24 sm:w-20 text-[11px]"}
                                             />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <div>
                                         <label className="block text-[11px] font-bold text-cyan-100 mb-1">Sexo *</label>
                                         <select
@@ -562,7 +586,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </select>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <div>
                                         <label className="block text-[11px] font-bold text-cyan-100 mb-1">Producto *</label>
                                         <select
@@ -591,7 +615,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                                 <div>
                                     <label className="block text-[11px] font-bold text-cyan-100 mb-1">Malformaciones Congénitas *</label>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex flex-wrap items-center gap-4">
                                         <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
                                             <input
                                                 type="radio"
@@ -619,7 +643,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 placeholder="¿Cuál malformación?"
                                                 value={formData.malformacionesDetalle}
                                                 onChange={(e) => setFormData({ ...formData, malformacionesDetalle: e.target.value })}
-                                                className={inputGlassStyle + " flex-1"}
+                                                className={inputGlassStyle + " flex-1 mt-1 sm:mt-0"}
                                             />
                                         )}
                                     </div>
@@ -657,17 +681,19 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                     </div>
 
+                    {/* COLUMNA DERECHA: SECCIÓN C Y D */}
                     <div className="space-y-6">
 
+                        {/* SECCIÓN C */}
                         <div className={cardGlassStyle}>
                             <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
-                                <HeartPulse className="w-4 h-4" />
+                                <HeartPulse className="w-4 h-4 shrink-0" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN C • Datos de la Madre o Tutora</h3>
                             </div>
 
                             <div className="space-y-3.5 text-xs font-semibold">
 
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <div>
                                         <label className="block text-[11px] font-bold text-cyan-100 mb-1">Nombre(s) *</label>
                                         <input
@@ -717,14 +743,14 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                                 <div>
                                     <label className="block text-[11px] font-bold text-cyan-100 mb-1">Calle y Números *</label>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                         <input
                                             type="text"
                                             required
                                             placeholder="Calle / Avenida"
                                             value={formData.calle}
                                             onChange={(e) => setFormData({ ...formData, calle: e.target.value })}
-                                            className={inputGlassStyle + " col-span-2"}
+                                            className={inputGlassStyle + " sm:col-span-2"}
                                         />
                                         <div className="flex gap-1">
                                             <input
@@ -746,7 +772,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <div>
                                         <label className="block text-[11px] font-bold text-cyan-100 mb-1">Colonia / Localidad *</label>
                                         <input
@@ -783,7 +809,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <div>
                                         <label className="block text-[10px] font-bold text-cyan-100 mb-1">Tel. Fijo</label>
                                         <input
@@ -845,7 +871,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                                 <div>
                                     <label className="block text-[11px] font-bold text-cyan-100 mb-1">Enfermedad Tiroidea / Metabólica *</label>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex flex-wrap items-center gap-4">
                                         <label className="inline-flex items-center gap-1.5 font-bold text-xs text-white cursor-pointer">
                                             <input
                                                 type="radio"
@@ -873,7 +899,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                                                 placeholder="¿Cuál enfermedad?"
                                                 value={formData.enfermedadTiroideaDetalle}
                                                 onChange={(e) => setFormData({ ...formData, enfermedadTiroideaDetalle: e.target.value })}
-                                                className={inputGlassStyle + " flex-1"}
+                                                className={inputGlassStyle + " flex-1 mt-1 sm:mt-0"}
                                             />
                                         )}
                                     </div>
@@ -882,9 +908,10 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
                             </div>
                         </div>
 
+                        {/* SECCIÓN D */}
                         <div className={cardGlassStyle}>
                             <div className="flex items-center gap-2.5 border-b border-white/20 pb-3 text-cyan-300">
-                                <ClipboardList className="w-4 h-4" />
+                                <ClipboardList className="w-4 h-4 shrink-0" />
                                 <h3 className="text-xs font-black uppercase tracking-wider">SECCIÓN D • Observaciones / Control de Calidad de Toma</h3>
                             </div>
 
@@ -920,6 +947,7 @@ export const TabCapturaGuthrie: React.FC<TabCapturaGuthrieProps> = ({
 
                 </div>
 
+                {/* BOTONERA INFERIOR RESPONSIVA */}
                 <div className={cardGlassStyle + " flex flex-col sm:flex-row items-center justify-between gap-4 py-4"}>
                     <button
                         type="button"
