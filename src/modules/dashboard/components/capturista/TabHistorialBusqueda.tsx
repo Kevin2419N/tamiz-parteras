@@ -1,217 +1,262 @@
 /* spell-checker: disable */
 import React, { useState, useEffect } from 'react';
-import { Truck, Plus, Package, MapPin, X, CheckSquare, Square, FileSpreadsheet, Send, Loader2, AlertCircle } from 'lucide-react';
-import type { LoteEnvioLESP } from './types';
+import { Search, Eye, Filter, Truck, AlertTriangle, CheckCircle2, FileText, Printer, X, Calendar, Loader2 } from 'lucide-react';
+import type { RegistroTamizHistorial } from './types';
 import { http } from '../../../../services/http'; // <--- Instancia de Axios centralizada
 
-interface MuestraPendiente {
-    folio: string;
-    rn: string;
-    fecha: string;
-    unidad: string;
+interface TabHistorialBusquedaProps {
+    registros?: RegistroTamizHistorial[];
 }
 
-export const TabControlLotes: React.FC = () => {
-    const [lotes, setLotes] = useState<any[]>([]);
-    const [pendientes, setPendientes] = useState<MuestraPendiente[]>([]);
+export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ registros: propsRegistros = [] }) => {
+    const [registros, setRegistros] = useState<any[]>(propsRegistros);
     const [cargando, setCargando] = useState<boolean>(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('TODOS');
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+    const [selectedRegistro, setSelectedRegistro] = useState<any | null>(null);
 
-    const [selectedFolios, setSelectedFolios] = useState<string[]>([]);
-    const [showModal, setShowModal] = useState(false);
-    const [guia, setGuia] = useState('');
-    const [transportista, setTransportista] = useState('Vehículo Oficial Jurisdicción No. 2');
-
-    // Carga exclusiva de datos 100% reales desde PostgreSQL a través del backend
+    // Carga de historial desde el backend real en PostgreSQL
     useEffect(() => {
-        const cargarDatosLogistica = async () => {
+        const cargarHistorial = async () => {
             setCargando(true);
-            setErrorMessage(null);
             try {
-                const [resLotes, resPendientes] = await Promise.all([
-                    http.get('/tamiz/lotes'),
-                    http.get('/tamiz/muestras-pendientes-lote')
-                ]);
-                setLotes(resLotes.data || []);
-                setPendientes(resPendientes.data || []);
+                // RUTA CORREGIDA: Apunta exactamente al endpoint /tamiz/muestras del backend
+                const res = await http.get('/tamiz/muestras');
+                if (res.data) {
+                    setRegistros(res.data);
+                }
             } catch (error) {
-                console.error('Error al cargar datos logísticos desde el servidor:', error);
-                setErrorMessage('No se pudo conectar con el servidor para obtener los datos de lotes y muestras.');
-                setLotes([]);
-                setPendientes([]);
+                console.error('Error al cargar el historial desde el backend:', error);
+                setRegistros([]);
             } finally {
                 setCargando(false);
             }
         };
 
-        cargarDatosLogistica();
+        const timeoutId = setTimeout(() => {
+            cargarHistorial();
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
     }, []);
 
-    const toggleSelectFolio = (folio: string) => {
-        setSelectedFolios(prev =>
-            prev.includes(folio) ? prev.filter(f => f !== folio) : [...prev, folio]
-        );
-    };
+    const filtrados = registros.filter((item) => {
+        const folioStr = item.folio_tarjeta || item.folio || '';
+        const rnStr = `${item.rn_nombres || item.rn || ''} ${item.rn_apellido_paterno || ''}`;
+        const madreStr = `${item.madre_nombres || item.madre || ''} ${item.madre_apellido_paterno || ''}`;
+        const munStr = item.madre_municipio || item.municipio || '';
 
-    const handleCreateLote = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (selectedFolios.length === 0) {
-            alert('Por favor seleccione al menos 1 muestra real para el lote.');
-            return;
+        const matchSearch =
+            folioStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            rnStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            madreStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            munStr.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const estatusItem = item.estatus_muestra || item.estatus || 'REGISTRADO';
+        const matchStatus = statusFilter === 'TODOS' || estatusItem === statusFilter;
+
+        const fechaTomaStr = (item.rn_fecha_toma_muestra || item.fechaToma || '').split('T')[0];
+        let matchDate = true;
+        if (startDate && fechaTomaStr) {
+            matchDate = matchDate && fechaTomaStr >= startDate;
+        }
+        if (endDate && fechaTomaStr) {
+            matchDate = matchDate && fechaTomaStr <= endDate;
         }
 
-        const nuevoLotePayload = {
-            numeroGuia: guia,
-            transportista,
-            foliosIncluidos: selectedFolios,
-            destino: 'Laboratorio Estatal de Salud Pública (LESP Oaxaca)'
-        };
+        return matchSearch && matchStatus && matchDate;
+    });
 
-        try {
-            const res = await http.post('/tamiz/lotes', nuevoLotePayload);
-            const loteGuardado = res.data.data;
-
-            setLotes(prev => [loteGuardado, ...prev]);
-            setPendientes(prev => prev.filter(p => !selectedFolios.includes(p.folio)));
-            setShowModal(false);
-            setGuia('');
-            setSelectedFolios([]);
-            alert('¡Lote de envío creado y registrado exitosamente en PostgreSQL!');
-        } catch (error: any) {
-            console.error('Error al crear el lote en el servidor:', error);
-            alert('Error al registrar el lote en el servidor PostgreSQL.');
+    const getEstatusBadge = (estatus: string) => {
+        switch (estatus) {
+            case 'MUESTRA_COAGULADA':
+            case 'MUESTRA_INSUFICIENTE':
+            case 'RETOMA_SOLICITADA':
+            case 'RE_TOMA_URGENTE':
+                return (
+                    <span className="px-3 py-1 bg-rose-100 text-rose-900 border border-rose-300 rounded-full text-[10px] font-black flex items-center gap-1.5 shadow-sm">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600 animate-pulse" /> Re-Toma Urgente
+                    </span>
+                );
+            case 'EN_TRANSITO_LAB':
+            case 'EN_LOTE_TRANSITO':
+                return (
+                    <span className="px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                        <Truck className="w-3.5 h-3.5 text-amber-600" /> En Tránsito Lab
+                    </span>
+                );
+            case 'PROCESADA_NORMAL':
+            case 'REGISTRADO':
+                return (
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {estatus === 'REGISTRADO' ? 'Registrado' : 'Resultado Normal'}
+                    </span>
+                );
+            default:
+                return (
+                    <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-[10px] font-bold border border-slate-200">
+                        {estatus}
+                    </span>
+                );
         }
     };
-
-    // Cálculos dinámicos de KPIs basados en registros reales
-    const lotesEnTransito = lotes.filter((l: any) => (l.estatus || l.estatus_lote) === 'EN_TRANSITO_LESP').length;
-    const totalMuestrasEnviadas = lotes.reduce((acc: number, l: any) => acc + (l.cantidadMuestras || l.cantidad_muestras || 0), 0);
 
     return (
         <div className="space-y-6">
 
-            {/* ENCABEZADO Y BOTÓN PRINCIPAL */}
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-amber-50 text-amber-800 rounded-2xl border border-amber-300">
-                        <Truck className="w-6 h-6 text-amber-600" />
+            {/* BARRA DE BÚSQUEDA, RANGO DE FECHAS Y FILTROS */}
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+
+                    {/* Búsqueda por Texto */}
+                    <div className="relative w-full lg:w-96">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por Folio Guthrie, RN, Madre o Municipio..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-300 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#9D2449] font-medium"
+                        />
                     </div>
-                    <div>
-                        <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
-                            CONTROL LOGÍSTICO Y CADENA DE CUSTODIA • JURISDICCIÓN NO. 2
+
+                    {/* Selector de Rango de Fechas */}
+                    <div className="flex items-center gap-2 w-full lg:w-auto bg-slate-50 p-2 rounded-2xl border border-slate-200">
+                        <span className="text-xs font-bold text-slate-600 flex items-center gap-1 pl-1">
+                            <Calendar className="w-4 h-4 text-[#9D2449]" /> Rango:
                         </span>
-                        <h2 className="text-lg font-black text-slate-900">
-                            Control de Lotes y Envíos a LESP Oaxaca
-                        </h2>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-xs text-slate-900 font-medium focus:outline-none focus:border-[#9D2449]"
+                            title="Fecha Inicio"
+                        />
+                        <span className="text-xs font-bold text-slate-400">a</span>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-xs text-slate-900 font-medium focus:outline-none focus:border-[#9D2449]"
+                            title="Fecha Fin"
+                        />
+                        {(startDate || endDate) && (
+                            <button
+                                type="button"
+                                onClick={() => { setStartDate(''); setEndDate(''); }}
+                                className="text-[10px] font-bold text-rose-700 hover:underline px-1 cursor-pointer"
+                            >
+                                Limpiar
+                            </button>
+                        )}
                     </div>
+
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => setShowModal(true)}
-                    className="px-5 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-2xl shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-95"
-                >
-                    <Plus className="w-4 h-4 text-rose-200" />
-                    <span>+ Crear Nuevo Lote de Envío a LESP</span>
-                </button>
+                {/* Filtros por Estatus Pill */}
+                <div className="flex items-center gap-2 w-full overflow-x-auto pt-2 border-t border-slate-100">
+                    <span className="text-xs font-bold text-slate-500 whitespace-nowrap flex items-center gap-1">
+                        <Filter className="w-3.5 h-3.5 text-[#9D2449]" /> Estatus:
+                    </span>
+                    {[
+                        { id: 'TODOS', label: 'Todos los Registros' },
+                        { id: 'EN_TRANSITO_LAB', label: 'En Tránsito Lab' },
+                        { id: 'PROCESADA_NORMAL', label: 'Procesada Normal' },
+                        { id: 'REGISTRADO', label: 'Registrados' },
+                        { id: 'MUESTRA_COAGULADA', label: 'Alertas Re-Toma' },
+                    ].map((f) => (
+                        <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => setStatusFilter(f.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${statusFilter === f.id
+                                ? 'bg-[#9D2449] text-white shadow-sm'
+                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                }`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+
             </div>
 
-            {errorMessage && (
-                <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3 text-rose-900 text-xs font-bold">
-                    <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-                    <span>{errorMessage}</span>
-                </div>
-            )}
-
-            {/* TARJETAS KPI LOGÍSTICO */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
-                    <div>
-                        <span className="text-xs font-bold text-slate-500">Lotes en Tránsito a LESP</span>
-                        <p className="text-3xl font-black text-amber-600 mt-1">{lotesEnTransito}</p>
-                    </div>
-                    <div className="p-3 bg-amber-50 rounded-2xl text-amber-700 border border-amber-200">
-                        <Truck className="w-6 h-6" />
-                    </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
-                    <div>
-                        <span className="text-xs font-bold text-slate-500">Muestras Enviadas</span>
-                        <p className="text-3xl font-black text-slate-900 mt-1">{totalMuestrasEnviadas}</p>
-                    </div>
-                    <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-700 border border-emerald-200">
-                        <Package className="w-6 h-6" />
-                    </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
-                    <div>
-                        <span className="text-xs font-bold text-slate-500">Destino Central Oficinas</span>
-                        <p className="text-xs font-black text-rose-800 mt-1">LESP Oaxaca (San Bartolo Coyotepec)</p>
-                    </div>
-                    <div className="p-3 bg-rose-50 rounded-2xl text-[#9D2449] border border-rose-200">
-                        <MapPin className="w-6 h-6" />
-                    </div>
-                </div>
-            </div>
-
-            {/* TABLA DE LOTES DE REMISIÓN */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+            {/* TABLA DE REGISTROS HISTÓRICOS */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                        <FileSpreadsheet className="w-4 h-4 text-[#9D2449]" />
-                        <span>Manifiestos y Remisiones de Envíos Registrados</span>
+                        <FileText className="w-4 h-4 text-[#9D2449]" />
+                        <span>Historial Completo de Tarjetas de Tamiz Registradas</span>
                     </h3>
                     <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                        {lotes.length} Lotes en Sistema
+                        {filtrados.length} Registros Encontrados
                     </span>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs font-medium">
+                    <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-slate-100/70 text-slate-500 font-bold uppercase border-b border-slate-200">
-                                <th className="py-3 px-3">N° Lote / Manifiesto</th>
-                                <th className="py-3 px-3">Guía / Rastreo</th>
-                                <th className="py-3 px-3">Transportista</th>
-                                <th className="py-3 px-3">Muestras</th>
-                                <th className="py-3 px-3">Fecha Salida</th>
-                                <th className="py-3 px-3 text-center">Estatus</th>
+                            <tr className="bg-slate-100/70 text-[11px] font-bold uppercase text-slate-500 border-b border-slate-200">
+                                <th className="py-3 px-3">Folio Guthrie</th>
+                                <th className="py-3 px-3">Recién Nacido</th>
+                                <th className="py-3 px-3">Madre / Tutor</th>
+                                <th className="py-3 px-3">Unidad Médica / CLUES</th>
+                                <th className="py-3 px-3">Fecha Toma</th>
+                                <th className="py-3 px-3">Estatus</th>
+                                <th className="py-3 px-3 text-right">Acción</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100 text-xs font-medium">
                             {cargando ? (
                                 <tr>
-                                    <td colSpan={6} className="py-10 text-center text-slate-400 font-semibold flex items-center justify-center gap-2">
-                                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
-                                        <span>Consultando lotes reales en PostgreSQL...</span>
+                                    <td colSpan={7} className="py-10 text-center text-slate-400 font-semibold">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                                            <span>Consultando registros en PostgreSQL...</span>
+                                        </div>
                                     </td>
                                 </tr>
-                            ) : lotes.length === 0 ? (
+                            ) : filtrados.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="py-8 text-center text-slate-400 font-normal">
-                                        No hay lotes de envío registrados en el sistema.
+                                    <td colSpan={7} className="py-8 text-center text-slate-400 font-normal">
+                                        No se encontraron registros de tarjetas Guthrie que coincidan con la búsqueda.
                                     </td>
                                 </tr>
                             ) : (
-                                lotes.map((lote: any) => (
-                                    <tr key={lote.id || lote.id_lote} className="hover:bg-slate-50">
-                                        <td className="py-3.5 px-3 font-mono font-bold text-slate-900">{lote.id || lote.id_lote}</td>
-                                        <td className="py-3.5 px-3 font-mono font-bold text-[#9D2449]">{lote.numeroGuia || lote.numero_guia}</td>
-                                        <td className="py-3.5 px-3 font-semibold text-slate-700">{lote.transportista}</td>
-                                        <td className="py-3.5 px-3 font-black text-slate-900">{lote.cantidadMuestras || lote.cantidad_muestras} tarjetas</td>
-                                        <td className="py-3.5 px-3 text-slate-500">{(lote.fechaSalida || lote.creado_en || '').replace('T', ' ').substring(0, 16)}</td>
-                                        <td className="py-3.5 px-3 text-center">
-                                            {(lote.estatus || lote.estatus_lote) === 'ENTREGADO_LAB' ? (
-                                                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black border border-emerald-300">
-                                                    Entregado en LESP
-                                                </span>
-                                            ) : (
-                                                <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-black border border-amber-300">
-                                                    En Tránsito a LESP
-                                                </span>
-                                            )}
+                                filtrados.map((item) => (
+                                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="py-3.5 px-3 font-mono font-bold text-[#9D2449] bg-rose-50/40 rounded-lg">
+                                            {item.folio_tarjeta || item.folio}
+                                        </td>
+                                        <td className="py-3.5 px-3 font-extrabold text-slate-900">
+                                            {item.rn_nombres || item.rn} {item.rn_apellido_paterno || ''}
+                                        </td>
+                                        <td className="py-3.5 px-3 text-slate-700">
+                                            <div>{item.madre_nombres || item.madre} {item.madre_apellido_paterno || ''}</div>
+                                            <div className="text-[10px] text-slate-400 font-mono">{item.madre_curp || item.curpMadre}</div>
+                                        </td>
+                                        <td className="py-3.5 px-3 text-slate-600">
+                                            <div className="font-bold text-slate-800">{item.unidad_medica_nombre || item.unidadMedica}</div>
+                                            <div className="text-[10px] font-mono text-emerald-700">{item.clues_unidad || item.clues}</div>
+                                        </td>
+                                        <td className="py-3.5 px-3 text-slate-500 font-mono">
+                                            {(item.rn_fecha_toma_muestra || item.fechaToma || '').split('T')[0]}
+                                        </td>
+                                        <td className="py-3.5 px-3">
+                                            {getEstatusBadge(item.estatus_muestra || item.estatus || 'REGISTRADO')}
+                                        </td>
+                                        <td className="py-3.5 px-3 text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedRegistro(item)}
+                                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-[#9D2449] font-bold rounded-xl text-xs flex items-center gap-1 ml-auto border border-rose-200 transition-colors cursor-pointer"
+                                            >
+                                                <Eye className="w-3.5 h-3.5" />
+                                                <span>Ver Ficha</span>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -221,97 +266,80 @@ export const TabControlLotes: React.FC = () => {
                 </div>
             </div>
 
-            {/* MODAL CREAR LOTE INTERACTIVO */}
-            {showModal && (
+            {/* MODAL DETALLE DE FICHA TÉCNICA GUTHRIE */}
+            {selectedRegistro && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border-2 border-[#9D2449] rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+                    <div className="bg-white border-2 border-[#9D2449] rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
                         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                            <div className="flex items-center gap-2 text-[#9D2449]">
-                                <Send className="w-5 h-5" />
-                                <h3 className="text-base font-black text-slate-900">Crear Nuevo Lote de Envío a LESP</h3>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-rose-50 text-[#9D2449] rounded-2xl border border-rose-200">
+                                    <FileText className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-mono font-bold text-[#9D2449] block">
+                                        FOLIO GUTHRIE: {selectedRegistro.folio_tarjeta || selectedRegistro.folio}
+                                    </span>
+                                    <h3 className="text-base font-black text-slate-900">
+                                        Ficha Oficial de Tamiz Neonatal
+                                    </h3>
+                                </div>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setShowModal(false)}
-                                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                                onClick={() => setSelectedRegistro(null)}
+                                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateLote} className="space-y-4 text-xs font-semibold">
-                            <div>
-                                <label className="block text-slate-800 font-bold mb-1">Número de Guía / Tracking *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Ej. GUIA-LESP-2026-001"
-                                    value={guia}
-                                    onChange={(e) => setGuia(e.target.value)}
-                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono font-bold uppercase focus:outline-none focus:border-[#9D2449]"
-                                />
+                        <div className="space-y-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Recién Nacido:</span>
+                                <span className="font-extrabold text-slate-900">
+                                    {selectedRegistro.rn_nombres || selectedRegistro.rn} {selectedRegistro.rn_apellido_paterno || ''}
+                                </span>
                             </div>
-
-                            <div>
-                                <label className="block text-slate-800 font-bold mb-1">Transportista / Mensajería *</label>
-                                <select
-                                    value={transportista}
-                                    onChange={(e) => setTransportista(e.target.value)}
-                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-bold focus:outline-none focus:border-[#9D2449]"
-                                >
-                                    <option value="Vehículo Oficial Jurisdicción No. 2">Vehículo Oficial Jurisdicción No. 2</option>
-                                    <option value="Mensajería Estafeta Express SSO">Mensajería Estafeta Express SSO</option>
-                                    <option value="Servicio Postal Mexicano (Mexpost)">Servicio Postal Mexicano (Mexpost)</option>
-                                </select>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Madre / Tutor:</span>
+                                <span className="font-extrabold text-slate-900">
+                                    {selectedRegistro.madre_nombres || selectedRegistro.madre} {selectedRegistro.madre_apellido_paterno || ''}
+                                </span>
                             </div>
-
-                            {/* SELECCIÓN DE MUESTRAS PENDIENTES */}
-                            <div>
-                                <label className="block text-slate-800 font-bold mb-1.5 flex items-center justify-between">
-                                    <span>Seleccionar Muestras Pendientes de Envío:</span>
-                                    <span className="text-[10px] text-[#9D2449] font-black font-mono">
-                                        {selectedFolios.length} Muestras Seleccionadas
-                                    </span>
-                                </label>
-                                <div className="space-y-2 max-h-40 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-2xl">
-                                    {pendientes.length === 0 ? (
-                                        <p className="text-slate-400 text-center py-2">No hay muestras pendientes de envío registradas.</p>
-                                    ) : (
-                                        pendientes.map((p) => {
-                                            const isSelected = selectedFolios.includes(p.folio);
-                                            return (
-                                                <div
-                                                    key={p.folio}
-                                                    onClick={() => toggleSelectFolio(p.folio)}
-                                                    className={`p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-rose-50 border-[#9D2449]' : 'bg-white border-slate-200 hover:bg-slate-100'
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        {isSelected ? (
-                                                            <CheckSquare className="w-4 h-4 text-[#9D2449]" />
-                                                        ) : (
-                                                            <Square className="w-4 h-4 text-slate-400" />
-                                                        )}
-                                                        <div>
-                                                            <span className="font-mono font-black text-[#9D2449]">{p.folio}</span>
-                                                            <span className="text-slate-700 ml-2 font-bold">{p.rn}</span>
-                                                        </div>
-                                                    </div>
-                                                    <span className="text-[10px] font-mono text-slate-500">{p.unidad}</span>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Unidad de Toma (CLUES):</span>
+                                <span className="font-extrabold text-slate-900">
+                                    {selectedRegistro.unidad_medica_nombre || selectedRegistro.unidadMedica} ({selectedRegistro.clues_unidad || selectedRegistro.clues})
+                                </span>
                             </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Municipio:</span>
+                                <span className="font-extrabold text-slate-900">
+                                    {selectedRegistro.madre_municipio || selectedRegistro.municipio || 'Juchitán'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-bold">Fecha Toma:</span>
+                                <span className="font-mono font-bold text-slate-900">
+                                    {(selectedRegistro.rn_fecha_toma_muestra || selectedRegistro.fechaToma || '').split('T')[0]}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-slate-500 font-bold">Estatus Muestra:</span>
+                                <span>{getEstatusBadge(selectedRegistro.estatus_muestra || selectedRegistro.estatus || 'REGISTRADO')}</span>
+                            </div>
+                        </div>
 
+                        <div className="flex gap-3 pt-2">
                             <button
-                                type="submit"
-                                className="w-full py-3.5 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md cursor-pointer transition-all active:scale-95"
+                                type="button"
+                                onClick={() => window.print()}
+                                className="flex-1 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer"
                             >
-                                Confirmar y Generar Lote de Remisión
+                                <Printer className="w-4 h-4" />
+                                <span>Reimprimir Tarjeta Guthrie</span>
                             </button>
-                        </form>
+                        </div>
                     </div>
                 </div>
             )}
@@ -320,4 +348,4 @@ export const TabControlLotes: React.FC = () => {
     );
 };
 
-export default TabControlLotes;
+export default TabHistorialBusqueda;
