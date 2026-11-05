@@ -1,6 +1,6 @@
 /* spell-checker: disable */
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Filter, Truck, AlertTriangle, CheckCircle2, FileText, Printer, X, Calendar, Loader2, Sparkles, Database } from 'lucide-react';
+import { Search, Eye, Filter, Truck, AlertTriangle, CheckCircle2, FileText, Printer, X, Calendar, Loader2, Sparkles, Database, Download, ArrowUpDown } from 'lucide-react';
 import type { RegistroTamizHistorial } from './types';
 import { http } from '../../../../services/http';
 
@@ -101,13 +101,33 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
         }
     };
 
-    const cardGlassStyle = "p-6 bg-white/5 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(15,23,42,0.5)] space-y-4";
+    const handleExportCSV = () => {
+        if (filtrados.length === 0) {
+            alert('No hay registros para exportar.');
+            return;
+        }
+        const headers = "Folio,Recien Nacido,Madre,Unidad Medica,Fecha Toma,Estatus\n";
+        const rows = filtrados.map(i => 
+            `"${i.folio_tarjeta || i.folio}","${i.rn_nombres || ''}","${i.madre_nombres || ''}","${i.unidad_medica_nombre || ''}","${(i.rn_fecha_toma_muestra || '').split('T')[0]}","${i.estatus_muestra || 'REGISTRADO'}"`
+        ).join("\n");
+        
+        const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `historial_tamiz_sso_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const cardGlassStyle = "p-4 sm:p-6 bg-white/5 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(15,23,42,0.5)] space-y-4";
     const inputGlassStyle = "w-full px-3.5 py-2.5 bg-white/5 border border-white/30 rounded-xl text-white text-xs font-semibold placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
 
     return (
         <div className="space-y-6 text-white w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 animate-fadeIn">
 
-            {/* BARRA DE BÚSQUEDA Y FILTROS */}
+            {/* BARRA DE BÚSQUEDA, FECHAS Y EXPORTACIÓN */}
             <div className={cardGlassStyle}>
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
 
@@ -123,35 +143,47 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                         />
                     </div>
 
-                    {/* Selector de Rango de Fechas */}
-                    <div className="flex items-center gap-2 w-full lg:w-auto bg-white/5 p-2 rounded-2xl border border-white/20 backdrop-blur-md">
-                        <span className="text-xs font-bold text-cyan-200 flex items-center gap-1 pl-1">
-                            <Calendar className="w-4 h-4 text-cyan-400" /> Rango:
-                        </span>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="bg-slate-900/60 border border-white/30 rounded-xl px-2.5 py-1 text-xs text-white font-medium focus:outline-none focus:border-cyan-300"
-                            title="Fecha Inicio"
-                        />
-                        <span className="text-xs font-bold text-white/50">a</span>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="bg-slate-900/60 border border-white/30 rounded-xl px-2.5 py-1 text-xs text-white font-medium focus:outline-none focus:border-cyan-300"
-                            title="Fecha Fin"
-                        />
-                        {(startDate || endDate) && (
-                            <button
-                                type="button"
-                                onClick={() => { setStartDate(''); setEndDate(''); }}
-                                className="text-[10px] font-bold text-rose-300 hover:underline px-1 cursor-pointer"
-                            >
-                                Limpiar
-                            </button>
-                        )}
+                    {/* Controles de Fecha y Botón de Exportación */}
+                    <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-between lg:justify-end">
+                        <div className="flex items-center gap-2 bg-white/5 p-2 rounded-2xl border border-white/20 backdrop-blur-md w-full sm:w-auto overflow-x-auto">
+                            <span className="text-xs font-bold text-cyan-200 flex items-center gap-1 pl-1 shrink-0">
+                                <Calendar className="w-4 h-4 text-cyan-400" /> Rango:
+                            </span>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="bg-slate-900/60 border border-white/30 rounded-xl px-2.5 py-1 text-xs text-white font-medium focus:outline-none focus:border-cyan-300"
+                                title="Fecha Inicio"
+                            />
+                            <span className="text-xs font-bold text-white/50">a</span>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="bg-slate-900/60 border border-white/30 rounded-xl px-2.5 py-1 text-xs text-white font-medium focus:outline-none focus:border-cyan-300"
+                                title="Fecha Fin"
+                            />
+                            {(startDate || endDate) && (
+                                <button
+                                    type="button"
+                                    onClick={() => { setStartDate(''); setEndDate(''); }}
+                                    className="text-[10px] font-bold text-rose-300 hover:underline px-1 cursor-pointer shrink-0"
+                                >
+                                    Limpiar
+                                </button>
+                            )}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleExportCSV}
+                            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-cyan-200 hover:text-white rounded-2xl text-xs font-extrabold flex items-center gap-2 border border-white/20 backdrop-blur-md transition-all cursor-pointer shadow-md shrink-0 w-full sm:w-auto justify-center"
+                            title="Exportar registros filtrados a CSV"
+                        >
+                            <Download className="w-4 h-4 text-cyan-400" />
+                            <span>Exportar CSV</span>
+                        </button>
                     </div>
 
                 </div>
@@ -183,7 +215,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                 </div>
             </div>
 
-            {/* TABLA DE REGISTROS HISTÓRICOS */}
+            {/* SECCIÓN DE REGISTROS (VISTA HÍBRIDA: CARDS EN MÓVIL Y TABLA EN ESCRITORIO) */}
             <div className={cardGlassStyle}>
                 <div className="flex items-center justify-between border-b border-white/15 pb-3">
                     <h3 className="text-sm font-black text-white flex items-center gap-2.5">
@@ -197,7 +229,49 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                     </span>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* VISTA MÓVIL: TARJETAS TÁCTILES */}
+                <div className="block lg:hidden space-y-3">
+                    {cargando ? (
+                        <div className="py-12 text-center text-cyan-200 font-semibold flex items-center justify-center gap-2.5">
+                            <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+                            <span>Consultando registros en PostgreSQL...</span>
+                        </div>
+                    ) : filtrados.length === 0 ? (
+                        <div className="py-10 text-center text-white/50 text-xs">
+                            No se encontraron registros de tarjetas Guthrie que coincidan con la búsqueda.
+                        </div>
+                    ) : (
+                        filtrados.map((item) => (
+                            <div key={item.id} className="p-4 bg-white/5 rounded-2xl border border-white/15 space-y-3 backdrop-blur-md shadow-lg">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-mono font-black text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-xl border border-cyan-400/20 text-xs">
+                                        {item.folio_tarjeta || item.folio}
+                                    </span>
+                                    {getEstatusBadge(item.estatus_muestra || item.estatus || 'REGISTRADO')}
+                                </div>
+                                <div className="space-y-1 text-xs">
+                                    <div><strong className="text-cyan-200">RN:</strong> <span className="text-white font-bold">{item.rn_nombres || item.rn} {item.rn_apellido_paterno || ''}</span></div>
+                                    <div><strong className="text-cyan-200">Madre:</strong> <span className="text-cyan-100">{item.madre_nombres || item.madre} {item.madre_apellido_paterno || ''}</span></div>
+                                    <div><strong className="text-cyan-200">Unidad:</strong> <span className="text-cyan-100/90 text-[11px]">{item.unidad_medica_nombre || item.unidadMedica}</span></div>
+                                    <div><strong className="text-cyan-200">Fecha Toma:</strong> <span className="font-mono text-cyan-300">{(item.rn_fecha_toma_muestra || item.fechaToma || '').split('T')[0]}</span></div>
+                                </div>
+                                <div className="pt-2 border-t border-white/10 flex justify-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedRegistro(item)}
+                                        className="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-blue-600 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-white/30 shadow-md active:scale-95 transition-all"
+                                    >
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span>Ver Ficha Completa</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* VISTA ESCRITORIO: TABLA DE ALTA DEFINICIÓN */}
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-white/5 text-[11px] font-bold uppercase text-cyan-200 border-b border-white/15">
@@ -272,7 +346,6 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                 <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl z-50 flex items-center justify-center p-4 animate-fadeIn">
                     <div className="relative border border-cyan-400/40 bg-slate-900/80 max-w-xl w-full p-6 sm:p-8 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-3xl space-y-6 text-white overflow-hidden">
                         
-                        {/* Luces decorativas */}
                         <div className="absolute -top-24 -left-24 size-48 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none" />
                         <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
 
