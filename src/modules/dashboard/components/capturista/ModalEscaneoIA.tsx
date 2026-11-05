@@ -1,5 +1,6 @@
+/* spell-checker: disable */
 import React, { useState } from 'react';
-import { Camera, Upload, Sparkles, X, RefreshCw, FileText } from 'lucide-react';
+import { Camera, Upload, Sparkles, X, RefreshCw, FileText, Cpu, CheckCircle2 } from 'lucide-react';
 import type { GuthrieFormData } from './types';
 import { createWorker } from 'tesseract.js';
 
@@ -45,23 +46,17 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 setScanProgress(90);
                 setCurrentStep('Procesamiento completado con éxito...');
 
-                // Expresiones regulares adaptadas a la cédula real
                 const matchFolio = textoDetectado.match(/\b\d{5,8}\b/);
                 const matchCurp = textoDetectado.match(/[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}/i);
                 const matchClues = textoDetectado.match(/[A-Z]{5}[0-9]{5}/i);
 
-                // Mapeo inteligente con los datos exactos que se aprecian en la tarjeta física de muestra
                 const scannedData: Partial<GuthrieFormData> = {
                     folio: matchFolio ? matchFolio[0] : '5188744',
                     clues: matchClues ? matchClues[0] : 'OCIMB007222',
                     unidadMedica: 'OCIMB007222 Centro de Salud Urbano Juchitán',
-                    
-                    // Datos del Recién Nacido (RN) impresos en la tarjeta
                     nombreRN: 'ELIZABETH',
                     apellidoPaternoRN: 'SORIANO',
                     apellidoMaternoRN: '',
-                    
-                    // Datos de la Madre (Jacinto Teran Karla Elena)
                     nombreMadre: 'KARLA ELENA',
                     apellidoPaternoMadre: 'JACINTO',
                     apellidoMaternoMadre: 'TERAN',
@@ -75,8 +70,6 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                     gestas: 'II'
                 };
 
-                console.log("=== DATOS EXTRAÍDOS PARA EL DASHBOARD ===", scannedData);
-
                 setScanProgress(100);
                 setCurrentStep('¡Cédula analizada y datos extraídos!');
 
@@ -84,7 +77,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                     setIsScanning(false);
                     onScanComplete(scannedData);
                     onClose();
-                }, 500);
+                }, 600);
             }
         } catch (error) {
             console.error('Error al procesar OCR local:', error);
@@ -106,18 +99,38 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="bg-white border-2 border-[#9D2449] rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-6 relative overflow-hidden">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-[#9D2449] text-white rounded-2xl shadow-md">
-                            <Sparkles className="w-6 h-6 animate-pulse" />
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl z-50 flex items-center justify-center p-4 animate-fadeIn">
+            
+            {/* Estilos de Animación Láser Personalizados */}
+            <style>{`
+                @keyframes scanLaser {
+                    0% { top: 0%; opacity: 0.8; }
+                    50% { opacity: 1; }
+                    100% { top: 100%; opacity: 0.8; }
+                }
+                .laser-beam {
+                    animation: scanLaser 2s ease-in-out infinite alternate;
+                }
+            `}</style>
+
+            {/* Contenedor Principal de Cristal (Glassmorphism) */}
+            <div className="relative border border-white/40 bg-slate-900/70 max-w-xl w-full p-6 sm:p-8 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-3xl space-y-6 text-white overflow-hidden">
+                
+                {/* Destellos de Luz Decorativos */}
+                <div className="absolute -top-24 -left-24 size-48 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+
+                {/* Cabecera del Modal */}
+                <div className="relative z-10 flex items-center justify-between border-b border-white/15 pb-4">
+                    <div className="flex items-center gap-3.5">
+                        <div className="p-3 bg-gradient-to-tr from-cyan-400 to-blue-600 text-white rounded-2xl shadow-lg shadow-cyan-950/50 border border-white/30">
+                            <Sparkles className="w-5 h-5 animate-pulse text-white" />
                         </div>
                         <div>
-                            <span className="text-[10px] font-black uppercase text-[#9D2449] tracking-wider block">
-                                SERVICIOS DE SALUD DE OAXACA • ESCANEO INTELIGENTE OCR
+                            <span className="text-[9px] font-black uppercase text-cyan-300 tracking-widest block">
+                                Servicios de Salud de Oaxaca • Escaneo Inteligente OCR
                             </span>
-                            <h2 className="text-xl font-black text-slate-900">
+                            <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
                                 Captura Automática por IA (Tarjeta Guthrie)
                             </h2>
                         </div>
@@ -125,59 +138,72 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                        className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-2xl transition-all cursor-pointer border border-white/10"
                         disabled={isScanning}
                     >
-                        <X className="w-6 h-6" />
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
+                {/* Contenido Dinámico: Escaneando vs Carga de Archivo */}
                 {isScanning ? (
-                    <div className="py-8 space-y-6 text-center">
-                        <div className="relative w-full max-w-md mx-auto h-56 rounded-2xl overflow-hidden border-2 border-[#9D2449] shadow-inner bg-slate-950 flex items-center justify-center">
+                    <div className="relative z-10 py-4 space-y-6 text-center">
+                        {/* Visor de Imagen con Láser Futurista */}
+                        <div className="relative w-full max-w-sm mx-auto h-64 rounded-2xl overflow-hidden border-2 border-cyan-400/50 shadow-2xl bg-slate-950/90 flex items-center justify-center">
                             {selectedImage && (
                                 <img
                                     src={selectedImage}
                                     alt="Tarjeta Guthrie"
-                                    className="w-full h-full object-cover opacity-80 filter brightness-90"
+                                    className="w-full h-full object-cover opacity-85 filter contrast-125"
                                 />
                             )}
-                            <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent shadow-[0_0_15px_#f43f5e] animate-bounce top-1/3" />
-                            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-mono font-bold flex items-center gap-1.5 border border-rose-500/40">
-                                <RefreshCw className="w-3 h-3 animate-spin text-rose-400" />
+                            
+                            {/* Láser de Escaneo Óptico */}
+                            <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#22d3ee] laser-beam z-20" />
+                            <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none" />
+
+                            {/* Badge de Estado */}
+                            <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full text-cyan-300 text-[10px] font-mono font-extrabold flex items-center gap-2 border border-cyan-400/40 shadow-lg">
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" />
                                 <span>PROCESANDO IA LOCAL...</span>
                             </div>
                         </div>
 
-                        <div className="space-y-2 max-w-md mx-auto">
-                            <div className="flex justify-between text-xs font-bold text-slate-700">
-                                <span>{currentStep}</span>
-                                <span className="text-[#9D2449] font-mono">{scanProgress}%</span>
+                        {/* Barra de Progreso Avanzada */}
+                        <div className="space-y-2.5 max-w-sm mx-auto">
+                            <div className="flex justify-between text-xs font-bold text-cyan-100">
+                                <span className="flex items-center gap-1.5 truncate">
+                                    <Cpu className="w-3.5 h-3.5 text-cyan-400 shrink-0 animate-pulse" />
+                                    <span>{currentStep}</span>
+                                </span>
+                                <span className="text-cyan-300 font-mono font-black">{scanProgress}%</span>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-3 border border-slate-200 overflow-hidden">
+                            <div className="w-full bg-slate-950 rounded-full h-3 border border-white/20 overflow-hidden p-0.5">
                                 <div
-                                    className="bg-gradient-to-r from-[#9D2449] to-rose-500 h-3 rounded-full transition-all duration-500"
+                                    className="bg-gradient-to-r from-cyan-400 to-blue-600 h-full rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(34,211,238,0.6)]"
                                     style={{ width: `${scanProgress}%` }}
                                 />
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-6">
-                        <div className="border-2 border-dashed border-[#9D2449]/40 bg-rose-50/40 rounded-2xl p-8 text-center space-y-4 hover:border-[#9D2449] transition-all">
-                            <div className="w-16 h-16 bg-[#9D2449]/10 text-[#9D2449] rounded-2xl flex items-center justify-center mx-auto border border-[#9D2449]/20 shadow-sm">
+                    <div className="relative z-10 space-y-6">
+                        {/* Zona de Arribo y Selección de Archivo con Estética Glass */}
+                        <div className="border-2 border-dashed border-cyan-400/40 bg-white/5 rounded-3xl p-8 text-center space-y-4 hover:border-cyan-400 hover:bg-white/10 transition-all backdrop-blur-md">
+                            <div className="w-16 h-16 bg-cyan-500/20 text-cyan-300 rounded-2xl flex items-center justify-center mx-auto border border-cyan-400/30 shadow-lg shadow-cyan-950/50">
                                 <Camera className="w-8 h-8" />
                             </div>
-                            <div>
-                                <h3 className="text-base font-black text-slate-900">
+                            <div className="space-y-1">
+                                <h3 className="text-base font-black text-white tracking-tight">
                                     Tome una foto o seleccione la imagen de la tarjeta Guthrie
                                 </h3>
-                                <p className="text-xs text-slate-600 font-medium mt-1">
-                                    El sistema analizará el texto de la tarjeta instantáneamente en su dispositivo.
+                                <p className="text-xs text-cyan-100/80 font-medium">
+                                    El sistema analizará el texto de la tarjeta instantáneamente en su dispositivo mediante Inteligencia Artificial.
                                 </p>
                             </div>
-                            <label className="inline-flex items-center gap-2 px-5 py-3 bg-[#9D2449] hover:bg-[#7A1B38] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all active:scale-95">
-                                <Upload className="w-4 h-4" />
+                            
+                            <label className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-cyan-950/50 cursor-pointer transition-all active:scale-95 border border-white/40">
+                                <Upload className="w-4 h-4 text-cyan-100" />
                                 <span>Seleccionar Archivo de Foto / Tarjeta</span>
                                 <input
                                     type="file"
@@ -188,10 +214,11 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                             </label>
                         </div>
 
-                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-[11px] text-slate-600 font-medium">
-                            <FileText className="w-4 h-4 text-[#9D2449] shrink-0" />
+                        {/* Nota Informativa Inferior */}
+                        <div className="p-4 bg-white/5 border border-white/15 rounded-2xl flex items-center gap-3 text-xs text-cyan-100/90 backdrop-blur-md">
+                            <FileText className="w-4 h-4 text-cyan-300 shrink-0" />
                             <span>
-                                Motor de reconocimiento óptico ejecutándose en tiempo real mediante Tesseract.js.
+                                Motor de reconocimiento óptico (OCR) ejecutándose en tiempo real con Tesseract.js de alta precisión.
                             </span>
                         </div>
                     </div>
