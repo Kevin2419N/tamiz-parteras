@@ -9,30 +9,27 @@ interface TabHistorialBusquedaProps {
 }
 
 export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ registros: propsRegistros = [] }) => {
-    const [registros, setRegistros] = useState<RegistroTamizHistorial[]>(propsRegistros);
+    const [registros, setRegistros] = useState<any[]>(propsRegistros);
     const [cargando, setCargando] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('TODOS');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
-    const [selectedRegistro, setSelectedRegistro] = useState<RegistroTamizHistorial | null>(null);
+    const [selectedRegistro, setSelectedRegistro] = useState<any | null>(null);
 
-    // Carga de historial desde el backend real en PostgreSQL con filtros
+    // Carga de historial desde el backend real en PostgreSQL
     useEffect(() => {
         const cargarHistorial = async () => {
             setCargando(true);
             try {
-                const params: any = {};
-                if (searchTerm.trim()) params.busqueda = searchTerm;
-                if (statusFilter !== 'TODOS') params.estatus = statusFilter;
-                if (startDate) params.fecha_inicio = startDate;
-                if (endDate) params.fecha_fin = endDate;
-
-                const res = await http.get('/api/tamiz/muestras', { params });
-                setRegistros(res.data || []);
+                // RUTA CORREGIDA: Apunta exactamente al endpoint /tamiz/muestras del backend
+                const res = await http.get('/tamiz/muestras');
+                if (res.data) {
+                    setRegistros(res.data);
+                }
             } catch (error) {
                 console.error('Error al cargar el historial desde el backend:', error);
-                setRegistros([]); // Dejar vacío si ocurre un error de conexión
+                setRegistros([]);
             } finally {
                 setCargando(false);
             }
@@ -40,26 +37,33 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
 
         const timeoutId = setTimeout(() => {
             cargarHistorial();
-        }, 300); // Debounce para búsqueda fluida
+        }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, statusFilter, startDate, endDate]);
+    }, []);
 
     const filtrados = registros.filter((item) => {
+        const folioStr = item.folio_tarjeta || item.folio || '';
+        const rnStr = `${item.rn_nombres || item.rn || ''} ${item.rn_apellido_paterno || ''}`;
+        const madreStr = `${item.madre_nombres || item.madre || ''} ${item.madre_apellido_paterno || ''}`;
+        const munStr = item.madre_municipio || item.municipio || '';
+
         const matchSearch =
-            (item.folio && item.folio.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (item.rn && item.rn.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (item.madre && item.madre.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (item.municipio && item.municipio.toLowerCase().includes(searchTerm.toLowerCase()));
+            folioStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            rnStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            madreStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            munStr.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchStatus = statusFilter === 'TODOS' || item.estatus === statusFilter;
+        const estatusItem = item.estatus_muestra || item.estatus || 'REGISTRADO';
+        const matchStatus = statusFilter === 'TODOS' || estatusItem === statusFilter;
 
+        const fechaTomaStr = (item.rn_fecha_toma_muestra || item.fechaToma || '').split('T')[0];
         let matchDate = true;
-        if (startDate && item.fechaToma) {
-            matchDate = matchDate && item.fechaToma >= startDate;
+        if (startDate && fechaTomaStr) {
+            matchDate = matchDate && fechaTomaStr >= startDate;
         }
-        if (endDate && item.fechaToma) {
-            matchDate = matchDate && item.fechaToma <= endDate;
+        if (endDate && fechaTomaStr) {
+            matchDate = matchDate && fechaTomaStr <= endDate;
         }
 
         return matchSearch && matchStatus && matchDate;
@@ -119,7 +123,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                         />
                     </div>
 
-                    {/* Selector de Rango de Fechas (Calendario Inicio y Fin) */}
+                    {/* Selector de Rango de Fechas */}
                     <div className="flex items-center gap-2 w-full lg:w-auto bg-slate-50 p-2 rounded-2xl border border-slate-200">
                         <span className="text-xs font-bold text-slate-600 flex items-center gap-1 pl-1">
                             <Calendar className="w-4 h-4 text-[#9D2449]" /> Rango:
@@ -161,6 +165,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                         { id: 'TODOS', label: 'Todos los Registros' },
                         { id: 'EN_TRANSITO_LAB', label: 'En Tránsito Lab' },
                         { id: 'PROCESADA_NORMAL', label: 'Procesada Normal' },
+                        { id: 'REGISTRADO', label: 'Registrados' },
                         { id: 'MUESTRA_COAGULADA', label: 'Alertas Re-Toma' },
                     ].map((f) => (
                         <button
@@ -224,19 +229,25 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                                 filtrados.map((item) => (
                                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                                         <td className="py-3.5 px-3 font-mono font-bold text-[#9D2449] bg-rose-50/40 rounded-lg">
-                                            {item.folio}
+                                            {item.folio_tarjeta || item.folio}
                                         </td>
-                                        <td className="py-3.5 px-3 font-extrabold text-slate-900">{item.rn}</td>
+                                        <td className="py-3.5 px-3 font-extrabold text-slate-900">
+                                            {item.rn_nombres || item.rn} {item.rn_apellido_paterno || ''}
+                                        </td>
                                         <td className="py-3.5 px-3 text-slate-700">
-                                            <div>{item.madre}</div>
-                                            <div className="text-[10px] text-slate-400 font-mono">{item.curpMadre}</div>
+                                            <div>{item.madre_nombres || item.madre} {item.madre_apellido_paterno || ''}</div>
+                                            <div className="text-[10px] text-slate-400 font-mono">{item.madre_curp || item.curpMadre}</div>
                                         </td>
                                         <td className="py-3.5 px-3 text-slate-600">
-                                            <div className="font-bold text-slate-800">{item.unidadMedica}</div>
-                                            <div className="text-[10px] font-mono text-emerald-700">{item.clues}</div>
+                                            <div className="font-bold text-slate-800">{item.unidad_medica_nombre || item.unidadMedica}</div>
+                                            <div className="text-[10px] font-mono text-emerald-700">{item.clues_unidad || item.clues}</div>
                                         </td>
-                                        <td className="py-3.5 px-3 text-slate-500 font-mono">{item.fechaToma}</td>
-                                        <td className="py-3.5 px-3">{getEstatusBadge(item.estatus)}</td>
+                                        <td className="py-3.5 px-3 text-slate-500 font-mono">
+                                            {(item.rn_fecha_toma_muestra || item.fechaToma || '').split('T')[0]}
+                                        </td>
+                                        <td className="py-3.5 px-3">
+                                            {getEstatusBadge(item.estatus_muestra || item.estatus || 'REGISTRADO')}
+                                        </td>
                                         <td className="py-3.5 px-3 text-right">
                                             <button
                                                 type="button"
@@ -266,7 +277,7 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                                 </div>
                                 <div>
                                     <span className="text-[10px] font-mono font-bold text-[#9D2449] block">
-                                        FOLIO GUTHRIE: {selectedRegistro.folio}
+                                        FOLIO GUTHRIE: {selectedRegistro.folio_tarjeta || selectedRegistro.folio}
                                     </span>
                                     <h3 className="text-base font-black text-slate-900">
                                         Ficha Oficial de Tamiz Neonatal
@@ -285,27 +296,37 @@ export const TabHistorialBusqueda: React.FC<TabHistorialBusquedaProps> = ({ regi
                         <div className="space-y-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
                             <div className="flex justify-between border-b border-slate-200 pb-2">
                                 <span className="text-slate-500 font-bold">Recién Nacido:</span>
-                                <span className="font-extrabold text-slate-900">{selectedRegistro.rn}</span>
+                                <span className="font-extrabold text-slate-900">
+                                    {selectedRegistro.rn_nombres || selectedRegistro.rn} {selectedRegistro.rn_apellido_paterno || ''}
+                                </span>
                             </div>
                             <div className="flex justify-between border-b border-slate-200 pb-2">
                                 <span className="text-slate-500 font-bold">Madre / Tutor:</span>
-                                <span className="font-extrabold text-slate-900">{selectedRegistro.madre}</span>
+                                <span className="font-extrabold text-slate-900">
+                                    {selectedRegistro.madre_nombres || selectedRegistro.madre} {selectedRegistro.madre_apellido_paterno || ''}
+                                </span>
                             </div>
                             <div className="flex justify-between border-b border-slate-200 pb-2">
                                 <span className="text-slate-500 font-bold">Unidad de Toma (CLUES):</span>
-                                <span className="font-extrabold text-slate-900">{selectedRegistro.unidadMedica} ({selectedRegistro.clues})</span>
+                                <span className="font-extrabold text-slate-900">
+                                    {selectedRegistro.unidad_medica_nombre || selectedRegistro.unidadMedica} ({selectedRegistro.clues_unidad || selectedRegistro.clues})
+                                </span>
                             </div>
                             <div className="flex justify-between border-b border-slate-200 pb-2">
                                 <span className="text-slate-500 font-bold">Municipio:</span>
-                                <span className="font-extrabold text-slate-900">{selectedRegistro.municipio}</span>
+                                <span className="font-extrabold text-slate-900">
+                                    {selectedRegistro.madre_municipio || selectedRegistro.municipio || 'Juchitán'}
+                                </span>
                             </div>
                             <div className="flex justify-between border-b border-slate-200 pb-2">
                                 <span className="text-slate-500 font-bold">Fecha Toma:</span>
-                                <span className="font-mono font-bold text-slate-900">{selectedRegistro.fechaToma}</span>
+                                <span className="font-mono font-bold text-slate-900">
+                                    {(selectedRegistro.rn_fecha_toma_muestra || selectedRegistro.fechaToma || '').split('T')[0]}
+                                </span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-500 font-bold">Estatus Muestra:</span>
-                                <span>{getEstatusBadge(selectedRegistro.estatus)}</span>
+                                <span>{getEstatusBadge(selectedRegistro.estatus_muestra || selectedRegistro.estatus || 'REGISTRADO')}</span>
                             </div>
                         </div>
 
