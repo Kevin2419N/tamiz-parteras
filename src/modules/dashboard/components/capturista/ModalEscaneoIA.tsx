@@ -112,18 +112,21 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                 }
             `}</style>
 
-            <div className="relative border border-cyan-400/40 bg-slate-900/80 max-w-xl w-full p-6 sm:p-8 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-3xl space-y-6 text-white overflow-hidden">
+            {/* Contenedor con fondo translúcido glassmorphism idéntico al capturador */}
+            <div className="relative border border-white/30 bg-white/10 max-w-xl w-full p-6 sm:p-8 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-3xl space-y-6 text-white overflow-hidden">
                 
+                {/* Luces decorativas ambientales */}
                 <div className="absolute -top-24 -left-24 size-48 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
 
-                <div className="relative z-10 flex items-center justify-between border-b border-white/15 pb-4">
+                {/* Cabecera */}
+                <div className="relative z-10 flex items-center justify-between border-b border-white/20 pb-4">
                     <div className="flex items-center gap-3.5">
-                        <div className="p-3 bg-gradient-to-tr from-cyan-400 to-blue-600 text-white rounded-2xl shadow-lg shadow-cyan-950/50 border border-white/30">
-                            <Sparkles className="w-5 h-5 animate-pulse text-white" />
+                        <div className="p-3 bg-cyan-500/20 text-cyan-300 rounded-2xl shadow-lg border border-cyan-400/40 backdrop-blur-md">
+                            <Sparkles className="w-5 h-5 animate-pulse" />
                         </div>
                         <div>
-                            <span className="text-[9px] font-black uppercase text-cyan-300 tracking-widest block">
+                            <span className="text-[9px] font-black uppercase text-cyan-200 tracking-widest block">
                                 Servicios de Salud de Oaxaca • Escaneo Inteligente OCR
                             </span>
                             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
@@ -134,7 +137,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-2xl transition-all cursor-pointer border border-white/10"
+                        className="p-2.5 text-white/70 hover:text-white bg-white/5 hover:bg-white/15 rounded-2xl transition-all cursor-pointer border border-white/20 backdrop-blur-md"
                         disabled={isScanning}
                     >
                         <X className="w-5 h-5" />
@@ -143,7 +146,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
 
                 {isScanning ? (
                     <div className="relative z-10 py-4 space-y-6 text-center">
-                        <div className="relative w-full max-w-sm mx-auto h-64 rounded-2xl overflow-hidden border-2 border-cyan-400/50 shadow-2xl bg-slate-950/90 flex items-center justify-center">
+                        <div className="relative w-full max-w-sm mx-auto h-64 rounded-2xl overflow-hidden border-2 border-cyan-400/50 shadow-2xl bg-slate-950/80 flex items-center justify-center">
                             {selectedImage && (
                                 <img
                                     src={selectedImage}
@@ -169,7 +172,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                                 </span>
                                 <span className="text-cyan-300 font-mono font-black">{scanProgress}%</span>
                             </div>
-                            <div className="w-full bg-slate-950 rounded-full h-3 border border-white/20 overflow-hidden p-0.5">
+                            <div className="w-full bg-white/5 rounded-full h-3 border border-white/20 overflow-hidden p-0.5 backdrop-blur-md">
                                 <div
                                     className="bg-gradient-to-r from-cyan-400 to-blue-600 h-full rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(34,211,238,0.6)]"
                                     style={{ width: `${scanProgress}%` }}
@@ -179,7 +182,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                     </div>
                 ) : (
                     <div className="relative z-10 space-y-6">
-                        <div className="border-2 border-dashed border-cyan-400/40 bg-white/5 rounded-3xl p-8 text-center space-y-4 hover:border-cyan-400 hover:bg-white/10 transition-all backdrop-blur-md">
+                        <div className="border-2 border-dashed border-white/30 bg-white/5 rounded-3xl p-8 text-center space-y-4 hover:border-cyan-400 hover:bg-white/10 transition-all backdrop-blur-md shadow-inner">
                             <div className="w-16 h-16 bg-cyan-500/20 text-cyan-300 rounded-2xl flex items-center justify-center mx-auto border border-cyan-400/30 shadow-lg shadow-cyan-950/50">
                                 <Camera className="w-8 h-8" />
                             </div>
@@ -204,7 +207,7 @@ export const ModalEscaneoIA: React.FC<ModalEscaneoIAProps> = ({ isOpen, onClose,
                             </label>
                         </div>
 
-                        <div className="p-4 bg-white/5 border border-white/15 rounded-2xl flex items-center gap-3 text-xs text-cyan-100/90 backdrop-blur-md">
+                        <div className="p-4 bg-white/5 border border-white/20 rounded-2xl flex items-center gap-3 text-xs text-cyan-100/90 backdrop-blur-md">
                             <FileText className="w-4 h-4 text-cyan-300 shrink-0" />
                             <span>
                                 Motor de reconocimiento óptico (OCR) ejecutándose en tiempo real con Tesseract.js de alta precisión.
