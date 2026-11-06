@@ -11,7 +11,7 @@ import {
     ShieldCheck,
     Menu,
     X,
-    Stethoscope
+    Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -35,11 +35,11 @@ interface TabConfig {
     badge?: number;
 }
 
-/* Estilos simétricos y de alta gama homologados idénticos al capturador */
-const ACCENT = 'bg-gradient-to-r from-cyan-400 to-blue-600';
+/* Estilos simétricos y de alta gama homologados */
+const ACCENT = 'bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 shadow-[0_0_20px_rgba(34,211,238,0.4)]';
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-0';
-const GLASS = 'lg-edge relative border border-white/40 bg-slate-900/40 shadow-[0_20px_40px_-15px_rgba(15,23,42,0.6)] backdrop-blur-3xl';
-const SECONDARY_BTN = `flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-all duration-200 hover:border-white/50 hover:bg-white/20 active:scale-[0.98] ${FOCUS}`;
+const GLASS = 'lg-edge relative border border-white/30 bg-white/10 shadow-[0_20px_40px_-15px_rgba(15,23,42,0.6)] backdrop-blur-3xl';
+const SECONDARY_BTN = `flex items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-all duration-200 hover:border-white/50 hover:bg-white/20 active:scale-[0.98] ${FOCUS}`;
 
 const DASHBOARD_CSS = `
 @keyframes lgFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -52,7 +52,7 @@ const DASHBOARD_CSS = `
 .lg-float-b{animation:lgFloatB 26s ease-in-out infinite}
 .lg-text{text-shadow:0 1px 3px rgba(15,23,42,.4)}
 .lg-edge::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
-background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.3) 35%,rgba(255,255,255,0) 60%,rgba(255,255,255,.5));
+background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,255,255,.25) 35%,rgba(255,255,255,0) 60%,rgba(255,255,255,.4));
 -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 `;
 
@@ -101,7 +101,7 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
         <div className="lg-text min-h-screen w-full overflow-x-hidden p-2.5 text-white selection:bg-cyan-300/40 sm:p-6">
             <style>{DASHBOARD_CSS}</style>
 
-            {/* Fondo Inmersivo Absoluto con fondo-login.png */}
+            {/* Fondo Inmersivo Absoluto */}
             <div aria-hidden="true" className="fixed inset-0 z-0 overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-950">
                 <img
                     src="/fondo-login.png"
@@ -116,12 +116,12 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
                 <div className="lg-float-b absolute -bottom-28 -right-20 size-[32rem] rounded-full bg-blue-400/25 blur-3xl pointer-events-none" />
             </div>
 
-            {/* Contenedor Principal Simétrico */}
+            {/* Contenedor Principal */}
             <div className="relative z-10 mx-auto max-w-7xl space-y-4 sm:space-y-6">
 
-                {/* 1. CABECERA INSTITUCIONAL HOMOLOGADA */}
+                {/* 1. CABECERA INSTITUCIONAL */}
                 <header className={`lg-card ${GLASS} rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left`}>
-                    <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
+                    <div className="flex items-center gap-3.5 w-full sm:w-auto justify-center sm:justify-start">
                         <img
                             src="/logo-jurisdiccion.png"
                             alt="Logo Jurisdicción Sanitaria No. 2"
@@ -143,7 +143,6 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
                             <img src="/Logo-Secretaria.png" alt="Logo Secretaría de Salud" draggable={false} className="h-5 sm:h-6 w-auto object-contain" />
                         </div>
 
-                        {/* Botón de menú móvil */}
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -177,7 +176,7 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
 
                         <div className="flex flex-wrap items-center justify-center gap-2.5 w-full lg:w-auto">
                             {casosPendientesCount > 0 && (
-                                <div className="flex items-center gap-2 bg-rose-500/20 border border-rose-400/40 px-3.5 py-2 rounded-xl backdrop-blur-md">
+                                <div className="flex items-center gap-2 bg-rose-500/20 border border-rose-400/40 px-3.5 py-2.5 rounded-2xl backdrop-blur-md shadow-lg">
                                     <AlertTriangle className="size-4 text-rose-300 animate-pulse" />
                                     <span className="text-xs font-black text-rose-200">{casosPendientesCount} Casos Pendientes</span>
                                 </div>
@@ -203,7 +202,7 @@ export const DashboardMedico: React.FC<DashboardMedicoProps> = ({
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer relative ${
                                     isActive
-                                        ? `${ACCENT} text-white shadow-lg shadow-cyan-950/50 ring-1 ring-white/50`
+                                        ? `${ACCENT} text-white ring-1 ring-white/50`
                                         : 'bg-white/5 text-white/80 hover:bg-white/15 hover:text-white border border-white/10'
                                 }`}
                             >
