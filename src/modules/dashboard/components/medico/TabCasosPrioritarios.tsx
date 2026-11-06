@@ -350,7 +350,8 @@ export const TabCasosPrioritarios: React.FC = () => {
             setCargando(true);
             setErrorMsg(null);
             try {
-                const res = await http.get('/api/medico/tamiz/casos-prioritarios');
+                // CORREGIDO: Se apunta a la ruta relativa correcta tomando baseURL (/api/v1)
+                const res = await http.get('/medico/tamiz/casos-prioritarios');
                 setCasos(res.data || []);
             } catch (error: any) {
                 console.error('Error al conectar con el backend para casos prioritarios:', error);
@@ -381,7 +382,8 @@ export const TabCasosPrioritarios: React.FC = () => {
 
     const handleSave2Muestra = async (data: RegistroSegundaMuestra) => {
         try {
-            await http.post('/api/medico/tamiz/solicitar-segunda-muestra', data);
+            // CORREGIDO: Ruta relativa limpia sin duplicar /api/
+            await http.post('/medico/tamiz/solicitar-segunda-muestra', data);
 
             setCasos(prev => prev.map(c =>
                 c.id === data.casoId
