@@ -1,7 +1,7 @@
+/* spell-checker: disable */
 import React, { useState, useEffect } from 'react';
 import { UserCheck, Plus, X, Mail, Shield, ShieldCheck, Phone, Lock, Building2, Loader2, AlertCircle, Search, KeyRound } from 'lucide-react';
 import type { UsuarioSSO, UnidadCLUES } from './types';
-import { getCluesCatalog, subscribeCluesCatalog } from './cluesData';
 import { http } from '../../../../services/http';
 
 export const TabCuentasPersonal: React.FC = () => {
@@ -10,15 +10,11 @@ export const TabCuentasPersonal: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [busqueda, setBusqueda] = useState<string>('');
 
-    const [cluesList, setCluesList] = useState<UnidadCLUES[]>(getCluesCatalog());
+    // Estado dinámico para el catálogo de unidades médicas reales desde PostgreSQL
+    const [cluesList, setCluesList] = useState<UnidadCLUES[]>([]);
+    const [cargandoClues, setCargandoClues] = useState<boolean>(false);
 
-    useEffect(() => {
-        const unsubscribe = subscribeCluesCatalog((updatedList) => {
-            setCluesList(updatedList);
-        });
-        return unsubscribe;
-    }, []);
-
+    // Cargar cuentas de personal desde el backend
     useEffect(() => {
         const cargarUsuarios = async () => {
             setCargando(true);
@@ -39,6 +35,26 @@ export const TabCuentasPersonal: React.FC = () => {
         cargarUsuarios();
     }, []);
 
+    // Cargar el catálogo CLUES real desde la base de datos
+    useEffect(() => {
+        const cargarCluesReal = async () => {
+            setCargandoClues(true);
+            try {
+                const response = await http.get('/clues');
+                if (response.data && Array.isArray(response.data)) {
+                    setCluesList(response.data);
+                }
+            } catch (error) {
+                console.error('Error al cargar el catálogo CLUES:', error);
+                setCluesList([]);
+            } finally {
+                setCargandoClues(false);
+            }
+        };
+
+        cargarCluesReal();
+    }, []);
+
     const [showModal, setShowModal] = useState(false);
     const [nombres, setNombres] = useState('');
     const [apellidoPaterno, setApellidoPaterno] = useState('');
@@ -53,9 +69,10 @@ export const TabCuentasPersonal: React.FC = () => {
     const [showPinText, setShowPinText] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Seleccionar automáticamente la primera unidad cuando cargue la lista
     useEffect(() => {
         if (cluesList.length > 0 && !selectedCluesId) {
-            setSelectedCluesId(cluesList[0].id);
+            setSelectedCluesId(cluesList[0].id || cluesList[0].clues);
         }
     }, [cluesList, selectedCluesId]);
 
@@ -97,7 +114,7 @@ export const TabCuentasPersonal: React.FC = () => {
         setIsSubmitting(true);
         setErrorMessage(null);
 
-        const foundUnit = cluesList.find((u) => u.id === selectedCluesId) || cluesList[0];
+        const foundUnit = cluesList.find((u: any) => String(u.id) === String(selectedCluesId) || String(u.clues) === String(selectedCluesId)) || cluesList[0];
 
         const payload = {
             nombre: nombres.trim(),
@@ -108,7 +125,7 @@ export const TabCuentasPersonal: React.FC = () => {
             telefono,
             municipio: municipio.trim() || foundUnit?.municipio || 'Juchitán de Zaragoza',
             rol,
-            unidadMedicaId: foundUnit ? foundUnit.id : null,
+            unidadMedicaId: foundUnit ? (foundUnit.id || null) : null,
             unidadAsignada: foundUnit ? `${foundUnit.nombre} (${foundUnit.clues})` : 'Unidad Médica SSO',
             clues: foundUnit?.clues || 'OASSA000000',
             pinTemporal: pinTemporal || '123456',
@@ -327,7 +344,7 @@ export const TabCuentasPersonal: React.FC = () => {
                 )}
             </div>
 
-            {/* MODAL CREAR USUARIO INSTITUCIONAL SSO (CON CLUES ESTILIZADAS) */}
+            {/* MODAL CREAR USUARIO INSTITUCIONAL SSO (CON CLUES DINÁMICAS DESDE POSTGRESQL) */}
             {showModal && (
                 <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6">
                     <div className="bg-slate-900/95 border border-white/40 rounded-[32px] max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl shadow-slate-950/90 backdrop-blur-3xl overflow-y-auto max-h-[90vh] lg-modal">
@@ -486,22 +503,26 @@ export const TabCuentasPersonal: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    {/* SELECTOR DE CLUES MEJORADO Y VISIBLE */}
+                                    {/* SELECTOR DE CLUES DESDE POSTGRESQL */}
                                     <div>
                                         <label className="block text-cyan-100 font-bold mb-1 flex items-center justify-between text-[11px]">
                                             <span>Unidad Médica de Adscripción / CLUES *</span>
-                                            <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                                            {cargandoClues && <span className="text-[10px] text-cyan-300 animate-pulse">Cargando catálogo...</span>}
                                         </label>
                                         <select
                                             value={selectedCluesId}
                                             onChange={(e) => setSelectedCluesId(e.target.value)}
                                             className="w-full px-3.5 py-3 bg-slate-950 border-2 border-cyan-400/60 rounded-xl text-white focus:outline-none focus:border-cyan-400 font-extrabold text-xs shadow-lg shadow-cyan-950/50"
                                         >
-                                            {cluesList.map((unit) => (
-                                                <option key={unit.id} value={unit.id} className="bg-slate-900 text-white font-bold py-2">
-                                                    🏥 [{unit.clues}] - {unit.nombre} ({unit.municipio})
-                                                </option>
-                                            ))}
+                                            {cluesList.length === 0 ? (
+                                                <option value="" className="bg-slate-900 text-white">No hay unidades registradas</option>
+                                            ) : (
+                                                cluesList.map((unit: any) => (
+                                                    <option key={unit.id || unit.clues} value={unit.id || unit.clues} className="bg-slate-900 text-white font-bold py-2">
+                                                        🏥 [{unit.clues}] - {unit.nombre} ({unit.municipio || 'Oaxaca'})
+                                                    </option>
+                                                ))
+                                            )}
                                         </select>
                                     </div>
 
@@ -538,7 +559,7 @@ export const TabCuentasPersonal: React.FC = () => {
 
                                     {/* RESUMEN VISUAL DE CLUES SELECCIONADA */}
                                     {(() => {
-                                        const currentUnit = cluesList.find((u) => u.id === selectedCluesId);
+                                        const currentUnit: any = cluesList.find((u: any) => String(u.id) === String(selectedCluesId) || String(u.clues) === String(selectedCluesId));
                                         if (!currentUnit) return null;
                                         return (
                                             <div className="p-3 bg-cyan-950/40 rounded-2xl border border-cyan-400/40 space-y-1 text-[11px] backdrop-blur-md shadow-lg">
@@ -550,7 +571,7 @@ export const TabCuentasPersonal: React.FC = () => {
                                                 </div>
                                                 <div className="flex justify-between text-cyan-100 font-medium">
                                                     <span>Ubicación / Municipio:</span>
-                                                    <span className="font-bold text-white">{currentUnit.municipio}</span>
+                                                    <span className="font-bold text-white">{currentUnit.municipio || 'Oaxaca'}</span>
                                                 </div>
                                             </div>
                                         );
