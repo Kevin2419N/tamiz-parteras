@@ -1,6 +1,6 @@
 /* spell-checker: disable */
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Phone, Calendar, MessageSquare, CheckCircle2, X, Loader2, ShieldAlert, BellRing } from 'lucide-react';
+import { AlertTriangle, Phone, Calendar, MessageSquare, CheckCircle2, X, Loader2, ShieldAlert, BellRing, Send } from 'lucide-react';
 import type { RegistroTamizHistorial } from './types';
 import { http } from '../../../../services/http';
 
@@ -19,7 +19,8 @@ export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: pro
         const cargarAlertasRecall = async () => {
             setCargando(true);
             try {
-                const res = await http.get('/api/tamiz/alertas-recall');
+                // Ruta corregida con el prefijo /api/v1/ para empatar con el backend
+                const res = await http.get('/api/v1/tamiz/alertas-recall');
                 setAlertas(res.data || []);
             } catch (error) {
                 console.error('Error al cargar alertas de recall desde el backend:', error);
@@ -34,7 +35,7 @@ export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: pro
 
     const handleSendNotification = async (item: RegistroTamizHistorial) => {
         try {
-            await http.post('/api/tamiz/notificar-recall', {
+            await http.post('/api/v1/tamiz/notificar-recall', {
                 casoId: item.id,
                 folio: item.folio,
                 telefono: (item as any).telefonoContacto,
@@ -43,23 +44,36 @@ export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: pro
 
             setNotifiedIds(prev => [...prev, item.id]);
             setSelectedContacto(null);
-            alert('¡Notificación enviada exitosamente a la madre / partera!');
+            alert('¡Notificación registrada y enviada exitosamente!');
         } catch (error: any) {
             console.error('Error al enviar notificación:', error);
             alert('Error al enviar la notificación a través del servidor.');
         }
     };
 
+    const handleWhatsAppDirect = (item: any) => {
+        const telefono = item.telefonoContacto ? item.telefonoContacto.replace(/\D/g, '') : '';
+        const mensaje = encodeURIComponent(
+            `SERVICIOS DE SALUD DE OAXACA: Aviso urgente de RE-TOMA de Tamiz Neonatal para el recién nacido de ${item.madre} (Folio: ${item.folio}). Motivo: ${item.motivoRecall || 'Muestra coagulada'}. Favor de acudir a su Unidad de Salud.`
+        );
+        
+        if (telefono) {
+            window.open(`https://wa.me/52${telefono}?text=${mensaje}`, '_blank');
+        } else {
+            alert('El paciente no cuenta con un número de teléfono celular registrado.');
+        }
+    };
+
     const handleScheduleRetoma = async (item: RegistroTamizHistorial) => {
         try {
-            await http.post('/api/tamiz/agendar-retoma', {
+            await http.post('/api/v1/tamiz/agendar-retoma', {
                 casoId: item.id,
                 folio: item.folio,
                 unidadMedica: item.unidadMedica
             });
 
             setScheduledIds(prev => [...prev, item.id]);
-            alert(`¡Re-toma de muestra agendada exitosamente en el servidor para el recién nacido de ${item.madre} (Folio ${item.folio})!`);
+            alert(`¡Re-toma de muestra agendada exitosamente para el recién nacido de ${item.madre} (Folio ${item.folio})!`);
         } catch (error: any) {
             console.error('Error al agendar re-toma:', error);
             alert('Error al agendar la re-toma en el servidor.');
@@ -240,14 +254,23 @@ export const TabAlertasRecall: React.FC<TabAlertasRecallProps> = ({ alertas: pro
                                 />
                             </div>
 
-                            <div className="flex gap-2 pt-2">
+                            <div className="flex flex-col gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => handleWhatsAppDirect(selectedContacto)}
+                                    className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 border border-white/40"
+                                >
+                                    <MessageSquare className="w-4 h-4 text-emerald-100" />
+                                    <span>Enviar por WhatsApp Directo</span>
+                                </button>
+
                                 <button
                                     type="button"
                                     onClick={() => handleSendNotification(selectedContacto)}
-                                    className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white font-extrabold rounded-2xl shadow-lg shadow-cyan-950/50 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 border border-white/40"
+                                    className="w-full py-3 bg-white/10 hover:bg-white/20 text-cyan-200 font-bold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-all border border-white/20"
                                 >
-                                    <MessageSquare className="w-4 h-4 text-cyan-100" />
-                                    <span>Enviar Mensaje SMS / WhatsApp</span>
+                                    <Send className="w-4 h-4" />
+                                    <span>Registrar Notificación en el Servidor</span>
                                 </button>
                             </div>
                         </div>
