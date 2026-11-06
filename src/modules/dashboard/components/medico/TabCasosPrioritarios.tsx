@@ -24,15 +24,15 @@ import { http } from '../../../../services/http';
 
 function getEstatusBadge(estatus: EstatusResultado): React.ReactNode {
     const map: Record<EstatusResultado, { label: string; cls: string }> = {
-        MUESTRA_INADECUADA: { label: 'Muestra Inadecuada', cls: 'bg-amber-500/20 text-amber-300 border border-amber-400/40 backdrop-blur-md' },
-        RESULTADO_SOSPECHOSO: { label: 'Resultado Sospechoso', cls: 'bg-rose-500/20 text-rose-300 border border-rose-400/40 backdrop-blur-md' },
-        RETOMA_REQUERIDA: { label: 'Re-toma Requerida', cls: 'bg-orange-500/20 text-orange-300 border border-orange-400/40 backdrop-blur-md' },
-        MUESTRA_VENOSA_PENDIENTE: { label: 'Venosa Pendiente', cls: 'bg-purple-500/20 text-purple-300 border border-purple-400/40 backdrop-blur-md' },
-        EN_CONFIRMACION: { label: 'En Confirmación', cls: 'bg-blue-500/20 text-blue-300 border border-blue-400/40 backdrop-blur-md' },
-        CONFIRMADO_POSITIVO: { label: 'Confirmado Positivo', cls: 'bg-red-500/30 text-red-200 border border-red-400/60 font-black backdrop-blur-md animate-pulse' },
-        NORMAL: { label: 'Normal', cls: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 backdrop-blur-md' },
+        MUESTRA_INADECUADA: { label: 'Muestra Inadecuada', cls: 'bg-amber-500/25 text-amber-200 border border-amber-400/50 backdrop-blur-md' },
+        RESULTADO_SOSPECHOSO: { label: 'Resultado Sospechoso', cls: 'bg-rose-500/25 text-rose-200 border border-rose-400/50 backdrop-blur-md' },
+        RETOMA_REQUERIDA: { label: 'Re-toma Requerida', cls: 'bg-orange-500/25 text-orange-200 border border-orange-400/50 backdrop-blur-md' },
+        MUESTRA_VENOSA_PENDIENTE: { label: 'Venosa Pendiente', cls: 'bg-purple-500/25 text-purple-200 border border-purple-400/50 backdrop-blur-md' },
+        EN_CONFIRMACION: { label: 'En Confirmación', cls: 'bg-blue-500/25 text-blue-200 border border-blue-400/50 backdrop-blur-md' },
+        CONFIRMADO_POSITIVO: { label: 'Confirmado Positivo', cls: 'bg-red-600/40 text-white border border-red-400 font-black backdrop-blur-md animate-pulse' },
+        NORMAL: { label: 'Normal', cls: 'bg-emerald-500/25 text-emerald-200 border border-emerald-400/50 backdrop-blur-md' },
     };
-    const { label, cls } = map[estatus] || { label: estatus, cls: 'bg-white/10 text-cyan-200 border border-white/20 backdrop-blur-md' };
+    const { label, cls } = map[estatus] || { label: estatus, cls: 'bg-slate-800 text-slate-200 border border-slate-600 backdrop-blur-md' };
     return <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black shadow-lg ${cls}`}>{label}</span>;
 }
 
@@ -176,8 +176,8 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
         tratamiento,
     };
 
-    const inputGlassStyle = "w-full px-3.5 py-2.5 bg-white/5 border border-white/30 rounded-xl text-white text-xs font-semibold placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
-    const selectGlassStyle = "w-full px-3.5 py-2.5 bg-slate-900/60 border border-white/30 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
+    const inputGlassStyle = "w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/40 rounded-xl text-white text-xs font-semibold placeholder:text-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 backdrop-blur-md transition-all shadow-inner";
+    const selectGlassStyle = "w-full px-3.5 py-2.5 bg-slate-950/90 border border-white/40 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 backdrop-blur-md transition-all shadow-inner";
 
     return (
         <>
@@ -190,8 +190,8 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                 }
             `}</style>
 
-            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl z-50 flex items-start justify-center p-4 overflow-y-auto animate-fadeIn">
-                <div className="relative border border-cyan-400/40 bg-slate-900/90 max-w-2xl w-full rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-3xl my-4 text-white overflow-hidden">
+            <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl z-50 flex items-start justify-center p-4 overflow-y-auto animate-fadeIn">
+                <div className="relative border border-cyan-400/50 bg-slate-950/95 max-w-2xl w-full rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-3xl my-4 text-white overflow-hidden">
                     
                     <div className="absolute -top-24 -left-24 size-48 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none" />
                     <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
@@ -200,11 +200,11 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                         <div>
                             <span className="text-[10px] font-black uppercase text-cyan-300 tracking-widest block">Servicios de Salud de Oaxaca</span>
                             <h3 className="text-base sm:text-lg font-black text-white tracking-tight">Registro de 2ª Muestra / Venosa Confirmatoria</h3>
-                            <p className="text-xs text-cyan-100/80 mt-0.5">
+                            <p className="text-xs text-slate-200 mt-0.5">
                                 Folio <span className="font-black text-cyan-300">{caso.folio}</span> · {caso.nombreRN} · {caso.tipoPrueba}
                             </p>
                         </div>
-                        <button type="button" onClick={onClose} className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-all border border-white/20 backdrop-blur-md cursor-pointer">
+                        <button type="button" onClick={onClose} className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all border border-white/30 backdrop-blur-md cursor-pointer">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
@@ -218,13 +218,13 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                                     onChange={e => setTipo(e.target.value as RegistroSegundaMuestra['tipoMuestra'])}
                                     className={selectGlassStyle}
                                 >
-                                    <option value="TALON_RETOMA" className="bg-slate-900 text-white">Re-toma Talón (Guthrie)</option>
-                                    <option value="VENOSA_CONFIRMATORIA" className="bg-slate-900 text-white">Muestra Venosa Confirmatoria</option>
+                                    <option value="TALON_RETOMA" className="bg-slate-950 text-white">Re-toma Talón (Guthrie)</option>
+                                    <option value="VENOSA_CONFIRMATORIA" className="bg-slate-950 text-white">Muestra Venosa Confirmatoria</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-black text-cyan-200 uppercase tracking-wider mb-1.5">Prueba Objetivo</label>
-                                <div className="bg-cyan-500/20 border border-cyan-400/40 rounded-xl px-3.5 py-2.5 text-xs font-black text-cyan-300 backdrop-blur-md">
+                                <div className="bg-cyan-500/30 border border-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs font-black text-cyan-200 backdrop-blur-md">
                                     {caso.tipoPrueba}
                                 </div>
                             </div>
@@ -233,14 +233,14 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-black text-cyan-200 uppercase tracking-wider mb-1.5">
-                                    <Calendar className="w-3.5 h-3.5 inline mr-1 text-cyan-400" />Fecha Obtención
+                                    <Calendar className="w-3.5 h-3.5 inline mr-1 text-cyan-300" />Fecha Obtención
                                 </label>
                                 <input type="date" required value={fechaObtension} onChange={e => setFechaObtension(e.target.value)}
                                     className={inputGlassStyle} />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-black text-cyan-200 uppercase tracking-wider mb-1.5">
-                                    <Calendar className="w-3.5 h-3.5 inline mr-1 text-cyan-400" />Fecha Envío Lab.
+                                    <Calendar className="w-3.5 h-3.5 inline mr-1 text-cyan-300" />Fecha Envío Lab.
                                 </label>
                                 <input type="date" required value={fechaEnvio} onChange={e => setFechaEnvio(e.target.value)}
                                     className={inputGlassStyle} />
@@ -250,7 +250,7 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-black text-cyan-200 uppercase tracking-wider mb-1.5">
-                                    <Beaker className="w-3.5 h-3.5 inline mr-1 text-cyan-400" />Valor TSH Tamiz Previo
+                                    <Beaker className="w-3.5 h-3.5 inline mr-1 text-cyan-300" />Valor TSH Tamiz Previo
                                 </label>
                                 <input type="text" placeholder="Ej. 25.4 mU/L" value={valorTshPrevio} onChange={e => setValorTshPrevio(e.target.value)}
                                     className={inputGlassStyle} />
@@ -266,15 +266,15 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
 
                         <div>
                             <label className="block text-[10px] font-black text-cyan-200 uppercase tracking-wider mb-1.5">
-                                <Hash className="w-3.5 h-3.5 inline mr-1 text-cyan-400" />Laboratorio Destino
+                                <Hash className="w-3.5 h-3.5 inline mr-1 text-cyan-300" />Laboratorio Destino
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {(Object.entries(labOpciones) as [NonNullable<RegistroSegundaMuestra['laboratorioId']>, string][]).map(([id, label]) => (
                                     <button key={id} type="button"
                                         onClick={() => handleLabChange(id)}
                                         className={`text-left px-3 py-2.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer backdrop-blur-md ${laboratorioId === id
-                                            ? 'bg-gradient-to-r from-cyan-400 to-blue-600 border-white/40 text-white shadow-lg shadow-cyan-950/50'
-                                            : 'bg-white/5 border-white/20 text-cyan-100 hover:bg-white/10'}`}>
+                                            ? 'bg-gradient-to-r from-cyan-400 to-blue-600 border-white text-white shadow-lg shadow-cyan-950/70'
+                                            : 'bg-slate-900/80 border-white/30 text-slate-200 hover:bg-slate-800'}`}>
                                         {label}
                                     </button>
                                 ))}
@@ -293,24 +293,24 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
                                 className={inputGlassStyle + " resize-none"} />
                         </div>
 
-                        <div className="border border-white/20 rounded-2xl overflow-hidden backdrop-blur-md bg-white/5">
+                        <div className="border border-white/30 rounded-2xl overflow-hidden backdrop-blur-md bg-slate-900/80">
                             <button type="button"
                                 onClick={() => setMostrarCedula(v => !v)}
-                                className="w-full flex items-center justify-between px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors text-xs font-black text-white cursor-pointer">
+                                className="w-full flex items-center justify-between px-4 py-3 bg-white/10 hover:bg-white/20 transition-colors text-xs font-black text-white cursor-pointer">
                                 <span className="flex items-center gap-2">
                                     <FileText className="w-4 h-4 text-cyan-300" />
                                     Vista previa: Cédula de Orden de Laboratorio Confirmatoria
                                 </span>
-                                <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold border ${mostrarCedula ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40' : 'bg-white/10 text-white/70 border-white/20'}`}>
+                                <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold border ${mostrarCedula ? 'bg-cyan-500/30 text-cyan-200 border-cyan-400/60' : 'bg-white/10 text-white border-white/30'}`}>
                                     {mostrarCedula ? 'Ocultar' : 'Ver Cédula'}
                                 </span>
                             </button>
                             {mostrarCedula && (
-                                <div className="p-4 space-y-3 bg-slate-950/80">
+                                <div className="p-4 space-y-3 bg-slate-950">
                                     <CedulaLaboratorio caso={caso} datos={cedulaData} />
                                     <button type="button"
                                         onClick={() => window.print()}
-                                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-400 to-blue-600 text-white text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-lg border border-white/30">
+                                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-400 to-blue-600 text-white text-[10px] font-black rounded-xl transition-all cursor-pointer shadow-lg border border-white/40">
                                         <Printer className="w-3.5 h-3.5" />
                                         Imprimir Cédula de Laboratorio (A5)
                                     </button>
@@ -320,11 +320,11 @@ const Modal2Muestra: React.FC<Modal2MuestraProps> = ({ caso, onClose, onSave }) 
 
                         <div className="flex justify-end gap-3 pt-2">
                             <button type="button" onClick={onClose}
-                                className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-2xl border border-white/20 backdrop-blur-md cursor-pointer transition-all">
+                                className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-2xl border border-white/30 backdrop-blur-md cursor-pointer transition-all">
                                 Cancelar
                             </button>
                             <button type="submit"
-                                className="px-6 py-3 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white text-xs font-extrabold rounded-2xl flex items-center gap-2 shadow-lg shadow-cyan-950/50 transition-all active:scale-95 border border-white/40 cursor-pointer">
+                                className="px-6 py-3 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white text-xs font-extrabold rounded-2xl flex items-center gap-2 shadow-lg shadow-cyan-950/70 transition-all active:scale-95 border border-white/50 cursor-pointer">
                                 <Syringe className="w-4 h-4 text-cyan-100" />
                                 Registrar y Enviar a Lab.
                             </button>
@@ -355,7 +355,7 @@ export const TabCasosPrioritarios: React.FC = () => {
             } catch (error: any) {
                 console.error('Error al conectar con el backend para casos prioritarios:', error);
                 setErrorMsg('No se pudo conectar con el servidor para obtener los casos prioritarios.');
-                setCasos([]); // Cero datos simulados, array vacío limpio
+                setCasos([]);
             } finally {
                 setCargando(false);
             }
@@ -395,32 +395,32 @@ export const TabCasosPrioritarios: React.FC = () => {
         }
     };
 
-    const cardGlassStyle = "p-5 bg-white/5 rounded-3xl border border-white/30 backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(15,23,42,0.5)] space-y-4 text-white";
-    const inputGlassStyle = "w-full px-3.5 py-2.5 bg-white/5 border border-white/30 rounded-xl text-white text-xs font-semibold placeholder:text-white/40 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/30 backdrop-blur-md transition-all shadow-inner";
+    const cardGlassStyle = "p-5 bg-slate-950/80 rounded-3xl border border-white/40 backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)] space-y-4 text-white";
+    const inputGlassStyle = "w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/40 rounded-xl text-white text-xs font-semibold placeholder:text-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 backdrop-blur-md transition-all shadow-inner";
 
     return (
         <div className="space-y-6 text-white animate-fadeIn">
             {errorMsg && (
-                <div className="bg-rose-500/20 border border-rose-400/40 p-3.5 rounded-2xl text-rose-200 text-xs font-bold flex items-center gap-2.5 backdrop-blur-md shadow-lg">
+                <div className="bg-rose-950/80 border border-rose-500/60 p-3.5 rounded-2xl text-rose-200 text-xs font-bold flex items-center gap-2.5 backdrop-blur-md shadow-lg">
                     <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                     <span>{errorMsg}</span>
                 </div>
             )}
 
-            {/* TARJETAS KPI DE CRISTAL */}
+            {/* TARJETAS KPI DE CRISTAL ALTO CONTRASTE */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                    { label: 'Casos Pendientes', value: pendientes, icon: AlertTriangle, cls: 'bg-rose-500/10 border-rose-400/30 text-rose-300' },
-                    { label: 'Muestras Inadecuadas', value: inadecuadas, icon: FlaskConical, cls: 'bg-amber-500/10 border-amber-400/30 text-amber-300' },
-                    { label: 'En Confirmación', value: enConfirmacion, icon: Clock, cls: 'bg-blue-500/10 border-blue-400/30 text-blue-300' },
+                    { label: 'Casos Pendientes', value: pendientes, icon: AlertTriangle, cls: 'bg-rose-950/70 border-rose-500/50 text-rose-200' },
+                    { label: 'Muestras Inadecuadas', value: inadecuadas, icon: FlaskConical, cls: 'bg-amber-950/70 border-amber-500/50 text-amber-200' },
+                    { label: 'En Confirmación', value: enConfirmacion, icon: Clock, cls: 'bg-blue-950/70 border-blue-500/50 text-blue-200' },
                 ].map(({ label, value, icon: Icon, cls }) => (
-                    <div key={label} className={`flex items-center gap-4 p-5 rounded-3xl border ${cls} backdrop-blur-3xl shadow-[0_15px_30px_-10px_rgba(15,23,42,0.5)]`}>
-                        <div className="p-3 bg-white/10 rounded-2xl border border-white/20 backdrop-blur-md shadow-lg">
+                    <div key={label} className={`flex items-center gap-4 p-5 rounded-3xl border ${cls} backdrop-blur-3xl shadow-[0_15px_30px_-10px_rgba(0,0,0,0.7)]`}>
+                        <div className="p-3 bg-white/10 rounded-2xl border border-white/30 backdrop-blur-md shadow-lg">
                             <Icon className="w-5 h-5 text-cyan-300" />
                         </div>
                         <div>
                             <p className="text-3xl font-black text-white">{value}</p>
-                            <p className="text-xs font-bold text-cyan-200/90 mt-0.5">{label}</p>
+                            <p className="text-xs font-bold text-slate-200 mt-0.5">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -438,12 +438,12 @@ export const TabCasosPrioritarios: React.FC = () => {
                 />
             </div>
 
-            {/* TABLA DE CASOS PRIORITARIOS */}
+            {/* TABLA DE CASOS PRIORITARIOS ALTO CONTRASTE */}
             <div className={cardGlassStyle + " overflow-hidden p-0 sm:p-0"}>
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[700px] text-xs text-left border-collapse">
                         <thead>
-                            <tr className="bg-white/5 text-cyan-200 uppercase tracking-wider text-[11px] font-bold border-b border-white/15">
+                            <tr className="bg-slate-900/90 text-cyan-200 uppercase tracking-wider text-[11px] font-bold border-b border-white/20">
                                 <th className="px-4.5 py-3.5">Folio / R.N.</th>
                                 <th className="px-4.5 py-3.5">Madre • CLUES</th>
                                 <th className="px-4.5 py-3.5">Prueba</th>
@@ -464,31 +464,31 @@ export const TabCasosPrioritarios: React.FC = () => {
                                 </tr>
                             ) : casosFiltrados.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="text-center py-12 text-white/50 font-normal">
+                                    <td colSpan={6} className="text-center py-12 text-slate-300 font-normal">
                                         No se encontraron casos prioritarios registrados en el servidor.
                                     </td>
                                 </tr>
                             ) : (
                                 casosFiltrados.map(caso => (
-                                    <tr key={caso.id} className="hover:bg-white/5 transition-colors">
+                                    <tr key={caso.id} className="hover:bg-white/10 transition-colors">
                                         <td className="px-4.5 py-3.5">
                                             <p className="font-mono font-black text-cyan-300">{caso.folio}</p>
-                                            <p className="text-cyan-100/80 text-[11px] mt-0.5">{caso.nombreRN}</p>
+                                            <p className="text-slate-200 text-[11px] mt-0.5">{caso.nombreRN}</p>
                                         </td>
                                         <td className="px-4.5 py-3.5">
                                             <p className="font-bold text-white">{caso.nombreMadre}</p>
-                                            <div className="flex items-center gap-1 text-cyan-300/80 text-[10px] font-mono mt-0.5">
+                                            <div className="flex items-center gap-1 text-cyan-300 text-[10px] font-mono mt-0.5">
                                                 <MapPin className="w-3 h-3" />
                                                 <span>{caso.clues}</span>
                                             </div>
                                         </td>
                                         <td className="px-4.5 py-3.5">
-                                            <span className="font-black text-white bg-white/10 border border-white/20 px-2.5 py-1 rounded-xl">{caso.tipoPrueba}</span>
+                                            <span className="font-black text-white bg-white/15 border border-white/30 px-2.5 py-1 rounded-xl">{caso.tipoPrueba}</span>
                                         </td>
                                         <td className="px-4.5 py-3.5">
                                             <p className="font-bold text-white">{caso.valorObtenido ?? '—'}</p>
                                             {caso.valorReferencia && (
-                                                <p className="text-[10px] text-cyan-200/80 font-mono">Ref: {caso.valorReferencia}</p>
+                                                <p className="text-[10px] text-slate-300 font-mono">Ref: {caso.valorReferencia}</p>
                                             )}
                                         </td>
                                         <td className="px-4.5 py-3.5">
@@ -499,14 +499,14 @@ export const TabCasosPrioritarios: React.FC = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => setCasoSeleccionado(caso)}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-cyan-950/50 transition-all active:scale-95 border border-white/30 cursor-pointer"
+                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-cyan-950/70 transition-all active:scale-95 border border-white/40 cursor-pointer"
                                                 >
                                                     <FlaskConical className="w-3.5 h-3.5 text-cyan-100" />
                                                     2ª Muestra / Venosa
                                                 </button>
                                             )}
                                             {caso.estatusResultado === 'EN_CONFIRMACION' && (
-                                                <span className="inline-flex items-center gap-1 text-cyan-300 text-xs font-bold bg-cyan-500/20 border border-cyan-400/40 px-3 py-1.5 rounded-xl backdrop-blur-md">
+                                                <span className="inline-flex items-center gap-1 text-cyan-200 text-xs font-bold bg-cyan-600/30 border border-cyan-400/50 px-3 py-1.5 rounded-xl backdrop-blur-md">
                                                     <Clock className="w-3.5 h-3.5" /> En Lab.
                                                 </span>
                                             )}
