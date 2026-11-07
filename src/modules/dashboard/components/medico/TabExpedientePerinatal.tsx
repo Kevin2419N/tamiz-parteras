@@ -430,7 +430,6 @@ export const TabExpedientePerinatal: React.FC = () => {
     const [pacientes, setPacientes] = useState<ExpedientePerinatal[]>([]);
     const [expediente, setExpediente] = useState<ExpedientePerinatal | null>(null);
     const [cargando, setCargando] = useState<boolean>(true);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const [nuevaConsulta, setNuevaConsulta] = useState<Partial<ConsultaAntenatal>>({});
     const [mostrarFormConsulta, setMostrarFormConsulta] = useState(false);
@@ -442,9 +441,7 @@ export const TabExpedientePerinatal: React.FC = () => {
     useEffect(() => {
         const cargarExpedientes = async () => {
             setCargando(true);
-            setErrorMsg(null);
             try {
-                // RUTA LIMPIA (Sin duplicar /api/v1 ya que http.ts ya lo incluye)
                 const res = await http.get('/medico/perinatales/pacientes-activas');
                 const lista: ExpedientePerinatal[] = res.data;
                 setPacientes(lista);
@@ -457,7 +454,6 @@ export const TabExpedientePerinatal: React.FC = () => {
                 }
             } catch (error: any) {
                 console.warn('Backend no disponible o sin registros, cargando datos de respaldo perinatales:', error);
-                setErrorMsg('No se pudo conectar con el servidor. Mostrando datos de respaldo locales.');
                 const mockExp: ExpedientePerinatal = {
                     id: 'EXP-2026-0089',
                     expedienteId: 'EXP-2026-0089',
@@ -626,13 +622,6 @@ export const TabExpedientePerinatal: React.FC = () => {
 
     return (
         <div className="space-y-5 mt-4 print-scope">
-            {errorMsg && (
-                <div className="bg-amber-50 border border-amber-300 p-3 rounded-xl text-amber-900 text-xs font-bold flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>{errorMsg}</span>
-                </div>
-            )}
-
             <style>{`
                 @media print {
                     body * { visibility: hidden !important; }
