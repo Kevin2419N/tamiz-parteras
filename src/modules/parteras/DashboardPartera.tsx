@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Volume2,
     VolumeX,
-    ShieldCheck,
     BadgeCheck,
     CheckCircle2,
     Ambulance,
@@ -12,6 +11,7 @@ import {
     KeyRound,
     ChevronLeft,
     LogOut,
+    UserRound,
     Hand,
     type LucideIcon
 } from 'lucide-react';
@@ -52,6 +52,17 @@ interface CardImageProps {
     alt: string;
     FallbackIcon: LucideIcon;
     className?: string;
+}
+
+interface DashboardParteraProps {
+    nombrePartera?: string;
+    comunidad?: string;
+    avatarSrc?: string;
+}
+
+interface AvatarParteraProps {
+    src: string;
+    nombre: string;
 }
 
 interface OndasVozProps {
@@ -160,6 +171,38 @@ const OndasVoz: React.FC<OndasVozProps> = ({ className = '' }) => (
     </span>
 );
 
+const AvatarPartera: React.FC<AvatarParteraProps> = ({ src, nombre }) => {
+    const [falla, setFalla] = useState<boolean>(false);
+
+    return (
+        <div className="relative shrink-0">
+            {/* Destello dorado sutil */}
+            <span
+                className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-[#C2603A]/60 via-[#EDBF55] to-[#C2603A]/60 opacity-80 blur-[3px]"
+                aria-hidden="true"
+            />
+            {/* Borde doble: terracota exterior + aro blanco + aro dorado interior */}
+            <div className="relative p-[3px] rounded-full bg-gradient-to-br from-[#C2603A] to-[#8F3F1E] shadow-lg shadow-[#8F3F1E]/35">
+                <div className="p-[3px] rounded-full bg-white">
+                    <div className="w-14 h-14 sm:w-[4.5rem] sm:h-[4.5rem] rounded-full overflow-hidden bg-orange-50 ring-2 ring-[#EDBF55]/80 flex items-center justify-center">
+                        {falla ? (
+                            <UserRound className="w-8 h-8 text-[#8F3F1E]" aria-hidden="true" />
+                        ) : (
+                            <img
+                                src={src}
+                                alt={`Fotografía de ${nombre}`}
+                                draggable={false}
+                                onError={() => setFalla(true)}
+                                className="w-full h-full object-cover"
+                            />
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const CardImage: React.FC<CardImageProps> = ({ src, alt, FallbackIcon, className = '' }) => {
     const [falla, setFalla] = useState<boolean>(false);
 
@@ -220,7 +263,11 @@ const elegirMejorVoz = (voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | n
 /* Componente principal                                               */
 /* ------------------------------------------------------------------ */
 
-export const DashboardPartera: React.FC = () => {
+export const DashboardPartera: React.FC<DashboardParteraProps> = ({
+    nombrePartera = 'Doña María Eustolia Jiménez',
+    comunidad = 'Santa Catarina Juquila, Oaxaca',
+    avatarSrc = '/avatar-partera-default.png'
+}) => {
     // Autenticación PIN / QR
     const [pinIngresado, setPinIngresado] = useState<string>('');
     const [autenticado, setAutenticado] = useState<boolean>(true); // true para demo directa
@@ -305,7 +352,7 @@ export const DashboardPartera: React.FC = () => {
         if (pin === '1234' || pin.length === 4) {
             setAutenticado(true);
             setErrorPin(false);
-            hablarTexto('Acceso verificado. Bienvenida.');
+            hablarTexto(`Acceso verificado. Bienvenida, ${nombrePartera}.`);
         } else {
             setErrorPin(true);
         }
@@ -437,57 +484,52 @@ export const DashboardPartera: React.FC = () => {
                         <span className="flex-1 bg-[#3E8E7E]" />
                     </div>
 
-                    <div className="p-3 sm:p-5 space-y-3">
-                        {/* Fila superior: identidad + Salir */}
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                                {vistaActiva !== 'HOME' && (
-                                    <button
-                                        type="button"
-                                        onClick={volverAlMenu}
-                                        title="Regresar al Menú Principal"
-                                        aria-label="Regresar al Menú Principal"
-                                        className="shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-3 rounded-full bg-orange-50 hover:bg-orange-100 text-[#8F3F1E] border border-orange-200 text-sm font-bold transition-all active:scale-95 hover:-translate-x-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/30 pt-fade-in"
-                                    >
-                                        <ChevronLeft className="w-5 h-5" aria-hidden="true" />
-                                        <span className="hidden sm:inline">Menú</span>
-                                    </button>
-                                )}
+                    <div className="p-3 sm:p-5 grid grid-cols-[1fr_auto] lg:grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3 lg:gap-x-6">
+                        {/* IZQUIERDA: avatar + identidad */}
+                        <div className="col-start-1 row-start-1 flex items-center gap-3 sm:gap-4 min-w-0">
+                            {vistaActiva !== 'HOME' && (
+                                <button
+                                    type="button"
+                                    onClick={volverAlMenu}
+                                    title="Regresar al Menú Principal"
+                                    aria-label="Regresar al Menú Principal"
+                                    className="shrink-0 flex items-center gap-1.5 px-3 py-3 rounded-full bg-orange-50 hover:bg-orange-100 text-[#8F3F1E] border border-orange-200 text-sm font-bold transition-all active:scale-95 hover:-translate-x-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/30 pt-fade-in"
+                                >
+                                    <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+                                    <span className="hidden sm:inline">Menú</span>
+                                </button>
+                            )}
 
-                                <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 bg-gradient-to-br from-[#C2603A] to-[#8F3F1E] rounded-2xl flex items-center justify-center shadow-lg shadow-[#8F3F1E]/30">
-                                    <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-orange-50" aria-hidden="true" />
-                                </div>
+                            <AvatarPartera src={avatarSrc} nombre={nombrePartera} />
 
-                                <div className="min-w-0">
-                                    <h1 className="text-xl sm:text-2xl font-black text-stone-900 leading-tight truncate">
-                                        Partera Tradicional
-                                    </h1>
-                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
-                                        <p className="text-xs text-stone-600 font-medium hidden sm:block">
-                                            Servicios de Salud de Oaxaca
-                                        </p>
-                                        <span className="inline-flex items-center gap-1 text-[11px] font-black text-teal-900 bg-teal-100 border border-teal-300 px-2 py-0.5 rounded-full shadow-[0_0_14px_rgba(45,212,191,0.5)]">
-                                            <BadgeCheck className="w-3.5 h-3.5" aria-hidden="true" />
-                                            PIN Verificado
-                                        </span>
-                                    </div>
-                                </div>
+                            <div className="min-w-0">
+                                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#8F3F1E]">
+                                    Partera Tradicional
+                                </p>
+                                <h1 className="text-base sm:text-xl font-black text-stone-900 leading-tight">
+                                    {nombrePartera}
+                                </h1>
+                                <p className="text-xs text-stone-600 font-medium truncate">{comunidad}</p>
+                                <span className="inline-flex items-center gap-1 mt-1 text-[11px] font-black text-teal-900 bg-teal-100 border border-teal-300 px-2 py-0.5 rounded-full shadow-[0_0_14px_rgba(45,212,191,0.5)]">
+                                    <BadgeCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                                    PIN Verificado
+                                </span>
                             </div>
-
-                            {/* BOTÓN SALIR */}
-                            <button
-                                type="button"
-                                onClick={handleSalir}
-                                aria-label="Salir. Cerrar sesión"
-                                className="shrink-0 flex items-center gap-2 px-4 sm:px-5 py-3 rounded-2xl bg-white hover:bg-stone-50 text-stone-800 border-2 border-stone-300 hover:border-[#C2603A] hover:text-[#8F3F1E] font-black text-sm shadow-md transition-all active:scale-95 hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/30"
-                            >
-                                <LogOut className="w-5 h-5" aria-hidden="true" />
-                                <span>Salir</span>
-                            </button>
                         </div>
 
-                        {/* BOTÓN DE VOZ GIGANTE CON ONDAS */}
-                        <div className="relative">
+                        {/* EXTREMA DERECHA: SALIR */}
+                        <button
+                            type="button"
+                            onClick={handleSalir}
+                            aria-label="Salir. Cerrar sesión"
+                            className="col-start-2 row-start-1 lg:col-start-3 self-start lg:self-center flex items-center gap-2 px-4 sm:px-5 py-3 rounded-2xl bg-white hover:bg-stone-50 text-stone-800 border-2 border-stone-300 hover:border-[#C2603A] hover:text-[#8F3F1E] font-black text-sm shadow-md transition-all active:scale-95 hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/30"
+                        >
+                            <LogOut className="w-5 h-5" aria-hidden="true" />
+                            <span>Salir</span>
+                        </button>
+
+                        {/* CENTRO: BOTÓN DE VOZ GRANDE CON ONDAS */}
+                        <div className="relative col-span-2 row-start-2 lg:col-span-1 lg:col-start-2 lg:row-start-1 w-full lg:max-w-md lg:mx-auto">
                             {isSpeaking && (
                                 <span
                                     className="pt-ring absolute inset-0 rounded-3xl bg-amber-300/70 pointer-events-none"
@@ -499,20 +541,20 @@ export const DashboardPartera: React.FC = () => {
                                 onClick={() => (isSpeaking ? detenerVoz() : hablarTexto(TEXTO_BIENVENIDA))}
                                 aria-pressed={isSpeaking}
                                 aria-label={isSpeaking ? 'Detener la voz' : 'Escuchar instrucciones por voz'}
-                                className={`relative w-full px-5 py-4 sm:py-5 rounded-3xl font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg border-2 transition-all duration-300 active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 ${isSpeaking
+                                className={`relative w-full px-5 py-4 rounded-3xl font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg border-2 transition-all duration-300 active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 ${isSpeaking
                                     ? 'bg-gradient-to-r from-amber-300 to-amber-400 text-stone-900 border-amber-300 shadow-amber-400/40 focus-visible:ring-amber-300/60'
                                     : 'bg-gradient-to-r from-[#C2603A] to-[#8F3F1E] text-white border-[#C2603A] shadow-[#8F3F1E]/30 hover:shadow-[#8F3F1E]/45 focus-visible:ring-[#C2603A]/40'
                                     }`}
                             >
                                 {isSpeaking ? (
                                     <>
-                                        <VolumeX className="w-8 h-8" aria-hidden="true" />
+                                        <VolumeX className="w-7 h-7" aria-hidden="true" />
                                         <span>Detener voz</span>
-                                        <OndasVoz className="h-7" />
+                                        <OndasVoz className="h-6" />
                                     </>
                                 ) : (
                                     <>
-                                        <Volume2 className="w-8 h-8" aria-hidden="true" />
+                                        <Volume2 className="w-7 h-7" aria-hidden="true" />
                                         <span>Escuchar instrucciones</span>
                                     </>
                                 )}
@@ -564,7 +606,7 @@ export const DashboardPartera: React.FC = () => {
                                 <p className="text-sm font-bold text-stone-700">Toque una tarjeta</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 pb-4">
                                 {TARJETAS.map((tarjeta, indice) => (
                                     <button
                                         key={tarjeta.vista}
@@ -572,7 +614,7 @@ export const DashboardPartera: React.FC = () => {
                                         onClick={() => abrirFormato(tarjeta)}
                                         style={{ animationDelay: `${indice * 110}ms` }}
                                         aria-label={`${tarjeta.titulo}. ${tarjeta.subtitulo}`}
-                                        className={`pt-slide-up group relative overflow-hidden flex flex-col text-center gap-4 p-4 sm:p-5 rounded-3xl bg-white/85 backdrop-blur-md border-2 shadow-2xl transition-all duration-300 ease-out hover:-translate-y-2 active:translate-y-0 active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-2 ${tarjeta.borde} ${tarjeta.sombra} ${tarjeta.foco}`}
+                                        className={`pt-slide-up group relative overflow-hidden flex flex-col text-center gap-4 p-4 sm:p-5 rounded-3xl bg-white/85 backdrop-blur-md border-2 ring-1 ring-inset ring-white/60 shadow-2xl transition-all duration-300 ease-out hover:-translate-y-2 active:translate-y-0 active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-2 ${tarjeta.borde} ${tarjeta.sombra} ${tarjeta.foco}`}
                                     >
                                         {/* Ilustración protagonista */}
                                         <div
