@@ -446,38 +446,10 @@ export const TabContrareferencias: React.FC = () => {
                 const res = await http.get('/api/medico/contrareferencias/pendientes');
                 setReferencias(res.data);
             } catch (error: any) {
-                console.warn('Backend no disponible para contrareferencias, cargando datos de respaldo:', error);
-                setErrorMsg('No se pudo conectar con el servidor. Mostrando datos de respaldo locales.');
-
-                const mockReferencias: ReferenciaComunidad[] = [
-                    {
-                        id: 'REF-COM-2026-001',
-                        folioReferencia: 'REF-COM-2026-001',
-                        nombrePaciente: 'Guadalupe Jiménez Santiago',
-                        edadPaciente: 27,
-                        comunidadOrigen: 'San Dionisio del Mar',
-                        municipio: 'San Dionisio del Mar',
-                        nombrePartera: 'Doña Rosa Partera Tradicional',
-                        nivelRiesgo: 'ALTO',
-                        motivoReferencia: 'Paciente primigesta con cifras tensionales elevadas (140/90 mmHg) reportada por partera comunitaria.',
-                        estatusContraRef: 'PENDIENTE_ATENCION',
-                        fechaReferencia: '2026-10-20',
-                    },
-                    {
-                        id: 'REF-COM-2026-002',
-                        folioReferencia: 'REF-COM-2026-002',
-                        nombrePaciente: 'Juana Martínez Pineda',
-                        edadPaciente: 32,
-                        comunidadOrigen: 'Playa Vicente',
-                        municipio: 'Juchitán de Zaragoza',
-                        nombrePartera: 'Abuela Martina Orozco',
-                        nivelRiesgo: 'MEDIO',
-                        motivoReferencia: 'Embarazo de 34 semanas con sospecha de disminución de movimientos fetales.',
-                        estatusContraRef: 'PENDIENTE_ATENCION',
-                        fechaReferencia: '2026-10-21',
-                    }
-                ];
-                setReferencias(mockReferencias);
+                console.warn('Backend no disponible para contrareferencias:', error);
+                setErrorMsg('No se pudo conectar con el servidor para obtener las contrareferencias.');
+                // SIN DATOS FANTASMAS: Dejamos el arreglo vacío si la API falla
+                setReferencias([]);
             } finally {
                 setCargando(false);
             }
@@ -513,26 +485,13 @@ export const TabContrareferencias: React.FC = () => {
             alert('Contrareferencia emitida y sincronizada correctamente con el servidor.');
         } catch (error: any) {
             console.error('Error al emitir contrareferencia en servidor:', error);
-            setReferencias(prev => prev.map(r =>
-                r.id === data.referenciaId
-                    ? {
-                        ...r,
-                        estatusContraRef: 'ATENDIDA' as EstatusContraRef,
-                        diagnosticoMedico: data.diagnosticoImpresion,
-                        planManejo: data.planManejo,
-                        folioContraRef: data.folioContraRef,
-                        medicoResponsable: data.medicoFirma,
-                    }
-                    : r
-            ));
-            alert('Contrareferencia guardada localmente (modo offline / respaldo).');
+            alert('Error al conectar con el servidor para emitir la contrareferencia.');
         }
     };
 
     const pendientes = referencias.filter(r => r.estatusContraRef === 'PENDIENTE_ATENCION').length;
     const atendidas = referencias.filter(r => r.estatusContraRef === 'ATENDIDA').length;
 
-    const cardGlassStyle = "p-6 bg-slate-900/35 rounded-3xl border border-white/50 backdrop-blur-3xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] space-y-4 text-white";
     const inputGlassStyle = "w-full px-4 py-3 bg-slate-900/40 border border-white/50 rounded-2xl text-white text-xs font-bold placeholder:text-slate-300 focus:outline-none focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/30 backdrop-blur-2xl transition-all shadow-inner";
 
     return (
@@ -584,7 +543,7 @@ export const TabContrareferencias: React.FC = () => {
                     </div>
                 ) : refFiltradas.length === 0 ? (
                     <div className="text-center py-16 text-cyan-100/80 font-medium text-sm bg-slate-900/35 border border-white/50 rounded-3xl backdrop-blur-3xl shadow-xl">
-                        No hay referencias comunitarias registradas.
+                        No hay referencias comunitarias registradas en el servidor.
                     </div>
                 ) : (
                     refFiltradas.map(ref => (
