@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import {
-    Mic,
-    Send,
-    Check,
-    Volume2,
-    VolumeX,
-    Info,
-    Sparkles,
-    Stethoscope,
-    Building2,
-    User,
-    Calendar,
-    MapPin,
-    Megaphone,
-    FolderOpen,
-    Loader2
-} from 'lucide-react';
-import { handleVoiceInput } from '../../utils/voiceUtils';
-import { http } from '../../services/http'; // <--- Importamos tu instancia de Axios
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import axios from 'axios';
+import { http } from '../../services/http'; // Instancia de Axios hacia el servidor en Render
+
+/* ============================================================================
+ * MotivoReferencia — Motor del formulario de referencia
+ *
+ * - Estados completos del formulario y payload hacia PostgreSQL vía Axios:
+ *     http.post('/api/v1/referencias', payloadReferencia)
+ * - Dictado por voz en vivo (es-MX) con ondas de audio en cada campo de texto
+ * - Tarjetas de motivos táctiles con imágenes PNG reales y voz instantánea
+ * - Contrarreferencia médica colapsable
+ * - Estados de carga (spinner) y éxito (alerta visual + auditiva)
+ *
+ * El encabezado y el contenedor general los aporta FormatoReferencia.
+ * ========================================================================== */
+
+/* ------------------------------ Tipos ------------------------------------ */
 
 interface MotivoReferenciaProps {
     onBack?: () => void;
@@ -25,543 +23,787 @@ interface MotivoReferenciaProps {
     hablarTexto?: (texto: string) => void;
     isListeningExternal?: boolean;
     campoEscuchandoExternal?: string | null;
+    iniciarDictadoExternal?: (campo: string, setFieldState?: (val: string) => void) => void;
 }
 
 export interface MotivoItem {
     id: string;
     titulo: string;
+    voz: string;
     imagen: string;
     bullets?: string[];
 }
 
+type CampoId =
+    | 'centroSalud'
+    | 'nombreUsuaria'
+    | 'edad'
+    | 'localidad'
+    | 'municipio'
+    | 'nombrePartera'
+    | 'localidadPartera'
+    | 'diagnostico'
+    | 'tratamiento'
+    | 'observacionesMedico'
+    | 'nombreMedico'
+    | 'centroMedico';
+
+type Sexo = 'F' | 'M';
+type EstadoContra = 'CONTROLADA' | 'PARA_CONTROL_PARTERA';
+
+interface Datos extends Record<CampoId, string> {
+    sexo: Sexo;
+    fecha: string;
+}
+
+type ErroresForm = Partial<Record<CampoId | 'motivos', boolean>>;
+
+interface PayloadReferencia {
+    parteraId: string;
+    centroSalud: string;
+    nombreUsuaria: string;
+    edad: number;
+    sexo: Sexo;
+    fecha: string;
+    localidad: string;
+    municipio: string;
+    nombrePartera: string;
+    localidadPartera: string;
+    motivos: string[];
+    contrareferencia: {
+        activa: boolean;
+        estadoContra: EstadoContra;
+        diagnostico: string;
+        tratamiento: string;
+        observacionesMedico: string;
+        nombreMedico: string;
+        centroMedico: string;
+    };
+}
+
+interface ErrorServidor {
+    message?: string;
+}
+
+/* Tipos mínimos de Web Speech API */
+interface SpeechResultLike {
+    isFinal: boolean;
+    [index: number]: { transcript: string };
+}
+interface SpeechEventLike {
+    resultIndex: number;
+    results: ArrayLike<SpeechResultLike>;
+}
+interface SpeechRecognitionLike {
+    lang: string;
+    continuous: boolean;
+    interimResults: boolean;
+    onresult: ((e: SpeechEventLike) => void) | null;
+    onend: (() => void) | null;
+    onerror: ((e: { error: string }) => void) | null;
+    start: () => void;
+    stop: () => void;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
+const obtenerReconocimiento = (): SpeechRecognitionCtor | null => {
+    if (typeof window === 'undefined') return null;
+    const w = window as unknown as {
+        SpeechRecognition?: SpeechRecognitionCtor;
+        webkitSpeechRecognition?: SpeechRecognitionCtor;
+    };
+    return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+};
+
+/* ------------------------------ Datos ------------------------------------ */
+
+/* IDs (viajan al backend) y rutas PNG reales de /public/. */
+const LISTA_MOTIVOS: MotivoItem[] = [
+    { id: 'COMPLICACIONES_EMBARAZO', titulo: 'Complicaciones del embarazo', voz: 'Complicaciones del embarazo', imagen: '/Complicaciones-del-embarazo.png' },
+    { id: 'APLICAR_TOXOIDE_TETANICO', titulo: 'Aplicar toxoide tetánico', voz: 'Aplicar toxoide tetánico', imagen: '/Aplicar-Toxoide-Tetanico.png' },
+    { id: 'ABORTO', titulo: 'Aborto', voz: 'Aborto', imagen: '/Aborto.png' },
+    { id: 'PARTO_COMPLICADO', titulo: 'Parto complicado', voz: 'Parto complicado', imagen: '/Parto-Complicado.png' },
+    { id: 'PUERPERIO_COMPLICADO', titulo: 'Puerperio complicado', voz: 'Puerperio complicado', imagen: '/Puerferico-Complicado.png' },
+    {
+        id: 'ZIKA',
+        titulo: 'Zika',
+        voz: 'Zika',
+        imagen: '/Zika.png',
+        bullets: ['Fiebre', 'Dolor de articulaciones', 'Salpullido', 'Conjuntivitis'],
+    },
+    { id: 'NINO_CON_COMPLICACIONES', titulo: 'Niño con complicaciones', voz: 'Niño con complicaciones', imagen: '/Niño-Con-Complicaciones.png' },
+    { id: 'NINA_CON_COMPLICACIONES', titulo: 'Niña con complicaciones', voz: 'Niña con complicaciones', imagen: '/Niña-Con-Complicaciones.png' },
+    { id: 'TAMIZ_METABOLICO', titulo: 'Tamiz metabólico', voz: 'Tamiz metabólico', imagen: '/Tamiz-Metabolico.png' },
+    { id: 'TAMIZ_AUDITIVO', titulo: 'Tamiz auditivo', voz: 'Tamiz auditivo', imagen: '/Tamiz-Auditivo.png' },
+    { id: 'APLICAR_VITAMINA_A_Y_K', titulo: "Aplicar vitamina 'A' y 'K'", voz: 'Aplicar vitamina A y K', imagen: '/Aplicar-Vitamina-A-Y-K.png' },
+    { id: 'VACUNA_BCG_ANTI_HEPATITIS', titulo: 'Vacuna BCG / Anti hepatitis B', voz: 'Vacuna BCG y anti hepatitis B', imagen: '/Vacuna.png' },
+    { id: 'TOMA_DE_PAPANICOLAOU', titulo: 'Toma de papanicolaou', voz: 'Toma de papanicolaou', imagen: '/Toma-De-Papanicolao.png' },
+    { id: 'OTROS', titulo: 'Otros', voz: 'Otros motivos', imagen: '/Otros.png' },
+];
+
+const CAMPOS_OBLIGATORIOS: CampoId[] = ['centroSalud', 'nombreUsuaria', 'nombrePartera', 'localidadPartera'];
+
+const AVISOS_FALTANTES: Partial<Record<CampoId, string>> = {
+    centroSalud: 'Falta el centro de salud u hospital.',
+    nombreUsuaria: 'Falta el nombre de la usuaria.',
+    nombrePartera: 'Falta el nombre de la partera.',
+    localidadPartera: 'Falta la localidad de la partera.',
+};
+
+const hoyISO = (): string => {
+    const d = new Date();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mes}-${dia}`;
+};
+
+const DATOS_INICIALES = (): Datos => ({
+    centroSalud: '',
+    nombreUsuaria: '',
+    edad: '',
+    sexo: 'F',
+    fecha: hoyISO(),
+    localidad: '',
+    municipio: '',
+    nombrePartera: '',
+    localidadPartera: '',
+    diagnostico: '',
+    tratamiento: '',
+    observacionesMedico: '',
+    nombreMedico: '',
+    centroMedico: '',
+});
+
+/* --------------------------- Estilos / animación -------------------------- */
+
+const ESTILOS = `
+@keyframes pt-fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes pt-slide-up { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes pt-pop-in { 0% { opacity: 0; transform: scale(.4) } 70% { transform: scale(1.18) } 100% { opacity: 1; transform: scale(1) } }
+@keyframes pt-breathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.03) } }
+@keyframes pt-wave { 0%,100% { transform: scaleY(.25) } 50% { transform: scaleY(1) } }
+@keyframes pt-ring { 0% { box-shadow: 0 0 0 0 rgba(194,96,58,.55) } 100% { box-shadow: 0 0 0 14px rgba(194,96,58,0) } }
+@keyframes pt-shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+.pt-fade-in { animation: pt-fade-in .5s ease-out both }
+.pt-slide-up { animation: pt-slide-up .55s cubic-bezier(.22,1,.36,1) both }
+.pt-pop-in { animation: pt-pop-in .38s cubic-bezier(.34,1.56,.64,1) both }
+.pt-breathe { animation: pt-breathe 2.8s ease-in-out infinite }
+.pt-ring { animation: pt-ring 1.2s ease-out infinite }
+.pt-shake { animation: pt-shake .4s ease-in-out }
+.pt-wave-bar { display: inline-block; width: 4px; height: 20px; border-radius: 4px; background: #C2603A; transform-origin: center; animation: pt-wave .9s ease-in-out infinite }
+@media (prefers-reduced-motion: reduce) {
+  .pt-fade-in, .pt-slide-up, .pt-pop-in, .pt-breathe, .pt-ring, .pt-shake, .pt-wave-bar { animation: none !important }
+}
+`;
+
+const VIDRIO =
+    'bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-orange-900/10 rounded-3xl';
+
+const BOTON_TIERRA =
+    'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-lg shadow-orange-900/30 border border-white/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98]';
+
+/* ------------------------------ Iconos SVG -------------------------------- */
+
+interface IconoProps {
+    className?: string;
+}
+
+const IconoMic: React.FC<IconoProps> = ({ className = 'h-6 w-6' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="9" y="2" width="6" height="12" rx="3" />
+        <path d="M5 11a7 7 0 0 0 14 0" />
+        <path d="M12 18v4" />
+    </svg>
+);
+const IconoStop: React.FC<IconoProps> = ({ className = 'h-6 w-6' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <rect x="6" y="6" width="12" height="12" rx="2.5" />
+    </svg>
+);
+const IconoCheck: React.FC<IconoProps> = ({ className = 'h-5 w-5' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+);
+const IconoEnviar: React.FC<IconoProps> = ({ className = 'h-7 w-7' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="m22 2-11 11" />
+        <path d="M22 2 15 22l-4-9-9-4 20-7z" />
+    </svg>
+);
+const IconoCargando: React.FC<IconoProps> = ({ className = 'h-7 w-7' }) => (
+    <svg className={`${className} animate-spin`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity={0.3} strokeWidth={3.5} />
+        <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" />
+    </svg>
+);
+
+/* ------------------------- Campo con dictado por voz ---------------------- */
+
+interface CampoVozProps {
+    id: CampoId;
+    etiqueta: string;
+    valor: string;
+    placeholder: string;
+    escuchando: boolean;
+    onCambio: (valor: string) => void;
+    onMic: (id: CampoId) => void;
+    inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+    multilinea?: boolean;
+    error?: boolean;
+    maxLength?: number;
+}
+
+const CampoVoz: React.FC<CampoVozProps> = ({
+    id,
+    etiqueta,
+    valor,
+    placeholder,
+    escuchando,
+    onCambio,
+    onMic,
+    inputMode,
+    multilinea = false,
+    error = false,
+    maxLength,
+}) => {
+    const base =
+        'w-full rounded-2xl border-2 bg-white/90 px-4 pr-20 text-lg font-bold text-stone-900 placeholder:font-semibold placeholder:text-stone-500 outline-none transition-all duration-200 focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20';
+    const borde = escuchando
+        ? 'border-[#C2603A] ring-4 ring-[#C2603A]/25 bg-orange-50/90'
+        : error
+            ? 'border-red-500 pt-shake'
+            : 'border-stone-200';
+    const alto = multilinea ? 'min-h-[110px] resize-none py-3' : 'h-16';
+    const ph = escuchando ? 'Escuchando… hable ahora' : placeholder;
+
+    return (
+        <div>
+            <label htmlFor={`pt-${id}`} className="mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800">
+                {etiqueta}
+            </label>
+            <div className="relative">
+                {multilinea ? (
+                    <textarea
+                        id={`pt-${id}`}
+                        value={valor}
+                        maxLength={maxLength}
+                        placeholder={ph}
+                        onChange={(e) => onCambio(e.target.value)}
+                        className={`${base} ${borde} ${alto}`}
+                    />
+                ) : (
+                    <input
+                        id={`pt-${id}`}
+                        type="text"
+                        inputMode={inputMode}
+                        value={valor}
+                        maxLength={maxLength}
+                        placeholder={ph}
+                        onChange={(e) => onCambio(e.target.value)}
+                        autoComplete="off"
+                        aria-invalid={error}
+                        className={`${base} ${borde} ${alto}`}
+                    />
+                )}
+
+                {escuchando && (
+                    <div
+                        className={`pt-fade-in pointer-events-none absolute right-[4.25rem] flex items-center gap-1 ${multilinea ? 'top-5' : 'top-1/2 -translate-y-1/2'}`}
+                        aria-hidden="true"
+                    >
+                        {[0, 0.15, 0.3, 0.1, 0.25].map((d, i) => (
+                            <span key={i} className="pt-wave-bar" style={{ animationDelay: `${d}s` }} />
+                        ))}
+                    </div>
+                )}
+
+                <button
+                    type="button"
+                    onClick={() => onMic(id)}
+                    aria-label={escuchando ? `Detener dictado de ${etiqueta}` : `Dictar ${etiqueta} por voz`}
+                    aria-pressed={escuchando}
+                    className={`absolute right-2 flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-md transition-all duration-200 active:scale-[0.96] ${multilinea ? 'top-2' : 'top-1/2 -translate-y-1/2'
+                        } ${escuchando
+                            ? 'pt-ring bg-[#C2603A]'
+                            : 'bg-gradient-to-br from-[#D69A1E] to-[#C2603A] hover:shadow-lg'
+                        }`}
+                >
+                    {escuchando ? <IconoStop /> : <IconoMic />}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+/* ------------------------ Ilustración (imagen real) ----------------------- */
+
+const Ilustracion: React.FC<{ motivo: MotivoItem }> = ({ motivo }) => {
+    const [fallo, setFallo] = useState(false);
+    if (fallo) {
+        return (
+            <div className="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 px-2 text-center text-xs font-bold text-stone-600">
+                Imagen no disponible
+            </div>
+        );
+    }
+    return (
+        <img
+            src={motivo.imagen}
+            alt={motivo.titulo}
+            loading="lazy"
+            draggable={false}
+            onError={() => setFallo(true)}
+            className="max-h-full max-w-full object-contain mix-blend-multiply"
+        />
+    );
+};
+
+/* ------------------------------ Componente -------------------------------- */
+
 export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     onSuccess,
     hablarTexto: propsHablarTexto,
-    isListeningExternal,
-    campoEscuchandoExternal
+    isListeningExternal = false,
+    campoEscuchandoExternal = null,
+    iniciarDictadoExternal,
 }) => {
-    // 1. Datos de Identificación
-    const [centroSalud, setCentroSalud] = useState('');
-    const [nombreUsuaria, setNombreUsuaria] = useState('');
-    const [edad, setEdad] = useState('');
-    const [sexo, setSexo] = useState<'F' | 'M'>('F');
-    const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
-    const [localidad, setLocalidad] = useState('');
-    const [municipio, setMunicipio] = useState('');
-
-    // 2. Datos de la Partera
-    const [nombrePartera, setNombrePartera] = useState('');
-    const [localidadPartera, setLocalidadPartera] = useState('');
-
-    // 3. Motivos Seleccionados
+    /* ----- Estado de negocio ----- */
+    const [datos, setDatos] = useState<Datos>(DATOS_INICIALES);
     const [motivosSeleccionados, setMotivosSeleccionados] = useState<string[]>([]);
-
-    // 4. Contrareferencia Médica
     const [mostrarContrareferencia, setMostrarContrareferencia] = useState(false);
-    const [estadoContra, setEstadoContra] = useState<'CONTROLADA' | 'PARA_CONTROL_PARTERA'>('CONTROLADA');
-    const [diagnostico, setDiagnostico] = useState('');
-    const [tratamiento, setTratamiento] = useState('');
-    const [observacionesMedico, setObservacionesMedico] = useState('');
-    const [nombreMedico, setNombreMedico] = useState('');
-    const [centroMedico, setCentroMedico] = useState('');
+    const [estadoContra, setEstadoContra] = useState<EstadoContra>('CONTROLADA');
 
-    // Estado de Envío al Backend
+    /* ----- Estado de UI ----- */
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [enviado, setEnviado] = useState(false);
+    const [errorServidor, setErrorServidor] = useState<string | null>(null);
+    const [errores, setErrores] = useState<ErroresForm>({});
+    const [campoInterno, setCampoInterno] = useState<CampoId | null>(null);
 
-    // Dictado por voz Web Speech API estado
-    const [listeningFieldInternal, setListeningFieldInternal] = useState<string | null>(null);
-    const [isSpeaking, setIsSpeaking] = useState(false);
-    const [dictationNotification, setDictationNotification] = useState<string | null>(null);
-
-    const activeListeningField = campoEscuchandoExternal ?? listeningFieldInternal;
-    const isCurrentlyListening = Boolean(isListeningExternal || activeListeningField);
-
-    const speakText = (text: string) => {
-        if (propsHablarTexto) {
-            propsHablarTexto(text);
-            return;
-        }
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'es-MX';
-            utterance.rate = 0.85;
-            utterance.onstart = () => setIsSpeaking(true);
-            utterance.onend = () => setIsSpeaking(false);
-            utterance.onerror = () => setIsSpeaking(false);
-            window.speechSynthesis.speak(utterance);
-        }
-    };
-
-    const stopSpeech = () => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            setIsSpeaking(false);
-        }
-    };
+    const datosRef = useRef<Datos>(datos);
+    const recRef = useRef<SpeechRecognitionLike | null>(null);
+    const temporizadorRef = useRef<number | null>(null);
+    const montadoRef = useRef(true);
 
     useEffect(() => {
+        datosRef.current = datos;
+    }, [datos]);
+
+    useEffect(() => {
+        montadoRef.current = true;
         return () => {
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            montadoRef.current = false;
+            recRef.current?.stop();
+            if (temporizadorRef.current !== null) window.clearTimeout(temporizadorRef.current);
         };
     }, []);
 
-    const startListening = (setter: React.Dispatch<React.SetStateAction<string>>, fieldKey: string, fieldLabel: string) => {
-        handleVoiceInput(
-            (transcript) => {
-                setter(transcript);
-                setListeningFieldInternal(null);
-                setDictationNotification(`Capturado: "${transcript}"`);
-                speakText(`Registrado: ${transcript}`);
-                setTimeout(() => setDictationNotification(null), 3000);
-            },
-            (listening) => {
-                setListeningFieldInternal(listening ? fieldKey : null);
-                if (listening) {
-                    setDictationNotification(`Escuchando voz para ${fieldLabel}...`);
-                }
+    /* ----- Voz de salida (usa la del contenedor; si no, la del navegador) -- */
+    const speakText = useCallback(
+        (texto: string) => {
+            if (propsHablarTexto) {
+                propsHablarTexto(texto);
+                return;
             }
-        );
+            if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(texto);
+            u.lang = 'es-MX';
+            u.rate = 0.9;
+            window.speechSynthesis.speak(u);
+        },
+        [propsHablarTexto]
+    );
+
+    /* ----- Campos ----------------------------------------------------------- */
+    const setCampo = useCallback((id: CampoId, valor: string) => {
+        const limpio = id === 'edad' ? valor.replace(/\D/g, '').slice(0, 3) : valor;
+        setDatos((prev) => ({ ...prev, [id]: limpio }));
+        setErrores((prev) => (prev[id] ? { ...prev, [id]: false } : prev));
+    }, []);
+
+    /* ----- Dictado ---------------------------------------------------------- */
+    const detenerDictadoInterno = useCallback(() => {
+        recRef.current?.stop();
+        recRef.current = null;
+        setCampoInterno(null);
+    }, []);
+
+    const campoActivo: string | null = campoInterno ?? (isListeningExternal ? campoEscuchandoExternal : null);
+
+    const alternarDictado = useCallback(
+        (id: CampoId) => {
+            /* Si el padre controla el dictado, se delega en él. */
+            if (iniciarDictadoExternal) {
+                iniciarDictadoExternal(id, (val: string) => setCampo(id, val));
+                return;
+            }
+
+            if (campoInterno === id) {
+                detenerDictadoInterno();
+                return;
+            }
+            detenerDictadoInterno();
+
+            const Ctor = obtenerReconocimiento();
+            if (!Ctor) {
+                speakText('Su dispositivo no permite dictar por voz. Escriba con el teclado.');
+                return;
+            }
+
+            const rec = new Ctor();
+            rec.lang = 'es-MX';
+            rec.continuous = false;
+            rec.interimResults = true;
+
+            const textoBase = datosRef.current[id].trim();
+            let dictadoFinal = '';
+
+            rec.onresult = (e: SpeechEventLike) => {
+                let transcripcion = '';
+                for (let i = e.resultIndex; i < e.results.length; i += 1) {
+                    transcripcion += e.results[i][0].transcript;
+                }
+                dictadoFinal = transcripcion.trim();
+                setCampo(id, textoBase ? `${textoBase} ${dictadoFinal}` : dictadoFinal);
+            };
+            rec.onerror = () => {
+                if (!montadoRef.current) return;
+                setCampoInterno(null);
+                recRef.current = null;
+            };
+            rec.onend = () => {
+                if (!montadoRef.current) return;
+                setCampoInterno((actual) => (actual === id ? null : actual));
+                recRef.current = null;
+                if (dictadoFinal) speakText(`Registrado: ${dictadoFinal}`);
+            };
+
+            recRef.current = rec;
+            setCampoInterno(id);
+            try {
+                rec.start();
+            } catch {
+                setCampoInterno(null);
+                recRef.current = null;
+            }
+        },
+        [campoInterno, detenerDictadoInterno, iniciarDictadoExternal, setCampo, speakText]
+    );
+
+    /* ----- Motivos ---------------------------------------------------------- */
+    const toggleMotivo = (m: MotivoItem) => {
+        const yaEsta = motivosSeleccionados.includes(m.id);
+        setMotivosSeleccionados((prev) => (yaEsta ? prev.filter((x) => x !== m.id) : [...prev, m.id]));
+        setErrores((prev) => ({ ...prev, motivos: false }));
+        speakText(yaEsta ? `Desmarcado: ${m.voz}` : `Seleccionado: ${m.voz}`);
     };
 
-    const toggleMotivo = (id: string, titulo: string) => {
-        let nuevosMotivos: string[];
-        if (motivosSeleccionados.includes(id)) {
-            nuevosMotivos = motivosSeleccionados.filter(m => m !== id);
-            speakText(`Desmarcado: ${titulo}`);
-        } else {
-            nuevosMotivos = [...motivosSeleccionados, id];
-            speakText(`Seleccionado: ${titulo}`);
-        }
-        setMotivosSeleccionados(nuevosMotivos);
+    /* ----- Envío al backend (Axios → Render / PostgreSQL) ------------------- */
+    const enfocar = (id: string) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) el.focus({ preventScroll: true });
     };
 
-    // Envío real al Backend en Render y PostgreSQL vía Axios
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsSubmitting(true);
+        if (isSubmitting || enviado) return;
+        setErrorServidor(null);
 
-        const payloadReferencia = {
+        const nuevos: ErroresForm = {};
+        CAMPOS_OBLIGATORIOS.forEach((id) => {
+            if (!datos[id].trim()) nuevos[id] = true;
+        });
+        if (motivosSeleccionados.length === 0) nuevos.motivos = true;
+        setErrores(nuevos);
+
+        const primerFaltante = CAMPOS_OBLIGATORIOS.find((id) => nuevos[id]);
+        if (primerFaltante) {
+            speakText(AVISOS_FALTANTES[primerFaltante] ?? 'Falta un dato obligatorio.');
+            enfocar(`pt-${primerFaltante}`);
+            return;
+        }
+        if (nuevos.motivos) {
+            speakText('Toque al menos un motivo de la referencia.');
+            enfocar('pt-motivos');
+            return;
+        }
+
+        detenerDictadoInterno();
+        setIsSubmitting(true);
+        speakText('Enviando la hoja de referencia.');
+
+        const payloadReferencia: PayloadReferencia = {
             parteraId: localStorage.getItem('partera_id') || 'DEFAULT-PARTERA-UUID',
-            centroSalud,
-            nombreUsuaria,
-            edad: Number(edad) || 0,
-            sexo,
-            fecha,
-            localidad,
-            municipio,
-            nombrePartera,
-            localidadPartera,
+            centroSalud: datos.centroSalud,
+            nombreUsuaria: datos.nombreUsuaria,
+            edad: Number(datos.edad) || 0,
+            sexo: datos.sexo,
+            fecha: datos.fecha,
+            localidad: datos.localidad,
+            municipio: datos.municipio,
+            nombrePartera: datos.nombrePartera,
+            localidadPartera: datos.localidadPartera,
             motivos: motivosSeleccionados,
             contrareferencia: {
                 activa: mostrarContrareferencia,
                 estadoContra,
-                diagnostico,
-                tratamiento,
-                observacionesMedico,
-                nombreMedico,
-                centroMedico
-            }
+                diagnostico: datos.diagnostico,
+                tratamiento: datos.tratamiento,
+                observacionesMedico: datos.observacionesMedico,
+                nombreMedico: datos.nombreMedico,
+                centroMedico: datos.centroMedico,
+            },
         };
 
         try {
             await http.post('/api/v1/referencias', payloadReferencia);
+            if (!montadoRef.current) return;
 
-            speakText('Hoja de Referencia enviada y guardada con éxito en la base de datos.');
-            if (onSuccess) onSuccess();
-        } catch (err: any) {
+            setEnviado(true);
+            speakText('Hoja de referencia enviada y guardada con éxito.');
+            temporizadorRef.current = window.setTimeout(() => {
+                if (montadoRef.current && onSuccess) onSuccess();
+            }, 2600);
+        } catch (err: unknown) {
             console.error('Error al enviar la hoja de referencia:', err);
-            alert(err.response?.data?.message || 'Error al conectar con el servidor para guardar la referencia.');
+            const mensaje =
+                (axios.isAxiosError<ErrorServidor>(err) ? err.response?.data?.message : undefined) ??
+                'No se pudo conectar con el servidor para guardar la referencia. Revise su señal e intente de nuevo.';
+            if (montadoRef.current) {
+                setErrorServidor(mensaje);
+                speakText('No se pudo enviar la hoja. Revise su señal e intente de nuevo.');
+            }
         } finally {
-            setIsSubmitting(false);
+            if (montadoRef.current) setIsSubmitting(false);
         }
     };
 
-    const listaMotivos: MotivoItem[] = [
-        { id: 'COMPLICACIONES_EMBARAZO', titulo: 'COMPLICACIONES DEL EMBARAZO', imagen: '/Complicaciones-del-embarazo.png' },
-        { id: 'APLICAR_TOXOIDE_TETANICO', titulo: 'APLICAR TOXOIDE TETÁNICO', imagen: '/Aplicar-Toxoide-Tetanico.png' },
-        { id: 'ABORTO', titulo: 'ABORTO', imagen: '/Aborto.png' },
-        { id: 'PARTO_COMPLICADO', titulo: 'PARTO COMPLICADO', imagen: '/Parto-Complicado.png' },
-        { id: 'PUERPERIO_COMPLICADO', titulo: 'PUERPERIO COMPLICADO', imagen: '/Puerferico-Complicado.png' },
-        {
-            id: 'ZIKA',
-            titulo: 'ZIKA',
-            imagen: '/Zika.png',
-            bullets: ['Fiebre', 'Dolor articulaciones', 'Salpullido', 'Conjuntivitis']
-        },
-        { id: 'NINO_CON_COMPLICACIONES', titulo: 'NIÑO CON COMPLICACIONES', imagen: '/Niño-Con-Complicaciones.png' },
-        { id: 'NINA_CON_COMPLICACIONES', titulo: 'NIÑA CON COMPLICACIONES', imagen: '/Niña-Con-Complicaciones.png' },
-        { id: 'TAMIZ_METABOLICO', titulo: 'TAMIZ METABÓLICO', imagen: '/Tamiz-Metabolico.png' },
-        { id: 'TAMIZ_AUDITIVO', titulo: 'TAMIZ AUDITIVO', imagen: '/Tamiz-Auditivo.png' },
-        { id: 'APLICAR_VITAMINA_A_Y_K', titulo: "APLICAR VITAMINA 'A' Y 'K'", imagen: '/Aplicar-Vitamina-A-Y-K.png' },
-        { id: 'VACUNA_BCG_ANTI_HEPATITIS', titulo: 'VACUNA BCG / ANTI HEPATITIS B', imagen: '/Vacuna.png' },
-        { id: 'TOMA_DE_PAPANICOLAOU', titulo: 'TOMA DE PAPANICOLAOU', imagen: '/Toma-De-Papanicolao.png' },
-        { id: 'OTROS', titulo: 'OTROS', imagen: '/Otros.png' }
-    ];
+    /* ----- Helper de campo -------------------------------------------------- */
+    const campo = (id: CampoId, etiqueta: string, placeholder: string, extra?: Partial<CampoVozProps>) => (
+        <CampoVoz
+            id={id}
+            etiqueta={etiqueta}
+            valor={datos[id]}
+            placeholder={placeholder}
+            escuchando={campoActivo === id}
+            onCambio={(v) => setCampo(id, v)}
+            onMic={alternarDictado}
+            error={Boolean(errores[id])}
+            {...extra}
+        />
+    );
 
+    const totalMotivos = motivosSeleccionados.length;
+
+    /* ------------------------------ Render ---------------------------------- */
     return (
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-5xl mx-auto my-4 selection:bg-[#9D2449] selection:text-white">
+        <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-5">
+            <style>{ESTILOS}</style>
 
-            {(dictationNotification || isCurrentlyListening) && (
-                <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-2xl flex items-center justify-between gap-3 text-amber-950 font-bold text-sm shadow-md animate-pulse">
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-[#9D2449]" />
-                        <span>{dictationNotification || `Dictado activo para campo: ${activeListeningField}`}</span>
+            {/* ================= Datos de identificación ================== */}
+            <section className={`pt-slide-up p-4 sm:p-6 ${VIDRIO}`} style={{ animationDelay: '.06s' }}>
+                <h2 className="mb-5 border-b-4 border-[#D69A1E]/60 pb-2 text-xl font-black text-stone-900 sm:text-2xl">
+                    Datos de identificación y canalización
+                </h2>
+
+                <div className="flex flex-col gap-5">
+                    {campo('centroSalud', 'Centro de salud u hospital', 'Hospital o centro de salud…')}
+                    {campo('nombreUsuaria', 'Nombre de la usuaria', 'Nombre completo de la paciente…')}
+                    {campo('edad', 'Edad', 'Ej. 26', { inputMode: 'numeric', maxLength: 3 })}
+
+                    <div>
+                        <label htmlFor="pt-sexo" className="mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800">
+                            Sexo
+                        </label>
+                        <select
+                            id="pt-sexo"
+                            value={datos.sexo}
+                            onChange={(e) => setDatos((p) => ({ ...p, sexo: e.target.value === 'M' ? 'M' : 'F' }))}
+                            className="h-16 w-full rounded-2xl border-2 border-stone-200 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20"
+                        >
+                            <option value="F">Femenino</option>
+                            <option value="M">Masculino</option>
+                        </select>
                     </div>
+
+                    <div>
+                        <label htmlFor="pt-fecha" className="mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800">
+                            Fecha
+                        </label>
+                        <input
+                            id="pt-fecha"
+                            type="date"
+                            value={datos.fecha}
+                            onChange={(e) => setDatos((p) => ({ ...p, fecha: e.target.value }))}
+                            className="h-16 w-full rounded-2xl border-2 border-stone-200 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20"
+                        />
+                    </div>
+
+                    {campo('localidad', 'Localidad', 'Localidad…')}
+                    {campo('municipio', 'Municipio', 'Municipio…')}
+                    {campo('nombrePartera', 'Nombre de la partera', 'Partera tradicional…')}
+                    {campo('localidadPartera', 'Localidad de la partera', 'Localidad de la partera…')}
                 </div>
-            )}
+            </section>
 
-            <div className="bg-white rounded-3xl border-4 border-[#9D2449] p-4 sm:p-8 shadow-xl space-y-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-slate-200 pb-6">
-                    <img src="/logo-jurisdiccion.png" alt="Jurisdicción Sanitaria" className="h-16 md:h-20 w-auto object-contain mix-blend-multiply" />
-                    <div className="text-center px-2 space-y-1">
-                        <h1 className="text-sm sm:text-xl font-black text-[#9D2449] uppercase tracking-tight">
-                            SERVICIOS DE SALUD DE OAXACA - PROGRAMA DE PARTERAS TRADICIONALES
-                        </h1>
+            {/* ================== Motivo de la referencia ================= */}
+            <section
+                id="pt-motivos"
+                className={`pt-slide-up p-4 sm:p-6 ${VIDRIO} ${errores.motivos ? 'pt-shake ring-4 ring-red-400/60' : ''}`}
+                style={{ animationDelay: '.12s' }}
+            >
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-2 border-b-4 border-[#C2603A]/60 pb-2">
+                    <div>
+                        <h2 className="text-xl font-black text-stone-900 sm:text-2xl">Motivo de la referencia</h2>
+                        <p className="text-sm font-bold text-stone-700">Toque los dibujos que correspondan</p>
                     </div>
-                    <img src="/Logo-Secretaria.png" alt="Secretaría de Salud de Oaxaca" className="h-16 md:h-20 w-auto object-contain mix-blend-multiply" />
-                </div>
-
-                <div className="bg-[#9D2449] text-white rounded-2xl p-4 text-center shadow-md font-bold text-lg md:text-xl flex flex-col md:flex-row items-center justify-center gap-2 my-4">
-                    <div className="flex items-center gap-2">
-                        <Megaphone className="w-6 h-6 text-rose-200 shrink-0" />
-                        <span>ACUDE A TU UNIDAD DE SALUD</span>
-                    </div>
-                    <span className="hidden md:inline">•</span>
-                    <span className="text-sm md:text-base font-normal text-rose-100">
-                        Hoja Oficial de Referencia Comunitaria • Red de Servicios de Salud de Oaxaca
+                    <span className="rounded-full border border-[#D69A1E]/50 bg-amber-100 px-4 py-1.5 text-sm font-black text-stone-900">
+                        Seleccionados: {totalMotivos}
                     </span>
                 </div>
 
-                <div className="flex justify-end">
-                    <button
-                        type="button"
-                        onClick={() => isSpeaking ? stopSpeech() : speakText('Hoja de Referencia de Parteras Tradicionales. Servicios de Salud de Oaxaca.')}
-                        className="px-4 py-2.5 bg-rose-550 hover:bg-rose-100 text-[#9D2449] border-2 border-rose-200 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-sm cursor-pointer"
-                    >
-                        {isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        <span>{isSpeaking ? 'Detener Voz' : 'Escuchar Instrucciones'}</span>
-                    </button>
-                </div>
-
-                <div className="space-y-6 pt-2">
-                    <div className="flex items-center gap-2 border-b-2 border-[#9D2449]/20 pb-2">
-                        <Info className="w-6 h-6 text-[#9D2449]" />
-                        <h3 className="text-base sm:text-lg font-black text-slate-900 uppercase">
-                            DATOS DE IDENTIFICACIÓN Y CANALIZACIÓN
-                        </h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                        <div className="space-y-2">
-                            <label className="block text-xs font-black text-slate-800 uppercase flex items-center justify-between">
-                                <span className="flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-[#9D2449]" /> Centro de Salud u Hospital
-                                </span>
-                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar por voz</span>
-                            </label>
-                            <div className="relative flex items-center w-full">
-                                <input
-                                    type="text"
-                                    required
-                                    value={centroSalud}
-                                    onChange={(e) => setCentroSalud(e.target.value)}
-                                    placeholder="Hospital o Centro de Salud..."
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-4 pr-14 py-3.5 text-sm sm:text-base font-bold text-slate-900 focus:outline-none focus:bg-white transition-all shadow-sm"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => startListening(setCentroSalud, 'centroSalud', 'Centro de Salud')}
-                                    className={`absolute right-2 p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center cursor-pointer ${activeListeningField === 'centroSalud' ? 'bg-rose-600 text-white animate-pulse' : 'bg-[#9D2449] text-white'}`}
-                                >
-                                    <Mic className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="block text-xs font-black text-slate-800 uppercase flex items-center justify-between">
-                                <span className="flex items-center gap-2">
-                                    <User className="w-4 h-4 text-[#9D2449]" /> Nombre de la Usuaria (O)
-                                </span>
-                                <span className="text-[11px] text-[#9D2449] font-bold">Dictar por voz</span>
-                            </label>
-                            <div className="relative flex items-center w-full">
-                                <input
-                                    type="text"
-                                    required
-                                    value={nombreUsuaria}
-                                    onChange={(e) => setNombreUsuaria(e.target.value)}
-                                    placeholder="Nombre completo de la paciente..."
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl pl-4 pr-14 py-3.5 text-sm sm:text-base font-bold text-slate-900 focus:outline-none focus:bg-white transition-all shadow-sm"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => startListening(setNombreUsuaria, 'nombreUsuaria', 'Nombre de la Usuaria')}
-                                    className={`absolute right-2 p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center cursor-pointer ${activeListeningField === 'nombreUsuaria' ? 'bg-rose-600 text-white animate-pulse' : 'bg-[#9D2449] text-white'}`}
-                                >
-                                    <Mic className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center gap-1">
-                                    <Calendar className="w-3.5 h-3.5 text-[#9D2449]" /> Edad
-                                </label>
-                                <input
-                                    type="number"
-                                    value={edad}
-                                    placeholder="Ej. 26"
-                                    onChange={(e) => setEdad(e.target.value)}
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-3 py-3.5 text-sm font-bold text-slate-900"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase">Sexo</label>
-                                <select
-                                    value={sexo}
-                                    onChange={(e) => setSexo(e.target.value as 'F' | 'M')}
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-3 py-3.5 text-sm font-bold text-slate-900 cursor-pointer"
-                                >
-                                    <option value="F">Femenino</option>
-                                    <option value="M">Masculino</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase">Fecha</label>
-                                <input
-                                    type="date"
-                                    value={fecha}
-                                    onChange={(e) => setFecha(e.target.value)}
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-2 py-3.5 text-xs font-bold text-slate-900"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase flex items-center gap-1">
-                                    <MapPin className="w-3.5 h-3.5 text-[#9D2449]" /> Localidad
-                                </label>
-                                <input
-                                    type="text"
-                                    value={localidad}
-                                    onChange={(e) => setLocalidad(e.target.value)}
-                                    placeholder="Localidad..."
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-3 py-3 text-sm font-bold text-slate-900"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="block text-xs font-black text-slate-800 uppercase">Municipio</label>
-                                <input
-                                    type="text"
-                                    value={municipio}
-                                    onChange={(e) => setMunicipio(e.target.value)}
-                                    placeholder="Municipio..."
-                                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-3 py-3 text-sm font-bold text-slate-900"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="block text-xs font-black text-slate-800 uppercase">Nombre de la Partera</label>
-                            <input
-                                type="text"
-                                required
-                                value={nombrePartera}
-                                onChange={(e) => setNombrePartera(e.target.value)}
-                                placeholder="Partera Tradicional..."
-                                className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-900"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="block text-xs font-black text-slate-800 uppercase">Localidad de la Partera</label>
-                            <input
-                                type="text"
-                                required
-                                value={localidadPartera}
-                                onChange={(e) => setLocalidadPartera(e.target.value)}
-                                placeholder="Localidad de la Partera..."
-                                className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#9D2449] rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-900"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* SELECCIÓN TÁCTIL DE MOTIVOS */}
-            <div className="bg-white rounded-3xl border-4 border-slate-200 p-4 sm:p-8 shadow-xl space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-4 border-[#9D2449] pb-4">
-                    <div>
-                        <span className="text-xs font-black uppercase text-[#9D2449] tracking-wider bg-rose-100 px-3 py-1 rounded-full border border-rose-300">
-                            SELECCIÓN TÁCTIL ILUSTRADA
-                        </span>
-                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase mt-1">
-                            MOTIVO DE LA REFERENCIA
-                        </h2>
-                    </div>
-                    <div className="text-xs font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-300">
-                        Seleccionados: <span className="text-[#9D2449] text-base font-black">{motivosSeleccionados.length}</span>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap justify-center gap-3 sm:gap-4 p-1 sm:p-2">
-                    {listaMotivos.map((item) => {
-                        const isSelected = motivosSeleccionados.includes(item.id);
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+                    {LISTA_MOTIVOS.map((m, i) => {
+                        const activo = motivosSeleccionados.includes(m.id);
                         return (
                             <button
+                                key={m.id}
                                 type="button"
-                                key={item.id}
-                                onClick={() => toggleMotivo(item.id, item.titulo)}
-                                className={`w-full max-w-[220px] sm:max-w-[240px] flex-1 min-w-[140px] sm:min-w-[160px] flex flex-col items-center justify-between p-3 sm:p-4 min-h-[170px] sm:min-h-[200px] bg-white border-2 rounded-2xl transition-all duration-200 cursor-pointer group select-none relative ${isSelected ? 'border-[#9D2449] bg-rose-50/90 shadow-md ring-4 ring-[#9D2449]/20' : 'border-slate-200 hover:border-[#9D2449] hover:shadow-md'}`}
+                                onClick={() => toggleMotivo(m)}
+                                aria-pressed={activo}
+                                style={{ animationDelay: `${0.15 + i * 0.03}s` }}
+                                className={`pt-fade-in relative flex min-h-[200px] flex-col items-center justify-between gap-2 rounded-3xl border-4 p-3 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98] ${activo
+                                    ? '-translate-y-1 border-[#C2603A] bg-gradient-to-b from-orange-50 to-amber-100 shadow-xl shadow-orange-900/20'
+                                    : 'border-stone-200 bg-gradient-to-b from-white to-amber-50/70 shadow-md'
+                                    }`}
                             >
-                                <div className="absolute top-2 right-2 z-10">
-                                    {isSelected ? (
-                                        <div className="w-6 h-6 rounded-full bg-[#9D2449] text-white flex items-center justify-center shadow-md">
-                                            <Check className="w-4 h-4 stroke-[3]" />
-                                        </div>
-                                    ) : (
-                                        <div className="w-5 h-5 rounded-full border-2 border-slate-300 bg-white group-hover:border-rose-400" />
-                                    )}
-                                </div>
-                                <div className="w-full flex-1 flex items-center justify-center py-2 px-1">
-                                    <img src={item.imagen} alt={item.titulo} className="h-20 sm:h-28 w-auto object-contain mix-blend-multiply drop-shadow-sm transition-transform duration-200 group-hover:scale-105" />
-                                </div>
-                                <div className="w-full pt-2">
-                                    <span className={`text-xs md:text-sm font-bold text-center leading-snug w-full px-1 block break-words uppercase ${isSelected ? 'text-[#9D2449]' : 'text-slate-800'}`}>
-                                        {item.titulo}
+                                {activo && (
+                                    <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-emerald-600 text-white shadow-lg">
+                                        <IconoCheck />
                                     </span>
-                                </div>
+                                )}
+                                <span className="flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-amber-200/70">
+                                    <Ilustracion motivo={m} />
+                                </span>
+                                <span className="flex flex-col items-center gap-1">
+                                    <span className="text-sm font-black uppercase leading-tight text-stone-900">{m.titulo}</span>
+                                    {m.bullets && (
+                                        <span className="text-xs font-bold leading-snug text-stone-700">{m.bullets.join(' · ')}</span>
+                                    )}
+                                </span>
                             </button>
                         );
                     })}
                 </div>
-            </div>
+            </section>
 
-            {/* CONTRAREFERENCIA MÉDICA */}
-            <div className="bg-slate-900 text-white p-4 sm:p-8 rounded-3xl border-2 border-slate-800 space-y-6 shadow-2xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0">
-                            <Stethoscope className="w-7 h-7 text-rose-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg sm:text-xl font-black text-white uppercase">Módulo de Contrareferencia Médica</h3>
-                            <p className="text-xs text-slate-400">Respuesta oficial del Centro de Salud a la Partera Tradicional</p>
-                        </div>
+            {/* ================= Contrarreferencia médica ================= */}
+            <section className={`pt-slide-up p-4 sm:p-6 ${VIDRIO}`} style={{ animationDelay: '.18s' }}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 className="text-xl font-black text-stone-900 sm:text-2xl">Contrarreferencia médica</h2>
+                        <p className="text-sm font-bold text-stone-700">Respuesta oficial del centro de salud a la partera</p>
                     </div>
                     <button
                         type="button"
-                        onClick={() => setMostrarContrareferencia(!mostrarContrareferencia)}
-                        className="px-4 py-2 bg-rose-500/20 text-rose-300 border border-rose-400/30 hover:bg-rose-500/30 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+                        onClick={() => {
+                            setMostrarContrareferencia((v) => !v);
+                            speakText(mostrarContrareferencia ? 'Sección del médico oculta.' : 'Sección del médico tratante abierta.');
+                        }}
+                        aria-expanded={mostrarContrareferencia}
+                        className="h-14 rounded-2xl border-2 border-[#5E8C61]/60 bg-emerald-50 px-5 text-base font-black text-stone-900 shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
                     >
-                        <FolderOpen className="w-4 h-4" />
-                        <span>{mostrarContrareferencia ? 'Ocultar Sección' : 'Abrir Sección Médico Tratante'}</span>
+                        {mostrarContrareferencia ? 'Ocultar sección' : 'Abrir sección del médico'}
                     </button>
                 </div>
 
                 {mostrarContrareferencia && (
-                    <div className="space-y-6 pt-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="pt-slide-up mt-5 flex flex-col gap-5 border-t-2 border-amber-200 pt-5">
+                        <div className="flex flex-col gap-3">
                             <button
                                 type="button"
-                                onClick={() => setEstadoContra('CONTROLADA')}
-                                className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${estadoContra === 'CONTROLADA' ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-300'}`}
+                                onClick={() => {
+                                    setEstadoContra('CONTROLADA');
+                                    speakText('Paciente controlada, dada de alta.');
+                                }}
+                                aria-pressed={estadoContra === 'CONTROLADA'}
+                                className={`flex h-16 items-center justify-center gap-2 rounded-2xl border-4 text-base font-black transition-all duration-200 active:scale-[0.98] ${estadoContra === 'CONTROLADA'
+                                    ? 'border-emerald-700 bg-emerald-600 text-white shadow-lg'
+                                    : 'border-stone-200 bg-white text-stone-900 hover:border-emerald-500'
+                                    }`}
                             >
-                                <Check className="w-5 h-5" />
-                                <span>Paciente Controlada / Alta</span>
+                                {estadoContra === 'CONTROLADA' && <IconoCheck />} Paciente controlada / Alta
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setEstadoContra('PARA_CONTROL_PARTERA')}
-                                className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${estadoContra === 'PARA_CONTROL_PARTERA' ? 'bg-sky-600 border-sky-400 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-300'}`}
+                                onClick={() => {
+                                    setEstadoContra('PARA_CONTROL_PARTERA');
+                                    speakText('La paciente regresa a control con la partera.');
+                                }}
+                                aria-pressed={estadoContra === 'PARA_CONTROL_PARTERA'}
+                                className={`flex h-16 items-center justify-center gap-2 rounded-2xl border-4 text-base font-black transition-all duration-200 active:scale-[0.98] ${estadoContra === 'PARA_CONTROL_PARTERA'
+                                    ? 'border-[#9A6A0F] bg-[#D69A1E] text-stone-900 shadow-lg'
+                                    : 'border-stone-200 bg-white text-stone-900 hover:border-[#D69A1E]'
+                                    }`}
                             >
-                                <User className="w-5 h-5" />
-                                <span>Regresa para Control con la Partera</span>
+                                {estadoContra === 'PARA_CONTROL_PARTERA' && <IconoCheck />} Regresa para control con la partera
                             </button>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="block text-xs font-bold text-slate-300 uppercase">Diagnóstico del Médico</label>
-                            <textarea
-                                rows={2}
-                                value={diagnostico}
-                                onChange={(e) => setDiagnostico(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm text-white"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="block text-xs font-bold text-slate-300 uppercase">Tratamiento Indicado</label>
-                                <textarea
-                                    rows={2}
-                                    value={tratamiento}
-                                    onChange={(e) => setTratamiento(e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm text-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="block text-xs font-bold text-slate-300 uppercase">Indicaciones a la Partera</label>
-                                <textarea
-                                    rows={2}
-                                    value={observacionesMedico}
-                                    onChange={(e) => setObservacionesMedico(e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm text-white"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-300 uppercase">Nombre del Médico Tratante</label>
-                                <input
-                                    type="text"
-                                    value={nombreMedico}
-                                    onChange={(e) => setNombreMedico(e.target.value)}
-                                    placeholder="Dr. o Dra...."
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-300 uppercase">Unidad Médica / Hospital</label>
-                                <input
-                                    type="text"
-                                    value={centroMedico}
-                                    onChange={(e) => setCentroMedico(e.target.value)}
-                                    placeholder="Hospital o Centro de Salud..."
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-white"
-                                />
-                            </div>
-                        </div>
+                        {campo('diagnostico', 'Diagnóstico del médico', 'Diagnóstico…', { multilinea: true })}
+                        {campo('tratamiento', 'Tratamiento indicado', 'Tratamiento…', { multilinea: true })}
+                        {campo('observacionesMedico', 'Indicaciones a la partera', 'Indicaciones…', { multilinea: true })}
+                        {campo('nombreMedico', 'Nombre del médico tratante', 'Dr. o Dra.…')}
+                        {campo('centroMedico', 'Unidad médica / hospital', 'Hospital o centro de salud…')}
                     </div>
                 )}
-            </div>
+            </section>
 
-            {/* BOTÓN DE ENVÍO */}
-            <div className="pt-2">
-                <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-[#9D2449] hover:bg-[#7A1B38] text-white text-lg font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-3 transition-transform active:scale-95 w-full cursor-pointer disabled:opacity-50"
+            {/* ================== Error del servidor ====================== */}
+            {errorServidor && (
+                <div
+                    role="alert"
+                    className="pt-pop-in rounded-3xl border-4 border-red-400 bg-red-50 p-4 text-base font-bold text-stone-900 shadow-lg"
                 >
-                    {isSubmitting ? (
-                        <>
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                            <span>Enviando Referencia a PostgreSQL (Render)...</span>
-                        </>
-                    ) : (
-                        <>
-                            <Send className="w-6 h-6" />
-                            <span>ENVIAR HOJA DE REFERENCIA AL CENTRO DE SALUD</span>
-                        </>
-                    )}
-                </button>
-            </div>
+                    {errorServidor}
+                </div>
+            )}
 
+            {/* ====================== Botón de envío ====================== */}
+            <button
+                type="submit"
+                disabled={isSubmitting || enviado}
+                className={`pt-slide-up flex min-h-[88px] w-full items-center justify-center gap-4 rounded-3xl px-6 py-5 text-xl font-black disabled:cursor-wait disabled:opacity-80 sm:text-2xl ${BOTON_TIERRA} ${totalMotivos > 0 && !isSubmitting ? 'pt-breathe' : ''
+                    }`}
+                style={{ animationDelay: '.24s' }}
+            >
+                {isSubmitting ? <IconoCargando /> : <IconoEnviar />}
+                <span>{isSubmitting ? 'Enviando referencia…' : 'Enviar hoja de referencia al centro de salud'}</span>
+            </button>
+
+            {/* ================== Confirmación de envío ======================= */}
+            {enviado && (
+                <div
+                    role="status"
+                    aria-live="polite"
+                    className="pt-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4 backdrop-blur-sm"
+                >
+                    <div className={`pt-pop-in w-full max-w-md p-8 text-center ${VIDRIO}`}>
+                        <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl">
+                            <IconoCheck className="h-14 w-14" />
+                        </div>
+                        <h2 className="text-3xl font-black text-stone-900">¡Hoja enviada!</h2>
+                        <p className="mt-2 text-lg font-bold text-stone-800">
+                            La referencia de {datos.nombreUsuaria || 'la usuaria'} quedó guardada y llegó al centro de salud.
+                        </p>
+                        <p className="mt-3 text-sm font-bold text-stone-600">Regresando al menú…</p>
+                    </div>
+                </div>
+            )}
         </form>
     );
 };
