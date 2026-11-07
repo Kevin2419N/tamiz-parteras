@@ -1,3 +1,4 @@
+/* spell-checker: disable */
 import React, { useState, useEffect, useRef } from 'react';
 import {
     HeartHandshake,
@@ -66,14 +67,14 @@ const UNIDADES_DESTINO = [
 
 function getEstatusContaRefBadge(estatus: EstatusContraRef): React.ReactNode {
     const map: Record<EstatusContraRef, { label: string; cls: string; icon: React.ReactNode }> = {
-        PENDIENTE_ATENCION: { label: 'Pendiente de Atención', cls: 'bg-rose-100 text-rose-800 border-rose-300', icon: <AlertTriangle className="w-3 h-3" /> },
-        EN_VALORACION: { label: 'En Valoración', cls: 'bg-amber-100 text-amber-800 border-amber-300', icon: <Clock className="w-3 h-3" /> },
-        ATENDIDA: { label: 'Atendida', cls: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: <CheckCircle2 className="w-3 h-3" /> },
-        DERIVADA_HOSPITAL: { label: 'Derivada a Hospital', cls: 'bg-blue-100 text-blue-800 border-blue-300', icon: <Building2 className="w-3 h-3" /> },
+        PENDIENTE_ATENCION: { label: 'Pendiente de Atención', cls: 'bg-rose-500/25 text-rose-200 border-rose-400/50', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+        EN_VALORACION: { label: 'En Valoración', cls: 'bg-amber-500/25 text-amber-200 border-amber-400/50', icon: <Clock className="w-3.5 h-3.5" /> },
+        ATENDIDA: { label: 'Atendida', cls: 'bg-emerald-500/25 text-emerald-200 border-emerald-400/50', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+        DERIVADA_HOSPITAL: { label: 'Derivada a Hospital', cls: 'bg-blue-500/25 text-blue-200 border-blue-400/50', icon: <Building2 className="w-3.5 h-3.5" /> },
     };
-    const { label, cls, icon } = map[estatus] || { label: estatus, cls: 'bg-slate-100 text-slate-800 border-slate-300', icon: null };
+    const { label, cls, icon } = map[estatus] || { label: estatus, cls: 'bg-white/10 text-white border-white/30', icon: null };
     return (
-        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${cls}`}>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black border backdrop-blur-md shadow-md ${cls}`}>
             {icon}{label}
         </span>
     );
@@ -81,12 +82,12 @@ function getEstatusContaRefBadge(estatus: EstatusContraRef): React.ReactNode {
 
 function getRiesgoBadge(nivel: ReferenciaComunidad['nivelRiesgo']): React.ReactNode {
     const map = {
-        BAJO: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-        MEDIO: 'bg-amber-100 text-amber-800 border-amber-300',
-        ALTO: 'bg-rose-100 text-rose-900 border-rose-400',
-        CRITICO: 'bg-red-100 text-red-900 border-red-500 font-black',
+        BAJO: 'bg-emerald-500/25 text-emerald-200 border-emerald-400/50',
+        MEDIO: 'bg-amber-500/25 text-amber-200 border-amber-400/50',
+        ALTO: 'bg-rose-500/30 text-rose-200 border-rose-400/60',
+        CRITICO: 'bg-red-600/50 text-white border-red-300 font-black animate-pulse',
     };
-    return <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${map[nivel] || map.BAJO}`}>{nivel}</span>;
+    return <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-black border backdrop-blur-md shadow-md ${map[nivel] || map.BAJO}`}>{nivel}</span>;
 }
 
 // ─── Selector CIE-10 ────────────────────────────────────────────────────────
@@ -106,30 +107,30 @@ const Cie10Selector: React.FC<Cie10SelectorProps> = ({ value, onChange }) => {
         <div className="relative">
             <button type="button"
                 onClick={() => setOpen(v => !v)}
-                className={`w-full flex items-center justify-between bg-slate-50 border rounded-xl px-3 py-2 text-xs text-left transition-colors cursor-pointer ${open ? 'border-[#9D2449]' : 'border-slate-300 hover:border-slate-400'}`}>
-                <span className={value ? 'font-bold text-slate-900' : 'text-slate-400'}>
+                className={`w-full flex items-center justify-between bg-slate-900/50 border rounded-2xl px-4 py-3 text-xs text-left transition-all cursor-pointer backdrop-blur-xl shadow-inner ${open ? 'border-cyan-300 ring-2 ring-cyan-400/30' : 'border-white/50 text-white hover:border-white'}`}>
+                <span className={value ? 'font-bold text-white' : 'text-slate-300'}>
                     {value || 'Seleccionar código CIE-10…'}
                 </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-cyan-300 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
             </button>
             {open && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-30 overflow-hidden">
-                    <div className="p-2 border-b border-slate-100">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 border border-white/30 rounded-2xl shadow-2xl z-30 overflow-hidden backdrop-blur-3xl">
+                    <div className="p-3 border-b border-white/20">
                         <input autoFocus type="text" placeholder="Buscar código o diagnóstico…"
                             value={query} onChange={e => setQuery(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                            className="w-full bg-slate-950/80 border border-white/40 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-300" />
                     </div>
-                    <div className="max-h-48 overflow-y-auto">
+                    <div className="max-h-52 overflow-y-auto divide-y divide-white/10">
                         {filtrados.map(item => (
                             <button key={item.codigo} type="button"
                                 onClick={() => { onChange(`${item.codigo} — ${item.desc}`); setOpen(false); setQuery(''); }}
-                                className="w-full text-left px-3 py-2 text-xs hover:bg-rose-50 transition-colors flex items-start gap-2 cursor-pointer">
-                                <span className="font-black text-[#9D2449] shrink-0 mt-0.5">{item.codigo}</span>
-                                <span className="text-slate-700">{item.desc}</span>
+                                className="w-full text-left px-4 py-2.5 text-xs hover:bg-white/10 transition-colors flex items-start gap-2.5 cursor-pointer">
+                                <span className="font-mono font-black text-cyan-300 shrink-0 mt-0.5">{item.codigo}</span>
+                                <span className="text-white/90 font-medium">{item.desc}</span>
                             </button>
                         ))}
                         {filtrados.length === 0 && (
-                            <p className="text-center py-4 text-slate-400 text-[10px]">Sin resultados para "{query}"</p>
+                            <p className="text-center py-4 text-slate-400 text-xs">Sin resultados para "{query}"</p>
                         )}
                     </div>
                 </div>
@@ -184,6 +185,9 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
         OTRO: 'Otro',
     };
 
+    const inputGlassStyle = "w-full px-4 py-3 bg-slate-900/50 border border-white/50 rounded-2xl text-white text-xs font-bold placeholder:text-slate-300 focus:outline-none focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/30 backdrop-blur-2xl transition-all shadow-inner";
+    const selectGlassStyle = "w-full px-4 py-3 bg-slate-900/70 border border-white/50 rounded-2xl text-white text-xs font-bold focus:outline-none focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/30 backdrop-blur-2xl transition-all shadow-inner";
+
     return (
         <>
             <style>{`
@@ -198,18 +202,22 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
                 .only-print { display: none; }
             `}</style>
 
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
-                <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full shadow-2xl my-4 print-contraref" ref={printRef}>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl z-50 flex items-start justify-center p-4 overflow-y-auto animate-fadeIn">
+                <div className="relative border border-white/60 bg-slate-900/90 max-w-2xl w-full rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.9)] backdrop-blur-3xl my-4 text-white overflow-hidden print-contraref" ref={printRef}>
+                    <div className="absolute -top-32 -left-32 size-64 rounded-full bg-cyan-400/35 blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-32 -right-32 size-64 rounded-full bg-blue-500/35 blur-3xl pointer-events-none" />
+
                     {/* Header no-print */}
-                    <div className="flex items-center justify-between p-5 border-b border-slate-100 no-print">
+                    <div className="relative z-10 flex items-center justify-between p-6 border-b border-white/25 no-print">
                         <div>
-                            <h3 className="text-sm font-black text-[#9D2449]">Formulario Oficial de Contrareferencia Médica SSO</h3>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                                Folio: <span className="font-black text-slate-700">{form.folioContraRef}</span> · Jurisdicción Sanitaria No. 2 Istmo
+                            <span className="text-[10px] font-black uppercase text-cyan-300 tracking-widest block">Servicios de Salud de Oaxaca</span>
+                            <h3 className="text-lg font-black text-white tracking-tight mt-0.5">Formulario Oficial de Contrareferencia Médica SSO</h3>
+                            <p className="text-xs text-cyan-100 font-medium mt-1">
+                                Folio: <span className="font-extrabold text-cyan-300">{form.folioContraRef}</span> · Jurisdicción Sanitaria No. 2 Istmo
                             </p>
                         </div>
-                        <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer">
-                            <X className="w-4 h-4" />
+                        <button type="button" onClick={onClose} className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all border border-white/40 backdrop-blur-md cursor-pointer">
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -222,31 +230,31 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
                         <p className="text-xs text-slate-600">Folio: {form.folioContraRef} · Fecha: {form.fechaAtencion} · CLUES: {form.cluesUnidadEmisora}</p>
                     </div>
 
-                    <div className="p-5 space-y-4">
+                    <div className="relative z-10 p-6 space-y-5 text-xs">
                         {/* Datos del paciente (read-only) */}
-                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 grid grid-cols-2 gap-3 text-xs">
+                        <div className="bg-white/5 border border-white/20 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5 backdrop-blur-xl">
                             <div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Paciente</p>
-                                <p className="font-bold text-slate-900">{referencia.nombrePaciente} · {referencia.edadPaciente} años</p>
+                                <p className="text-[10px] font-black text-cyan-200 uppercase tracking-wider">Paciente</p>
+                                <p className="font-bold text-white text-sm">{referencia.nombrePaciente} · {referencia.edadPaciente} años</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Comunidad de Origen</p>
-                                <p className="font-bold text-slate-900">{referencia.comunidadOrigen}, {referencia.municipio}</p>
+                                <p className="text-[10px] font-black text-cyan-200 uppercase tracking-wider">Comunidad de Origen</p>
+                                <p className="font-bold text-white text-sm">{referencia.comunidadOrigen}, {referencia.municipio}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Referida Por</p>
-                                <p className="font-bold text-slate-900">{referencia.nombrePartera}</p>
+                                <p className="text-[10px] font-black text-cyan-200 uppercase tracking-wider">Referida Por</p>
+                                <p className="font-bold text-white">{referencia.nombrePartera}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Motivo de Referencia</p>
-                                <p className="font-medium text-slate-700 leading-snug">{referencia.motivoReferencia}</p>
+                                <p className="text-[10px] font-black text-cyan-200 uppercase tracking-wider">Motivo de Referencia</p>
+                                <p className="font-medium text-cyan-100 leading-snug">{referencia.motivoReferencia}</p>
                             </div>
                         </div>
 
                         {/* Diagnóstico CIE-10 */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                                <Stethoscope className="w-3 h-3 inline mr-1 text-[#9D2449]" />
+                            <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">
+                                <Stethoscope className="w-4 h-4 inline mr-1.5 text-cyan-300" />
                                 Código CIE-10 — Diagnóstico Principal
                             </label>
                             <Cie10Selector
@@ -257,75 +265,75 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
 
                         {/* Impresión diagnóstica */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                            <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">
                                 Impresión Diagnóstica Completa
                             </label>
                             <input type="text"
                                 value={form.diagnosticoImpresion}
                                 onChange={e => handleChange('diagnosticoImpresion', e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                                className={inputGlassStyle} />
                         </div>
 
                         {/* Hallazgos */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                            <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">
                                 Hallazgos a la Exploración Clínica
                             </label>
                             <textarea rows={2}
                                 value={form.hallazgosClinica}
                                 onChange={e => handleChange('hallazgosClinica', e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449] resize-none" />
+                                className={inputGlassStyle + " resize-none"} />
                         </div>
 
                         {/* Plan de manejo y conducta médica — 2 columnas */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">
                                     Plan de Manejo Médico
                                 </label>
                                 <textarea rows={3}
                                     value={form.planManejo}
                                     onChange={e => handleChange('planManejo', e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449] resize-none" />
+                                    className={inputGlassStyle + " resize-none"} />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                                    <Pill className="w-3 h-3 inline mr-1 text-blue-600" />
+                                <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">
+                                    <Pill className="w-4 h-4 inline mr-1.5 text-cyan-300" />
                                     Plan Farmacológico / Conducta Médica
                                 </label>
                                 <textarea rows={3}
                                     value={form.conductaMedica ?? ''}
                                     onChange={e => handleChange('conductaMedica', e.target.value)}
                                     placeholder="Ej. Metildopa 250mg c/8h, reposo relativo, control en 48h con tira de TA…"
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449] resize-none" />
+                                    className={inputGlassStyle + " resize-none"} />
                             </div>
                         </div>
 
                         {/* Medicamentos */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                            <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">
                                 Medicamentos Indicados (nombre, dosis, vía, duración)
                             </label>
                             <input type="text"
                                 value={form.medicamentosIndicados}
                                 onChange={e => handleChange('medicamentosIndicados', e.target.value)}
                                 placeholder="Ej. Metildopa 500mg VO c/8h x 30 días · Ácido fólico 5mg VO/día"
-                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                                className={inputGlassStyle} />
                         </div>
 
                         {/* Nivel de derivación */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                                <Navigation className="w-3 h-3 inline mr-1 text-slate-500" />
+                            <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">
+                                <Navigation className="w-4 h-4 inline mr-1.5 text-cyan-300" />
                                 Nivel de Derivación
                             </label>
                             <div className="flex flex-wrap gap-2">
                                 {(Object.entries(niveles) as [NonNullable<FormularioContraRef['nivelDerivacion']>, string][]).map(([key, label]) => (
                                     <button key={key} type="button"
                                         onClick={() => setForm(prev => ({ ...prev, nivelDerivacion: key }))}
-                                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer ${form.nivelDerivacion === key
-                                            ? 'bg-[#9D2449] border-[#9D2449] text-white'
-                                            : 'bg-slate-50 border-slate-300 text-slate-700 hover:border-[#9D2449]'}`}>
+                                        className={`px-3.5 py-2 rounded-2xl border text-xs font-bold transition-all cursor-pointer backdrop-blur-xl ${form.nivelDerivacion === key
+                                            ? 'bg-gradient-to-r from-cyan-400 to-blue-600 border-white text-white shadow-lg'
+                                            : 'bg-white/10 border-white/30 text-white hover:bg-white/20'}`}>
                                         {label}
                                     </button>
                                 ))}
@@ -335,43 +343,43 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
                         {/* Unidad de destino */}
                         {form.nivelDerivacion !== 'SIN_DERIVACION' && (
                             <div>
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                                    <Building2 className="w-3 h-3 inline mr-1" />Unidad de Destino
+                                <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">
+                                    <Building2 className="w-4 h-4 inline mr-1.5 text-cyan-300" />Unidad de Destino
                                 </label>
                                 <select
                                     value={form.unidadDestino ?? ''}
                                     onChange={e => handleChange('unidadDestino', e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]">
-                                    <option value="">-- Seleccionar unidad --</option>
-                                    {UNIDADES_DESTINO.map(u => <option key={u} value={u}>{u}</option>)}
+                                    className={selectGlassStyle}>
+                                    <option value="" className="bg-slate-900 text-white">-- Seleccionar unidad --</option>
+                                    {UNIDADES_DESTINO.map(u => <option key={u} value={u} className="bg-slate-900 text-white">{u}</option>)}
                                 </select>
                             </div>
                         )}
 
                         {/* Próxima cita */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Próxima Cita / Seguimiento</label>
+                            <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">Próxima Cita / Seguimiento</label>
                             <input type="text"
                                 value={form.proximaCita}
                                 onChange={e => handleChange('proximaCita', e.target.value)}
                                 placeholder="Ej. Control en 7 días — CSU Juchitán, cita el ___/___/2026"
-                                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]" />
+                                className={inputGlassStyle} />
                         </div>
 
                         {/* Firma médica */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                             {[
                                 { label: 'Médico Responsable', key: 'medicoFirma' },
                                 { label: 'Cédula Profesional', key: 'cedulaProfesional' },
                                 { label: 'CLUES Unidad Emisora', key: 'cluesUnidadEmisora' },
                             ].map(({ label, key }) => (
                                 <div key={key}>
-                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>
+                                    <label className="block text-[11px] font-black text-cyan-200 uppercase tracking-wider mb-2">{label}</label>
                                     <input
                                         type="text"
                                         value={form[key as keyof FormularioContraRef] as string ?? ''}
                                         onChange={e => handleChange(key as keyof FormularioContraRef, e.target.value)}
-                                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#9D2449]"
+                                        className={inputGlassStyle}
                                     />
                                 </div>
                             ))}
@@ -391,26 +399,26 @@ const ModalFormContraRef: React.FC<ModalContraRefProps> = ({ referencia, onClose
                     </div>
 
                     {/* Acciones */}
-                    <div className="flex justify-between items-center p-5 border-t border-slate-100 no-print gap-3 flex-wrap">
+                    <div className="relative z-10 flex justify-between items-center p-6 border-t border-white/25 no-print gap-3 flex-wrap">
                         <button type="button" onClick={onClose}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">
+                            className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-2xl border border-white/30 backdrop-blur-xl cursor-pointer transition-all shadow-md">
                             Cancelar
                         </button>
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                             <button
                                 type="button"
                                 onClick={() => window.print()}
-                                className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                className="flex items-center gap-2 px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-2xl transition-all cursor-pointer border border-white/30 shadow-lg"
                             >
-                                <Printer className="w-3.5 h-3.5" />
+                                <Printer className="w-4 h-4 text-cyan-300" />
                                 Imprimir / PDF Oficial SSO
                             </button>
                             <button
                                 type="button"
                                 onClick={() => { onEmitir(form); onClose(); }}
-                                className="flex items-center gap-2 px-5 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
+                                className="flex items-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white text-xs font-black rounded-2xl shadow-2xl shadow-cyan-950/80 transition-all active:scale-95 border border-white/60 cursor-pointer"
                             >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <CheckCircle2 className="w-4 h-4 text-cyan-100" />
                                 Emitir Contrareferencia
                             </button>
                         </div>
@@ -430,7 +438,6 @@ export const TabContrareferencias: React.FC = () => {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [referenciaSeleccionada, setReferenciaSeleccionada] = useState<ReferenciaComunidad | null>(null);
 
-    // Carga de referencias comunitarias desde el Backend con fallback local
     useEffect(() => {
         const cargarReferencias = async () => {
             setCargando(true);
@@ -442,7 +449,6 @@ export const TabContrareferencias: React.FC = () => {
                 console.warn('Backend no disponible para contrareferencias, cargando datos de respaldo:', error);
                 setErrorMsg('No se pudo conectar con el servidor. Mostrando datos de respaldo locales.');
 
-                // Mock de respaldo para desarrollo offline / residency demo
                 const mockReferencias: ReferenciaComunidad[] = [
                     {
                         id: 'REF-COM-2026-001',
@@ -507,7 +513,6 @@ export const TabContrareferencias: React.FC = () => {
             alert('Contrareferencia emitida y sincronizada correctamente con el servidor.');
         } catch (error: any) {
             console.error('Error al emitir contrareferencia en servidor:', error);
-            // Actualización local optimista en caso de fallo de red
             setReferencias(prev => prev.map(r =>
                 r.id === data.referenciaId
                     ? {
@@ -527,29 +532,32 @@ export const TabContrareferencias: React.FC = () => {
     const pendientes = referencias.filter(r => r.estatusContraRef === 'PENDIENTE_ATENCION').length;
     const atendidas = referencias.filter(r => r.estatusContraRef === 'ATENDIDA').length;
 
+    const cardGlassStyle = "p-6 bg-slate-900/35 rounded-3xl border border-white/50 backdrop-blur-3xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] space-y-4 text-white";
+    const inputGlassStyle = "w-full px-4 py-3 bg-slate-900/40 border border-white/50 rounded-2xl text-white text-xs font-bold placeholder:text-slate-300 focus:outline-none focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/30 backdrop-blur-2xl transition-all shadow-inner";
+
     return (
-        <div className="space-y-6 mt-4">
+        <div className="space-y-6 text-white animate-fadeIn">
             {errorMsg && (
-                <div className="bg-amber-50 border border-amber-300 p-3 rounded-xl text-amber-900 text-xs font-bold flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <div className="bg-rose-950/70 border border-rose-400/60 p-4 rounded-2xl text-rose-200 text-xs font-bold flex items-center gap-3 backdrop-blur-2xl shadow-xl">
+                    <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
                     <span>{errorMsg}</span>
                 </div>
             )}
 
             {/* KPIs */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 {[
-                    { label: 'Referencias Recibidas', value: referencias.length, cls: 'bg-slate-50 border-slate-200 text-slate-700', icon: HeartHandshake },
-                    { label: 'Pendientes de Atención', value: pendientes, cls: 'bg-rose-50 border-rose-200 text-[#9D2449]', icon: AlertTriangle },
-                    { label: 'Atendidas y Documentadas', value: atendidas, cls: 'bg-emerald-50 border-emerald-200 text-emerald-700', icon: CheckCircle2 },
+                    { label: 'Referencias Recibidas', value: referencias.length, cls: 'bg-white/5 border-white/30 text-white', icon: HeartHandshake },
+                    { label: 'Pendientes de Atención', value: pendientes, cls: 'bg-rose-950/40 border-rose-400/40 text-rose-200', icon: AlertTriangle },
+                    { label: 'Atendidas y Documentadas', value: atendidas, cls: 'bg-emerald-950/40 border-emerald-400/40 text-emerald-200', icon: CheckCircle2 },
                 ].map(({ label, value, cls, icon: Icon }) => (
-                    <div key={label} className={`flex items-center gap-4 p-4 rounded-2xl border ${cls} shadow-sm`}>
-                        <div className="p-3 bg-white/60 rounded-xl shadow-sm">
-                            <Icon className="w-5 h-5" />
+                    <div key={label} className={`flex items-center gap-4 p-6 rounded-3xl border ${cls} backdrop-blur-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.6)]`}>
+                        <div className="p-3.5 bg-white/15 rounded-2xl border border-white/40 backdrop-blur-xl shadow-lg">
+                            <Icon className="w-6 h-6 text-cyan-300" />
                         </div>
                         <div>
-                            <p className="text-2xl font-black">{value}</p>
-                            <p className="text-[11px] font-bold opacity-75 leading-tight">{label}</p>
+                            <p className="text-3xl font-black text-white">{value}</p>
+                            <p className="text-xs font-bold text-cyan-100 mt-0.5">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -557,78 +565,80 @@ export const TabContrareferencias: React.FC = () => {
 
             {/* Buscador */}
             <div className="relative max-w-md">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Search className="w-4 h-4 text-cyan-300 absolute left-4 top-3.5" />
                 <input
                     type="text"
                     placeholder="Buscar por paciente, folio, partera o municipio..."
                     value={busqueda}
                     onChange={e => setBusqueda(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#9D2449] focus:ring-2 focus:ring-[#9D2449]/20"
+                    className={inputGlassStyle + " pl-11"}
                 />
             </div>
 
             {/* Bandeja de referencias */}
-            <div className="space-y-3">
+            <div className="space-y-4">
                 {cargando ? (
-                    <div className="text-center py-20 text-slate-400 font-semibold text-xs flex items-center justify-center gap-2">
-                        <Loader2 className="w-5 h-5 animate-spin text-[#9D2449]" />
+                    <div className="text-center py-20 text-cyan-200 font-semibold text-sm flex items-center justify-center gap-3">
+                        <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
                         <span>Sincronizando contrareferencias con PostgreSQL (Render)...</span>
                     </div>
                 ) : refFiltradas.length === 0 ? (
-                    <div className="text-center py-12 text-slate-400 font-semibold text-sm">No hay referencias comunitarias registradas.</div>
+                    <div className="text-center py-16 text-cyan-100/80 font-medium text-sm bg-slate-900/35 border border-white/50 rounded-3xl backdrop-blur-3xl shadow-xl">
+                        No hay referencias comunitarias registradas.
+                    </div>
                 ) : (
                     refFiltradas.map(ref => (
-                        <div key={ref.id} className={`border rounded-2xl p-4 transition-all hover:shadow-md ${ref.estatusContraRef === 'PENDIENTE_ATENCION'
-                            ? 'border-rose-200 bg-rose-50/40'
+                        <div key={ref.id} className={`border rounded-3xl p-6 transition-all backdrop-blur-3xl shadow-xl ${ref.estatusContraRef === 'PENDIENTE_ATENCION'
+                            ? 'border-rose-400/50 bg-rose-950/30'
                             : ref.estatusContraRef === 'ATENDIDA'
-                                ? 'border-emerald-200 bg-emerald-50/30'
-                                : 'border-slate-200 bg-white'
+                                ? 'border-emerald-400/50 bg-emerald-950/30'
+                                : 'border-white/50 bg-slate-900/35'
                             }`}>
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-[10px] font-black text-slate-400">{ref.folioReferencia}</span>
+                            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2.5 flex-wrap">
+                                        <span className="text-xs font-mono font-black text-cyan-300">{ref.folioReferencia}</span>
                                         {getEstatusContaRefBadge(ref.estatusContraRef)}
                                         {getRiesgoBadge(ref.nivelRiesgo)}
                                     </div>
-                                    <p className="font-black text-sm text-slate-900 flex items-center gap-1.5">
-                                        <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <p className="font-black text-base text-white flex items-center gap-2">
+                                        <User className="w-4 h-4 text-cyan-300 shrink-0" />
                                         {ref.nombrePaciente} · {ref.edadPaciente} años
                                     </p>
-                                    <p className="text-xs text-slate-500 flex items-center gap-1.5">
-                                        <HeartHandshake className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                                    <p className="text-xs text-cyan-100 font-semibold flex items-center gap-2">
+                                        <HeartHandshake className="w-4 h-4 text-rose-300 shrink-0" />
                                         {ref.nombrePartera}
                                     </p>
-                                    <p className="text-xs text-slate-500 flex items-center gap-1.5">
-                                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <p className="text-xs text-cyan-200/90 flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-cyan-300 shrink-0" />
                                         {ref.comunidadOrigen}, {ref.municipio}
                                     </p>
-                                    <p className="text-xs text-slate-600 font-medium mt-1 max-w-lg">{ref.motivoReferencia}</p>
+                                    <p className="text-xs text-white font-medium mt-1.5 max-w-2xl bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-md">{ref.motivoReferencia}</p>
                                     {ref.diagnosticoMedico && (
-                                        <p className="text-xs text-emerald-700 font-bold flex items-center gap-1.5">
-                                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> {ref.diagnosticoMedico}
+                                        <p className="text-xs text-emerald-300 font-bold flex items-center gap-2 mt-1">
+                                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" /> {ref.diagnosticoMedico}
                                         </p>
                                     )}
                                 </div>
-                                <div className="flex flex-col gap-2 shrink-0">
+                                <div className="flex flex-col gap-3 shrink-0 w-full lg:w-auto items-stretch lg:items-end">
                                     {ref.estatusContraRef !== 'ATENDIDA' && (
                                         <button
                                             type="button"
                                             onClick={() => setReferenciaSeleccionada(ref)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-[#9D2449] hover:bg-[#7A1B38] text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
+                                            className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-cyan-400 to-blue-600 hover:brightness-110 text-white text-xs font-extrabold rounded-2xl shadow-xl shadow-cyan-950/80 transition-all active:scale-95 border border-white/60 cursor-pointer"
                                         >
-                                            <FileText className="w-3.5 h-3.5" />
+                                            <FileText className="w-4 h-4 text-cyan-100" />
                                             Emitir Contrareferencia
                                         </button>
                                     )}
                                     {ref.folioContraRef && (
-                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
-                                            <CheckCircle2 className="w-3 h-3" />
+                                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-200 bg-emerald-500/25 border border-emerald-400/50 px-4 py-2 rounded-2xl backdrop-blur-xl shadow-lg">
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-300" />
                                             Folio: {ref.folioContraRef}
                                         </div>
                                     )}
-                                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" /> Recibida: {ref.fechaRecepcion ?? ref.fechaReferencia}
+                                    <span className="text-[11px] text-cyan-200/80 flex items-center justify-center lg:justify-end gap-1.5 font-medium">
+                                        <Clock className="w-3.5 h-3.5" /> Recibida: {ref.fechaRecepcion ?? ref.fechaReferencia}
                                     </span>
                                 </div>
                             </div>
@@ -638,12 +648,12 @@ export const TabContrareferencias: React.FC = () => {
             </div>
 
             {/* Nota informativa */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-500 flex items-start gap-3">
-                <FileText className="w-4 h-4 text-[#9D2449] shrink-0 mt-0.5" />
-                <p>
+            <div className="bg-slate-900/35 border border-white/50 rounded-3xl p-5 text-xs text-cyan-100 flex items-start gap-3.5 backdrop-blur-3xl shadow-xl">
+                <FileText className="w-5 h-5 text-cyan-300 shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
                     Las contrareferencias emitidas tienen número de folio oficial SSO e incluyen diagnóstico CIE-10, plan farmacológico y unidad de destino.
-                    El botón <span className="font-black text-slate-700">Imprimir / PDF Oficial SSO</span> aplica reglas
-                    <code className="bg-slate-100 border border-slate-300 rounded px-1 mx-0.5">@media print</code>
+                    El botón <span className="font-black text-white">Imprimir / PDF Oficial SSO</span> aplica reglas
+                    <code className="bg-white/10 border border-white/30 rounded px-1.5 py-0.5 mx-1 font-mono">@media print</code>
                     para generar el documento institucional en A4.
                 </p>
             </div>
