@@ -5,14 +5,15 @@ import { http } from '../../services/http'; // Instancia de Axios hacia el servi
 /* ============================================================================
  * MotivoReferencia — Motor del formulario de referencia
  *
- * - Estados completos del formulario y payload hacia PostgreSQL vía Axios:
+ * - Estados del formulario y envío a PostgreSQL vía Axios:
  *     http.post('/api/v1/referencias', payloadReferencia)
  * - Dictado por voz en vivo (es-MX) con ondas de audio en cada campo de texto
- * - Tarjetas de motivos táctiles con imágenes PNG reales y voz instantánea
+ * - Datos de identificación en 2 columnas simétricas (1 columna en celular)
+ * - Tarjetas de motivos en cuadrícula simétrica, con imágenes PNG reales
  * - Contrarreferencia médica colapsable
  * - Estados de carga (spinner) y éxito (alerta visual + auditiva)
  *
- * El encabezado y el contenedor general los aporta FormatoReferencia.
+ * No incluye encabezado propio: el header global lo aporta FormatoReferencia.
  * ========================================================================== */
 
 /* ------------------------------ Tipos ------------------------------------ */
@@ -200,7 +201,12 @@ const VIDRIO =
     'bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-orange-900/10 rounded-3xl';
 
 const BOTON_TIERRA =
-    'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-lg shadow-orange-900/30 border border-white/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98]';
+    'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-xl shadow-orange-900/40 border border-white/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl active:scale-[0.98]';
+
+const CLASE_SELECTOR =
+    'h-16 w-full rounded-2xl border-2 border-stone-200 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20';
+
+const CLASE_ETIQUETA = 'mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800';
 
 /* ------------------------------ Iconos SVG -------------------------------- */
 
@@ -237,6 +243,26 @@ const IconoCargando: React.FC<IconoProps> = ({ className = 'h-7 w-7' }) => (
         <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" />
     </svg>
 );
+const IconoEstetoscopio: React.FC<IconoProps> = ({ className = 'h-7 w-7' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 3v6a4 4 0 0 0 8 0V3" />
+        <path d="M5 3h2" />
+        <path d="M13 3h2" />
+        <path d="M10 13v2a5 5 0 0 0 10 0v-2" />
+        <circle cx="20" cy="11" r="2" />
+    </svg>
+);
+const IconoChevron: React.FC<IconoProps> = ({ className = 'h-6 w-6' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="m6 9 6 6 6-6" />
+    </svg>
+);
+const IconoPersona: React.FC<IconoProps> = ({ className = 'h-6 w-6' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+);
 
 /* ------------------------- Campo con dictado por voz ---------------------- */
 
@@ -252,6 +278,7 @@ interface CampoVozProps {
     multilinea?: boolean;
     error?: boolean;
     maxLength?: number;
+    className?: string;
 }
 
 const CampoVoz: React.FC<CampoVozProps> = ({
@@ -266,6 +293,7 @@ const CampoVoz: React.FC<CampoVozProps> = ({
     multilinea = false,
     error = false,
     maxLength,
+    className = '',
 }) => {
     const base =
         'w-full rounded-2xl border-2 bg-white/90 px-4 pr-20 text-lg font-bold text-stone-900 placeholder:font-semibold placeholder:text-stone-500 outline-none transition-all duration-200 focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20';
@@ -274,12 +302,12 @@ const CampoVoz: React.FC<CampoVozProps> = ({
         : error
             ? 'border-red-500 pt-shake'
             : 'border-stone-200';
-    const alto = multilinea ? 'min-h-[110px] resize-none py-3' : 'h-16';
+    const alto = multilinea ? 'min-h-[120px] resize-none py-3' : 'h-16';
     const ph = escuchando ? 'Escuchando… hable ahora' : placeholder;
 
     return (
-        <div>
-            <label htmlFor={`pt-${id}`} className="mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800">
+        <div className={className}>
+            <label htmlFor={`pt-${id}`} className={CLASE_ETIQUETA}>
                 {etiqueta}
             </label>
             <div className="relative">
@@ -604,49 +632,50 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-5">
             <style>{ESTILOS}</style>
 
-            {/* ================= Datos de identificación ================== */}
-            <section className={`pt-slide-up p-4 sm:p-6 ${VIDRIO}`} style={{ animationDelay: '.06s' }}>
+            {/* ================= Datos de identificación (2 columnas) ========= */}
+            <section className={`pt-slide-up p-4 sm:p-6 ${VIDRIO}`} style={{ animationDelay: '.05s' }}>
                 <h2 className="mb-5 border-b-4 border-[#D69A1E]/60 pb-2 text-xl font-black text-stone-900 sm:text-2xl">
                     Datos de identificación y canalización
                 </h2>
 
-                <div className="flex flex-col gap-5">
+                <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
                     {campo('centroSalud', 'Centro de salud u hospital', 'Hospital o centro de salud…')}
                     {campo('nombreUsuaria', 'Nombre de la usuaria', 'Nombre completo de la paciente…')}
-                    {campo('edad', 'Edad', 'Ej. 26', { inputMode: 'numeric', maxLength: 3 })}
 
+                    {campo('edad', 'Edad', 'Ej. 26', { inputMode: 'numeric', maxLength: 3 })}
                     <div>
-                        <label htmlFor="pt-sexo" className="mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800">
+                        <label htmlFor="pt-sexo" className={CLASE_ETIQUETA}>
                             Sexo
                         </label>
                         <select
                             id="pt-sexo"
                             value={datos.sexo}
                             onChange={(e) => setDatos((p) => ({ ...p, sexo: e.target.value === 'M' ? 'M' : 'F' }))}
-                            className="h-16 w-full rounded-2xl border-2 border-stone-200 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20"
+                            className={CLASE_SELECTOR}
                         >
                             <option value="F">Femenino</option>
                             <option value="M">Masculino</option>
                         </select>
                     </div>
 
-                    <div>
-                        <label htmlFor="pt-fecha" className="mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800">
-                            Fecha
+                    {campo('localidad', 'Localidad', 'Localidad…')}
+                    {campo('municipio', 'Municipio', 'Municipio…')}
+
+                    {campo('nombrePartera', 'Nombre de la partera', 'Partera tradicional…')}
+                    {campo('localidadPartera', 'Localidad de la partera', 'Localidad de la partera…')}
+
+                    <div className="md:col-span-2">
+                        <label htmlFor="pt-fecha" className={CLASE_ETIQUETA}>
+                            Fecha de la referencia
                         </label>
                         <input
                             id="pt-fecha"
                             type="date"
                             value={datos.fecha}
                             onChange={(e) => setDatos((p) => ({ ...p, fecha: e.target.value }))}
-                            className="h-16 w-full rounded-2xl border-2 border-stone-200 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20"
+                            className={CLASE_SELECTOR}
                         />
                     </div>
-
-                    {campo('localidad', 'Localidad', 'Localidad…')}
-                    {campo('municipio', 'Municipio', 'Municipio…')}
-                    {campo('nombrePartera', 'Nombre de la partera', 'Partera tradicional…')}
-                    {campo('localidadPartera', 'Localidad de la partera', 'Localidad de la partera…')}
                 </div>
             </section>
 
@@ -654,7 +683,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
             <section
                 id="pt-motivos"
                 className={`pt-slide-up p-4 sm:p-6 ${VIDRIO} ${errores.motivos ? 'pt-shake ring-4 ring-red-400/60' : ''}`}
-                style={{ animationDelay: '.12s' }}
+                style={{ animationDelay: '.1s' }}
             >
                 <div className="mb-5 flex flex-wrap items-end justify-between gap-2 border-b-4 border-[#C2603A]/60 pb-2">
                     <div>
@@ -666,7 +695,8 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+                {/* Cuadrícula simétrica: 2 / 3 / 4 columnas; la última fila queda centrada */}
+                <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
                     {LISTA_MOTIVOS.map((m, i) => {
                         const activo = motivosSeleccionados.includes(m.id);
                         return (
@@ -675,21 +705,21 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                                 type="button"
                                 onClick={() => toggleMotivo(m)}
                                 aria-pressed={activo}
-                                style={{ animationDelay: `${0.15 + i * 0.03}s` }}
-                                className={`pt-fade-in relative flex min-h-[200px] flex-col items-center justify-between gap-2 rounded-3xl border-4 p-3 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98] ${activo
-                                    ? '-translate-y-1 border-[#C2603A] bg-gradient-to-b from-orange-50 to-amber-100 shadow-xl shadow-orange-900/20'
+                                style={{ animationDelay: `${0.12 + i * 0.03}s` }}
+                                className={`pt-fade-in relative flex min-h-[220px] w-[calc(50%-0.375rem)] flex-col items-center justify-between gap-2 rounded-3xl border-4 p-3 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)] ${activo
+                                    ? '-translate-y-1 border-[#C2603A] bg-gradient-to-b from-orange-50 to-amber-100 shadow-xl shadow-orange-900/25'
                                     : 'border-stone-200 bg-gradient-to-b from-white to-amber-50/70 shadow-md'
                                     }`}
                             >
                                 {activo && (
-                                    <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-emerald-600 text-white shadow-lg">
-                                        <IconoCheck />
+                                    <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-emerald-500 text-white shadow-lg shadow-emerald-700/40">
+                                        <IconoCheck className="h-6 w-6" />
                                     </span>
                                 )}
                                 <span className="flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-amber-200/70">
                                     <Ilustracion motivo={m} />
                                 </span>
-                                <span className="flex flex-col items-center gap-1">
+                                <span className="flex flex-1 flex-col items-center justify-center gap-1">
                                     <span className="text-sm font-black uppercase leading-tight text-stone-900">{m.titulo}</span>
                                     {m.bullets && (
                                         <span className="text-xs font-bold leading-snug text-stone-700">{m.bullets.join(' · ')}</span>
@@ -702,63 +732,90 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
             </section>
 
             {/* ================= Contrarreferencia médica ================= */}
-            <section className={`pt-slide-up p-4 sm:p-6 ${VIDRIO}`} style={{ animationDelay: '.18s' }}>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h2 className="text-xl font-black text-stone-900 sm:text-2xl">Contrarreferencia médica</h2>
-                        <p className="text-sm font-bold text-stone-700">Respuesta oficial del centro de salud a la partera</p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setMostrarContrareferencia((v) => !v);
-                            speakText(mostrarContrareferencia ? 'Sección del médico oculta.' : 'Sección del médico tratante abierta.');
-                        }}
-                        aria-expanded={mostrarContrareferencia}
-                        className="h-14 rounded-2xl border-2 border-[#5E8C61]/60 bg-emerald-50 px-5 text-base font-black text-stone-900 shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+            <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.15s' }}>
+                <div className="h-1.5 w-full bg-gradient-to-r from-[#5E8C61] via-[#D69A1E] to-[#C2603A]" />
+
+                <button
+                    type="button"
+                    onClick={() => {
+                        setMostrarContrareferencia((v) => !v);
+                        speakText(mostrarContrareferencia ? 'Sección del médico oculta.' : 'Sección del médico tratante abierta.');
+                    }}
+                    aria-expanded={mostrarContrareferencia}
+                    aria-controls="pt-contrarreferencia"
+                    className="flex w-full items-center gap-4 p-4 text-left transition-colors duration-200 hover:bg-amber-50/60 sm:p-6"
+                >
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#5E8C61] to-[#3F7048] text-white shadow-lg shadow-emerald-900/25">
+                        <IconoEstetoscopio />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                        <span className="block text-xl font-black text-stone-900 sm:text-2xl">Contrarreferencia médica</span>
+                        <span className="block text-sm font-bold text-stone-700">
+                            Respuesta oficial del centro de salud a la partera
+                        </span>
+                    </span>
+                    <span className="hidden rounded-2xl border-2 border-[#5E8C61]/60 bg-emerald-50 px-4 py-2 text-sm font-black text-stone-900 sm:block">
+                        {mostrarContrareferencia ? 'Ocultar' : 'Abrir sección del médico'}
+                    </span>
+                    <span
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-100 text-stone-900 transition-transform duration-300 ${mostrarContrareferencia ? 'rotate-180' : ''
+                            }`}
                     >
-                        {mostrarContrareferencia ? 'Ocultar sección' : 'Abrir sección del médico'}
-                    </button>
-                </div>
+                        <IconoChevron />
+                    </span>
+                </button>
 
                 {mostrarContrareferencia && (
-                    <div className="pt-slide-up mt-5 flex flex-col gap-5 border-t-2 border-amber-200 pt-5">
-                        <div className="flex flex-col gap-3">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setEstadoContra('CONTROLADA');
-                                    speakText('Paciente controlada, dada de alta.');
-                                }}
-                                aria-pressed={estadoContra === 'CONTROLADA'}
-                                className={`flex h-16 items-center justify-center gap-2 rounded-2xl border-4 text-base font-black transition-all duration-200 active:scale-[0.98] ${estadoContra === 'CONTROLADA'
-                                    ? 'border-emerald-700 bg-emerald-600 text-white shadow-lg'
-                                    : 'border-stone-200 bg-white text-stone-900 hover:border-emerald-500'
-                                    }`}
-                            >
-                                {estadoContra === 'CONTROLADA' && <IconoCheck />} Paciente controlada / Alta
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setEstadoContra('PARA_CONTROL_PARTERA');
-                                    speakText('La paciente regresa a control con la partera.');
-                                }}
-                                aria-pressed={estadoContra === 'PARA_CONTROL_PARTERA'}
-                                className={`flex h-16 items-center justify-center gap-2 rounded-2xl border-4 text-base font-black transition-all duration-200 active:scale-[0.98] ${estadoContra === 'PARA_CONTROL_PARTERA'
-                                    ? 'border-[#9A6A0F] bg-[#D69A1E] text-stone-900 shadow-lg'
-                                    : 'border-stone-200 bg-white text-stone-900 hover:border-[#D69A1E]'
-                                    }`}
-                            >
-                                {estadoContra === 'PARA_CONTROL_PARTERA' && <IconoCheck />} Regresa para control con la partera
-                            </button>
+                    <div
+                        id="pt-contrarreferencia"
+                        className="pt-slide-up flex flex-col gap-5 border-t-2 border-amber-200 p-4 sm:p-6"
+                    >
+                        <div>
+                            <p className={CLASE_ETIQUETA}>Resultado de la atención</p>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEstadoContra('CONTROLADA');
+                                        speakText('Paciente controlada, dada de alta.');
+                                    }}
+                                    aria-pressed={estadoContra === 'CONTROLADA'}
+                                    className={`flex min-h-[72px] items-center justify-center gap-3 rounded-2xl border-4 px-4 text-base font-black transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${estadoContra === 'CONTROLADA'
+                                        ? 'border-emerald-700 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-900/30'
+                                        : 'border-stone-200 bg-white text-stone-900 hover:border-emerald-500'
+                                        }`}
+                                >
+                                    {estadoContra === 'CONTROLADA' && <IconoCheck />}
+                                    Paciente controlada / Alta
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEstadoContra('PARA_CONTROL_PARTERA');
+                                        speakText('La paciente regresa a control con la partera.');
+                                    }}
+                                    aria-pressed={estadoContra === 'PARA_CONTROL_PARTERA'}
+                                    className={`flex min-h-[72px] items-center justify-center gap-3 rounded-2xl border-4 px-4 text-base font-black transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${estadoContra === 'PARA_CONTROL_PARTERA'
+                                        ? 'border-[#9A6A0F] bg-gradient-to-br from-[#E3AE3A] to-[#D69A1E] text-stone-900 shadow-lg shadow-amber-900/30'
+                                        : 'border-stone-200 bg-white text-stone-900 hover:border-[#D69A1E]'
+                                        }`}
+                                >
+                                    {estadoContra === 'PARA_CONTROL_PARTERA' ? <IconoCheck /> : <IconoPersona />}
+                                    Regresa para control con la partera
+                                </button>
+                            </div>
                         </div>
 
-                        {campo('diagnostico', 'Diagnóstico del médico', 'Diagnóstico…', { multilinea: true })}
-                        {campo('tratamiento', 'Tratamiento indicado', 'Tratamiento…', { multilinea: true })}
-                        {campo('observacionesMedico', 'Indicaciones a la partera', 'Indicaciones…', { multilinea: true })}
-                        {campo('nombreMedico', 'Nombre del médico tratante', 'Dr. o Dra.…')}
-                        {campo('centroMedico', 'Unidad médica / hospital', 'Hospital o centro de salud…')}
+                        <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                            {campo('diagnostico', 'Diagnóstico del médico', 'Diagnóstico…', {
+                                multilinea: true,
+                                className: 'md:col-span-2',
+                            })}
+                            {campo('tratamiento', 'Tratamiento indicado', 'Tratamiento…', { multilinea: true })}
+                            {campo('observacionesMedico', 'Indicaciones a la partera', 'Indicaciones…', { multilinea: true })}
+                            {campo('nombreMedico', 'Nombre del médico tratante', 'Dr. o Dra.…')}
+                            {campo('centroMedico', 'Unidad médica / hospital', 'Hospital o centro de salud…')}
+                        </div>
                     </div>
                 )}
             </section>
@@ -779,7 +836,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 disabled={isSubmitting || enviado}
                 className={`pt-slide-up flex min-h-[88px] w-full items-center justify-center gap-4 rounded-3xl px-6 py-5 text-xl font-black disabled:cursor-wait disabled:opacity-80 sm:text-2xl ${BOTON_TIERRA} ${totalMotivos > 0 && !isSubmitting ? 'pt-breathe' : ''
                     }`}
-                style={{ animationDelay: '.24s' }}
+                style={{ animationDelay: '.2s' }}
             >
                 {isSubmitting ? <IconoCargando /> : <IconoEnviar />}
                 <span>{isSubmitting ? 'Enviando referencia…' : 'Enviar hoja de referencia al centro de salud'}</span>
