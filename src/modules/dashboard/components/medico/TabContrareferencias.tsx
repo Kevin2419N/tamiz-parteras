@@ -443,12 +443,12 @@ export const TabContrareferencias: React.FC = () => {
             setCargando(true);
             setErrorMsg(null);
             try {
-                const res = await http.get('/api/medico/contrareferencias/pendientes');
+                // RUTA LIMPIA (Sin duplicar /api/v1 ya que http.ts ya lo incluye)
+                const res = await http.get('/medico/contrareferencias/pendientes');
                 setReferencias(res.data);
             } catch (error: any) {
                 console.warn('Backend no disponible para contrareferencias:', error);
                 setErrorMsg('No se pudo conectar con el servidor para obtener las contrareferencias.');
-                // SIN DATOS FANTASMAS: Dejamos el arreglo vacío si la API falla
                 setReferencias([]);
             } finally {
                 setCargando(false);
@@ -468,7 +468,8 @@ export const TabContrareferencias: React.FC = () => {
 
     const handleEmitir = async (data: FormularioContraRef) => {
         try {
-            await http.post(`/api/medico/contrareferencias/emitir`, data);
+            // RUTA LIMPIA (Sin duplicar /api/v1)
+            await http.post(`/medico/contrareferencias/emitir`, data);
 
             setReferencias(prev => prev.map(r =>
                 r.id === data.referenciaId
