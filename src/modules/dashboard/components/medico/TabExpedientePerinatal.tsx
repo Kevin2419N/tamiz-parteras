@@ -444,12 +444,14 @@ export const TabExpedientePerinatal: React.FC = () => {
             setCargando(true);
             setErrorMsg(null);
             try {
-                const res = await http.get('/medico/perinatales/pacientes-activas');
+                // RUTA CORREGIDA CON /api/v1
+                const res = await http.get('/api/v1/medico/perinatales/pacientes-activas');
                 const lista: ExpedientePerinatal[] = res.data;
                 setPacientes(lista);
                 if (lista.length > 0) {
                     const firstPx: any = lista[0];
-                    const detalleRes = await http.get(`/medico/perinatales/expediente/${firstPx.expedienteId || firstPx.id}`);
+                    // RUTA CORREGIDA CON /api/v1
+                    const detalleRes = await http.get(`/api/v1/medico/perinatales/expediente/${firstPx.expedienteId || firstPx.id}`);
                     setExpediente(detalleRes.data);
                 } else {
                     throw new Error('Sin pacientes en servidor');
@@ -512,7 +514,8 @@ export const TabExpedientePerinatal: React.FC = () => {
         const pxAny: any = px;
         const id = pxAny.expedienteId || pxAny.id;
         try {
-            const res = await http.get(`/medico/perinatales/expediente/${id}`);
+            // RUTA CORREGIDA CON /api/v1
+            const res = await http.get(`/api/v1/medico/perinatales/expediente/${id}`);
             setExpediente(res.data);
         } catch {
             setExpediente(px);
@@ -538,7 +541,8 @@ export const TabExpedientePerinatal: React.FC = () => {
         try {
             const expAny: any = expediente;
             const id = expAny.expedienteId || expAny.id;
-            await http.post(`/medico/perinatales/expediente/${id}/consultas`, payloadConsulta);
+            // RUTA CORREGIDA CON /api/v1
+            await http.post(`/api/v1/medico/perinatales/expediente/${id}/consultas`, payloadConsulta);
 
             const nuevaC: ConsultaAntenatal = {
                 id: `CONS-${Date.now()}`,
@@ -930,7 +934,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                     onSave={async updated => {
                         try {
                             const id = expAny.expedienteId || expAny.id;
-                            await http.put(`/medico/perinatales/expediente/${id}/antecedentes`, updated);
+                            // RUTA CORREGIDA CON /api/v1
+                            await http.put(`/api/v1/medico/perinatales/expediente/${id}/antecedentes`, updated);
                             setExpediente(prev => prev ? ({ ...prev, ...updated }) : null);
                         } catch (err) {
                             console.error('Error al actualizar antecedentes:', err);
@@ -946,7 +951,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                     onSave={async data => {
                         try {
                             const id = expAny.expedienteId || expAny.id;
-                            await http.put(`/medico/perinatales/expediente/${id}/laboratorios`, data);
+                            // RUTA CORREGIDA CON /api/v1
+                            await http.put(`/api/v1/medico/perinatales/expediente/${id}/laboratorios`, data);
                             setExpediente(prev => prev ? ({
                                 ...prev,
                                 grupoSanguineo: data.grupoSanguineo,
@@ -978,7 +984,8 @@ export const TabExpedientePerinatal: React.FC = () => {
                                 tallaRNCm: data.tallaRNCm,
                                 folioGuthrie: data.folioGuthrie
                             };
-                            await http.post(`/medico/perinatales/expediente/${id}/parto`, payloadParto);
+                            // RUTA CORREGIDA CON /api/v1
+                            await http.post(`/api/v1/medico/perinatales/expediente/${id}/parto`, payloadParto);
                             setExpediente(prev => prev ? ({
                                 ...prev,
                                 fechaParto: data.fechaHoraNacimiento.split('T')[0],
