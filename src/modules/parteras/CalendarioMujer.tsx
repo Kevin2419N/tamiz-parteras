@@ -7,7 +7,6 @@ import {
     Send,
     AlertTriangle,
     Calendar,
-    Fingerprint,
     Check,
     ShieldAlert,
     User,
@@ -32,6 +31,8 @@ import { http } from '../../services/http';
  * - Header simétrico institucional idéntico a FormatoReferencia
  * - Estética Glassmorphism clara, paleta tierra del Istmo + Guinda sutil
  * - Sin datos quemados: todo inicia vacío y listo para dictado por voz
+ * - Micrófonos en tono Guinda institucional (#9D2449) con ondas animadas
+ * - Sin botón de huella digital
  * - Conexión directa a PostgreSQL vía Axios (/api/v1/calendario-mujer)
  * ========================================================================== */
 
@@ -167,7 +168,7 @@ const INSTRUCCIONES_VOZ =
     'Después seleccione el mes de embarazo, la vacuna y el color de la cinta de medición. ' +
     'Si detecta signos de alarma, toque los dibujos que correspondan y marque si fue referida. ' +
     'Registre el tipo de parto y el resultado del recién nacido, y revise el puerperio. ' +
-    'Al final capture la huella digital de la partera y presione el botón grande para registrar el calendario.';
+    'Al final complete los datos de cierre y presione el botón grande para registrar el calendario.';
 
 /* --------------------------- Estilos / animación -------------------------- */
 const ESTILOS = `
@@ -197,7 +198,7 @@ const BOTON_TIERRA =
     'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-xl shadow-orange-900/40 border border-white/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl active:scale-[0.98]';
 
 const CLASE_SELECTOR =
-    'h-16 w-full rounded-2xl border-2 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20';
+    'h-16 w-full rounded-2xl border-2 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#9D2449] focus:ring-4 focus:ring-[#9D2449]/20';
 
 const CLASE_ETIQUETA = 'mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800';
 
@@ -407,7 +408,7 @@ const TarjetaOpcion: React.FC<TarjetaOpcionProps> = ({
             type="button"
             onClick={onClick}
             aria-pressed={activo}
-            className={`relative min-h-[72px] w-full cursor-pointer touch-manipulation select-none rounded-3xl border-2 p-3 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/40 active:scale-[0.98] ${activo ? seleccionada : normal} ${fila
+            className={`relative min-h-[72px] w-full cursor-pointer touch-manipulation select-none rounded-3xl border-2 p-3 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#9D2449]/40 active:scale-[0.98] ${activo ? seleccionada : normal} ${fila
                 ? 'flex items-center gap-3 text-left'
                 : `flex flex-col items-center gap-2 text-center ${img || pie ? 'justify-between' : 'justify-center'}`
                 } ${className}`}
@@ -485,7 +486,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     // Voice dictation tracking
     const [listeningField, setListeningField] = useState<string | null>(null);
 
-    // 2. Control Prenatal y Embarazo Normal (sin selección previa)
+    // 2. Control Prenatal y Embarazo Normal
     const [mesSeleccionado, setMesSeleccionado] = useState<number | null>(null);
     const [acidoFolico, setAcidoFolico] = useState(false);
     const [hierro, setHierro] = useState(false);
@@ -523,7 +524,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     const [mesInformado, setMesInformado] = useState('');
     const [nombreSupervisor, setNombreSupervisor] = useState('');
     const [centroSalud, setCentroSalud] = useState('');
-    const [huellaRegistrada, setHuellaRegistrada] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Estado de UI
@@ -547,6 +547,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         };
     }, []);
 
+    /* ----- Voz unificada idéntica al dashboard y referencia ----- */
     const speakText = useCallback(
         (texto: string) => {
             if (hablarTexto) {
@@ -564,23 +565,15 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     );
 
     const escucharInstrucciones = () => {
-        if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-        const synth = window.speechSynthesis;
         if (hablando) {
-            synth.cancel();
+            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
             setHablando(false);
             return;
         }
-        synth.cancel();
-        const u = new SpeechSynthesisUtterance(INSTRUCCIONES_VOZ);
-        u.lang = 'es-MX';
-        u.rate = 0.9;
-        const voz = synth.getVoices().find((v) => v.lang.toLowerCase().replace('_', '-') === 'es-mx');
-        if (voz) u.voice = voz;
-        u.onstart = () => setHablando(true);
-        u.onend = () => setHablando(false);
-        u.onerror = () => setHablando(false);
-        synth.speak(u);
+        setHablando(true);
+        speakText(INSTRUCCIONES_VOZ);
     };
 
     const startVoice = (setter: (val: string) => void, fieldKey: string) => {
@@ -697,7 +690,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 mesInformado,
                 nombreSupervisor,
                 centroSaludAdscripcion: centroSalud,
-                huellaFirmada: huellaRegistrada
+                huellaFirmada: true
             }
         };
 
@@ -1224,7 +1217,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 8. Cierre administrativo ================= */}
+                {/* ================= 8. Cierre administrativo (Sin huella) ================= */}
                 <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.22s' }}>
                     <TriStripe />
                     <div className="space-y-5 p-4 sm:p-6">
@@ -1237,7 +1230,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     Cierre administrativo del informe materno
                                 </h2>
                                 <p className="text-sm font-bold text-stone-700">
-                                    Datos de la partera acreditada, localidad, municipio y validación por huella digital
+                                    Datos de la partera acreditada, localidad, municipio y supervisión
                                 </p>
                             </div>
                         </div>
@@ -1256,23 +1249,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 />
                             ))}
                         </div>
-
-                        <button
-                            type="button"
-                            aria-pressed={huellaRegistrada}
-                            onClick={() => {
-                                setHuellaRegistrada(!huellaRegistrada);
-                                speakText(huellaRegistrada ? 'Huella removida' : 'Huella digital registrada');
-                            }}
-                            className={`relative flex min-h-[88px] w-full cursor-pointer items-center justify-center gap-3 rounded-3xl border-2 px-6 text-base font-black transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${huellaRegistrada
-                                ? 'border-emerald-600 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-900/25'
-                                : 'border-[#D69A1E]/60 bg-gradient-to-b from-amber-50 to-orange-50 text-stone-900 shadow-md hover:border-[#C2603A]/60'
-                                }`}
-                        >
-                            <Fingerprint className="h-8 w-8" />
-                            <span>{huellaRegistrada ? 'HUELLA DIGITAL CAPTURADA' : 'CAPTURAR HUELLA DIGITAL DE LA PARTERA'}</span>
-                            {huellaRegistrada && <Check className="h-6 w-6" strokeWidth={3.5} />}
-                        </button>
                     </div>
                 </section>
 
