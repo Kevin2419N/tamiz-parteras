@@ -610,7 +610,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
 
             <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-6 sm:gap-7">
                 
-                {/* ===================== Cabecera Compacta (Estándar Ofertado) ===================== */}
+                {/* ===================== Cabecera Compacta ===================== */}
                 <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
                     <TriStripe />
                     <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
@@ -759,7 +759,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= Control Nutricional y Vacunación ================= */}
+                {/* ================= Control Nutricional y Vacunación (Diseño Simétrico Optimizado) ================= */}
                 <SectionCard
                     acento="verde"
                     delay={0.08}
@@ -767,6 +767,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     title="Control de crecimiento y vacunación"
                     subtitle="Seleccione el mes de vida, evaluación nutricional con cinta MUAC y esquema de vacunación"
                 >
+                    {/* 1. Mes de control */}
                     <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
                         <div className="flex items-center gap-3 border-b border-stone-200 pb-3">
                             <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
@@ -791,63 +792,69 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                        <div className="space-y-3 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
-                            <div className="flex items-center gap-2">
-                                <Ruler className="h-5 w-5 text-stone-700" />
-                                <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Estado nutricional (Cinta MUAC infantil)</h3>
-                            </div>
-                            <div role="radiogroup" aria-label="Estado nutricional del infante" className="grid grid-cols-3 gap-2.5 pt-2">
-                                {SEMAFORO_NINO.map((s) => {
-                                    const activo = cintaMUACNino === s.id;
-                                    return (
-                                        <button
-                                            key={s.id}
-                                            type="button"
-                                            role="radio"
-                                            aria-checked={activo}
-                                            onClick={() => handleSelectMUAC(s.id)}
-                                            className={`relative flex min-h-[110px] cursor-pointer touch-manipulation flex-col items-center justify-center gap-1 rounded-3xl border-2 px-2 py-3 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${activo ? s.on : s.off}`}
-                                        >
-                                            {activo && (
-                                                <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-stone-900 text-white shadow-md">
-                                                    <Check className="h-4 w-4" strokeWidth={3.5} />
-                                                </span>
-                                            )}
-                                            <span className="text-sm sm:text-base font-black uppercase tracking-wider">{s.titulo}</span>
-                                            <span className="text-[11px] sm:text-xs font-bold opacity-90 text-center">{s.estado}</span>
-                                        </button>
-                                    );
-                                })}
+                    {/* 2. Estado Nutricional (Cinta MUAC) a lo ancho simétricamente */}
+                    <div className="space-y-3 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-6">
+                        <div className="flex items-center gap-2.5">
+                            <Ruler className="h-6 w-6 text-[#CC7A2C]" />
+                            <div>
+                                <h3 className="text-sm sm:text-base font-black uppercase text-stone-900">Estado nutricional (Cinta MUAC infantil)</h3>
+                                <p className="text-xs font-bold text-stone-600">Evaluación física del desarrollo y peso del infante en la comunidad</p>
                             </div>
                         </div>
+                        <div role="radiogroup" aria-label="Estado nutricional del infante" className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                            {SEMAFORO_NINO.map((s) => {
+                                const activo = cintaMUACNino === s.id;
+                                return (
+                                    <button
+                                        key={s.id}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={activo}
+                                        onClick={() => handleSelectMUAC(s.id)}
+                                        className={`relative flex min-h-[120px] cursor-pointer touch-manipulation flex-col items-center justify-center gap-2 rounded-3xl border-4 px-4 py-5 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] ${activo ? s.on : s.off}`}
+                                    >
+                                        {activo && (
+                                            <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-stone-900 text-white shadow-lg">
+                                                <Check className="h-5 w-5" strokeWidth={3.5} />
+                                            </span>
+                                        )}
+                                        <span className="text-base sm:text-lg font-black uppercase tracking-wider">{s.titulo}</span>
+                                        <span className="text-xs sm:text-sm font-bold opacity-90 text-center">{s.estado}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                        <div className="space-y-3 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                    <Syringe className="h-5 w-5 text-[#CC7A2C]" />
-                                    <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Esquema de vacunación</h3>
+                    {/* 3. Esquema de Vacunación en Grid Equilibrado */}
+                    <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-6">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3">
+                            <div className="flex items-center gap-2.5">
+                                <Syringe className="h-6 w-6 text-[#CC7A2C]" />
+                                <div>
+                                    <h3 className="text-sm sm:text-base font-black uppercase text-stone-900">Esquema de vacunación</h3>
+                                    <p className="text-xs font-bold text-stone-600">Inmunizaciones correspondientes a la etapa del infante</p>
                                 </div>
-                                <ContadorPill total={vacunasSeleccionadas.length} />
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                {VACUNAS_NINO.map((v) => {
-                                    const activo = vacunasSeleccionadas.includes(v.id);
-                                    return (
-                                        <TarjetaOpcion
-                                            key={v.id}
-                                            activo={activo}
-                                            onClick={() => toggleVacuna(v.id, v.label)}
-                                            titulo={v.label}
-                                            subtitulo={v.subtitulo}
-                                            img={v.img}
-                                            altoImg="h-24 sm:h-28"
-                                            pie={{ off: 'Aplicar', on: 'Aplicada' }}
-                                            className="min-h-[180px]"
-                                        />
-                                    );
-                                })}
-                            </div>
+                            <ContadorPill total={vacunasSeleccionadas.length} />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+                            {VACUNAS_NINO.map((v) => {
+                                const activo = vacunasSeleccionadas.includes(v.id);
+                                return (
+                                    <TarjetaOpcion
+                                        key={v.id}
+                                        activo={activo}
+                                        onClick={() => toggleVacuna(v.id, v.label)}
+                                        titulo={v.label}
+                                        subtitulo={v.subtitulo}
+                                        img={v.img}
+                                        altoImg="h-28 sm:h-32"
+                                        pie={{ off: 'Aplicar vacuna', on: 'Vacuna aplicada' }}
+                                        className="min-h-[220px]"
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
                 </SectionCard>
