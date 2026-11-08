@@ -26,7 +26,7 @@ import { handleVoiceInput } from '../../utils/voiceUtils';
 import { http } from '../../services/http';
 
 /* ============================================================================
- * CalendarioMujer — Versión Profesional Optimizada (Móvil, Tablet y Desktop)
+ * CalendarioMujer — Versión Compacta y Profesional (Estilo Referencias)
  * Servicios de Salud de Oaxaca · Programa de Parteras Tradicionales
  * ========================================================================== */
 
@@ -198,7 +198,7 @@ const ACENTOS: Record<Acento, string> = {
 };
 
 /* ------------------------- Componentes reutilizables ---------------------- */
-const TriStripe: React.FC<{ className?: string }> = ({ className = 'h-2.5' }) => (
+const TriStripe: React.FC<{ className?: string }> = ({ className = 'h-2' }) => (
     <div className={`w-full bg-gradient-to-r from-[#C2603A] via-[#D69A1E] to-[#5E8C61] ${className}`} aria-hidden="true" />
 );
 
@@ -720,20 +720,20 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         <div className="relative min-h-screen w-full overflow-x-hidden px-3 py-4 sm:px-6 sm:py-10 bg-gradient-to-b from-amber-50/40 via-orange-50/20 to-stone-50">
             <style>{ESTILOS}</style>
 
-            <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8">
+            <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-6 sm:gap-7">
                 
-                {/* ===================== Cabecera Global ===================== */}
+                {/* ===================== Cabecera Compacta (Estilo Referencias) ===================== */}
                 <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
                     <TriStripe />
-                    <div className="grid grid-cols-1 items-center gap-5 p-5 sm:grid-cols-[1fr_auto] sm:p-8">
+                    <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
                         <div className="min-w-0 text-center sm:text-left">
-                            <span className="inline-block rounded-full bg-amber-100/80 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-amber-900 mb-2">
+                            <span className="inline-block rounded-full bg-amber-100/80 px-3 py-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-amber-900 mb-1.5">
                                 Servicio de Salud Materna
                             </span>
-                            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 uppercase">
+                            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-stone-900 uppercase">
                                 Calendario de atención a la mujer
                             </h1>
-                            <p className="mt-1 text-sm sm:text-base font-bold text-stone-600">
+                            <p className="mt-0.5 text-xs sm:text-sm font-bold text-stone-600">
                                 Programa de Parteras Tradicionales · Servicios de Salud de Oaxaca
                             </p>
                         </div>
@@ -742,9 +742,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 type="button"
                                 onClick={escucharInstrucciones}
                                 aria-pressed={hablando}
-                                className={`flex h-14 w-full sm:w-auto items-center justify-center gap-3 rounded-2xl px-7 text-base font-black ${BOTON_TIERRA} ${hablando ? 'pt-ring' : ''}`}
+                                className={`flex h-12 w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl px-5 text-sm font-black ${BOTON_TIERRA} ${hablando ? 'pt-ring' : ''}`}
                             >
-                                <Volume2 className="h-6 w-6 shrink-0" />
+                                <Volume2 className="h-5 w-5 shrink-0" />
                                 <span>{hablando ? 'Detener audio' : 'Escuchar instrucciones'}</span>
                             </button>
                         </div>
@@ -752,11 +752,11 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 </header>
 
                 {/* ============ Selector de Vista (Partera / Centro de Salud) ============ */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-1">
-                    <div className="min-h-[36px] flex items-center">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
+                    <div className="min-h-[32px] flex items-center">
                         {modoDuplicado && (
-                            <span className="pt-fade-in inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-stone-900 shadow-sm">
-                                <Award className="h-4 w-4 text-[#CC7A2C]" />
+                            <span className="pt-fade-in inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 text-xs font-black uppercase tracking-wide text-stone-900 shadow-sm">
+                                <Award className="h-3.5 w-3.5 text-[#CC7A2C]" />
                                 Duplicado oficial SSO · Copia para Centro de Salud
                             </span>
                         )}
@@ -769,7 +769,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 setModoDuplicado(false);
                                 speakText('Vista Partera activa');
                             }}
-                            className={`flex min-h-[48px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition-all duration-200 active:scale-95 ${!modoDuplicado ? BOTON_TIERRA : 'text-stone-700 hover:bg-amber-50/60'}`}
+                            className={`flex min-h-[42px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${!modoDuplicado ? BOTON_TIERRA : 'text-stone-700 hover:bg-amber-50/60'}`}
                         >
                             <FileText className="h-4 w-4" />
                             <span>Vista Partera</span>
@@ -781,7 +781,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 setModoDuplicado(true);
                                 speakText('Mostrando copia oficial para el Centro de Salud');
                             }}
-                            className={`flex min-h-[48px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition-all duration-200 active:scale-95 ${modoDuplicado ? BOTON_TIERRA : 'text-stone-700 hover:bg-amber-50/60'}`}
+                            className={`flex min-h-[42px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${modoDuplicado ? BOTON_TIERRA : 'text-stone-700 hover:bg-amber-50/60'}`}
                         >
                             <Building2 className="h-4 w-4" />
                             <span>Centro de Salud</span>
@@ -793,11 +793,11 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <SectionCard
                     acento="ocre"
                     delay={0.05}
-                    icon={<User className="h-6 w-6" />}
+                    icon={<User className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="Datos de identificación de la paciente"
-                    subtitle="Toque el micrófono dentro de cada campo para dictar con su voz de forma rápida y cómoda"
+                    subtitle="Toque el micrófono dentro de cada campo para dictar con su voz"
                 >
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <CampoVoz
                             id="nombreMujer"
                             etiqueta="Nombre de la mujer"
@@ -864,46 +864,46 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <SectionCard
                     acento="verde"
                     delay={0.08}
-                    icon={<Calendar className="h-6 w-6" />}
+                    icon={<Calendar className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="1. Embarazo normal y control prenatal"
                     subtitle="Mes de embarazo, micronutrientes, vacuna anti-tetánica y semáforo nutricional"
                 >
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-5 lg:col-span-2">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b border-stone-200 pb-4">
-                                <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5 lg:col-span-2">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b border-stone-200 pb-3">
+                                <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                     <Imagen src="/EmbarazoNormal.png" alt="Embarazo normal" />
                                 </span>
                                 <div>
-                                    <h3 className="text-base sm:text-lg font-black text-stone-900">Embarazo normal (evolución fisiológica)</h3>
-                                    <p className="text-xs sm:text-sm font-bold text-stone-600 mt-0.5">Seleccione el mes de gestación activo (1º al 9º mes)</p>
+                                    <h3 className="text-sm sm:text-base font-black text-stone-900">Embarazo normal (evolución fisiológica)</h3>
+                                    <p className="text-xs font-bold text-stone-600 mt-0.5">Seleccione el mes de gestación activo (1º al 9º mes)</p>
                                 </div>
                             </div>
                             <p className={CLASE_ETIQUETA}>Mes de embarazo activo</p>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 gap-2.5">
                                 {MESES.map((m) => (
                                     <TarjetaOpcion
                                         key={m}
                                         activo={mesSeleccionado === m}
                                         onClick={() => setMesSeleccionado(m)}
                                         titulo={`${m}º Mes`}
-                                        tituloClassName="text-xl sm:text-2xl"
-                                        className="min-h-[88px] sm:min-h-[100px]"
+                                        tituloClassName="text-xl"
+                                        className="min-h-[80px]"
                                     />
                                 ))}
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3.5">
                             <TarjetaOpcion
                                 activo={acidoFolico}
                                 onClick={() => setAcidoFolico(!acidoFolico)}
                                 titulo="Ácido fólico (30 días)"
                                 subtitulo={acidoFolico ? 'Entregado' : 'Pendiente'}
                                 img="/DuranteElEmbarazo-PrimerosMeses.png"
-                                icono={<Pill className="h-6 w-6 shrink-0 text-[#3F7048]" />}
+                                icono={<Pill className="h-5 w-5 shrink-0 text-[#3F7048]" />}
                                 disposicion="fila"
-                                className="min-h-[100px] flex-1"
+                                className="min-h-[92px] flex-1"
                             />
                             <TarjetaOpcion
                                 activo={hierro}
@@ -911,35 +911,35 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 titulo="Sulfato ferroso"
                                 subtitulo={hierro ? 'Entregado' : 'Pendiente'}
                                 img="/DuranteElEmbarazo.png"
-                                icono={<Droplet className="h-6 w-6 shrink-0 text-[#C2603A]" />}
+                                icono={<Droplet className="h-5 w-5 shrink-0 text-[#C2603A]" />}
                                 disposicion="fila"
-                                className="min-h-[100px] flex-1"
+                                className="min-h-[92px] flex-1"
                             />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-5">
-                            <div className="flex items-center gap-4">
-                                <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div className="space-y-3 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
+                            <div className="flex items-center gap-3">
+                                <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                     <Imagen src="/Aplicar-Toxoide-Tetanico.png" alt="Vacunación anti-tetánica" />
                                 </span>
                                 <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Vacunación anti-tetánica (Td/Tdap)</h3>
                             </div>
-                            <div className="grid grid-cols-3 gap-2.5">
+                            <div className="grid grid-cols-3 gap-2">
                                 {VACUNAS.map((v) => (
                                     <TarjetaOpcion
                                         key={v.id}
                                         activo={vacunaTetanos === v.id}
                                         onClick={() => setVacunaTetanos(v.id)}
                                         titulo={v.label}
-                                        className="min-h-[80px] px-1 text-xs"
+                                        className="min-h-[72px] px-1 text-xs"
                                     />
                                 ))}
                             </div>
                         </div>
 
-                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-5">
+                        <div className="space-y-3 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
                             <div className="flex items-center gap-2">
                                 <Ruler className="h-5 w-5 text-stone-700" />
                                 <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Estado nutricional madre (Cinta MUAC)</h3>
@@ -953,7 +953,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <SectionCard
                     acento="terracota"
                     delay={0.1}
-                    icon={<AlertTriangle className="h-6 w-6" />}
+                    icon={<AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="2. Embarazo con complicaciones"
                     subtitle="Toque los dibujos de los signos de alarma identificados en la valoración clínica"
                     action={
@@ -963,7 +963,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         </div>
                     }
                 >
-                    <div className="relative overflow-hidden rounded-3xl border border-[#CC7A2C]/30 bg-gradient-to-b from-orange-50/80 to-amber-50/60 p-4 sm:p-8">
+                    <div className="relative overflow-hidden rounded-3xl border border-[#CC7A2C]/30 bg-gradient-to-b from-orange-50/80 to-amber-50/60 p-4 sm:p-6">
                         <svg
                             className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block"
                             viewBox="0 0 100 100"
@@ -987,22 +987,22 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             ))}
                         </svg>
 
-                        <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6 lg:gap-x-6 lg:gap-y-8">
+                        <div className="relative z-10 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-6 lg:gap-x-5 lg:gap-y-6">
                             {SINTOMAS_SUPERIORES.map((s) => renderSintoma(s, 'lg:col-span-2'))}
                             {renderSintoma(SINTOMA_IZQUIERDO, 'lg:col-span-2')}
 
-                            <div className="order-first flex flex-col items-center justify-center gap-3 rounded-3xl border border-[#CC7A2C]/40 bg-gradient-to-b from-orange-100 to-amber-100 p-6 text-center shadow-2xl shadow-orange-950/15 sm:col-span-2 lg:order-none lg:col-span-2">
-                                <span className="pt-breathe flex h-12 w-12 items-center justify-center rounded-full bg-[#CC7A2C] text-white shadow-lg">
-                                    <AlertTriangle className="h-6 w-6" />
+                            <div className="order-first flex flex-col items-center justify-center gap-2.5 rounded-3xl border border-[#CC7A2C]/40 bg-gradient-to-b from-orange-100 to-amber-100 p-5 text-center shadow-xl shadow-orange-950/10 sm:col-span-2 lg:order-none lg:col-span-2">
+                                <span className="pt-breathe flex h-10 w-10 items-center justify-center rounded-full bg-[#CC7A2C] text-white shadow-md">
+                                    <AlertTriangle className="h-5 w-5" />
                                 </span>
-                                <span className="flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
+                                <span className="flex h-28 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                     <Imagen src="/EmbarazoConComplicaciones.png" alt="Embarazo con complicaciones" />
                                 </span>
-                                <span className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider ${BOTON_TIERRA}`}>
+                                <span className={`rounded-full px-3.5 py-1.5 text-xs font-black uppercase tracking-wider ${BOTON_TIERRA}`}>
                                     Embarazo con complicaciones
                                 </span>
-                                <p className="text-xs font-bold text-stone-700">
-                                    Identificación temprana de signos de alarma materna
+                                <p className="text-[11px] font-bold text-stone-700">
+                                    Signos de alarma materna
                                 </p>
                             </div>
 
@@ -1016,7 +1016,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <SectionCard
                     acento="terracota"
                     delay={0.12}
-                    icon={<ShieldAlert className="h-6 w-6" />}
+                    icon={<ShieldAlert className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="3. Aborto, dolor y hemorragia"
                     subtitle="Evaluación clínica de complicaciones hemorrágicas o dolor agudo"
                     action={
@@ -1026,7 +1026,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         </div>
                     }
                 >
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                         {TARJETAS_ABORTO.map((item) => (
                             <TarjetaOpcion
                                 key={item.id}
@@ -1034,9 +1034,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 onClick={() => toggleTarjetaAborto(item.id)}
                                 titulo={item.title}
                                 img={item.img}
-                                altoImg="h-40 sm:h-44"
+                                altoImg="h-36 sm:h-40"
                                 pie={{ off: 'Marcar', on: 'Registrado' }}
-                                className="min-h-[240px]"
+                                className="min-h-[220px]"
                             />
                         ))}
                     </div>
@@ -1046,36 +1046,36 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <SectionCard
                     acento="ocre"
                     delay={0.14}
-                    icon={<HeartPulse className="h-6 w-6" />}
+                    icon={<HeartPulse className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="4. Parto normal (vertical y horizontal)"
                     subtitle="Posición de atención del parto y estado del recién nacido"
                 >
-                    <div className="space-y-5">
+                    <div className="space-y-4">
                         {FILAS_PARTO.map((fila) => {
                             const filaActiva = partoNormalPosicion === fila.pos;
                             return (
                                 <div
                                     key={fila.pos}
-                                    className={`grid items-center gap-5 rounded-3xl border-2 p-5 transition-all duration-300 lg:grid-cols-2 ${
+                                    className={`grid items-center gap-4 rounded-3xl border-2 p-4 transition-all duration-300 lg:grid-cols-2 ${
                                         filaActiva
                                             ? 'border-[#CC7A2C] bg-gradient-to-br from-amber-50/90 to-orange-50/70 shadow-xl shadow-orange-950/10'
                                             : 'border-stone-200/80 bg-white/70'
                                     }`}
                                 >
-                                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
-                                        <span className="flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
+                                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5 text-center sm:text-left">
+                                        <span className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                             <Imagen src={fila.img} alt={fila.titulo} />
                                         </span>
                                         <div>
-                                            <span className="inline-block rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-black uppercase text-stone-800 mb-2">
+                                            <span className="inline-block rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-stone-800 mb-1.5">
                                                 {fila.etiqueta}
                                             </span>
-                                            <h3 className="text-base sm:text-lg font-black text-stone-900">{fila.titulo}</h3>
-                                            <p className="text-xs sm:text-sm font-bold text-stone-600 mt-1">{fila.descripcion}</p>
+                                            <h3 className="text-sm sm:text-base font-black text-stone-900">{fila.titulo}</h3>
+                                            <p className="text-xs font-bold text-stone-600 mt-0.5">{fila.descripcion}</p>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-2.5">
                                         {RESULTADOS_PARTO.map((r) => (
                                             <TarjetaOpcion
                                                 key={r.id}
@@ -1086,9 +1086,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                                 }}
                                                 titulo={r.titulo}
                                                 img={r.img}
-                                                altoImg="h-24 sm:h-28"
-                                                icono={<Baby className="h-5 w-5 shrink-0 text-[#CC7A2C]" />}
-                                                className="min-h-[170px]"
+                                                altoImg="h-20 sm:h-24"
+                                                icono={<Baby className="h-4 w-4 shrink-0 text-[#CC7A2C]" />}
+                                                className="min-h-[150px]"
                                             />
                                         ))}
                                     </div>
@@ -1102,12 +1102,12 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <SectionCard
                     acento="terracota"
                     delay={0.16}
-                    icon={<AlertTriangle className="h-6 w-6" />}
+                    icon={<AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="5. Parto complicado (resultado de nacimiento)"
                     subtitle="Seleccione si el nacimiento presentó complicaciones o defunción"
                     action={<ReferidoToggle label="Referido" value={referidoPartoComplicado} onChange={setReferidoPartoComplicado} />}
                 >
-                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
                         {OPCIONES_PARTO_COMPLICADO.map((item) => {
                             const activo = partoComplicadoOpcion === item.id;
                             return (
@@ -1117,8 +1117,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     onClick={() => setPartoComplicadoOpcion(activo ? null : item.id)}
                                     titulo={item.title}
                                     img={item.img}
-                                    altoImg="h-32 sm:h-36"
-                                    className="min-h-[220px]"
+                                    altoImg="h-28 sm:h-32"
+                                    className="min-h-[190px]"
                                 />
                             );
                         })}
@@ -1129,30 +1129,30 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <SectionCard
                     acento="verde"
                     delay={0.18}
-                    icon={<HeartPulse className="h-6 w-6" />}
+                    icon={<HeartPulse className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="6. Puerperio normal y complicado"
                     subtitle="Primeros 40 días postparto: estado nutricional y signos de alarma"
                 >
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-5">
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                        <div className="space-y-3.5 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
                             <div className="flex items-center gap-2">
                                 <Ruler className="h-5 w-5 text-stone-700" />
                                 <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Puerperio normal (Cinta MUAC)</h3>
                             </div>
-                            <p className="text-xs sm:text-sm font-bold text-stone-600">Evaluación del estado nutricio posparto</p>
+                            <p className="text-xs font-bold text-stone-600">Evaluación del estado nutricio posparto</p>
                             <SemaforoMUAC value={cintaMUACPuerperio} onChange={setCintaMUACPuerperio} label="Estado nutricional en puerperio" />
                         </div>
 
-                        <div className="space-y-4 rounded-3xl border border-[#CC7A2C]/30 bg-gradient-to-br from-orange-50/80 to-amber-50/60 p-5">
+                        <div className="space-y-3.5 rounded-3xl border border-[#CC7A2C]/30 bg-gradient-to-br from-orange-50/80 to-amber-50/60 p-4 sm:p-5">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Puerperio complicado</h3>
                                 <ReferidoToggle label="Ref" value={referidoPuerperio} onChange={setReferidoPuerperio} />
                             </div>
-                            <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <span className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
+                            <div className="flex flex-col sm:flex-row items-center gap-3.5">
+                                <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                     <Imagen src="/PuerpericoComplicado.png" alt="Puerperio complicado" />
                                 </span>
-                                <div className="w-full flex-1 space-y-3">
+                                <div className="w-full flex-1 space-y-2.5">
                                     {CHECKS_PUERPERIO.map((chk) => (
                                         <TarjetaOpcion
                                             key={chk.id}
@@ -1160,7 +1160,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                             onClick={() => togglePuerperioCheckbox(chk.id)}
                                             titulo={chk.label}
                                             disposicion="fila"
-                                            className="min-h-[64px]"
+                                            className="min-h-[56px]"
                                         />
                                     ))}
                                 </div>
@@ -1173,11 +1173,11 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <SectionCard
                     acento="terracota"
                     delay={0.2}
-                    icon={<ShieldAlert className="h-6 w-6" />}
+                    icon={<ShieldAlert className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="7. Muerte materna (alerta epidemiológica médica)"
                     subtitle="Registro prioritario inmediato ante fallecimiento materno ocurrido en la comunidad"
                 >
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                         {ETAPAS_MUERTE_MATERNA.map((item) => {
                             const activo = muerteMaternaEtapa === item.id;
                             return (
@@ -1187,9 +1187,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     onClick={() => setMuerteMaternaEtapa(activo ? null : item.id)}
                                     titulo={item.title}
                                     img={item.img}
-                                    altoImg="h-40 sm:h-44"
+                                    altoImg="h-36 sm:h-40"
                                     pie={{ off: 'Notificar', on: 'Notificado', iconoOff: <AlertTriangle className="h-3.5 w-3.5 text-[#CC7A2C]" /> }}
-                                    className="min-h-[240px]"
+                                    className="min-h-[220px]"
                                 />
                             );
                         })}
@@ -1199,13 +1199,13 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 {/* ================= 8. Cierre administrativo ================= */}
                 <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.22s' }}>
                     <TriStripe />
-                    <div className="space-y-6 p-5 sm:p-8">
-                        <div className="flex items-center gap-3.5 border-b border-stone-200/80 pb-5">
-                            <span className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D69A1E] to-[#C2603A] text-white shadow-xl shadow-orange-900/15">
-                                <PenTool className="h-6 w-6" />
+                    <div className="space-y-5 p-4 sm:p-6">
+                        <div className="flex items-center gap-3.5 border-b border-stone-200/80 pb-4">
+                            <span className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D69A1E] to-[#C2603A] text-white shadow-xl shadow-orange-900/15">
+                                <PenTool className="h-5 w-5" />
                             </span>
                             <div>
-                                <h2 className="text-lg sm:text-2xl font-black leading-tight text-stone-900">
+                                <h2 className="text-base sm:text-xl font-black leading-tight text-stone-900">
                                     Cierre administrativo del informe materno
                                 </h2>
                                 <p className="text-xs sm:text-sm font-bold text-stone-600 mt-0.5">
@@ -1214,7 +1214,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {camposCierre.map((c) => (
                                 <CampoVoz
                                     key={c.key}
@@ -1235,9 +1235,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 {errorServidor && (
                     <div
                         role="alert"
-                        className="pt-pop-in rounded-3xl border-2 border-red-300 bg-red-50 p-5 text-sm sm:text-base font-bold text-stone-900 shadow-xl flex items-center gap-3"
+                        className="pt-pop-in rounded-3xl border-2 border-red-300 bg-red-50 p-4 text-xs sm:text-sm font-bold text-stone-900 shadow-xl flex items-center gap-3"
                     >
-                        <AlertTriangle className="h-6 w-6 text-red-600 shrink-0" />
+                        <AlertTriangle className="h-5 w-5 text-red-600 shrink-0" />
                         <span>{errorServidor}</span>
                     </div>
                 )}
@@ -1246,10 +1246,10 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 <button
                     type="submit"
                     disabled={isSubmitting || exito}
-                    className={`pt-slide-up flex min-h-[96px] w-full cursor-pointer items-center justify-center gap-4 rounded-3xl px-6 py-6 text-xl sm:text-2xl font-black disabled:cursor-wait disabled:opacity-80 ${BOTON_TIERRA} ${nombreMujer.trim() && !isSubmitting ? 'pt-breathe' : ''}`}
+                    className={`pt-slide-up flex min-h-[80px] w-full cursor-pointer items-center justify-center gap-3 rounded-3xl px-6 py-5 text-lg sm:text-xl font-black disabled:cursor-wait disabled:opacity-80 ${BOTON_TIERRA} ${nombreMujer.trim() && !isSubmitting ? 'pt-breathe' : ''}`}
                     style={{ animationDelay: '.25s' }}
                 >
-                    {isSubmitting ? <Loader2 className="h-8 w-8 animate-spin" /> : <Send className="h-8 w-8" />}
+                    {isSubmitting ? <Loader2 className="h-7 w-7 animate-spin" /> : <Send className="h-7 w-7" />}
                     <span>{isSubmitting ? 'Guardando en PostgreSQL (Render)…' : 'REGISTRAR CALENDARIO DE LA MUJER'}</span>
                 </button>
 
@@ -1262,15 +1262,15 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     >
                         <div className={`pt-pop-in w-full max-w-md overflow-hidden text-center ${VIDRIO}`}>
                             <TriStripe className="h-2" />
-                            <div className="p-8">
-                                <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600 text-white shadow-2xl">
-                                    <Check className="h-14 w-14" strokeWidth={3.5} />
+                            <div className="p-7">
+                                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-600 text-white shadow-2xl">
+                                    <Check className="h-10 w-10" strokeWidth={3.5} />
                                 </div>
-                                <h2 className="text-2xl sm:text-3xl font-black text-stone-900">¡Registro guardado!</h2>
-                                <p className="mt-3 text-base sm:text-lg font-bold text-stone-700">
-                                    El calendario de {nombreMujer || 'la paciente'} quedó guardado en la base de datos de forma exitosa.
+                                <h2 className="text-2xl font-black text-stone-900">¡Registro guardado!</h2>
+                                <p className="mt-2 text-sm sm:text-base font-bold text-stone-700">
+                                    El calendario de {nombreMujer || 'la paciente'} quedó guardado en la base de datos con éxito.
                                 </p>
-                                <p className="mt-4 text-xs sm:text-sm font-bold text-stone-500">Regresando al menú principal…</p>
+                                <p className="mt-3 text-xs sm:text-sm font-bold text-stone-500">Regresando al menú principal…</p>
                             </div>
                         </div>
                     </div>
