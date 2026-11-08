@@ -26,7 +26,7 @@ import { handleVoiceInput } from '../../utils/voiceUtils';
 import { http } from '../../services/http';
 
 /* ============================================================================
- * CalendarioMujer — Versión Compacta y Profesional (Estilo Referencias)
+ * CalendarioMujer — Versión Profesional con Retroalimentación Auditiva por Botón
  * Servicios de Salud de Oaxaca · Programa de Parteras Tradicionales
  * ========================================================================== */
 
@@ -577,16 +577,58 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         );
     };
 
-    const toggleSintoma = (id: string) => {
-        setSintomasComplicaciones(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+    // Funciones de selección con retroalimentación auditiva inmediata
+    const handleSelectMes = (m: number) => {
+        setMesSeleccionado(m);
+        speakText(`Seleccionado: ${m}º mes de embarazo`);
     };
 
-    const toggleTarjetaAborto = (id: string) => {
-        setTarjetasAborto(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+    const handleSelectAcidoFolico = () => {
+        const nuevo = !acidoFolico;
+        setAcidoFolico(nuevo);
+        speakText(nuevo ? 'Ácido fólico entregado' : 'Ácido fólico pendiente');
     };
 
-    const togglePuerperioCheckbox = (id: string) => {
-        setPuerperioCheckboxes(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+    const handleSelectHierro = () => {
+        const nuevo = !hierro;
+        setHierro(nuevo);
+        speakText(nuevo ? 'Sulfato ferroso entregado' : 'Sulfato ferroso pendiente');
+    };
+
+    const handleSelectVacuna = (v: Vacuna) => {
+        setVacunaTetanos(v);
+        const labelVac = v === '1A' ? 'Primera dosis' : v === '2A' ? 'Segunda dosis' : 'Refuerzo';
+        speakText(`Vacuna anti-tetánica: ${labelVac}`);
+    };
+
+    const handleSelectMUAC = (muac: Muac) => {
+        setCintaMUAC(muac);
+        const labelMuac = muac === 'VERDE' ? 'Verde, adecuado' : muac === 'AMARILLO' ? 'Amarillo, riesgo' : 'Rojo, desnutrición';
+        speakText(`Estado nutricional materno: ${labelMuac}`);
+    };
+
+    const toggleSintoma = (id: string, label: string) => {
+        const activo = sintomasComplicaciones.includes(id);
+        setSintomasComplicaciones(prev => activo ? prev.filter(item => item !== id) : [...prev, id]);
+        speakText(activo ? `Removido: ${label}` : `Seleccionado signo de alarma: ${label}`);
+    };
+
+    const toggleTarjetaAborto = (id: string, title: string) => {
+        const activo = tarjetasAborto.includes(id);
+        setTarjetasAborto(prev => activo ? prev.filter(item => item !== id) : [...prev, id]);
+        speakText(activo ? `Removido: ${title}` : `Seleccionado: ${title}`);
+    };
+
+    const handlePartoNormal = (pos: PosicionParto, res: ResultadoParto, posLabel: string, resLabel: string) => {
+        setPartoNormalPosicion(pos);
+        setPartoNormalResultado(res);
+        speakText(`Parto normal: ${posLabel}, resultado ${resLabel}`);
+    };
+
+    const togglePuerperioCheckbox = (id: string, label: string) => {
+        const activo = puerperioCheckboxes.includes(id);
+        setPuerperioCheckboxes(prev => activo ? prev.filter(item => item !== id) : [...prev, id]);
+        speakText(activo ? `Removido: ${label}` : `Seleccionado: ${label}`);
     };
 
     const enfocar = (id: string) => {
@@ -615,6 +657,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         }
 
         setIsSubmitting(true);
+        speakText('Guardando los datos del calendario en la base de datos...');
 
         const payload = {
             parteraId: localStorage.getItem('partera_id') || 'DEFAULT-PARTERA-UUID',
@@ -674,12 +717,12 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
             if (!montadoRef.current) return;
 
             setExito(true);
-            speakText('Calendario de atención a la mujer registrado y guardado exitosamente en la base de datos.');
+            speakText('¡Alerta de éxito! Los datos del calendario de atención a la mujer fueron enviados y guardados correctamente en la base de datos.');
             temporizadorRef.current = window.setTimeout(() => {
                 if (!montadoRef.current) return;
                 setExito(false);
                 if (onSuccess) onSuccess();
-            }, 2600);
+            }, 3000);
         } catch (err: unknown) {
             console.error('Error al guardar calendario:', err);
             const mensaje =
@@ -687,7 +730,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 'Error al conectar con el servidor. Revise su señal e intente de nuevo.';
             if (montadoRef.current) {
                 setErrorServidor(mensaje);
-                speakText('No se pudo guardar el calendario. Revise su señal e intente de nuevo.');
+                speakText('Error al enviar los datos. No se pudo guardar en el servidor.');
             }
         } finally {
             if (montadoRef.current) setIsSubmitting(false);
@@ -698,7 +741,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         <TarjetaOpcion
             key={item.id}
             activo={sintomasComplicaciones.includes(item.id)}
-            onClick={() => toggleSintoma(item.id)}
+            onClick={() => toggleSintoma(item.id, item.label)}
             titulo={item.label}
             img={item.img}
             altoImg="h-28 sm:h-32"
@@ -722,7 +765,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
 
             <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-6 sm:gap-7">
                 
-                {/* ===================== Cabecera Compacta (Estilo Referencias) ===================== */}
+                {/* ===================== Cabecera Compacta ===================== */}
                 <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
                     <TriStripe />
                     <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
@@ -751,7 +794,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </header>
 
-                {/* ============ Selector de Vista (Partera / Centro de Salud) ============ */}
+                {/* ============ Selector de Vista ================= */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
                     <div className="min-h-[32px] flex items-center">
                         {modoDuplicado && (
@@ -835,6 +878,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 onChange={(e) => {
                                     setFecha(e.target.value);
                                     if (errorFecha) setErrorFecha(false);
+                                    speakText(`Fecha seleccionada: ${e.target.value}`);
                                 }}
                                 className={`${CLASE_SELECTOR} ${errorFecha ? 'border-red-500 pt-shake' : 'border-stone-200/90'}`}
                             />
@@ -885,7 +929,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     <TarjetaOpcion
                                         key={m}
                                         activo={mesSeleccionado === m}
-                                        onClick={() => setMesSeleccionado(m)}
+                                        onClick={() => handleSelectMes(m)}
                                         titulo={`${m}º Mes`}
                                         tituloClassName="text-xl"
                                         className="min-h-[80px]"
@@ -897,7 +941,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         <div className="flex flex-col gap-3.5">
                             <TarjetaOpcion
                                 activo={acidoFolico}
-                                onClick={() => setAcidoFolico(!acidoFolico)}
+                                onClick={handleSelectAcidoFolico}
                                 titulo="Ácido fólico (30 días)"
                                 subtitulo={acidoFolico ? 'Entregado' : 'Pendiente'}
                                 img="/DuranteElEmbarazo-PrimerosMeses.png"
@@ -907,7 +951,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             />
                             <TarjetaOpcion
                                 activo={hierro}
-                                onClick={() => setHierro(!hierro)}
+                                onClick={handleSelectHierro}
                                 titulo="Sulfato ferroso"
                                 subtitulo={hierro ? 'Entregado' : 'Pendiente'}
                                 img="/DuranteElEmbarazo.png"
@@ -931,7 +975,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     <TarjetaOpcion
                                         key={v.id}
                                         activo={vacunaTetanos === v.id}
-                                        onClick={() => setVacunaTetanos(v.id)}
+                                        onClick={() => handleSelectVacuna(v.id)}
                                         titulo={v.label}
                                         className="min-h-[72px] px-1 text-xs"
                                     />
@@ -944,7 +988,11 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <Ruler className="h-5 w-5 text-stone-700" />
                                 <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Estado nutricional madre (Cinta MUAC)</h3>
                             </div>
-                            <SemaforoMUAC value={cintaMUAC} onChange={setCintaMUAC} label="Estado nutricional de la madre" />
+                            <SemaforoMUAC
+                                value={cintaMUAC}
+                                onChange={(muac) => handleSelectMUAC(muac)}
+                                label="Estado nutricional de la madre"
+                            />
                         </div>
                     </div>
                 </SectionCard>
@@ -959,7 +1007,14 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     action={
                         <div className="flex flex-wrap items-center gap-3">
                             <ContadorPill total={sintomasComplicaciones.length} />
-                            <ReferidoToggle label="Referido" value={referidoEmbarazo} onChange={setReferidoEmbarazo} />
+                            <ReferidoToggle
+                                label="Referido"
+                                value={referidoEmbarazo}
+                                onChange={(v) => {
+                                    setReferidoEmbarazo(v);
+                                    speakText(v ? 'Paciente referida en embarazo' : 'Sin referencia en embarazo');
+                                }}
+                            />
                         </div>
                     }
                 >
@@ -1022,7 +1077,14 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     action={
                         <div className="flex flex-wrap items-center gap-3">
                             <ContadorPill total={tarjetasAborto.length} />
-                            <ReferidoToggle label="Referido" value={referidoAborto} onChange={setReferidoAborto} />
+                            <ReferidoToggle
+                                label="Referido"
+                                value={referidoAborto}
+                                onChange={(v) => {
+                                    setReferidoAborto(v);
+                                    speakText(v ? 'Referida por hemorragia o aborto' : 'Sin referencia por hemorragia');
+                                }}
+                            />
                         </div>
                     }
                 >
@@ -1031,7 +1093,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             <TarjetaOpcion
                                 key={item.id}
                                 activo={tarjetasAborto.includes(item.id)}
-                                onClick={() => toggleTarjetaAborto(item.id)}
+                                onClick={() => toggleTarjetaAborto(item.id, item.title)}
                                 titulo={item.title}
                                 img={item.img}
                                 altoImg="h-36 sm:h-40"
@@ -1080,10 +1142,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                             <TarjetaOpcion
                                                 key={r.id}
                                                 activo={filaActiva && partoNormalResultado === r.id}
-                                                onClick={() => {
-                                                    setPartoNormalPosicion(fila.pos);
-                                                    setPartoNormalResultado(r.id);
-                                                }}
+                                                onClick={() => handlePartoNormal(fila.pos, r.id, fila.titulo, r.titulo)}
                                                 titulo={r.titulo}
                                                 img={r.img}
                                                 altoImg="h-20 sm:h-24"
@@ -1105,7 +1164,16 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     icon={<AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="5. Parto complicado (resultado de nacimiento)"
                     subtitle="Seleccione si el nacimiento presentó complicaciones o defunción"
-                    action={<ReferidoToggle label="Referido" value={referidoPartoComplicado} onChange={setReferidoPartoComplicado} />}
+                    action={
+                        <ReferidoToggle
+                            label="Referido"
+                            value={referidoPartoComplicado}
+                            onChange={(v) => {
+                                setReferidoPartoComplicado(v);
+                                speakText(v ? 'Parto complicado referido' : 'Sin referencia en parto complicado');
+                            }}
+                        />
+                    }
                 >
                     <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
                         {OPCIONES_PARTO_COMPLICADO.map((item) => {
@@ -1114,7 +1182,10 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <TarjetaOpcion
                                     key={item.id}
                                     activo={activo}
-                                    onClick={() => setPartoComplicadoOpcion(activo ? null : item.id)}
+                                    onClick={() => {
+                                        setPartoComplicadoOpcion(activo ? null : item.id);
+                                        speakText(activo ? 'Deseleccionado' : `Seleccionado: ${item.title}`);
+                                    }}
                                     titulo={item.title}
                                     img={item.img}
                                     altoImg="h-28 sm:h-32"
@@ -1140,13 +1211,27 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Puerperio normal (Cinta MUAC)</h3>
                             </div>
                             <p className="text-xs font-bold text-stone-600">Evaluación del estado nutricio posparto</p>
-                            <SemaforoMUAC value={cintaMUACPuerperio} onChange={setCintaMUACPuerperio} label="Estado nutricional en puerperio" />
+                            <SemaforoMUAC
+                                value={cintaMUACPuerperio}
+                                onChange={(muac) => {
+                                    setCintaMUACPuerperio(muac);
+                                    speakText(`Estado nutricional en puerperio: ${muac}`);
+                                }}
+                                label="Estado nutricional en puerperio"
+                            />
                         </div>
 
                         <div className="space-y-3.5 rounded-3xl border border-[#CC7A2C]/30 bg-gradient-to-br from-orange-50/80 to-amber-50/60 p-4 sm:p-5">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Puerperio complicado</h3>
-                                <ReferidoToggle label="Ref" value={referidoPuerperio} onChange={setReferidoPuerperio} />
+                                <ReferidoToggle
+                                    label="Ref"
+                                    value={referidoPuerperio}
+                                    onChange={(v) => {
+                                        setReferidoPuerperio(v);
+                                        speakText(v ? 'Puerperio complicado referido' : 'Sin referencia en puerperio');
+                                    }}
+                                />
                             </div>
                             <div className="flex flex-col sm:flex-row items-center gap-3.5">
                                 <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
@@ -1157,7 +1242,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         <TarjetaOpcion
                                             key={chk.id}
                                             activo={puerperioCheckboxes.includes(chk.id)}
-                                            onClick={() => togglePuerperioCheckbox(chk.id)}
+                                            onClick={() => togglePuerperioCheckbox(chk.id, chk.label)}
                                             titulo={chk.label}
                                             disposicion="fila"
                                             className="min-h-[56px]"
@@ -1184,7 +1269,10 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 <TarjetaOpcion
                                     key={item.id}
                                     activo={activo}
-                                    onClick={() => setMuerteMaternaEtapa(activo ? null : item.id)}
+                                    onClick={() => {
+                                        setMuerteMaternaEtapa(activo ? null : item.id);
+                                        speakText(activo ? 'Alerta retirada' : `Alerta de muerte materna en ${item.title} registrada`);
+                                    }}
                                     titulo={item.title}
                                     img={item.img}
                                     altoImg="h-36 sm:h-40"
@@ -1253,7 +1341,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     <span>{isSubmitting ? 'Guardando en PostgreSQL (Render)…' : 'REGISTRAR CALENDARIO DE LA MUJER'}</span>
                 </button>
 
-                {/* ================== Confirmación de éxito ======================= */}
+                {/* ================== Confirmación de éxito (Alerta Visual y Auditiva) ======================= */}
                 {exito && (
                     <div
                         role="status"
@@ -1263,12 +1351,12 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         <div className={`pt-pop-in w-full max-w-md overflow-hidden text-center ${VIDRIO}`}>
                             <TriStripe className="h-2" />
                             <div className="p-7">
-                                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-600 text-white shadow-2xl">
+                                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-600 text-white shadow-2xl animate-bounce">
                                     <Check className="h-10 w-10" strokeWidth={3.5} />
                                 </div>
-                                <h2 className="text-2xl font-black text-stone-900">¡Registro guardado!</h2>
+                                <h2 className="text-2xl font-black text-stone-900">¡Datos guardados con éxito!</h2>
                                 <p className="mt-2 text-sm sm:text-base font-bold text-stone-700">
-                                    El calendario de {nombreMujer || 'la paciente'} quedó guardado en la base de datos con éxito.
+                                    El calendario de atención de {nombreMujer || 'la paciente'} se ha enviado y guardado correctamente en la base de datos.
                                 </p>
                                 <p className="mt-3 text-xs sm:text-sm font-bold text-stone-500">Regresando al menú principal…</p>
                             </div>
