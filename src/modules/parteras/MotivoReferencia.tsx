@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { http } from '../../services/http'; // Instancia de Axios hacia el servidor en Render
+import { http } from '../../services/http'; // Instancia de Axios hacia el servidor en Render[cite: 10]
 
 /* ============================================================================
  * MotivoReferencia — Motor del formulario de referencia
  *
  * - Estados del formulario y envío a PostgreSQL vía Axios:
- *     http.post('/api/v1/referencias', payloadReferencia)
+ *     http.post('/referencias', payloadReferencia)
  * - Dictado por voz en vivo (es-MX) con ondas de audio en cada campo de texto
  * - Datos de identificación en 2 columnas simétricas (1 columna en celular)
  * - Tarjetas de motivos en cuadrícula simétrica, con imágenes PNG reales
@@ -588,7 +588,8 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         };
 
         try {
-            await http.post('/api/v1/referencias', payloadReferencia);
+            // CORREGIDO: Se cambia '/api/v1/referencias' por '/referencias' para evitar duplicación con el baseURL de http.ts
+            await http.post('/referencias', payloadReferencia);
             if (!montadoRef.current) return;
 
             setEnviado(true);
