@@ -6,7 +6,7 @@ import { MotivoReferencia } from '../MotivoReferencia';
  * Servicios de Salud de Oaxaca · Programa de Parteras Tradicionales
  *
  * Responsabilidades (presentación y cabecera simétrica global):
- *  - Header simétrico: Volver al menú (izq) · Título (centro exacto) · Escuchar instrucciones (der)
+ *  - Header simétrico sin botón volver: Título (centro exacto) · Escuchar instrucciones (der)
  *  - Contenedor de una sola columna, glassmorphism claro, paleta del Istmo
  *  - Renderiza <MotivoReferencia /> (motor del formulario y conexión backend en Render)
  * ========================================================================== */
@@ -41,11 +41,6 @@ interface IconoProps {
     className?: string;
 }
 
-const IconoAtras: React.FC<IconoProps> = ({ className = 'h-6 w-6' }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="m15 5-7 7 7 7" />
-    </svg>
-);
 const IconoBocina: React.FC<IconoProps> = ({ className = 'h-6 w-6' }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M11 5 6 9H3v6h3l5 4V5z" />
@@ -109,27 +104,14 @@ export const FormatoReferencia: React.FC<FormatoReferenciaProps> = ({
             <style>{ESTILOS_LAYOUT}</style>
 
             <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-                {/* ===================== Encabezado Simétrico Global ===================== */}
+                {/* ===================== Encabezado Simétrico sin Botón Volver ===================== */}
                 <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
                     <div className="h-2.5 w-full bg-gradient-to-r from-[#C2603A] via-[#D69A1E] to-[#5E8C61]" />
                     
-                    {/* Grid simétrica de 3 columnas para asegurar centrado perfecto */}
-                    <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto_1fr] sm:p-6">
-                        {/* Columna Izquierda: Botón Volver */}
-                        <div className="flex justify-start">
-                            <button
-                                type="button"
-                                onClick={onBack}
-                                aria-label="Volver al menú"
-                                className="flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border-2 border-[#D69A1E]/50 bg-amber-50 px-5 text-base font-black text-stone-900 shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
-                            >
-                                <IconoAtras />
-                                <span>Volver al menú</span>
-                            </button>
-                        </div>
-
-                        {/* Columna Centro: Título Oficial */}
-                        <div className="min-w-0 text-center px-2">
+                    {/* Grid simétrica de 2 columnas: Título centrado y Botón a la derecha */}
+                    <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
+                        {/* Columna Izquierda / Centro: Título Oficial */}
+                        <div className="min-w-0 text-center sm:text-left px-2">
                             <h1 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl uppercase tracking-tight">
                                 Hoja oficial de referencia
                             </h1>
@@ -139,12 +121,12 @@ export const FormatoReferencia: React.FC<FormatoReferenciaProps> = ({
                         </div>
 
                         {/* Columna Derecha: Botón Escuchar Instrucciones */}
-                        <div className="flex justify-end">
+                        <div className="flex justify-center sm:justify-end">
                             <button
                                 type="button"
                                 onClick={() => (isSpeaking ? detenerVoz() : hablar(INSTRUCCIONES))}
                                 aria-label={isSpeaking ? 'Detener voz' : 'Escuchar instrucciones'}
-                                className={`flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl px-5 text-base font-black ${BOTON_TIERRA}`}
+                                className={`flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl px-6 text-base font-black ${BOTON_TIERRA}`}
                             >
                                 {isSpeaking ? <IconoBocinaApagada /> : <IconoBocina />}
                                 <span>{isSpeaking ? 'Detener voz' : 'Escuchar instrucciones'}</span>
