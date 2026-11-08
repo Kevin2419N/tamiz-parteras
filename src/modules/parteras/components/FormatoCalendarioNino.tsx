@@ -24,7 +24,7 @@ import { handleVoiceInput } from '../../../utils/voiceUtils';
 import { http } from '../../../services/http';
 
 /* ============================================================================
- * FormatoCalendarioNino — Versión Profesional con Retroalimentación Auditiva por Botón
+ * FormatoCalendarioNino — Versión Profesional UI/UX (Estándar Calendario Mujer)
  * Servicios de Salud de Oaxaca · Programa de Parteras Tradicionales
  * ========================================================================== */
 
@@ -36,7 +36,7 @@ export interface FormatoCalendarioNinoProps {
 
 type MuacNino = 'VERDE' | 'AMARILLO' | 'ROJO';
 type VacunaNino = 'BCG' | 'HEPATITIS_B' | 'PENTAVALENTE' | 'ROTAVIRUS' | 'NEUMOCOCICA' | 'SRP';
-type AcentoNino = 'verde' | 'turquesa' | 'lima';
+type AcentoNino = 'ocre' | 'terracota' | 'verde';
 
 interface ItemCatalogoNino {
     id: string;
@@ -86,17 +86,17 @@ const SEMAFORO_NINO: { id: MuacNino; titulo: string; estado: string; on: string;
 ];
 
 const SIGNOS_ALARMA_NINO: ItemCatalogoNino[] = [
-    { id: 'FIEBRE_ALTA', label: 'Fiebre alta repentina o dificultad para calmar el llanto', img: '/DolorDeCabeza.png' },
-    { id: 'RESPIRACION_RAPIDA', label: 'Respiración rápida, hundimiento de costillas o sibilancias', img: '/DificultadParaRespirar.png' },
-    { id: 'DIARREA_VOMITO', label: 'Diarrea persistente o vómito a todo lo que mama/come', img: '/VomitoFrecuente.png' },
-    { id: 'SOMNOLENCIA', label: 'Mucha somnolencia, apatía o dificultad para despertar', img: '/Hinchazon.png' },
-    { id: 'MANCHAS_PIEL', label: 'Manchas rojas o violetas en la piel (petequias)', img: '/Hemorragia.png' },
-    { id: 'CONVULSIONES_NINO', label: 'Convulsiones o movimientos atípicos', img: '/Convulsiones.png' }
+    { id: 'FIEBRE_ALTA', label: 'Fiebre alta repentina o llanto inconsolable', subtitulo: 'Signo de infección aguda', img: '/DolorDeCabeza.png' },
+    { id: 'RESPIRACION_RAPIDA', label: 'Respiración rápida o hundimiento de costillas', subtitulo: 'Peligro respiratorio', img: '/DificultadParaRespirar.png' },
+    { id: 'DIARREA_VOMITO', label: 'Diarrea persistente o vómito a todo alimento', subtitulo: 'Riesgo de deshidratación', img: '/VomitoFrecuente.png' },
+    { id: 'SOMNOLENCIA', label: 'Mucha somnolencia, apatía o dificultad para despertar', subtitulo: 'Alerta neurológica', img: '/Hinchazon.png' },
+    { id: 'MANCHAS_PIEL', label: 'Manchas rojas o puntos violetas en la piel', subtitulo: 'Petequias o hemorragia', img: '/Hemorragia.png' },
+    { id: 'CONVULSIONES_NINO', label: 'Convulsiones o movimientos atípicos', subtitulo: 'Emergencia médica', img: '/Convulsiones.png' }
 ];
 
 const INSTRUCCIONES_VOZ_NINO =
     'Calendario de atención del niño y la niña menor de dos años. ' +
-    'Escriba o dicte los datos del recién nacido o lactante tocando el micrófono en cada campo. ' +
+    'Escriba o dicte los datos del infante tocando el micrófono en cada campo. ' +
     'Seleccione el mes de control, el estado nutricional con cinta MUAC, las vacunas aplicadas y los signos de alarma. ' +
     'Al finalizar, complete los datos administrativos de cierre y presione registrar.';
 
@@ -107,7 +107,7 @@ const ESTILOS = `
 @keyframes pt-pop-in { 0% { opacity: 0; transform: scale(.4) } 70% { transform: scale(1.18) } 100% { opacity: 1; transform: scale(1) } }
 @keyframes pt-breathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.02) } }
 @keyframes pt-wave { 0%,100% { transform: scaleY(.25) } 50% { transform: scaleY(1) } }
-@keyframes pt-ring { 0% { box-shadow: 0 0 0 0 rgba(62,142,126,.5) } 100% { box-shadow: 0 0 0 16px rgba(62,142,126,0) } }
+@keyframes pt-ring { 0% { box-shadow: 0 0 0 0 rgba(204,122,44,.5) } 100% { box-shadow: 0 0 0 16px rgba(204,122,44,0) } }
 @keyframes pt-shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
 .pt-fade-in { animation: pt-fade-in .4s cubic-bezier(.16,1,.3,1) both }
 .pt-slide-up { animation: pt-slide-up .5s cubic-bezier(.16,1,.3,1) both }
@@ -115,39 +115,39 @@ const ESTILOS = `
 .pt-breathe { animation: pt-breathe 3s ease-in-out infinite }
 .pt-ring { animation: pt-ring 1.2s ease-out infinite }
 .pt-shake { animation: pt-shake .4s ease-in-out }
-.pt-wave-bar { display: inline-block; width: 4px; height: 22px; border-radius: 4px; background: #3E8E7E; transform-origin: center; animation: pt-wave .9s ease-in-out infinite }
+.pt-wave-bar { display: inline-block; width: 4px; height: 22px; border-radius: 4px; background: #CC7A2C; transform-origin: center; animation: pt-wave .9s ease-in-out infinite }
 @media (prefers-reduced-motion: reduce) {
   .pt-fade-in, .pt-slide-up, .pt-pop-in, .pt-breathe, .pt-ring, .pt-shake, .pt-wave-bar { animation: none !important }
 }
 `;
 
 const VIDRIO =
-    'bg-white/90 backdrop-blur-xl border border-white/80 shadow-2xl shadow-teal-950/10 rounded-3xl transition-all duration-300';
+    'bg-white/90 backdrop-blur-xl border border-white/80 shadow-2xl shadow-orange-950/10 rounded-3xl transition-all duration-300';
 
-const BOTON_TEAL =
-    'bg-gradient-to-r from-[#3E8E7E] via-[#2F7365] to-[#24594E] text-white shadow-xl shadow-teal-900/30 border border-white/30 transition-all duration-300 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98]';
+const BOTON_TIERRA =
+    'bg-gradient-to-r from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-xl shadow-orange-900/30 border border-white/30 transition-all duration-300 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98]';
 
 const CLASE_SELECTOR =
-    'h-16 w-full rounded-2xl border-2 bg-white/95 px-4 text-base sm:text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#3E8E7E] focus:ring-4 focus:ring-[#3E8E7E]/20';
+    'h-16 w-full rounded-2xl border-2 bg-white/95 px-4 text-base sm:text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#CC7A2C] focus:ring-4 focus:ring-[#CC7A2C]/20';
 
 const CLASE_ETIQUETA = 'mb-2 block text-xs sm:text-sm font-black uppercase tracking-wider text-stone-700';
 
 const ACENTOS_NINO: Record<AcentoNino, string> = {
-    verde: 'from-[#3E8E7E] to-[#24594E]',
-    turquesa: 'from-[#2F7365] to-[#1E4A40]',
-    lima: 'from-[#4A9988] to-[#347063]'
+    ocre: 'from-[#D69A1E] to-[#CC7A2C]',
+    terracota: 'from-[#CC7A2C] to-[#C2603A]',
+    verde: 'from-[#5E8C61] to-[#3F7048]'
 };
 
 /* ------------------------- Componentes reutilizables ---------------------- */
-const TriStripeNino: React.FC<{ className?: string }> = ({ className = 'h-2' }) => (
-    <div className={`w-full bg-gradient-to-r from-[#24594E] via-[#3E8E7E] to-[#D69A1E] ${className}`} aria-hidden="true" />
+const TriStripe: React.FC<{ className?: string }> = ({ className = 'h-2' }) => (
+    <div className={`w-full bg-gradient-to-r from-[#C2603A] via-[#D69A1E] to-[#5E8C61] ${className}`} aria-hidden="true" />
 );
 
-const ImagenNino: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
+const Imagen: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
     const [fallo, setFallo] = useState(false);
     if (fallo) {
         return (
-            <div className="flex h-full w-full items-center justify-center rounded-xl bg-teal-50 px-2 text-center text-xs font-bold text-stone-500">
+            <div className="flex h-full w-full items-center justify-center rounded-xl bg-amber-50 px-2 text-center text-xs font-bold text-stone-500">
                 Imagen no disponible
             </div>
         );
@@ -192,7 +192,7 @@ const CampoVoz: React.FC<CampoVozProps> = ({
     className = ''
 }) => {
     const borde = escuchando
-        ? 'border-[#3E8E7E] ring-4 ring-[#3E8E7E]/20 bg-teal-50/60'
+        ? 'border-[#CC7A2C] ring-4 ring-[#CC7A2C]/20 bg-amber-50/60'
         : error
             ? 'border-red-500 pt-shake'
             : 'border-stone-200/90 hover:border-stone-300';
@@ -229,7 +229,7 @@ const CampoVoz: React.FC<CampoVozProps> = ({
                     onClick={onMic}
                     aria-label={escuchando ? `Detener dictado de ${etiqueta}` : `Dictar ${etiqueta} por voz`}
                     aria-pressed={escuchando}
-                    className={`absolute right-2.5 top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-2xl text-white shadow-md transition-all duration-200 active:scale-95 ${escuchando ? 'pt-ring bg-[#1E4A40]' : 'bg-[#3E8E7E] hover:bg-[#2F7365] hover:shadow-lg'}`}
+                    className={`absolute right-2.5 top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-2xl text-white shadow-md transition-all duration-200 active:scale-95 ${escuchando ? 'pt-ring bg-[#A85322]' : 'bg-[#CC7A2C] hover:bg-[#B56822] hover:shadow-lg'}`}
                 >
                     {escuchando ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-6 w-6" strokeWidth={2.4} />}
                 </button>
@@ -248,11 +248,11 @@ interface SectionCardProps {
     children: React.ReactNode;
 }
 
-const SectionCard: React.FC<SectionCardProps> = ({ icon, acento = 'verde', title, subtitle, action, delay = 0.05, children }) => (
+const SectionCard: React.FC<SectionCardProps> = ({ icon, acento = 'ocre', title, subtitle, action, delay = 0.05, children }) => (
     <section className={`pt-slide-up p-5 sm:p-8 ${VIDRIO}`} style={{ animationDelay: `${delay}s` }}>
         <div className="mb-6 flex flex-col gap-4 border-b border-stone-200/80 pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3.5">
-                <span className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-xl shadow-teal-900/15 ${ACENTOS_NINO[acento]}`}>
+                <span className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-xl shadow-orange-900/15 ${ACENTOS_NINO[acento]}`}>
                     {icon}
                 </span>
                 <div>
@@ -267,8 +267,8 @@ const SectionCard: React.FC<SectionCardProps> = ({ icon, acento = 'verde', title
 );
 
 const ContadorPill: React.FC<{ total: number }> = ({ total }) => (
-    <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-[#3E8E7E]/40 bg-teal-50 px-4 py-2 text-xs sm:text-sm font-black text-stone-900 shadow-sm sm:self-auto">
-        <CheckCircle2 className="h-4 w-4 text-[#3E8E7E]" />
+    <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-[#CC7A2C]/40 bg-amber-50 px-4 py-2 text-xs sm:text-sm font-black text-stone-900 shadow-sm sm:self-auto">
+        <CheckCircle2 className="h-4 w-4 text-[#CC7A2C]" />
         <span>Seleccionados: {total}</span>
     </span>
 );
@@ -280,7 +280,7 @@ const ReferidoToggle: React.FC<{ label: string; value: boolean; onChange: (v: bo
             type="button"
             aria-pressed={!value}
             onClick={() => onChange(false)}
-            className={`min-h-[48px] min-w-[64px] cursor-pointer rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${!value ? 'bg-stone-800 text-white shadow-md' : 'text-stone-700 hover:bg-teal-50'}`}
+            className={`min-h-[48px] min-w-[64px] cursor-pointer rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${!value ? 'bg-stone-800 text-white shadow-md' : 'text-stone-700 hover:bg-amber-50'}`}
         >
             NO
         </button>
@@ -288,10 +288,10 @@ const ReferidoToggle: React.FC<{ label: string; value: boolean; onChange: (v: bo
             type="button"
             aria-pressed={value}
             onClick={() => onChange(true)}
-            className={`flex min-h-[48px] min-w-[72px] cursor-pointer items-center justify-center gap-1 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${value ? 'bg-[#3E8E7E] text-white shadow-md' : 'text-stone-700 hover:bg-teal-50'}`}
+            className={`flex min-h-[48px] min-w-[72px] cursor-pointer items-center justify-center gap-1 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${value ? 'bg-[#CC7A2C] text-white shadow-md' : 'text-stone-700 hover:bg-amber-50'}`}
         >
             <span>SÍ</span>
-            <AlertTriangle className={`h-3.5 w-3.5 ${value ? 'text-teal-200' : 'text-[#3E8E7E]'}`} />
+            <AlertTriangle className={`h-3.5 w-3.5 ${value ? 'text-amber-200' : 'text-[#CC7A2C]'}`} />
         </button>
     </div>
 );
@@ -324,41 +324,41 @@ const TarjetaOpcion: React.FC<TarjetaOpcionProps> = ({
     className = ''
 }) => {
     const fila = disposicion === 'fila';
-    const seleccionada = 'border-[#3E8E7E] bg-gradient-to-b from-teal-50/90 to-emerald-50/70 shadow-xl shadow-teal-950/10 ring-4 ring-[#3E8E7E]/15 scale-[1.01]';
-    const normal = 'border-stone-200/90 bg-white/95 shadow-sm hover:-translate-y-0.5 hover:border-[#3E8E7E]/50 hover:shadow-lg';
+    const seleccionada = 'border-[#CC7A2C] bg-gradient-to-b from-orange-50/90 to-amber-50/70 shadow-xl shadow-orange-950/10 ring-4 ring-[#CC7A2C]/15 scale-[1.01]';
+    const normal = 'border-stone-200/90 bg-white/95 shadow-sm hover:-translate-y-0.5 hover:border-[#CC7A2C]/50 hover:shadow-lg';
 
     return (
         <button
             type="button"
             onClick={onClick}
             aria-pressed={activo}
-            className={`relative min-h-[72px] w-full cursor-pointer touch-manipulation select-none rounded-3xl border-2 p-3.5 sm:p-4 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#3E8E7E]/40 active:scale-[0.98] ${activo ? seleccionada : normal} ${
+            className={`relative min-h-[72px] w-full cursor-pointer touch-manipulation select-none rounded-3xl border-2 p-3.5 sm:p-4 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#CC7A2C]/40 active:scale-[0.98] ${activo ? seleccionada : normal} ${
                 fila
                     ? 'flex items-center gap-3.5 text-left'
                     : `flex flex-col items-center gap-3 text-center ${img || pie ? 'justify-between' : 'justify-center'}`
             } ${className}`}
         >
             {activo && (
-                <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border-2 border-white bg-[#3E8E7E] text-white shadow-lg">
+                <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border-2 border-white bg-[#CC7A2C] text-white shadow-lg">
                     <Check className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={3.5} />
                 </span>
             )}
 
             {img && (
-                <span className={`flex items-center justify-center overflow-hidden bg-white p-2.5 shadow-inner ring-1 ring-stone-200/60 ${fila ? 'h-20 w-20 shrink-0 rounded-2xl' : `w-full rounded-2xl ${altoImg}`}`}>
-                    <ImagenNino src={img} alt={titulo} />
+                <span className={`flex items-center justify-center overflow-hidden bg-white p-2.5 shadow-inner ring-1 ring-stone-200/60 ${fila ? 'h-24 w-24 shrink-0 rounded-2xl' : `w-full rounded-2xl ${altoImg}`}`}>
+                    <Imagen src={img} alt={titulo} />
                 </span>
             )}
 
             <span className={`flex flex-col gap-1 ${fila ? 'min-w-0 flex-1' : 'flex-1 items-center justify-center'}`}>
-                <span className={`font-black leading-tight text-stone-900 ${tituloClassName ?? (img && !fila ? 'text-xs sm:text-sm uppercase tracking-wide' : 'text-sm sm:text-base')}`}>{titulo}</span>
+                <span className={`font-black leading-tight text-stone-900 ${tituloClassName ?? (img && !fila ? 'text-sm sm:text-base uppercase tracking-wide' : 'text-sm sm:text-base')}`}>{titulo}</span>
                 {subtitulo && <span className="text-xs sm:text-sm font-bold text-stone-600">{subtitulo}</span>}
             </span>
 
             {icono}
 
             {pie && (
-                <span className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider ${activo ? 'bg-[#3E8E7E] text-white' : 'bg-stone-100/80 text-stone-700'}`}>
+                <span className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider ${activo ? 'bg-[#CC7A2C] text-white' : 'bg-stone-100/80 text-stone-700'}`}>
                     <span>{activo ? pie.on : pie.off}</span>
                     {activo ? <Check className="h-3.5 w-3.5" strokeWidth={3.5} /> : pie.iconoOff}
                 </span>
@@ -471,7 +471,6 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
         );
     };
 
-    // Funciones de selección con retroalimentación auditiva inmediata
     const handleSelectMes = (m: number) => {
         setMesSeleccionado(m);
         speakText(`Control seleccionado: ${m}º mes de vida`);
@@ -587,10 +586,11 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 activo={activo}
                 onClick={() => toggleAlarma(item.id, item.label)}
                 titulo={item.label}
+                subtitulo={item.subtitulo}
                 img={item.img}
-                altoImg="h-28 sm:h-32"
-                pie={{ off: 'Seleccionar', on: 'Seleccionado' }}
-                className="h-full"
+                altoImg="h-40 sm:h-44"
+                pie={{ off: 'Seleccionar signo', on: 'Signo seleccionado' }}
+                className="h-full min-h-[320px]"
             />
         );
     };
@@ -605,17 +605,17 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
     ];
 
     return (
-        <div className="relative min-h-screen w-full overflow-x-hidden px-3 py-4 sm:px-6 sm:py-10 bg-gradient-to-b from-teal-50/40 via-emerald-50/20 to-stone-50">
+        <div className="relative min-h-screen w-full overflow-x-hidden px-3 py-4 sm:px-6 sm:py-10 bg-gradient-to-b from-amber-50/40 via-orange-50/20 to-stone-50">
             <style>{ESTILOS}</style>
 
             <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-6 sm:gap-7">
                 
-                {/* ===================== Cabecera Compacta ===================== */}
+                {/* ===================== Cabecera Compacta (Estándar Ofertado) ===================== */}
                 <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
-                    <TriStripeNino />
+                    <TriStripe />
                     <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
                         <div className="min-w-0 text-center sm:text-left">
-                            <span className="inline-block rounded-full bg-teal-100/80 px-3 py-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-teal-900 mb-1.5">
+                            <span className="inline-block rounded-full bg-amber-100/80 px-3 py-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-amber-900 mb-1.5">
                                 Salud Infantil (Menores de 2 Años)
                             </span>
                             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-stone-900 uppercase">
@@ -630,7 +630,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 type="button"
                                 onClick={escucharInstrucciones}
                                 aria-pressed={hablando}
-                                className={`flex h-12 w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl px-5 text-sm font-black ${BOTON_TEAL} ${hablando ? 'pt-ring' : ''}`}
+                                className={`flex h-12 w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl px-5 text-sm font-black ${BOTON_TIERRA} ${hablando ? 'pt-ring' : ''}`}
                             >
                                 <Volume2 className="h-5 w-5 shrink-0" />
                                 <span>{hablando ? 'Detener audio' : 'Escuchar instrucciones'}</span>
@@ -643,8 +643,8 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
                     <div className="min-h-[32px] flex items-center">
                         {modoDuplicado && (
-                            <span className="pt-fade-in inline-flex items-center gap-2 rounded-full border border-teal-300 bg-teal-50 px-3.5 py-1.5 text-xs font-black uppercase tracking-wide text-stone-900 shadow-sm">
-                                <Award className="h-3.5 w-3.5 text-[#3E8E7E]" />
+                            <span className="pt-fade-in inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 text-xs font-black uppercase tracking-wide text-stone-900 shadow-sm">
+                                <Award className="h-3.5 w-3.5 text-[#CC7A2C]" />
                                 Duplicado oficial SSO · Copia para Centro de Salud
                             </span>
                         )}
@@ -657,7 +657,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 setModoDuplicado(false);
                                 speakText('Vista Partera activa');
                             }}
-                            className={`flex min-h-[42px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${!modoDuplicado ? BOTON_TEAL : 'text-stone-700 hover:bg-teal-50/60'}`}
+                            className={`flex min-h-[42px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${!modoDuplicado ? BOTON_TIERRA : 'text-stone-700 hover:bg-amber-50/60'}`}
                         >
                             <FileText className="h-4 w-4" />
                             <span>Vista Partera</span>
@@ -669,7 +669,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                 setModoDuplicado(true);
                                 speakText('Mostrando copia oficial para el Centro de Salud');
                             }}
-                            className={`flex min-h-[42px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${modoDuplicado ? BOTON_TEAL : 'text-stone-700 hover:bg-teal-50/60'}`}
+                            className={`flex min-h-[42px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${modoDuplicado ? BOTON_TIERRA : 'text-stone-700 hover:bg-amber-50/60'}`}
                         >
                             <Building2 className="h-4 w-4" />
                             <span>Centro de Salud</span>
@@ -679,7 +679,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
 
                 {/* ================= Datos de identificación del niño ================= */}
                 <SectionCard
-                    acento="verde"
+                    acento="ocre"
                     delay={0.05}
                     icon={<User className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="Datos de identificación del niño o niña"
@@ -761,7 +761,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
 
                 {/* ================= Control Nutricional y Vacunación ================= */}
                 <SectionCard
-                    acento="turquesa"
+                    acento="verde"
                     delay={0.08}
                     icon={<Calendar className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="Control de crecimiento y vacunación"
@@ -769,8 +769,8 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 >
                     <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
                         <div className="flex items-center gap-3 border-b border-stone-200 pb-3">
-                            <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
-                                <ImagenNino src="/Vacuna.png" alt="Control de crecimiento" />
+                            <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
+                                <Imagen src="/Vacuna.png" alt="Control de crecimiento" />
                             </span>
                             <div>
                                 <h3 className="text-sm sm:text-base font-black text-stone-900">Mes de control (1 al 12 meses, 18 y 24 meses)</h3>
@@ -785,7 +785,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                     onClick={() => handleSelectMes(m)}
                                     titulo={`${m}º Mes`}
                                     tituloClassName="text-base sm:text-lg"
-                                    className="min-h-[72px]"
+                                    className="min-h-[80px]"
                                 />
                             ))}
                         </div>
@@ -807,15 +807,15 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                             role="radio"
                                             aria-checked={activo}
                                             onClick={() => handleSelectMUAC(s.id)}
-                                            className={`relative flex min-h-[96px] cursor-pointer touch-manipulation flex-col items-center justify-center gap-1 rounded-3xl border-2 px-2 py-3 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${activo ? s.on : s.off}`}
+                                            className={`relative flex min-h-[110px] cursor-pointer touch-manipulation flex-col items-center justify-center gap-1 rounded-3xl border-2 px-2 py-3 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${activo ? s.on : s.off}`}
                                         >
                                             {activo && (
                                                 <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-stone-900 text-white shadow-md">
                                                     <Check className="h-4 w-4" strokeWidth={3.5} />
                                                 </span>
                                             )}
-                                            <span className="text-sm font-black uppercase tracking-wider">{s.titulo}</span>
-                                            <span className="text-[10px] font-bold opacity-90 text-center">{s.estado}</span>
+                                            <span className="text-sm sm:text-base font-black uppercase tracking-wider">{s.titulo}</span>
+                                            <span className="text-[11px] sm:text-xs font-bold opacity-90 text-center">{s.estado}</span>
                                         </button>
                                     );
                                 })}
@@ -823,14 +823,14 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </div>
 
                         <div className="space-y-3 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <Syringe className="h-5 w-5 text-[#3E8E7E]" />
+                                    <Syringe className="h-5 w-5 text-[#CC7A2C]" />
                                     <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Esquema de vacunación</h3>
                                 </div>
                                 <ContadorPill total={vacunasSeleccionadas.length} />
                             </div>
-                            <div className="grid grid-cols-2 gap-2.5 pt-1">
+                            <div className="grid grid-cols-2 gap-3">
                                 {VACUNAS_NINO.map((v) => {
                                     const activo = vacunasSeleccionadas.includes(v.id);
                                     return (
@@ -841,8 +841,9 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                                             titulo={v.label}
                                             subtitulo={v.subtitulo}
                                             img={v.img}
-                                            altoImg="h-16"
-                                            className="min-h-[88px]"
+                                            altoImg="h-24 sm:h-28"
+                                            pie={{ off: 'Aplicar', on: 'Aplicada' }}
+                                            className="min-h-[180px]"
                                         />
                                     );
                                 })}
@@ -851,13 +852,13 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= Signos de Alarma Infantil ================= */}
+                {/* ================= Signos de Alarma Infantil con Tarjetas Grandes ================= */}
                 <SectionCard
-                    acento="lima"
+                    acento="terracota"
                     delay={0.1}
                     icon={<AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6" />}
                     title="Signos de alarma en el menor de 2 años"
-                    subtitle="Toque los signos de alarma detectados durante la evaluación del infante"
+                    subtitle="Toque los dibujos de los signos de alarma detectados durante la evaluación del infante"
                     action={
                         <div className="flex flex-wrap items-center gap-3">
                             <ContadorPill total={alarmasSeleccionadas.length} />
@@ -872,17 +873,17 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </div>
                     }
                 >
-                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {SIGNOS_ALARMA_NINO.map(renderAlarma)}
                     </div>
                 </SectionCard>
 
                 {/* ================= Cierre Administrativo ================= */}
                 <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.15s' }}>
-                    <TriStripeNino />
+                    <TriStripe />
                     <div className="space-y-5 p-4 sm:p-6">
                         <div className="flex items-center gap-3.5 border-b border-stone-200/80 pb-4">
-                            <span className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3E8E7E] to-[#24594E] text-white shadow-xl shadow-teal-900/15">
+                            <span className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D69A1E] to-[#C2603A] text-white shadow-xl shadow-orange-900/15">
                                 <PenTool className="h-5 w-5" />
                             </span>
                             <div>
@@ -927,7 +928,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                 <button
                     type="submit"
                     disabled={isSubmitting || exito}
-                    className={`pt-slide-up flex min-h-[80px] w-full cursor-pointer items-center justify-center gap-3 rounded-3xl px-6 py-5 text-lg sm:text-xl font-black disabled:cursor-wait disabled:opacity-80 ${BOTON_TEAL} ${nombreNino.trim() && !isSubmitting ? 'pt-breathe' : ''}`}
+                    className={`pt-slide-up flex min-h-[80px] w-full cursor-pointer items-center justify-center gap-3 rounded-3xl px-6 py-5 text-lg sm:text-xl font-black disabled:cursor-wait disabled:opacity-80 ${BOTON_TIERRA} ${nombreNino.trim() && !isSubmitting ? 'pt-breathe' : ''}`}
                     style={{ animationDelay: '.2s' }}
                 >
                     {isSubmitting ? <Loader2 className="h-7 w-7 animate-spin" /> : <Send className="h-7 w-7" />}
@@ -942,7 +943,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         className="pt-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-950/60 p-4 backdrop-blur-md"
                     >
                         <div className={`pt-pop-in w-full max-w-md overflow-hidden text-center ${VIDRIO}`}>
-                            <TriStripeNino className="h-2" />
+                            <TriStripe className="h-2" />
                             <div className="p-7">
                                 <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-600 text-white shadow-2xl animate-bounce">
                                     <Check className="h-10 w-10" strokeWidth={3.5} />
