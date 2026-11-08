@@ -36,8 +36,7 @@ interface TarjetaMenu {
     alt: string;
     vozApertura: string;
     FallbackIcon: LucideIcon;
-    // Clases completas y estáticas para que Tailwind las detecte en build
-    lienzo: string; // fondo del contenedor de la ilustración
+    lienzo: string;
     borde: string;
     sombra: string;
     numeroBg: string;
@@ -134,7 +133,7 @@ const TEXTO_BIENVENIDA =
     'Bienvenida. Toque una de las tres tarjetas. La uno, para enviar a una paciente al hospital. La dos, para la mamá embarazada. La tres, para el bebé o niño menor de dos años.';
 
 /* ------------------------------------------------------------------ */
-/* Animaciones (sin dependencias externas)                            */
+/* Animaciones                                                        */
 /* ------------------------------------------------------------------ */
 
 const ESTILOS_ANIMACION = `
@@ -176,12 +175,10 @@ const AvatarPartera: React.FC<AvatarParteraProps> = ({ src, nombre }) => {
 
     return (
         <div className="relative shrink-0">
-            {/* Destello dorado sutil */}
             <span
                 className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-[#C2603A]/60 via-[#EDBF55] to-[#C2603A]/60 opacity-80 blur-[3px]"
                 aria-hidden="true"
             />
-            {/* Borde doble: terracota exterior + aro blanco + aro dorado interior */}
             <div className="relative p-[3px] rounded-full bg-gradient-to-br from-[#C2603A] to-[#8F3F1E] shadow-lg shadow-[#8F3F1E]/35">
                 <div className="p-[3px] rounded-full bg-white">
                     <div className="w-14 h-14 sm:w-[4.5rem] sm:h-[4.5rem] rounded-full overflow-hidden bg-orange-50 ring-2 ring-[#EDBF55]/80 flex items-center justify-center">
@@ -234,9 +231,9 @@ const puntuarVoz = (voz: SpeechSynthesisVoice): number => {
 
     if (lang === 'es-mx') puntos = 100;
     else if (lang === 'es-us' || lang === 'es-419') puntos = 70;
-    else if (lang.startsWith('es-') && lang !== 'es-es') puntos = 50; // Resto de Latinoamérica
+    else if (lang.startsWith('es-') && lang !== 'es-es') puntos = 50;
     else if (lang === 'es') puntos = 20;
-    else return -1; // Descarta es-ES y otros idiomas
+    else return -1;
 
     if (/natural|neural|online/i.test(voz.name)) puntos += 15;
     if (/google/i.test(voz.name)) puntos += 5;
@@ -268,37 +265,17 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
     comunidad = 'Santa Catarina Juquila, Oaxaca',
     avatarSrc = '/avatar-partera-default.png'
 }) => {
-    // Autenticación PIN / QR
     const [pinIngresado, setPinIngresado] = useState<string>('');
-    const [autenticado, setAutenticado] = useState<boolean>(true); // true para demo directa
+    const [autenticado, setAutenticado] = useState<boolean>(true);
     const [errorPin, setErrorPin] = useState<boolean>(false);
 
-    // Vista activa
     const [vistaActiva, setVistaActiva] = useState<Vista>('HOME');
 
-    // Síntesis de voz (Web Speech API)
     const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
     const vozRef = useRef<SpeechSynthesisVoice | null>(null);
 
-    // Dictado por voz (SpeechRecognition)
-    const [isListening, setIsListening] = useState<boolean>(false);
-    const [campoEscuchando, setCampoEscuchando] = useState<string | null>(null);
-
-    // Modal de éxito
     const [registroExitoso, setRegistroExitoso] = useState<boolean>(false);
 
-    const iniciarDictado = (campo: string, setFieldState?: (val: string) => void): void => {
-        if (!setFieldState) return;
-        handleVoiceInput(
-            (transcript: string) => setFieldState(transcript),
-            (listening: boolean) => {
-                setIsListening(listening);
-                setCampoEscuchando(listening ? campo : null);
-            }
-        );
-    };
-
-    /* ----- Carga y captura de la voz es-MX ----- */
     useEffect(() => {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
         const synth = window.speechSynthesis;
@@ -310,8 +287,8 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
             }
         };
 
-        actualizarVoz(); // Intento inmediato
-        synth.onvoiceschanged = actualizarVoz; // Captura cuando el navegador las cargue
+        actualizarVoz();
+        synth.onvoiceschanged = actualizarVoz;
 
         return () => {
             synth.onvoiceschanged = null;
@@ -319,7 +296,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
         };
     }, []);
 
-    // Voz cálida, pausada y en español de México
     const hablarTexto = useCallback((texto: string): void => {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
         const synth = window.speechSynthesis;
@@ -361,8 +337,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
     const handleSalir = (): void => {
         hablarTexto('Cerrando sesión de forma segura');
         setRegistroExitoso(false);
-        setIsListening(false);
-        setCampoEscuchando(null);
         setVistaActiva('HOME');
         setPinIngresado('');
         setErrorPin(false);
@@ -377,7 +351,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
         }, 2500);
     };
 
-    // Al tocar cualquier parte de la tarjeta: primero habla, luego cambia de vista
     const abrirFormato = (tarjeta: TarjetaMenu): void => {
         hablarTexto(tarjeta.vozApertura);
         setVistaActiva(tarjeta.vista);
@@ -388,7 +361,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
         setVistaActiva('HOME');
     };
 
-    /* ----- Fondo: ilustración protagonista + velo luminoso muy ligero ----- */
     const fondo: React.ReactNode = (
         <>
             <img
@@ -404,9 +376,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
         </>
     );
 
-    /* ================================================================ */
-    /* PANTALLA DE BLOQUEO POR PIN / QR                                 */
-    /* ================================================================ */
     if (!autenticado) {
         return (
             <div className="relative min-h-screen flex items-center justify-center p-4 text-stone-900">
@@ -466,9 +435,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
         );
     }
 
-    /* ================================================================ */
-    /* DASHBOARD PRINCIPAL                                              */
-    /* ================================================================ */
     return (
         <div className="relative min-h-screen text-stone-900 pb-12 selection:bg-[#C2603A] selection:text-white">
             <style>{ESTILOS_ANIMACION}</style>
@@ -477,7 +443,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
             {/* ENCABEZADO COMUNITARIO (GLASS) */}
             <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
                 <div className="max-w-6xl mx-auto bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-[#8F3F1E]/15 rounded-3xl overflow-hidden pt-fade-in">
-                    {/* Franja con los tres colores de las tarjetas */}
                     <div className="h-1.5 flex" aria-hidden="true">
                         <span className="flex-1 bg-[#C2603A]" />
                         <span className="flex-1 bg-[#D69A1E]" />
@@ -485,7 +450,7 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                     </div>
 
                     <div className="p-3 sm:p-5 grid grid-cols-[1fr_auto] lg:grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3 lg:gap-x-6">
-                        {/* IZQUIERDA: avatar + identidad */}
+                        {/* IZQUIERDA: avatar + identidad (Si estamos en módulo, aparece el botón Menú) */}
                         <div className="col-start-1 row-start-1 flex items-center gap-3 sm:gap-4 min-w-0">
                             {vistaActiva !== 'HOME' && (
                                 <button
@@ -496,7 +461,7 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                     className="shrink-0 flex items-center gap-1.5 px-3 py-3 rounded-full bg-orange-50 hover:bg-orange-100 text-[#8F3F1E] border border-orange-200 text-sm font-bold transition-all active:scale-95 hover:-translate-x-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/30 pt-fade-in"
                                 >
                                     <ChevronLeft className="w-5 h-5" aria-hidden="true" />
-                                    <span className="hidden sm:inline">Menú</span>
+                                    <span>Menú</span>
                                 </button>
                             )}
 
@@ -517,16 +482,18 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                             </div>
                         </div>
 
-                        {/* EXTREMA DERECHA: SALIR */}
-                        <button
-                            type="button"
-                            onClick={handleSalir}
-                            aria-label="Salir. Cerrar sesión"
-                            className="col-start-2 row-start-1 lg:col-start-3 self-start lg:self-center flex items-center gap-2 px-4 sm:px-5 py-3 rounded-2xl bg-white hover:bg-stone-50 text-stone-800 border-2 border-stone-300 hover:border-[#C2603A] hover:text-[#8F3F1E] font-black text-sm shadow-md transition-all active:scale-95 hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/30"
-                        >
-                            <LogOut className="w-5 h-5" aria-hidden="true" />
-                            <span>Salir</span>
-                        </button>
+                        {/* EXTREMA DERECHA: SALIR (Solo se muestra en el HOME / Menú Principal) */}
+                        {vistaActiva === 'HOME' && (
+                            <button
+                                type="button"
+                                onClick={handleSalir}
+                                aria-label="Salir. Cerrar sesión"
+                                className="col-start-2 row-start-1 lg:col-start-3 self-start lg:self-center flex items-center gap-2 px-4 sm:px-5 py-3 rounded-2xl bg-white hover:bg-stone-50 text-stone-800 border-2 border-stone-300 hover:border-[#C2603A] hover:text-[#8F3F1E] font-black text-sm shadow-md transition-all active:scale-95 hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/30 pt-fade-in"
+                            >
+                                <LogOut className="w-5 h-5" aria-hidden="true" />
+                                <span>Salir</span>
+                            </button>
+                        )}
 
                         {/* CENTRO: BOTÓN DE VOZ GRANDE CON ONDAS */}
                         <div className="relative col-span-2 row-start-2 lg:col-span-1 lg:col-start-2 lg:row-start-1 w-full lg:max-w-md lg:mx-auto">
@@ -595,12 +562,10 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                     </div>
                 )}
 
-                {/* Transición suave al cambiar de vista */}
                 <div key={vistaActiva} className="pt-slide-up">
 
                     {vistaActiva === 'HOME' && (
                         <section className="space-y-5" aria-label="Menú principal de formatos">
-                            {/* Indicación visual mínima (icono primero, texto secundario) */}
                             <div className="mx-auto w-fit flex items-center gap-3 bg-white/85 backdrop-blur-md border border-white/70 px-5 py-2.5 rounded-full shadow-lg">
                                 <Hand className="w-6 h-6 text-[#C2603A] pt-breathe" aria-hidden="true" />
                                 <p className="text-sm font-bold text-stone-700">Toque una tarjeta</p>
@@ -616,7 +581,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                         aria-label={`${tarjeta.titulo}. ${tarjeta.subtitulo}`}
                                         className={`pt-slide-up group relative overflow-hidden flex flex-col text-center gap-4 p-4 sm:p-5 rounded-3xl bg-white/85 backdrop-blur-md border-2 ring-1 ring-inset ring-white/60 shadow-2xl transition-all duration-300 ease-out hover:-translate-y-2 active:translate-y-0 active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-2 ${tarjeta.borde} ${tarjeta.sombra} ${tarjeta.foco}`}
                                     >
-                                        {/* Ilustración protagonista */}
                                         <div
                                             className={`relative w-full aspect-[4/3] md:aspect-square rounded-2xl bg-gradient-to-br ${tarjeta.lienzo} border border-white shadow-inner flex items-center justify-center overflow-hidden`}
                                         >
@@ -625,7 +589,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                                 aria-hidden="true"
                                             />
 
-                                            {/* Número grande (ayuda a quien no lee) */}
                                             <span
                                                 className={`absolute top-3 left-3 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl text-white text-2xl sm:text-3xl font-black flex items-center justify-center shadow-lg ${tarjeta.numeroBg}`}
                                                 aria-hidden="true"
@@ -633,7 +596,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                                 {tarjeta.numero}
                                             </span>
 
-                                            {/* Indicador de que la tarjeta habla */}
                                             <span
                                                 className="absolute top-3 right-3 w-11 h-11 rounded-full bg-white/90 text-stone-700 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform"
                                                 aria-hidden="true"
@@ -649,7 +611,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                             />
                                         </div>
 
-                                        {/* Texto en segundo plano */}
                                         <div className="space-y-1 pb-2">
                                             <span
                                                 className={`block text-xl sm:text-2xl font-black leading-tight ${tarjeta.tituloColor}`}
@@ -661,7 +622,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                             </span>
                                         </div>
 
-                                        {/* Banda de color */}
                                         <span
                                             className={`absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r ${tarjeta.banda}`}
                                             aria-hidden="true"
@@ -678,9 +638,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                 onBack={volverAlMenu}
                                 onSuccess={handleFormSuccess}
                                 hablarTexto={hablarTexto}
-                                isListening={isListening}
-                                campoEscuchando={campoEscuchando}
-                                iniciarDictado={iniciarDictado}
                             />
                         </div>
                     )}
@@ -691,9 +648,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                 onBack={volverAlMenu}
                                 onSuccess={handleFormSuccess}
                                 hablarTexto={hablarTexto}
-                                isListening={isListening}
-                                campoEscuchando={campoEscuchando}
-                                iniciarDictado={iniciarDictado}
                             />
                         </div>
                     )}
@@ -704,9 +658,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                 onBack={volverAlMenu}
                                 onSuccess={handleFormSuccess}
                                 hablarTexto={hablarTexto}
-                                isListening={isListening}
-                                campoEscuchando={campoEscuchando}
-                                iniciarDictado={iniciarDictado}
                             />
                         </div>
                     )}
