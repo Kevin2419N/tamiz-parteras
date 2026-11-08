@@ -13,8 +13,7 @@ import { http } from '../../services/http'; // Instancia de Axios hacia el servi
  * - Contrarreferencia médica colapsable
  * - Estados de carga (spinner) y modal animado de éxito (alerta visual + auditiva)
  *
- * Barra interna: título del formato + "Escuchar instrucciones" (sin botón Volver;
- * la navegación la da el header general del Dashboard).
+ * Barra interna única: título del formato + "Escuchar instrucciones" (sin Volver).
  * ========================================================================== */
 
 /* ------------------------------ Tipos ------------------------------------ */
@@ -119,7 +118,6 @@ const obtenerReconocimiento = (): SpeechRecognitionCtor | null => {
 
 /* ------------------------------ Datos ------------------------------------ */
 
-/* IDs (viajan al backend) y rutas PNG reales de /public/. */
 const LISTA_MOTIVOS: MotivoItem[] = [
     { id: 'COMPLICACIONES_EMBARAZO', titulo: 'Complicaciones del embarazo', voz: 'Complicaciones del embarazo', imagen: '/Complicaciones-del-embarazo.png' },
     { id: 'APLICAR_TOXOIDE_TETANICO', titulo: 'Aplicar toxoide tetánico', voz: 'Aplicar toxoide tetánico', imagen: '/Aplicar-Toxoide-Tetanico.png' },
@@ -456,7 +454,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         };
     }, []);
 
-    /* ----- Voz de salida (usa la del contenedor; si no, la del navegador) -- */
+    /* ----- Voz de salida ----- */
     const speakText = useCallback(
         (texto: string) => {
             if (propsHablarTexto) {
@@ -505,7 +503,6 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
 
     const alternarDictado = useCallback(
         (id: CampoId) => {
-            /* Si el padre controla el dictado, se delega en él. */
             if (iniciarDictadoExternal) {
                 iniciarDictadoExternal(id, (val: string) => setCampo(id, val));
                 return;
@@ -675,7 +672,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
         <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-5">
             <style>{ESTILOS}</style>
 
-            {/* ============ Barra interna: título + escuchar instrucciones ====== */}
+            {/* ============ Barra interna: solo título + escuchar instrucciones (sin botón volver) ============ */}
             <div className={`pt-slide-up flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 ${VIDRIO}`}>
                 <div className="min-w-0">
                     <h1 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl">Hoja oficial de referencia</h1>
@@ -757,7 +754,6 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     </span>
                 </div>
 
-                {/* Cuadrícula simétrica: 2 / 3 / 4 columnas; la última fila queda centrada */}
                 <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
                     {LISTA_MOTIVOS.map((m, i) => {
                         const activo = motivosSeleccionados.includes(m.id);
