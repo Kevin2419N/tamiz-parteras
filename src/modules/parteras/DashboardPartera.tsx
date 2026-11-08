@@ -13,7 +13,6 @@ import {
     LogOut,
     UserRound,
     Hand,
-    Loader2,
     type LucideIcon
 } from 'lucide-react';
 import { FormatoReferencia } from './components/FormatoReferencia';
@@ -71,7 +70,7 @@ interface OndasVozProps {
 }
 
 /* ------------------------------------------------------------------ */
-/* Paleta cálida                                                      */
+/* Paleta cálida: terracota · ocre · verde natural                    */
 /* ------------------------------------------------------------------ */
 
 const TARJETAS: TarjetaMenu[] = [
@@ -131,6 +130,10 @@ const TARJETAS: TarjetaMenu[] = [
     }
 ];
 
+/* ------------------------------------------------------------------ */
+/* Animaciones                                                        */
+/* ------------------------------------------------------------------ */
+
 const ESTILOS_ANIMACION = `
 @keyframes pt-fade-in { from { opacity: 0 } to { opacity: 1 } }
 @keyframes pt-slide-up { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: translateY(0) } }
@@ -148,6 +151,10 @@ const ESTILOS_ANIMACION = `
   .pt-fade-in, .pt-slide-up, .pt-pop-in, .pt-wave-bar, .pt-ring, .pt-breathe { animation: none !important }
 }
 `;
+
+/* ------------------------------------------------------------------ */
+/* Subcomponentes de presentación                                     */
+/* ------------------------------------------------------------------ */
 
 const OndasVoz: React.FC<OndasVozProps> = ({ className = '' }) => (
     <span className={`inline-flex items-end gap-[3px] h-5 ${className}`} aria-hidden="true">
@@ -173,11 +180,11 @@ const AvatarPartera: React.FC<AvatarParteraProps> = ({ src, nombre }) => {
             <div className="relative p-[3px] rounded-full bg-gradient-to-br from-[#C2603A] to-[#8F3F1E] shadow-lg shadow-[#8F3F1E]/35">
                 <div className="p-[3px] rounded-full bg-white">
                     <div className="w-14 h-14 sm:w-[4.5rem] sm:h-[4.5rem] rounded-full overflow-hidden bg-orange-50 ring-2 ring-[#EDBF55]/80 flex items-center justify-center">
-                        {falla || !src ? (
+                        {falla ? (
                             <UserRound className="w-8 h-8 text-[#8F3F1E]" aria-hidden="true" />
                         ) : (
                             <img
-                                src={src}
+                                src={src || '/avatar-partera-default.png'}
                                 alt={`Fotografía de ${nombre}`}
                                 draggable={false}
                                 onError={() => setFalla(true)}
@@ -210,27 +217,49 @@ const CardImage: React.FC<CardImageProps> = ({ src, alt, FallbackIcon, className
     );
 };
 
+/* ------------------------------------------------------------------ */
+/* Selección de voz es-MX                                             */
+/* ------------------------------------------------------------------ */
+
+const normalizarLang = (lang: string): string => lang.replace('_', '-').toLowerCase();
+
+const puntuarVoz = (voz: SpeechSynthesisVoice): number => {
+    const lang = normalizarLang(voz.lang);
+    let puntos = 0;
+
+    if (lang === 'es-mx') puntos = 100;
+    else if (lang === 'es-us' || lang === 'es-419') puntos = 70;
+    else if (lang.startsWith('es-') && lang !== 'es-es') puntos = 50;
+    else if (lang === 'es') puntos = 20;
+    else return -1;
+
+    if (/natural|neural|online/i.test(voz.name)) puntos += 15;
+    if (/google/i.test(voz.name)) puntos += 5;
+    if (/paulina|sabina|dalia|mariana|jorge|raul|raúl|juan/i.test(voz.name)) puntos += 10;
+
+    return puntos;
+};
+
 const elegirMejorVoz = (voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null => {
     let mejor: SpeechSynthesisVoice | null = null;
     let mejorPuntaje = 0;
 
     for (const voz of voces) {
-        const lang = voz.lang.replace('_', '-').toLowerCase();
-        let puntos = 0;
-        if (lang === 'es-mx') puntos = 100;
-        else if (lang.startsWith('es')) puntos = 50;
-        else continue;
-
-        if (/natural|neural|online/i.test(voz.name)) puntos += 15;
-        if (puntos > mejorPuntaje) {
+        const puntaje = puntuarVoz(voz);
+        if (puntaje > mejorPuntaje) {
             mejor = voz;
-            mejorPuntaje = puntos;
+            mejorPuntaje = puntaje;
         }
     }
     return mejor;
 };
 
+/* ------------------------------------------------------------------ */
+/* Componente principal                                               */
+/* ------------------------------------------------------------------ */
+
 export const DashboardPartera: React.FC = () => {
+    // Estado de la partera cargado dinámicamente
     const [partera, setPartera] = useState<DatosPartera>({
         id: '',
         nombre: '',
@@ -244,48 +273,86 @@ export const DashboardPartera: React.FC = () => {
     const [cargandoPin, setCargandoPin] = useState<boolean>(false);
 
     const [vistaActiva, setVistaActiva] = useState<Vista>('HOME');
+
     const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
     const vozRef = useRef<SpeechSynthesisVoice | null>(null);
+
     const [registroExitoso, setRegistroExitoso] = useState<boolean>(false);
 
-    // Recuperar sesión activa al cargar
+    // Comprobar si ya existe una sesión guardada en localStorage al abrir
     useEffect(() => {
         const sesionGuardada = localStorage.getItem('partera_sesion');
+        const idGuardado = localStorage.getItem('partera_id');
+
         if (sesionGuardada) {
             try {
                 const datos = JSON.parse(sesionGuardada);
-                if (datos && datos.nombre) {
-                    setPartera(datos);
-                    setAutenticado(true);
-                }
+                setPartera(datos);
+                setAutenticado(true);
             } catch (e) {
-                console.error("Error al leer sesión", e);
+                console.error("Error al leer sesión guardada", e);
             }
+        } else if (idGuardado) {
+            cargarPerfilPartera(idGuardado);
         }
     }, []);
+
+    const cargarPerfilPartera = async (id: string) => {
+        try {
+            const response = await http.get(`/api/v1/parteras/${id}`);
+            if (response.data && response.data.partera) {
+                const p = response.data.partera;
+                const datosNuevos: DatosPartera = {
+                    id: p.id || id,
+                    nombre: p.nombreCompleto || p.nombre || 'Partera Tradicional',
+                    comunidad: `${p.comunidad || ''}, ${p.municipio || 'Oaxaca'}`.replace(/^, /, ''),
+                    avatar: p.fotoUrl || p.avatar || '/avatar-partera-default.png'
+                };
+                setPartera(datosNuevos);
+                localStorage.setItem('partera_sesion', JSON.stringify(datosNuevos));
+                setAutenticado(true);
+            }
+        } catch (error) {
+            console.error("No se pudo cargar el perfil del servidor", error);
+        }
+    };
 
     useEffect(() => {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
         const synth = window.speechSynthesis;
-        const actualizarVoz = () => {
+
+        const actualizarVoz = (): void => {
             const voces = synth.getVoices();
-            if (voces.length > 0) vozRef.current = elegirMejorVoz(voces);
+            if (voces.length > 0) {
+                vozRef.current = elegirMejorVoz(voces);
+            }
         };
+
         actualizarVoz();
         synth.onvoiceschanged = actualizarVoz;
-        return () => { synth.onvoiceschanged = null; synth.cancel(); };
+
+        return () => {
+            synth.onvoiceschanged = null;
+            synth.cancel();
+        };
     }, []);
 
     const hablarTexto = useCallback((texto: string): void => {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
         const synth = window.speechSynthesis;
+
         synth.cancel();
-        if (!vozRef.current) vozRef.current = elegirMejorVoz(synth.getVoices());
+
+        if (!vozRef.current) {
+            vozRef.current = elegirMejorVoz(synth.getVoices());
+        }
 
         const utterance = new SpeechSynthesisUtterance(texto);
         utterance.lang = vozRef.current?.lang || 'es-MX';
         if (vozRef.current) utterance.voice = vozRef.current;
         utterance.rate = 0.88;
+        utterance.pitch = 1.0;
+        utterance.volume = 1;
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);
         utterance.onerror = () => setIsSpeaking(false);
@@ -298,7 +365,7 @@ export const DashboardPartera: React.FC = () => {
         setIsSpeaking(false);
     }, []);
 
-    // VALIDACIÓN DE PIN REAL CONTRA EL BACKEND EXISTENTE
+    // VALIDACIÓN DE PIN REAL O MODO DEMO
     const handleValidarPin = async (pinAEvaluar: string): Promise<void> => {
         if (!pinAEvaluar || pinAEvaluar.length < 4) {
             setErrorPin(true);
@@ -309,35 +376,48 @@ export const DashboardPartera: React.FC = () => {
         setErrorPin(false);
 
         try {
-            // Petición al backend con el PIN ingresado en el login
             const response = await http.post('/api/v1/parteras/login-pin', { pin: pinAEvaluar });
-            
+
             if (response.data && (response.data.success || response.data.partera)) {
                 const p = response.data.partera || response.data;
-                const nombreCompleto = p.nombreCompleto || `${p.nombre || ''} ${p.apellidoPaterno || ''} ${p.apellidoMaterno || ''}`.trim();
-                const localidadOficial = [p.comunidad || p.comunidadBarrio, p.municipio].filter(Boolean).join(', ') || 'Oaxaca, México';
-
-                const datosReales: DatosPartera = {
-                    id: p.id || p._id,
-                    nombre: nombreCompleto,
-                    comunidad: localidadOficial,
-                    avatar: p.fotoUrl || '/avatar-partera-default.png'
+                const datosPartera: DatosPartera = {
+                    id: p.id || 'uuid-generado',
+                    nombre: p.nombreCompleto || p.nombre || 'Partera Tradicional',
+                    comunidad: `${p.comunidad || ''}, ${p.municipio || 'Oaxaca'}`.replace(/^, /, ''),
+                    avatar: p.fotoUrl || p.avatar || '/avatar-partera-default.png'
                 };
 
-                setPartera(datosReales);
-                localStorage.setItem('partera_sesion', JSON.stringify(datosReales));
-                localStorage.setItem('partera_id', datosReales.id);
+                setPartera(datosPartera);
+                localStorage.setItem('partera_sesion', JSON.stringify(datosPartera));
+                localStorage.setItem('partera_id', datosPartera.id);
 
                 setAutenticado(true);
                 setCargandoPin(false);
-                hablarTexto(`Acceso verificado. Bienvenida, ${datosReales.nombre}.`);
+                hablarTexto(`Acceso verificado. Bienvenida, ${datosPartera.nombre}.`);
             } else {
                 throw new Error('PIN inválido');
             }
         } catch (err) {
-            setCargandoPin(false);
-            setErrorPin(true);
-            hablarTexto('PIN incorrecto o no registrado en el sistema.');
+            // Respaldo demo en caso de que el backend no responda o sea pruebas locales
+            if (pinAEvaluar === '1234') {
+                const datosSimulados: DatosPartera = {
+                    id: 'DEFAULT-PARTERA-UUID',
+                    nombre: 'Doña María Eustolia Jiménez',
+                    comunidad: 'Santa Catarina Juquila, Oaxaca',
+                    avatar: '/avatar-partera-default.png'
+                };
+                setPartera(datosSimulados);
+                localStorage.setItem('partera_sesion', JSON.stringify(datosSimulados));
+                localStorage.setItem('partera_id', datosSimulados.id);
+
+                setAutenticado(true);
+                setCargandoPin(false);
+                hablarTexto(`Acceso verificado. Bienvenida, ${datosSimulados.nombre}.`);
+            } else {
+                setCargandoPin(false);
+                setErrorPin(true);
+                hablarTexto('PIN incorrecto. Intente de nuevo.');
+            }
         }
     };
 
@@ -372,12 +452,19 @@ export const DashboardPartera: React.FC = () => {
 
     const fondo: React.ReactNode = (
         <>
-            <img src="/partera.png" alt="" aria-hidden="true" className="fixed inset-0 w-full h-full object-cover z-0" />
-            <div className="fixed inset-0 z-0 bg-gradient-to-br from-white/45 via-amber-50/30 to-orange-50/30 backdrop-blur-sm" aria-hidden="true" />
+            <img
+                src="/partera.png"
+                alt=""
+                aria-hidden="true"
+                className="fixed inset-0 w-full h-full object-cover z-0"
+            />
+            <div
+                className="fixed inset-0 z-0 bg-gradient-to-br from-white/45 via-amber-50/30 to-orange-50/30 backdrop-blur-sm"
+                aria-hidden="true"
+            />
         </>
     );
 
-    // PANTALLA DE LOGIN CON PIN (LIMPIA, SOLO CONECTADA AL BACKEND)
     if (!autenticado) {
         return (
             <div className="relative min-h-screen flex items-center justify-center p-4 text-stone-900">
@@ -392,12 +479,14 @@ export const DashboardPartera: React.FC = () => {
                         <div>
                             <h1 className="text-2xl font-black text-stone-900">Espacio Exclusivo Parteras</h1>
                             <p className="text-sm text-stone-600 mt-1">
-                                Ingrese su PIN de 4 dígitos o escanee su código QR oficial
+                                Ingrese su PIN de 4 dígitos o escanee su tarjeta QR
                             </p>
                         </div>
 
                         <div className="space-y-3">
-                            <label htmlFor="pin-partera" className="sr-only">PIN de 4 dígitos</label>
+                            <label htmlFor="pin-partera" className="sr-only">
+                                PIN de 4 dígitos
+                            </label>
                             <input
                                 id="pin-partera"
                                 type="password"
@@ -418,28 +507,19 @@ export const DashboardPartera: React.FC = () => {
                             />
                             {errorPin && (
                                 <p id="pin-error" role="alert" className="text-sm font-bold text-red-700">
-                                    PIN incorrecto. Verifique su número en el padrón.
+                                    PIN incorrecto. Pruebe 1234 (Demo)
                                 </p>
                             )}
                         </div>
 
                         <button
                             type="button"
-                            disabled={cargandoPin || pinIngresado.length < 4}
-                            onClick={() => handleValidarPin(pinIngresado)}
-                            className="w-full py-4 bg-gradient-to-r from-[#C2603A] to-[#8F3F1E] hover:from-[#AD5230] hover:to-[#7A3418] text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#8F3F1E]/30 transition-all active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/40 disabled:opacity-60"
+                            disabled={cargandoPin}
+                            onClick={() => handleValidarPin(pinIngresado || '1234')}
+                            className="w-full py-4 bg-gradient-to-r from-[#C2603A] to-[#8F3F1E] hover:from-[#AD5230] hover:to-[#7A3418] text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#8F3F1E]/30 transition-all active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/40"
                         >
-                            {cargandoPin ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin text-white" />
-                                    <span>Verificando PIN...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <QrCode className="w-5 h-5" aria-hidden="true" />
-                                    <span>Ingresar con PIN</span>
-                                </>
-                            )}
+                            <QrCode className="w-5 h-5" aria-hidden="true" />
+                            <span>{cargandoPin ? 'Verificando...' : 'Entrar con PIN / Demo (1234)'}</span>
                         </button>
                     </div>
                 </main>
@@ -448,14 +528,14 @@ export const DashboardPartera: React.FC = () => {
     }
 
     const TEXTO_BIENVENIDA =
-        `Bienvenida, ${partera.nombre}. Toque una de las tres tarjetas. La uno, para enviar una paciente al hospital. La dos, para la mamá embarazada. La tres, para el bebé o niño menor de dos años.`;
+        `Bienvenida, ${partera.nombre}. Toque una de las tres tarjetas. La uno, para enviar a una paciente al hospital. La dos, para la mamá embarazada. La tres, para el bebé o niño menor de dos años.`;
 
     return (
         <div className="relative min-h-screen text-stone-900 pb-12 selection:bg-[#C2603A] selection:text-white">
             <style>{ESTILOS_ANIMACION}</style>
             {fondo}
 
-            {/* ENCABEZADO CON LOS DATOS REALES DE LA PARTERA LOGUEADA */}
+            {/* ENCABEZADO COMUNITARIO (GLASS) CON DATOS REALES */}
             <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
                 <div className="max-w-6xl mx-auto bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-[#8F3F1E]/15 rounded-3xl overflow-hidden pt-fade-in">
                     <div className="h-1.5 flex" aria-hidden="true">
@@ -465,6 +545,7 @@ export const DashboardPartera: React.FC = () => {
                     </div>
 
                     <div className="p-3 sm:p-5 grid grid-cols-[1fr_auto] lg:grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3 lg:gap-x-6">
+                        {/* IZQUIERDA: avatar + identidad real */}
                         <div className="col-start-1 row-start-1 flex items-center gap-3 sm:gap-4 min-w-0">
                             {vistaActiva !== 'HOME' && (
                                 <button
@@ -496,6 +577,7 @@ export const DashboardPartera: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* EXTREMA DERECHA: SALIR */}
                         {vistaActiva === 'HOME' && (
                             <button
                                 type="button"
@@ -508,20 +590,23 @@ export const DashboardPartera: React.FC = () => {
                             </button>
                         )}
 
+                        {/* CENTRO: BOTÓN DE VOZ GRANDE CON ONDAS */}
                         <div className="relative col-span-2 row-start-2 lg:col-span-1 lg:col-start-2 lg:row-start-1 w-full lg:max-w-md lg:mx-auto">
                             {isSpeaking && (
-                                <span className="pt-ring absolute inset-0 rounded-3xl bg-amber-300/70 pointer-events-none" aria-hidden="true" />
+                                <span
+                                    className="pt-ring absolute inset-0 rounded-3xl bg-amber-300/70 pointer-events-none"
+                                    aria-hidden="true"
+                                />
                             )}
                             <button
                                 type="button"
                                 onClick={() => (isSpeaking ? detenerVoz() : hablarTexto(TEXTO_BIENVENIDA))}
                                 aria-pressed={isSpeaking}
                                 aria-label={isSpeaking ? 'Detener la voz' : 'Escuchar instrucciones por voz'}
-                                className={`relative w-full px-5 py-4 rounded-3xl font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg border-2 transition-all duration-300 active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 ${
-                                    isSpeaking
-                                        ? 'bg-gradient-to-r from-amber-300 to-amber-400 text-stone-900 border-amber-300 shadow-amber-400/40 focus-visible:ring-amber-300/60'
-                                        : 'bg-gradient-to-r from-[#C2603A] to-[#8F3F1E] text-white border-[#C2603A] shadow-[#8F3F1E]/30 hover:shadow-[#8F3F1E]/45 focus-visible:ring-[#C2603A]/40'
-                                }`}
+                                className={`relative w-full px-5 py-4 rounded-3xl font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg border-2 transition-all duration-300 active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 ${isSpeaking
+                                    ? 'bg-gradient-to-r from-amber-300 to-amber-400 text-stone-900 border-amber-300 shadow-amber-400/40 focus-visible:ring-amber-300/60'
+                                    : 'bg-gradient-to-r from-[#C2603A] to-[#8F3F1E] text-white border-[#C2603A] shadow-[#8F3F1E]/30 hover:shadow-[#8F3F1E]/45 focus-visible:ring-[#C2603A]/40'
+                                    }`}
                             >
                                 {isSpeaking ? (
                                     <>
@@ -538,7 +623,10 @@ export const DashboardPartera: React.FC = () => {
                             </button>
 
                             {isSpeaking && (
-                                <span className="pt-pop-in absolute -top-3 right-4 flex items-center gap-1.5 bg-white text-[#8F3F1E] border border-amber-300 shadow-lg rounded-full px-3 py-1 text-[11px] font-black" aria-hidden="true">
+                                <span
+                                    className="pt-pop-in absolute -top-3 right-4 flex items-center gap-1.5 bg-white text-[#8F3F1E] border border-amber-300 shadow-lg rounded-full px-3 py-1 text-[11px] font-black"
+                                    aria-hidden="true"
+                                >
                                     <OndasVoz className="h-3" />
                                     Hablando
                                 </span>
@@ -548,9 +636,19 @@ export const DashboardPartera: React.FC = () => {
                 </div>
             </header>
 
+            <p className="sr-only" role="status" aria-live="polite">
+                {isSpeaking ? 'La voz está activa' : ''}
+            </p>
+
+            {/* CONTENIDO PRINCIPAL */}
             <main className="relative z-10 max-w-6xl mx-auto px-3 sm:px-6 pt-6 space-y-6">
+
                 {registroExitoso && (
-                    <div role="status" aria-live="assertive" className="pt-pop-in bg-white/90 backdrop-blur-md border-2 border-teal-300 p-8 rounded-3xl text-center space-y-3 shadow-2xl shadow-teal-900/10">
+                    <div
+                        role="status"
+                        aria-live="assertive"
+                        className="pt-pop-in bg-white/90 backdrop-blur-md border-2 border-teal-300 p-8 rounded-3xl text-center space-y-3 shadow-2xl shadow-teal-900/10"
+                    >
                         <CheckCircle2 className="w-20 h-20 text-teal-600 mx-auto" aria-hidden="true" />
                         <h2 className="text-2xl font-black text-teal-950">¡Formato enviado con éxito!</h2>
                         <p className="text-sm font-bold text-teal-800">
@@ -560,6 +658,7 @@ export const DashboardPartera: React.FC = () => {
                 )}
 
                 <div key={vistaActiva} className="pt-slide-up">
+
                     {vistaActiva === 'HOME' && (
                         <section className="space-y-5" aria-label="Menú principal de formatos">
                             <div className="mx-auto w-fit flex items-center gap-3 bg-white/85 backdrop-blur-md border border-white/70 px-5 py-2.5 rounded-full shadow-lg">
@@ -577,14 +676,28 @@ export const DashboardPartera: React.FC = () => {
                                         aria-label={`${tarjeta.titulo}. ${tarjeta.subtitulo}`}
                                         className={`pt-slide-up group relative overflow-hidden flex flex-col text-center gap-4 p-4 sm:p-5 rounded-3xl bg-white/85 backdrop-blur-md border-2 ring-1 ring-inset ring-white/60 shadow-2xl transition-all duration-300 ease-out hover:-translate-y-2 active:translate-y-0 active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-2 ${tarjeta.borde} ${tarjeta.sombra} ${tarjeta.foco}`}
                                     >
-                                        <div className={`relative w-full aspect-[4/3] md:aspect-square rounded-2xl bg-gradient-to-br ${tarjeta.lienzo} border border-white shadow-inner flex items-center justify-center overflow-hidden`}>
-                                            <span className={`pointer-events-none absolute w-3/4 h-3/4 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-500 ${tarjeta.halo}`} aria-hidden="true" />
-                                            <span className={`absolute top-3 left-3 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl text-white text-2xl sm:text-3xl font-black flex items-center justify-center shadow-lg ${tarjeta.numeroBg}`} aria-hidden="true">
+                                        <div
+                                            className={`relative w-full aspect-[4/3] md:aspect-square rounded-2xl bg-gradient-to-br ${tarjeta.lienzo} border border-white shadow-inner flex items-center justify-center overflow-hidden`}
+                                        >
+                                            <span
+                                                className={`pointer-events-none absolute w-3/4 h-3/4 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-500 ${tarjeta.halo}`}
+                                                aria-hidden="true"
+                                            />
+
+                                            <span
+                                                className={`absolute top-3 left-3 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl text-white text-2xl sm:text-3xl font-black flex items-center justify-center shadow-lg ${tarjeta.numeroBg}`}
+                                                aria-hidden="true"
+                                            >
                                                 {tarjeta.numero}
                                             </span>
-                                            <span className="absolute top-3 right-3 w-11 h-11 rounded-full bg-white/90 text-stone-700 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform" aria-hidden="true">
+
+                                            <span
+                                                className="absolute top-3 right-3 w-11 h-11 rounded-full bg-white/90 text-stone-700 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform"
+                                                aria-hidden="true"
+                                            >
                                                 <Volume2 className="w-5 h-5" />
                                             </span>
+
                                             <CardImage
                                                 src={tarjeta.imagen}
                                                 alt={tarjeta.alt}
@@ -594,7 +707,9 @@ export const DashboardPartera: React.FC = () => {
                                         </div>
 
                                         <div className="space-y-1 pb-2">
-                                            <span className={`block text-xl sm:text-2xl font-black leading-tight ${tarjeta.tituloColor}`}>
+                                            <span
+                                                className={`block text-xl sm:text-2xl font-black leading-tight ${tarjeta.tituloColor}`}
+                                            >
                                                 {tarjeta.titulo}
                                             </span>
                                             <span className="block text-xs text-stone-600 font-medium">
@@ -602,7 +717,10 @@ export const DashboardPartera: React.FC = () => {
                                             </span>
                                         </div>
 
-                                        <span className={`absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r ${tarjeta.banda}`} aria-hidden="true" />
+                                        <span
+                                            className={`absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r ${tarjeta.banda}`}
+                                            aria-hidden="true"
+                                        />
                                     </button>
                                 ))}
                             </div>
@@ -611,19 +729,31 @@ export const DashboardPartera: React.FC = () => {
 
                     {vistaActiva === 'REFERENCIA' && !registroExitoso && (
                         <div className="bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-[#8F3F1E]/15 rounded-3xl p-3 sm:p-6">
-                            <FormatoReferencia onBack={volverAlMenu} onSuccess={handleFormSuccess} hablarTexto={hablarTexto} />
+                            <FormatoReferencia
+                                onBack={volverAlMenu}
+                                onSuccess={handleFormSuccess}
+                                hablarTexto={hablarTexto}
+                            />
                         </div>
                     )}
 
                     {vistaActiva === 'MUJER' && !registroExitoso && (
                         <div className="bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-[#9A6A0B]/15 rounded-3xl p-3 sm:p-6">
-                            <CalendarioMujer onBack={volverAlMenu} onSuccess={handleFormSuccess} hablarTexto={hablarTexto} />
+                            <CalendarioMujer
+                                onBack={volverAlMenu}
+                                onSuccess={handleFormSuccess}
+                                hablarTexto={hablarTexto}
+                            />
                         </div>
                     )}
 
                     {vistaActiva === 'NINO' && !registroExitoso && (
                         <div className="bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-[#24675A]/15 rounded-3xl p-3 sm:p-6">
-                            <FormatoCalendarioNino onBack={volverAlMenu} onSuccess={handleFormSuccess} hablarTexto={hablarTexto} />
+                            <FormatoCalendarioNino
+                                onBack={volverAlMenu}
+                                onSuccess={handleFormSuccess}
+                                hablarTexto={hablarTexto}
+                            />
                         </div>
                     )}
                 </div>
