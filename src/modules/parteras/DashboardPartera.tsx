@@ -18,7 +18,7 @@ import {
 import { FormatoReferencia } from './components/FormatoReferencia';
 import { CalendarioMujer } from './CalendarioMujer';
 import { FormatoCalendarioNino } from './components/FormatoCalendarioNino';
-import { http } from '../../services/http';
+import { handleVoiceInput } from '../../utils/voiceUtils';
 
 /* ------------------------------------------------------------------ */
 /* Tipos                                                              */
@@ -53,11 +53,10 @@ interface CardImageProps {
     className?: string;
 }
 
-interface DatosPartera {
-    id: string;
-    nombre: string;
-    comunidad: string;
-    avatar: string;
+interface DashboardParteraProps {
+    nombrePartera?: string;
+    comunidad?: string;
+    avatarSrc?: string;
 }
 
 interface AvatarParteraProps {
@@ -130,6 +129,9 @@ const TARJETAS: TarjetaMenu[] = [
     }
 ];
 
+const TEXTO_BIENVENIDA =
+    'Bienvenida. Toque una de las tres tarjetas. La uno, para enviar a una paciente al hospital. La dos, para la mamá embarazada. La tres, para el bebé o niño menor de dos años.';
+
 /* ------------------------------------------------------------------ */
 /* Animaciones                                                        */
 /* ------------------------------------------------------------------ */
@@ -184,7 +186,7 @@ const AvatarPartera: React.FC<AvatarParteraProps> = ({ src, nombre }) => {
                             <UserRound className="w-8 h-8 text-[#8F3F1E]" aria-hidden="true" />
                         ) : (
                             <img
-                                src={src || '/avatar-partera-default.png'}
+                                src={src}
                                 alt={`Fotografía de ${nombre}`}
                                 draggable={false}
                                 onError={() => setFalla(true)}
@@ -258,19 +260,14 @@ const elegirMejorVoz = (voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | n
 /* Componente principal                                               */
 /* ------------------------------------------------------------------ */
 
-export const DashboardPartera: React.FC = () => {
-    // Estado de la partera cargado dinámicamente
-    const [partera, setPartera] = useState<DatosPartera>({
-        id: '',
-        nombre: '',
-        comunidad: '',
-        avatar: ''
-    });
-
+export const DashboardPartera: React.FC<DashboardParteraProps> = ({
+    nombrePartera = 'Doña María Eustolia Jiménez',
+    comunidad = 'Santa Catarina Juquila, Oaxaca',
+    avatarSrc = '/avatar-partera-default.png'
+}) => {
     const [pinIngresado, setPinIngresado] = useState<string>('');
-    const [autenticado, setAutenticado] = useState<boolean>(false);
+    const [autenticado, setAutenticado] = useState<boolean>(true);
     const [errorPin, setErrorPin] = useState<boolean>(false);
-    const [cargandoPin, setCargandoPin] = useState<boolean>(false);
 
     const [vistaActiva, setVistaActiva] = useState<Vista>('HOME');
 
@@ -278,44 +275,6 @@ export const DashboardPartera: React.FC = () => {
     const vozRef = useRef<SpeechSynthesisVoice | null>(null);
 
     const [registroExitoso, setRegistroExitoso] = useState<boolean>(false);
-
-    // Comprobar si ya existe una sesión guardada en localStorage al abrir
-    useEffect(() => {
-        const sesionGuardada = localStorage.getItem('partera_sesion');
-        const idGuardado = localStorage.getItem('partera_id');
-
-        if (sesionGuardada) {
-            try {
-                const datos = JSON.parse(sesionGuardada);
-                setPartera(datos);
-                setAutenticado(true);
-            } catch (e) {
-                console.error("Error al leer sesión guardada", e);
-            }
-        } else if (idGuardado) {
-            cargarPerfilPartera(idGuardado);
-        }
-    }, []);
-
-    const cargarPerfilPartera = async (id: string) => {
-        try {
-            const response = await http.get(`/api/v1/parteras/${id}`);
-            if (response.data && response.data.partera) {
-                const p = response.data.partera;
-                const datosNuevos: DatosPartera = {
-                    id: p.id || id,
-                    nombre: p.nombreCompleto || p.nombre || 'Partera Tradicional',
-                    comunidad: `${p.comunidad || ''}, ${p.municipio || 'Oaxaca'}`.replace(/^, /, ''),
-                    avatar: p.fotoUrl || p.avatar || '/avatar-partera-default.png'
-                };
-                setPartera(datosNuevos);
-                localStorage.setItem('partera_sesion', JSON.stringify(datosNuevos));
-                setAutenticado(true);
-            }
-        } catch (error) {
-            console.error("No se pudo cargar el perfil del servidor", error);
-        }
-    };
 
     useEffect(() => {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -365,66 +324,18 @@ export const DashboardPartera: React.FC = () => {
         setIsSpeaking(false);
     }, []);
 
-    // VALIDACIÓN DE PIN REAL O MODO DEMO
-    const handleValidarPin = async (pinAEvaluar: string): Promise<void> => {
-        if (!pinAEvaluar || pinAEvaluar.length < 4) {
+    const handleValidarPin = (pin: string): void => {
+        if (pin === '1234' || pin.length === 4) {
+            setAutenticado(true);
+            setErrorPin(false);
+            hablarTexto(`Acceso verificado. Bienvenida, ${nombrePartera}.`);
+        } else {
             setErrorPin(true);
-            return;
-        }
-
-        setCargandoPin(true);
-        setErrorPin(false);
-
-        try {
-            const response = await http.post('/api/v1/parteras/login-pin', { pin: pinAEvaluar });
-
-            if (response.data && (response.data.success || response.data.partera)) {
-                const p = response.data.partera || response.data;
-                const datosPartera: DatosPartera = {
-                    id: p.id || 'uuid-generado',
-                    nombre: p.nombreCompleto || p.nombre || 'Partera Tradicional',
-                    comunidad: `${p.comunidad || ''}, ${p.municipio || 'Oaxaca'}`.replace(/^, /, ''),
-                    avatar: p.fotoUrl || p.avatar || '/avatar-partera-default.png'
-                };
-
-                setPartera(datosPartera);
-                localStorage.setItem('partera_sesion', JSON.stringify(datosPartera));
-                localStorage.setItem('partera_id', datosPartera.id);
-
-                setAutenticado(true);
-                setCargandoPin(false);
-                hablarTexto(`Acceso verificado. Bienvenida, ${datosPartera.nombre}.`);
-            } else {
-                throw new Error('PIN inválido');
-            }
-        } catch (err) {
-            // Respaldo demo en caso de que el backend no responda o sea pruebas locales
-            if (pinAEvaluar === '1234') {
-                const datosSimulados: DatosPartera = {
-                    id: 'DEFAULT-PARTERA-UUID',
-                    nombre: 'Doña María Eustolia Jiménez',
-                    comunidad: 'Santa Catarina Juquila, Oaxaca',
-                    avatar: '/avatar-partera-default.png'
-                };
-                setPartera(datosSimulados);
-                localStorage.setItem('partera_sesion', JSON.stringify(datosSimulados));
-                localStorage.setItem('partera_id', datosSimulados.id);
-
-                setAutenticado(true);
-                setCargandoPin(false);
-                hablarTexto(`Acceso verificado. Bienvenida, ${datosSimulados.nombre}.`);
-            } else {
-                setCargandoPin(false);
-                setErrorPin(true);
-                hablarTexto('PIN incorrecto. Intente de nuevo.');
-            }
         }
     };
 
     const handleSalir = (): void => {
         hablarTexto('Cerrando sesión de forma segura');
-        localStorage.removeItem('partera_sesion');
-        localStorage.removeItem('partera_id');
         setRegistroExitoso(false);
         setVistaActiva('HOME');
         setPinIngresado('');
@@ -495,31 +406,28 @@ export const DashboardPartera: React.FC = () => {
                                 maxLength={4}
                                 placeholder="••••"
                                 value={pinIngresado}
-                                disabled={cargandoPin}
                                 aria-invalid={errorPin}
                                 aria-describedby={errorPin ? 'pin-error' : undefined}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                    const val = e.target.value.replace(/\D/g, '');
-                                    setPinIngresado(val);
-                                    if (val.length === 4) handleValidarPin(val);
+                                    setPinIngresado(e.target.value);
+                                    if (e.target.value.length === 4) handleValidarPin(e.target.value);
                                 }}
                                 className="w-full bg-white/90 border-2 border-orange-200 rounded-2xl py-4 text-center text-4xl font-black tracking-[0.5em] text-stone-900 placeholder:text-stone-300 focus:outline-none focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20 transition"
                             />
                             {errorPin && (
                                 <p id="pin-error" role="alert" className="text-sm font-bold text-red-700">
-                                    PIN incorrecto. Pruebe 1234 (Demo)
+                                    PIN incorrecto. Pruebe 1234
                                 </p>
                             )}
                         </div>
 
                         <button
                             type="button"
-                            disabled={cargandoPin}
-                            onClick={() => handleValidarPin(pinIngresado || '1234')}
+                            onClick={() => handleValidarPin('1234')}
                             className="w-full py-4 bg-gradient-to-r from-[#C2603A] to-[#8F3F1E] hover:from-[#AD5230] hover:to-[#7A3418] text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#8F3F1E]/30 transition-all active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/40"
                         >
                             <QrCode className="w-5 h-5" aria-hidden="true" />
-                            <span>{cargandoPin ? 'Verificando...' : 'Entrar con PIN / Demo (1234)'}</span>
+                            <span>Escanear Tarjeta QR / Ingresar Demo (1234)</span>
                         </button>
                     </div>
                 </main>
@@ -527,15 +435,12 @@ export const DashboardPartera: React.FC = () => {
         );
     }
 
-    const TEXTO_BIENVENIDA =
-        `Bienvenida, ${partera.nombre}. Toque una de las tres tarjetas. La uno, para enviar a una paciente al hospital. La dos, para la mamá embarazada. La tres, para el bebé o niño menor de dos años.`;
-
     return (
         <div className="relative min-h-screen text-stone-900 pb-12 selection:bg-[#C2603A] selection:text-white">
             <style>{ESTILOS_ANIMACION}</style>
             {fondo}
 
-            {/* ENCABEZADO COMUNITARIO (GLASS) CON DATOS REALES */}
+            {/* ENCABEZADO COMUNITARIO (GLASS) */}
             <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
                 <div className="max-w-6xl mx-auto bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-[#8F3F1E]/15 rounded-3xl overflow-hidden pt-fade-in">
                     <div className="h-1.5 flex" aria-hidden="true">
@@ -545,7 +450,7 @@ export const DashboardPartera: React.FC = () => {
                     </div>
 
                     <div className="p-3 sm:p-5 grid grid-cols-[1fr_auto] lg:grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3 lg:gap-x-6">
-                        {/* IZQUIERDA: avatar + identidad real */}
+                        {/* IZQUIERDA: avatar + identidad (Si estamos en módulo, aparece el botón Menú) */}
                         <div className="col-start-1 row-start-1 flex items-center gap-3 sm:gap-4 min-w-0">
                             {vistaActiva !== 'HOME' && (
                                 <button
@@ -560,16 +465,16 @@ export const DashboardPartera: React.FC = () => {
                                 </button>
                             )}
 
-                            <AvatarPartera src={partera.avatar} nombre={partera.nombre} />
+                            <AvatarPartera src={avatarSrc} nombre={nombrePartera} />
 
                             <div className="min-w-0">
                                 <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#8F3F1E]">
-                                    Partera Tradicional Acreditada
+                                    Partera Tradicional
                                 </p>
-                                <h1 className="text-base sm:text-xl font-black text-stone-900 leading-tight truncate">
-                                    {partera.nombre}
+                                <h1 className="text-base sm:text-xl font-black text-stone-900 leading-tight">
+                                    {nombrePartera}
                                 </h1>
-                                <p className="text-xs text-stone-600 font-medium truncate">{partera.comunidad}</p>
+                                <p className="text-xs text-stone-600 font-medium truncate">{comunidad}</p>
                                 <span className="inline-flex items-center gap-1 mt-1 text-[11px] font-black text-teal-900 bg-teal-100 border border-teal-300 px-2 py-0.5 rounded-full shadow-[0_0_14px_rgba(45,212,191,0.5)]">
                                     <BadgeCheck className="w-3.5 h-3.5" aria-hidden="true" />
                                     PIN Verificado
@@ -577,7 +482,7 @@ export const DashboardPartera: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* EXTREMA DERECHA: SALIR */}
+                        {/* EXTREMA DERECHA: SALIR (Solo se muestra en el HOME / Menú Principal) */}
                         {vistaActiva === 'HOME' && (
                             <button
                                 type="button"
