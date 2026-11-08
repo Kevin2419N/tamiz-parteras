@@ -11,9 +11,9 @@ import { http } from '../../services/http'; // Instancia de Axios hacia el servi
  * - Datos de identificación en 2 columnas simétricas (1 columna en celular)
  * - Tarjetas de motivos en cuadrícula simétrica, con imágenes PNG reales
  * - Contrarreferencia médica colapsable
- * - Estados de carga (spinner) y modal animado de éxito (alerta visual + auditiva)
+ * - Estados de carga (spinner) y éxito (alerta visual + auditiva)
  *
- * Barra interna única: título del formato + "Escuchar instrucciones" (sin Volver).
+ * No incluye encabezado propio: el header global lo aporta FormatoReferencia.
  * ========================================================================== */
 
 /* ------------------------------ Tipos ------------------------------------ */
@@ -118,6 +118,7 @@ const obtenerReconocimiento = (): SpeechRecognitionCtor | null => {
 
 /* ------------------------------ Datos ------------------------------------ */
 
+/* IDs (viajan al backend) y rutas PNG reales de /public/. */
 const LISTA_MOTIVOS: MotivoItem[] = [
     { id: 'COMPLICACIONES_EMBARAZO', titulo: 'Complicaciones del embarazo', voz: 'Complicaciones del embarazo', imagen: '/Complicaciones-del-embarazo.png' },
     { id: 'APLICAR_TOXOIDE_TETANICO', titulo: 'Aplicar toxoide tetánico', voz: 'Aplicar toxoide tetánico', imagen: '/Aplicar-Toxoide-Tetanico.png' },
@@ -140,11 +141,6 @@ const LISTA_MOTIVOS: MotivoItem[] = [
     { id: 'TOMA_DE_PAPANICOLAOU', titulo: 'Toma de papanicolaou', voz: 'Toma de papanicolaou', imagen: '/Toma-De-Papanicolao.png' },
     { id: 'OTROS', titulo: 'Otros', voz: 'Otros motivos', imagen: '/Otros.png' },
 ];
-
-const INSTRUCCIONES_FORMATO =
-    'Esta es la hoja de referencia. Primero escriba o dicte los datos de la usuaria: toque el micrófono de cada campo y hable. Después toque los dibujos del motivo por el que la envía. Si el médico ya respondió, abra la sección del médico. Al final, presione el botón grande de enviar.';
-
-const REDIRECCION_MS = 3500;
 
 const CAMPOS_OBLIGATORIOS: CampoId[] = ['centroSalud', 'nombreUsuaria', 'nombrePartera', 'localidadPartera'];
 
@@ -188,9 +184,6 @@ const ESTILOS = `
 @keyframes pt-breathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.03) } }
 @keyframes pt-wave { 0%,100% { transform: scaleY(.25) } 50% { transform: scaleY(1) } }
 @keyframes pt-ring { 0% { box-shadow: 0 0 0 0 rgba(194,96,58,.55) } 100% { box-shadow: 0 0 0 14px rgba(194,96,58,0) } }
-@keyframes pt-draw { from { stroke-dashoffset: 48 } to { stroke-dashoffset: 0 } }
-@keyframes pt-progress { from { transform: scaleX(1) } to { transform: scaleX(0) } }
-@keyframes pt-halo { 0% { transform: scale(.85); opacity: .7 } 100% { transform: scale(1.6); opacity: 0 } }
 @keyframes pt-shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
 .pt-fade-in { animation: pt-fade-in .5s ease-out both }
 .pt-slide-up { animation: pt-slide-up .55s cubic-bezier(.22,1,.36,1) both }
@@ -198,13 +191,9 @@ const ESTILOS = `
 .pt-breathe { animation: pt-breathe 2.8s ease-in-out infinite }
 .pt-ring { animation: pt-ring 1.2s ease-out infinite }
 .pt-shake { animation: pt-shake .4s ease-in-out }
-.pt-draw { stroke-dasharray: 48; stroke-dashoffset: 48; animation: pt-draw .6s .35s ease-out forwards }
-.pt-progress { transform-origin: left; animation: pt-progress linear forwards }
-.pt-halo { animation: pt-halo 1.6s ease-out infinite }
 .pt-wave-bar { display: inline-block; width: 4px; height: 20px; border-radius: 4px; background: #C2603A; transform-origin: center; animation: pt-wave .9s ease-in-out infinite }
 @media (prefers-reduced-motion: reduce) {
-  .pt-fade-in, .pt-slide-up, .pt-pop-in, .pt-breathe, .pt-ring, .pt-shake, .pt-wave-bar, .pt-progress, .pt-halo { animation: none !important }
-  .pt-draw { animation: none !important; stroke-dashoffset: 0 }
+  .pt-fade-in, .pt-slide-up, .pt-pop-in, .pt-breathe, .pt-ring, .pt-shake, .pt-wave-bar { animation: none !important }
 }
 `;
 
@@ -252,20 +241,6 @@ const IconoCargando: React.FC<IconoProps> = ({ className = 'h-7 w-7' }) => (
     <svg className={`${className} animate-spin`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity={0.3} strokeWidth={3.5} />
         <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" />
-    </svg>
-);
-const IconoBocina: React.FC<IconoProps> = ({ className = 'h-6 w-6' }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M11 5 6 9H3v6h3l5 4V5z" />
-        <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-        <path d="M18.5 5.5a9 9 0 0 1 0 13" />
-    </svg>
-);
-const IconoBocinaApagada: React.FC<IconoProps> = ({ className = 'h-6 w-6' }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M11 5 6 9H3v6h3l5 4V5z" />
-        <path d="m22 9-6 6" />
-        <path d="m16 9 6 6" />
     </svg>
 );
 const IconoEstetoscopio: React.FC<IconoProps> = ({ className = 'h-7 w-7' }) => (
@@ -433,7 +408,6 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     const [errorServidor, setErrorServidor] = useState<string | null>(null);
     const [errores, setErrores] = useState<ErroresForm>({});
     const [campoInterno, setCampoInterno] = useState<CampoId | null>(null);
-    const [isSpeaking, setIsSpeaking] = useState(false);
 
     const datosRef = useRef<Datos>(datos);
     const recRef = useRef<SpeechRecognitionLike | null>(null);
@@ -450,11 +424,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
             montadoRef.current = false;
             recRef.current?.stop();
             if (temporizadorRef.current !== null) window.clearTimeout(temporizadorRef.current);
-            if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
         };
     }, []);
 
-    /* ----- Voz de salida ----- */
+    /* ----- Voz de salida (usa la del contenedor; si no, la del navegador) -- */
     const speakText = useCallback(
         (texto: string) => {
             if (propsHablarTexto) {
@@ -466,24 +439,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
             const u = new SpeechSynthesisUtterance(texto);
             u.lang = 'es-MX';
             u.rate = 0.9;
-            u.onstart = () => setIsSpeaking(true);
-            u.onend = () => setIsSpeaking(false);
-            u.onerror = () => setIsSpeaking(false);
             window.speechSynthesis.speak(u);
         },
         [propsHablarTexto]
     );
-
-    const detenerVoz = useCallback(() => {
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
-        setIsSpeaking(false);
-    }, []);
-
-    const continuarAlMenu = useCallback(() => {
-        if (temporizadorRef.current !== null) window.clearTimeout(temporizadorRef.current);
-        temporizadorRef.current = null;
-        if (onSuccess) onSuccess();
-    }, [onSuccess]);
 
     /* ----- Campos ----------------------------------------------------------- */
     const setCampo = useCallback((id: CampoId, valor: string) => {
@@ -503,6 +462,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
 
     const alternarDictado = useCallback(
         (id: CampoId) => {
+            /* Si el padre controla el dictado, se delega en él. */
             if (iniciarDictadoExternal) {
                 iniciarDictadoExternal(id, (val: string) => setCampo(id, val));
                 return;
@@ -632,10 +592,10 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
             if (!montadoRef.current) return;
 
             setEnviado(true);
-            speakText('Hoja enviada con éxito. La referencia quedó guardada y llegó al centro de salud.');
+            speakText('Hoja de referencia enviada y guardada con éxito.');
             temporizadorRef.current = window.setTimeout(() => {
                 if (montadoRef.current && onSuccess) onSuccess();
-            }, REDIRECCION_MS);
+            }, 2600);
         } catch (err: unknown) {
             console.error('Error al enviar la hoja de referencia:', err);
             const mensaje =
@@ -671,25 +631,6 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
     return (
         <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-5">
             <style>{ESTILOS}</style>
-
-            {/* ============ Barra interna: solo título + escuchar instrucciones (sin botón volver) ============ */}
-            <div className={`pt-slide-up flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 ${VIDRIO}`}>
-                <div className="min-w-0">
-                    <h1 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl">Hoja oficial de referencia</h1>
-                    <p className="text-sm font-bold text-stone-700">
-                        Acude a tu unidad de salud · Red de Servicios de Salud de Oaxaca
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => (isSpeaking ? detenerVoz() : speakText(INSTRUCCIONES_FORMATO))}
-                    aria-label={isSpeaking ? 'Detener voz' : 'Escuchar instrucciones'}
-                    className={`pt-breathe flex h-14 shrink-0 items-center justify-center gap-3 rounded-2xl px-6 text-base font-black ${BOTON_TIERRA}`}
-                >
-                    {isSpeaking ? <IconoBocinaApagada /> : <IconoBocina />}
-                    <span>{isSpeaking ? 'Detener voz' : 'Escuchar instrucciones'}</span>
-                </button>
-            </div>
 
             {/* ================= Datos de identificación (2 columnas) ========= */}
             <section className={`pt-slide-up p-4 sm:p-6 ${VIDRIO}`} style={{ animationDelay: '.05s' }}>
@@ -754,6 +695,7 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                     </span>
                 </div>
 
+                {/* Cuadrícula simétrica: 2 / 3 / 4 columnas; la última fila queda centrada */}
                 <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
                     {LISTA_MOTIVOS.map((m, i) => {
                         const activo = motivosSeleccionados.includes(m.id);
@@ -900,50 +842,22 @@ export const MotivoReferencia: React.FC<MotivoReferenciaProps> = ({
                 <span>{isSubmitting ? 'Enviando referencia…' : 'Enviar hoja de referencia al centro de salud'}</span>
             </button>
 
-            {/* ============ Modal de éxito (glassmorphism animado) ============ */}
+            {/* ================== Confirmación de envío ======================= */}
             {enviado && (
                 <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="pt-exito-titulo"
-                    className="pt-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-900/45 p-4 backdrop-blur-sm"
+                    role="status"
+                    aria-live="polite"
+                    className="pt-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4 backdrop-blur-sm"
                 >
-                    <div className="pt-pop-in relative w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white/85 text-center shadow-2xl shadow-orange-900/30 backdrop-blur-md">
-                        <div className="h-2 w-full bg-gradient-to-r from-[#5E8C61] via-[#D69A1E] to-[#C2603A]" />
-
-                        <div className="px-6 pb-6 pt-8 sm:px-8">
-                            <div className="relative mx-auto mb-5 flex h-28 w-28 items-center justify-center">
-                                <span className="pt-halo absolute inset-0 rounded-full bg-emerald-400/50" aria-hidden="true" />
-                                <span className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 text-white shadow-xl shadow-emerald-900/40 ring-4 ring-white/80">
-                                    <svg className="h-16 w-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                        <path className="pt-draw" d="m5 12.5 4.5 4.5L19 7.5" />
-                                    </svg>
-                                </span>
-                            </div>
-
-                            <h2 id="pt-exito-titulo" className="text-3xl font-black leading-tight text-stone-900">
-                                ¡Hoja enviada con éxito!
-                            </h2>
-                            <p className="mt-3 text-lg font-bold text-stone-800">
-                                La referencia de {datos.nombreUsuaria || 'la usuaria'} quedó guardada y ya llegó al centro de salud.
-                            </p>
-
-                            <button
-                                type="button"
-                                onClick={continuarAlMenu}
-                                className={`mt-6 flex h-16 w-full items-center justify-center rounded-2xl text-lg font-black ${BOTON_TIERRA}`}
-                            >
-                                Continuar
-                            </button>
-                            <p className="mt-3 text-sm font-bold text-stone-600">Regresando al menú automáticamente…</p>
+                    <div className={`pt-pop-in w-full max-w-md p-8 text-center ${VIDRIO}`}>
+                        <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl">
+                            <IconoCheck className="h-14 w-14" />
                         </div>
-
-                        <div className="h-1.5 w-full bg-stone-200/70">
-                            <div
-                                className="pt-progress h-full bg-gradient-to-r from-[#D69A1E] to-[#C2603A]"
-                                style={{ animationDuration: `${REDIRECCION_MS}ms` }}
-                            />
-                        </div>
+                        <h2 className="text-3xl font-black text-stone-900">¡Hoja enviada!</h2>
+                        <p className="mt-2 text-lg font-bold text-stone-800">
+                            La referencia de {datos.nombreUsuaria || 'la usuaria'} quedó guardada y llegó al centro de salud.
+                        </p>
+                        <p className="mt-3 text-sm font-bold text-stone-600">Regresando al menú…</p>
                     </div>
                 </div>
             )}
