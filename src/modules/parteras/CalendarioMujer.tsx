@@ -19,30 +19,21 @@ import {
     Building2,
     Award,
     Loader2,
-    Volume2
+    Volume2,
+    CheckCircle2
 } from 'lucide-react';
 import { handleVoiceInput } from '../../utils/voiceUtils';
 import { http } from '../../services/http';
 
 /* ============================================================================
- * CalendarioMujer — Envoltorio y Formulario unificado
+ * CalendarioMujer — Versión Profesional Optimizada (Móvil, Tablet y Desktop)
  * Servicios de Salud de Oaxaca · Programa de Parteras Tradicionales
- *
- * - Header simétrico institucional idéntico a FormatoReferencia
- * - Estética Glassmorphism clara, paleta tierra del Istmo
- * - Micrófonos y ondas en tono Terracota/Ocre de referencia (#CC7A2C)
- * - Sin datos quemados y sin botón de huella digital
- * - Conexión directa a PostgreSQL vía Axios (/api/v1/calendario-mujer)
  * ========================================================================== */
 
-/* ------------------------------ Tipos ------------------------------------ */
 export interface CalendarioMujerProps {
     onBack?: () => void;
     onSuccess?: () => void;
     hablarTexto?: (texto: string) => void;
-    isListening?: boolean;
-    campoEscuchando?: string | null;
-    iniciarDictado?: (campo: string, setFieldState?: (val: string) => void) => void;
 }
 
 type Muac = 'VERDE' | 'AMARILLO' | 'ROJO';
@@ -50,7 +41,6 @@ type Vacuna = '1A' | '2A' | 'REFUERZO';
 type PosicionParto = 'VERTICAL' | 'HORIZONTAL';
 type ResultadoParto = 'NINO_VIVO' | 'NINA_VIVA';
 type EtapaMuerte = 'EMBARAZO' | 'PARTO' | 'PUERPERIO';
-type Tono = 'guinda' | 'verde';
 type Acento = 'ocre' | 'terracota' | 'verde';
 
 interface ItemCatalogo {
@@ -77,22 +67,22 @@ const SEMAFORO: { id: Muac; titulo: string; estado: string; on: string; off: str
         id: 'VERDE',
         titulo: 'Verde',
         estado: 'Adecuado',
-        on: 'border-emerald-700 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-900/25',
-        off: 'border-emerald-200 bg-emerald-50 text-stone-900 hover:border-emerald-500'
+        on: 'border-emerald-700 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-xl shadow-emerald-900/30 scale-[1.02]',
+        off: 'border-emerald-200 bg-emerald-50/80 text-stone-900 hover:border-emerald-400'
     },
     {
         id: 'AMARILLO',
         titulo: 'Amarillo',
         estado: 'Riesgo',
-        on: 'border-[#9A6A0F] bg-gradient-to-br from-[#E3AE3A] to-[#D69A1E] text-stone-900 shadow-lg shadow-amber-900/25',
-        off: 'border-amber-200 bg-amber-50 text-stone-900 hover:border-[#D69A1E]'
+        on: 'border-[#9A6A0F] bg-gradient-to-br from-[#E3AE3A] to-[#D69A1E] text-stone-900 shadow-xl shadow-amber-900/30 scale-[1.02]',
+        off: 'border-amber-200 bg-amber-50/80 text-stone-900 hover:border-[#D69A1E]'
     },
     {
         id: 'ROJO',
         titulo: 'Rojo',
         estado: 'Desnutrición',
-        on: 'border-red-800 bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg shadow-red-900/25',
-        off: 'border-red-200 bg-red-50 text-stone-900 hover:border-red-500'
+        on: 'border-red-800 bg-gradient-to-br from-red-500 to-red-700 text-white shadow-xl shadow-red-900/30 scale-[1.02]',
+        off: 'border-red-200 bg-red-50/80 text-stone-900 hover:border-red-400'
     }
 ];
 
@@ -163,43 +153,43 @@ const ETAPAS_MUERTE_MATERNA: { id: EtapaMuerte; img: string; title: string }[] =
 
 const INSTRUCCIONES_VOZ =
     'Calendario de atención a la mujer. ' +
-    'Primero escriba o dicte los datos de la paciente: toque el botón del micrófono dentro de cada campo y hable con claridad. ' +
-    'Después seleccione el mes de embarazo, la vacuna y el color de la cinta de medición. ' +
-    'Si detecta signos de alarma, toque los dibujos que correspondan y marque si fue referida. ' +
-    'Registre el tipo de parto y el resultado del recién nacido, y revise el puerperio. ' +
-    'Al final complete los datos de cierre y presione el botón grande para registrar el calendario.';
+    'Primero escriba o dicte los datos de la paciente tocando el micrófono en cada campo. ' +
+    'Seleccione el mes de embarazo, la vacuna y el color de la cinta de medición. ' +
+    'Si hay signos de alarma, toque los dibujos que correspondan. ' +
+    'Registre el tipo de parto, el resultado del recién nacido y el puerperio. ' +
+    'Al final complete los datos de cierre y presione el botón de registrar.';
 
-/* --------------------------- Estilos / animación -------------------------- */
+/* --------------------------- Estilos / Animaciones ------------------------ */
 const ESTILOS = `
-@keyframes pt-fade-in { from { opacity: 0 } to { opacity: 1 } }
-@keyframes pt-slide-up { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes pt-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pt-slide-up { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
 @keyframes pt-pop-in { 0% { opacity: 0; transform: scale(.4) } 70% { transform: scale(1.18) } 100% { opacity: 1; transform: scale(1) } }
-@keyframes pt-breathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.03) } }
+@keyframes pt-breathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.02) } }
 @keyframes pt-wave { 0%,100% { transform: scaleY(.25) } 50% { transform: scaleY(1) } }
-@keyframes pt-ring { 0% { box-shadow: 0 0 0 0 rgba(204,122,44,.5) } 100% { box-shadow: 0 0 0 14px rgba(204,122,44,0) } }
+@keyframes pt-ring { 0% { box-shadow: 0 0 0 0 rgba(204,122,44,.5) } 100% { box-shadow: 0 0 0 16px rgba(204,122,44,0) } }
 @keyframes pt-shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
-.pt-fade-in { animation: pt-fade-in .5s ease-out both }
-.pt-slide-up { animation: pt-slide-up .55s cubic-bezier(.22,1,.36,1) both }
-.pt-pop-in { animation: pt-pop-in .38s cubic-bezier(.34,1.56,.64,1) both }
-.pt-breathe { animation: pt-breathe 2.8s ease-in-out infinite }
+.pt-fade-in { animation: pt-fade-in .4s cubic-bezier(.16,1,.3,1) both }
+.pt-slide-up { animation: pt-slide-up .5s cubic-bezier(.16,1,.3,1) both }
+.pt-pop-in { animation: pt-pop-in .35s cubic-bezier(.34,1.56,.64,1) both }
+.pt-breathe { animation: pt-breathe 3s ease-in-out infinite }
 .pt-ring { animation: pt-ring 1.2s ease-out infinite }
 .pt-shake { animation: pt-shake .4s ease-in-out }
-.pt-wave-bar { display: inline-block; width: 4px; height: 20px; border-radius: 4px; background: #CC7A2C; transform-origin: center; animation: pt-wave .9s ease-in-out infinite }
+.pt-wave-bar { display: inline-block; width: 4px; height: 22px; border-radius: 4px; background: #CC7A2C; transform-origin: center; animation: pt-wave .9s ease-in-out infinite }
 @media (prefers-reduced-motion: reduce) {
   .pt-fade-in, .pt-slide-up, .pt-pop-in, .pt-breathe, .pt-ring, .pt-shake, .pt-wave-bar { animation: none !important }
 }
 `;
 
 const VIDRIO =
-    'bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-orange-900/10 rounded-3xl';
+    'bg-white/90 backdrop-blur-xl border border-white/80 shadow-2xl shadow-orange-950/10 rounded-3xl transition-all duration-300';
 
 const BOTON_TIERRA =
-    'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-xl shadow-orange-900/40 border border-white/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl active:scale-[0.98]';
+    'bg-gradient-to-r from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-xl shadow-orange-900/30 border border-white/30 transition-all duration-300 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98]';
 
 const CLASE_SELECTOR =
-    'h-16 w-full rounded-2xl border-2 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#CC7A2C] focus:ring-4 focus:ring-[#CC7A2C]/20';
+    'h-16 w-full rounded-2xl border-2 bg-white/95 px-4 text-base sm:text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#CC7A2C] focus:ring-4 focus:ring-[#CC7A2C]/20';
 
-const CLASE_ETIQUETA = 'mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800';
+const CLASE_ETIQUETA = 'mb-2 block text-xs sm:text-sm font-black uppercase tracking-wider text-stone-700';
 
 const ACENTOS: Record<Acento, string> = {
     ocre: 'from-[#D69A1E] to-[#CC7A2C]',
@@ -216,7 +206,7 @@ const Imagen: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
     const [fallo, setFallo] = useState(false);
     if (fallo) {
         return (
-            <div className="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 px-2 text-center text-xs font-bold text-stone-600">
+            <div className="flex h-full w-full items-center justify-center rounded-xl bg-amber-50 px-2 text-center text-xs font-bold text-stone-500">
                 Imagen no disponible
             </div>
         );
@@ -228,7 +218,7 @@ const Imagen: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
             loading="lazy"
             draggable={false}
             onError={() => setFallo(true)}
-            className="max-h-full max-w-full object-contain mix-blend-multiply"
+            className="max-h-full max-w-full object-contain mix-blend-multiply transition-transform duration-300 hover:scale-105"
         />
     );
 };
@@ -264,7 +254,7 @@ const CampoVoz: React.FC<CampoVozProps> = ({
         ? 'border-[#CC7A2C] ring-4 ring-[#CC7A2C]/20 bg-amber-50/60'
         : error
             ? 'border-red-500 pt-shake'
-            : 'border-stone-200';
+            : 'border-stone-200/90 hover:border-stone-300';
 
     return (
         <div className={className}>
@@ -282,7 +272,7 @@ const CampoVoz: React.FC<CampoVozProps> = ({
                     onChange={(e) => onCambio(e.target.value)}
                     autoComplete="off"
                     aria-invalid={error}
-                    className={`${CLASE_SELECTOR} pr-20 placeholder:font-semibold placeholder:text-stone-500 ${borde}`}
+                    className={`${CLASE_SELECTOR} pr-20 placeholder:font-semibold placeholder:text-stone-400 ${borde}`}
                 />
 
                 {escuchando && (
@@ -298,7 +288,7 @@ const CampoVoz: React.FC<CampoVozProps> = ({
                     onClick={onMic}
                     aria-label={escuchando ? `Detener dictado de ${etiqueta}` : `Dictar ${etiqueta} por voz`}
                     aria-pressed={escuchando}
-                    className={`absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-xl text-white shadow-md transition-all duration-200 active:scale-[0.96] ${escuchando ? 'pt-ring bg-[#A85322]' : 'bg-[#CC7A2C] hover:bg-[#B56822] hover:shadow-lg'}`}
+                    className={`absolute right-2.5 top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-2xl text-white shadow-md transition-all duration-200 active:scale-95 ${escuchando ? 'pt-ring bg-[#A85322]' : 'bg-[#CC7A2C] hover:bg-[#B56822] hover:shadow-lg'}`}
                 >
                     {escuchando ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-6 w-6" strokeWidth={2.4} />}
                 </button>
@@ -318,37 +308,38 @@ interface SectionCardProps {
 }
 
 const SectionCard: React.FC<SectionCardProps> = ({ icon, acento = 'ocre', title, subtitle, action, delay = 0.05, children }) => (
-    <section className={`pt-slide-up p-4 sm:p-6 ${VIDRIO}`} style={{ animationDelay: `${delay}s` }}>
-        <div className="mb-5 flex flex-col gap-3 border-b border-stone-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-                <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg shadow-orange-900/20 ${ACENTOS[acento]}`}>
+    <section className={`pt-slide-up p-5 sm:p-8 ${VIDRIO}`} style={{ animationDelay: `${delay}s` }}>
+        <div className="mb-6 flex flex-col gap-4 border-b border-stone-200/80 pb-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3.5">
+                <span className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-xl shadow-orange-900/15 ${ACENTOS[acento]}`}>
                     {icon}
                 </span>
                 <div>
-                    <h2 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl">{title}</h2>
-                    <p className="text-sm font-bold text-stone-700">{subtitle}</p>
+                    <h2 className="text-lg sm:text-2xl font-black leading-tight text-stone-900">{title}</h2>
+                    <p className="text-xs sm:text-sm font-bold text-stone-600 mt-0.5">{subtitle}</p>
                 </div>
             </div>
             {action}
         </div>
-        <div className="space-y-5">{children}</div>
+        <div className="space-y-6">{children}</div>
     </section>
 );
 
 const ContadorPill: React.FC<{ total: number }> = ({ total }) => (
-    <span className="self-start rounded-full border border-[#D69A1E]/50 bg-amber-50 px-4 py-1.5 text-sm font-black text-stone-900 sm:self-auto">
-        Seleccionados: {total}
+    <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-[#CC7A2C]/40 bg-amber-50 px-4 py-2 text-xs sm:text-sm font-black text-stone-900 shadow-sm sm:self-auto">
+        <CheckCircle2 className="h-4 w-4 text-[#CC7A2C]" />
+        <span>Seleccionados: {total}</span>
     </span>
 );
 
 const ReferidoToggle: React.FC<{ label: string; value: boolean; onChange: (v: boolean) => void }> = ({ label, value, onChange }) => (
-    <div role="group" aria-label={label} className="inline-flex items-center gap-1.5 self-start rounded-2xl border border-stone-200 bg-white/70 p-1.5 sm:self-auto">
-        <span className="px-2 text-xs font-black uppercase text-stone-800">{label}</span>
+    <div role="group" aria-label={label} className="inline-flex items-center gap-1.5 self-start rounded-2xl border border-stone-200/90 bg-white/80 p-1.5 shadow-sm sm:self-auto">
+        <span className="px-2 text-xs font-black uppercase tracking-wider text-stone-700">{label}</span>
         <button
             type="button"
             aria-pressed={!value}
             onClick={() => onChange(false)}
-            className={`min-h-[56px] min-w-[72px] cursor-pointer rounded-xl px-5 text-sm font-black transition-all duration-200 active:scale-[0.98] ${!value ? 'bg-stone-700 text-white shadow-md' : 'text-stone-700 hover:bg-amber-50'}`}
+            className={`min-h-[48px] min-w-[64px] cursor-pointer rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${!value ? 'bg-stone-800 text-white shadow-md' : 'text-stone-700 hover:bg-amber-50'}`}
         >
             NO
         </button>
@@ -356,10 +347,10 @@ const ReferidoToggle: React.FC<{ label: string; value: boolean; onChange: (v: bo
             type="button"
             aria-pressed={value}
             onClick={() => onChange(true)}
-            className={`flex min-h-[56px] min-w-[80px] cursor-pointer items-center justify-center gap-1.5 rounded-xl px-5 text-sm font-black transition-all duration-200 active:scale-[0.98] ${value ? 'bg-[#CC7A2C] text-white shadow-md' : 'text-stone-700 hover:bg-amber-50'}`}
+            className={`flex min-h-[48px] min-w-[72px] cursor-pointer items-center justify-center gap-1 rounded-xl px-4 text-xs sm:text-sm font-black transition-all duration-200 active:scale-95 ${value ? 'bg-[#CC7A2C] text-white shadow-md' : 'text-stone-700 hover:bg-amber-50'}`}
         >
             <span>SÍ</span>
-            <AlertTriangle className={`h-4 w-4 ${value ? 'text-amber-300' : 'text-[#D69A1E]'}`} />
+            <AlertTriangle className={`h-3.5 w-3.5 ${value ? 'text-amber-200' : 'text-[#CC7A2C]'}`} />
         </button>
     </div>
 );
@@ -372,7 +363,6 @@ interface TarjetaOpcionProps {
     img?: string;
     altoImg?: string;
     icono?: React.ReactNode;
-    tono?: Tono;
     disposicion?: 'columna' | 'fila';
     pie?: { off: string; on: string; iconoOff?: React.ReactNode };
     tituloClassName?: string;
@@ -387,52 +377,47 @@ const TarjetaOpcion: React.FC<TarjetaOpcionProps> = ({
     img,
     altoImg = 'h-36',
     icono,
-    tono = 'guinda',
     disposicion = 'columna',
     pie,
     tituloClassName,
     className = ''
 }) => {
     const fila = disposicion === 'fila';
-    const seleccionada =
-        tono === 'verde'
-            ? 'border-emerald-600 bg-gradient-to-b from-emerald-50 to-green-50 shadow-xl shadow-emerald-900/10 ring-4 ring-emerald-500/10'
-            : 'border-[#CC7A2C] bg-gradient-to-b from-orange-50/80 to-amber-50 shadow-xl shadow-orange-900/10 ring-4 ring-[#CC7A2C]/10';
-    const normal =
-        'border-stone-200 bg-white/90 shadow-md hover:-translate-y-0.5 hover:border-[#C2603A]/50 hover:shadow-xl';
-    const insignia = tono === 'verde' ? 'bg-emerald-600' : 'bg-[#CC7A2C]';
+    const seleccionada = 'border-[#CC7A2C] bg-gradient-to-b from-orange-50/90 to-amber-50/70 shadow-xl shadow-orange-950/10 ring-4 ring-[#CC7A2C]/15 scale-[1.01]';
+    const normal = 'border-stone-200/90 bg-white/95 shadow-sm hover:-translate-y-0.5 hover:border-[#CC7A2C]/50 hover:shadow-lg';
 
     return (
         <button
             type="button"
             onClick={onClick}
             aria-pressed={activo}
-            className={`relative min-h-[72px] w-full cursor-pointer touch-manipulation select-none rounded-3xl border-2 p-3 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#CC7A2C]/40 active:scale-[0.98] ${activo ? seleccionada : normal} ${fila
-                ? 'flex items-center gap-3 text-left'
-                : `flex flex-col items-center gap-2 text-center ${img || pie ? 'justify-between' : 'justify-center'}`
-                } ${className}`}
+            className={`relative min-h-[72px] w-full cursor-pointer touch-manipulation select-none rounded-3xl border-2 p-3.5 sm:p-4 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#CC7A2C]/40 active:scale-[0.98] ${activo ? seleccionada : normal} ${
+                fila
+                    ? 'flex items-center gap-3.5 text-left'
+                    : `flex flex-col items-center gap-3 text-center ${img || pie ? 'justify-between' : 'justify-center'}`
+            } ${className}`}
         >
             {activo && (
-                <span className={`pt-pop-in absolute -right-2 -top-2 z-10 flex items-center justify-center rounded-full border-2 border-white text-white shadow-lg ${insignia} ${img ? 'h-10 w-10' : 'h-8 w-8'}`}>
-                    <Check className={img ? 'h-6 w-6' : 'h-5 w-5'} strokeWidth={3.5} />
+                <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border-2 border-white bg-[#CC7A2C] text-white shadow-lg">
+                    <Check className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={3.5} />
                 </span>
             )}
 
             {img && (
-                <span className={`flex items-center justify-center overflow-hidden bg-white p-2 shadow-inner ring-1 ring-stone-200/80 ${fila ? 'h-20 w-20 shrink-0 rounded-2xl' : `w-full rounded-2xl ${altoImg}`}`}>
+                <span className={`flex items-center justify-center overflow-hidden bg-white p-2.5 shadow-inner ring-1 ring-stone-200/60 ${fila ? 'h-20 w-20 shrink-0 rounded-2xl' : `w-full rounded-2xl ${altoImg}`}`}>
                     <Imagen src={img} alt={titulo} />
                 </span>
             )}
 
-            <span className={`flex flex-col gap-0.5 ${fila ? 'min-w-0 flex-1' : 'flex-1 items-center justify-center'}`}>
-                <span className={`font-black leading-tight text-stone-900 ${tituloClassName ?? (img && !fila ? 'text-sm uppercase sm:text-base' : 'text-base')}`}>{titulo}</span>
-                {subtitulo && <span className="text-sm font-bold text-stone-700">{subtitulo}</span>}
+            <span className={`flex flex-col gap-1 ${fila ? 'min-w-0 flex-1' : 'flex-1 items-center justify-center'}`}>
+                <span className={`font-black leading-tight text-stone-900 ${tituloClassName ?? (img && !fila ? 'text-xs sm:text-sm uppercase tracking-wide' : 'text-sm sm:text-base')}`}>{titulo}</span>
+                {subtitulo && <span className="text-xs sm:text-sm font-bold text-stone-600">{subtitulo}</span>}
             </span>
 
             {icono}
 
             {pie && (
-                <span className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black uppercase ${activo ? `${insignia} text-white` : 'bg-stone-100 text-stone-700'}`}>
+                <span className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider ${activo ? 'bg-[#CC7A2C] text-white' : 'bg-stone-100/80 text-stone-700'}`}>
                     <span>{activo ? pie.on : pie.off}</span>
                     {activo ? <Check className="h-3.5 w-3.5" strokeWidth={3.5} /> : pie.iconoOff}
                 </span>
@@ -442,7 +427,7 @@ const TarjetaOpcion: React.FC<TarjetaOpcionProps> = ({
 };
 
 const SemaforoMUAC: React.FC<{ value: Muac | null; onChange: (v: Muac) => void; label: string }> = ({ value, onChange, label }) => (
-    <div role="radiogroup" aria-label={label} className="grid grid-cols-3 gap-3">
+    <div role="radiogroup" aria-label={label} className="grid grid-cols-3 gap-2.5 sm:gap-3">
         {SEMAFORO.map((s) => {
             const activo = value === s.id;
             return (
@@ -452,22 +437,22 @@ const SemaforoMUAC: React.FC<{ value: Muac | null; onChange: (v: Muac) => void; 
                     role="radio"
                     aria-checked={activo}
                     onClick={() => onChange(s.id)}
-                    className={`relative flex min-h-[104px] cursor-pointer touch-manipulation flex-col items-center justify-center gap-1 rounded-3xl border-2 px-2 py-4 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${activo ? s.on : s.off}`}
+                    className={`relative flex min-h-[96px] sm:min-h-[110px] cursor-pointer touch-manipulation flex-col items-center justify-center gap-1 rounded-3xl border-2 px-2 py-3 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${activo ? s.on : s.off}`}
                 >
                     {activo && (
-                        <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#CC7A2C] text-white shadow-lg">
-                            <Check className="h-5 w-5" strokeWidth={3.5} />
+                        <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border-2 border-white bg-stone-900 text-white shadow-md">
+                            <Check className="h-4 w-4" strokeWidth={3.5} />
                         </span>
                     )}
-                    <span className="text-base font-black uppercase tracking-wider">{s.titulo}</span>
-                    <span className="text-xs font-bold opacity-90">{s.estado}</span>
+                    <span className="text-sm sm:text-base font-black uppercase tracking-wider">{s.titulo}</span>
+                    <span className="text-[11px] sm:text-xs font-bold opacity-90">{s.estado}</span>
                 </button>
             );
         })}
     </div>
 );
 
-/* ------------------------------ Componente -------------------------------- */
+/* ------------------------------ Componente principal ---------------------- */
 export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     onSuccess,
     hablarTexto
@@ -475,24 +460,22 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     // 0. Modo Duplicado (Vista Partera vs Copia Centro de Salud)
     const [modoDuplicado, setModoDuplicado] = useState(false);
 
-    // 1. Datos de Identificación (todos inician vacíos)
+    // 1. Datos de Identificación
     const [nombreMujer, setNombreMujer] = useState('');
     const [edad, setEdad] = useState('');
     const [fecha, setFecha] = useState('');
     const [municipio, setMunicipio] = useState('');
     const [localidad, setLocalidad] = useState('');
-
-    // Voice dictation tracking
     const [listeningField, setListeningField] = useState<string | null>(null);
 
-    // 2. Control Prenatal y Embarazo Normal
+    // 2. Control Prenatal
     const [mesSeleccionado, setMesSeleccionado] = useState<number | null>(null);
     const [acidoFolico, setAcidoFolico] = useState(false);
     const [hierro, setHierro] = useState(false);
     const [vacunaTetanos, setVacunaTetanos] = useState<Vacuna | null>(null);
     const [cintaMUAC, setCintaMUAC] = useState<Muac | null>(null);
 
-    // 3. Embarazo con Complicaciones (Mapa Radial)
+    // 3. Complicaciones Embarazo
     const [referidoEmbarazo, setReferidoEmbarazo] = useState<boolean>(false);
     const [sintomasComplicaciones, setSintomasComplicaciones] = useState<string[]>([]);
 
@@ -508,7 +491,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     const [referidoPartoComplicado, setReferidoPartoComplicado] = useState<boolean>(false);
     const [partoComplicadoOpcion, setPartoComplicadoOpcion] = useState<string | null>(null);
 
-    // 7. Puerperio Normal y Complicado
+    // 7. Puerperio
     const [cintaMUACPuerperio, setCintaMUACPuerperio] = useState<Muac | null>(null);
     const [referidoPuerperio, setReferidoPuerperio] = useState<boolean>(false);
     const [puerperioCheckboxes, setPuerperioCheckboxes] = useState<string[]>([]);
@@ -525,7 +508,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     const [centroSalud, setCentroSalud] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Estado de UI
+    // Estado UI
     const [hablando, setHablando] = useState(false);
     const [exito, setExito] = useState(false);
     const [errorServidor, setErrorServidor] = useState<string | null>(null);
@@ -546,7 +529,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         };
     }, []);
 
-    /* ----- Voz unificada idéntica al dashboard y referencia ----- */
     const speakText = useCallback(
         (texto: string) => {
             if (hablarTexto) {
@@ -596,21 +578,15 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     };
 
     const toggleSintoma = (id: string) => {
-        setSintomasComplicaciones(prev =>
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
+        setSintomasComplicaciones(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
     };
 
     const toggleTarjetaAborto = (id: string) => {
-        setTarjetasAborto(prev =>
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
+        setTarjetasAborto(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
     };
 
     const togglePuerperioCheckbox = (id: string) => {
-        setPuerperioCheckboxes(prev =>
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
+        setPuerperioCheckboxes(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
     };
 
     const enfocar = (id: string) => {
@@ -705,10 +681,10 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 if (onSuccess) onSuccess();
             }, 2600);
         } catch (err: unknown) {
-            console.error('Error al guardar calendario de la mujer:', err);
+            console.error('Error al guardar calendario:', err);
             const mensaje =
                 (axios.isAxiosError<ErrorServidor>(err) ? err.response?.data?.message : undefined) ??
-                'Error al conectar con el servidor para guardar el calendario. Revise su señal e intente de nuevo.';
+                'Error al conectar con el servidor. Revise su señal e intente de nuevo.';
             if (montadoRef.current) {
                 setErrorServidor(mensaje);
                 speakText('No se pudo guardar el calendario. Revise su señal e intente de nuevo.');
@@ -725,7 +701,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
             onClick={() => toggleSintoma(item.id)}
             titulo={item.label}
             img={item.img}
-            altoImg="h-32"
+            altoImg="h-28 sm:h-32"
             pie={{ off: 'Seleccionar', on: 'Seleccionado' }}
             className={`h-full ${extra}`}
         />
@@ -740,22 +716,24 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         { key: 'centroSalud', label: 'Centro de salud', ph: 'Centro de salud…', value: centroSalud, set: setCentroSalud }
     ];
 
-    /* ------------------------------ Render ---------------------------------- */
     return (
-        <div className="relative min-h-screen w-full overflow-x-hidden px-3 py-4 sm:px-6 sm:py-8">
+        <div className="relative min-h-screen w-full overflow-x-hidden px-3 py-4 sm:px-6 sm:py-10 bg-gradient-to-b from-amber-50/40 via-orange-50/20 to-stone-50">
             <style>{ESTILOS}</style>
 
-            <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+            <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8">
                 
-                {/* ===================== Cabecera Simétrica Global ===================== */}
+                {/* ===================== Cabecera Global ===================== */}
                 <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
                     <TriStripe />
-                    <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
-                        <div className="min-w-0 text-center sm:text-left px-2">
-                            <h1 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl uppercase tracking-tight">
+                    <div className="grid grid-cols-1 items-center gap-5 p-5 sm:grid-cols-[1fr_auto] sm:p-8">
+                        <div className="min-w-0 text-center sm:text-left">
+                            <span className="inline-block rounded-full bg-amber-100/80 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-amber-900 mb-2">
+                                Servicio de Salud Materna
+                            </span>
+                            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 uppercase">
                                 Calendario de atención a la mujer
                             </h1>
-                            <p className="mt-1 text-xs sm:text-sm font-bold text-stone-700">
+                            <p className="mt-1 text-sm sm:text-base font-bold text-stone-600">
                                 Programa de Parteras Tradicionales · Servicios de Salud de Oaxaca
                             </p>
                         </div>
@@ -764,26 +742,26 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 type="button"
                                 onClick={escucharInstrucciones}
                                 aria-pressed={hablando}
-                                className={`flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl px-6 text-base font-black ${BOTON_TIERRA} ${hablando ? 'pt-ring' : ''}`}
+                                className={`flex h-14 w-full sm:w-auto items-center justify-center gap-3 rounded-2xl px-7 text-base font-black ${BOTON_TIERRA} ${hablando ? 'pt-ring' : ''}`}
                             >
-                                <Volume2 className="h-6 w-6" />
-                                <span>{hablando ? 'Detener instrucciones' : 'Escuchar instrucciones'}</span>
+                                <Volume2 className="h-6 w-6 shrink-0" />
+                                <span>{hablando ? 'Detener audio' : 'Escuchar instrucciones'}</span>
                             </button>
                         </div>
                     </div>
                 </header>
 
-                {/* ============ Vista Partera / Copia Centro de Salud ============ */}
-                <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-                    <div className="min-h-[40px]">
+                {/* ============ Selector de Vista (Partera / Centro de Salud) ============ */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-1">
+                    <div className="min-h-[36px] flex items-center">
                         {modoDuplicado && (
-                            <span className="pt-fade-in inline-flex items-center gap-2 rounded-full border border-[#D69A1E]/60 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-stone-900">
-                                <Award className="h-4 w-4 text-[#C2603A]" />
-                                Duplicado oficial SSO · Copia institucional
+                            <span className="pt-fade-in inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-stone-900 shadow-sm">
+                                <Award className="h-4 w-4 text-[#CC7A2C]" />
+                                Duplicado oficial SSO · Copia para Centro de Salud
                             </span>
                         )}
                     </div>
-                    <div role="group" aria-label="Tipo de vista" className="flex w-full items-center gap-1 rounded-2xl border border-stone-200 bg-white/70 p-1 sm:w-auto">
+                    <div role="group" aria-label="Tipo de vista" className="flex w-full sm:w-auto items-center gap-1.5 rounded-2xl border border-stone-200/90 bg-white/80 p-1.5 shadow-sm">
                         <button
                             type="button"
                             aria-pressed={!modoDuplicado}
@@ -791,7 +769,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 setModoDuplicado(false);
                                 speakText('Vista Partera activa');
                             }}
-                            className={`flex min-h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition-all duration-200 active:scale-[0.98] sm:flex-initial ${!modoDuplicado ? 'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-md' : 'text-stone-800 hover:bg-amber-50'}`}
+                            className={`flex min-h-[48px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition-all duration-200 active:scale-95 ${!modoDuplicado ? BOTON_TIERRA : 'text-stone-700 hover:bg-amber-50/60'}`}
                         >
                             <FileText className="h-4 w-4" />
                             <span>Vista Partera</span>
@@ -803,10 +781,10 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 setModoDuplicado(true);
                                 speakText('Mostrando copia oficial para el Centro de Salud');
                             }}
-                            className={`flex min-h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition-all duration-200 active:scale-[0.98] sm:flex-initial ${modoDuplicado ? 'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-md' : 'text-stone-800 hover:bg-amber-50'}`}
+                            className={`flex min-h-[48px] flex-1 sm:flex-initial cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition-all duration-200 active:scale-95 ${modoDuplicado ? BOTON_TIERRA : 'text-stone-700 hover:bg-amber-50/60'}`}
                         >
                             <Building2 className="h-4 w-4" />
-                            <span>Copia para Centro de Salud</span>
+                            <span>Centro de Salud</span>
                         </button>
                     </div>
                 </div>
@@ -817,9 +795,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     delay={0.05}
                     icon={<User className="h-6 w-6" />}
                     title="Datos de identificación de la paciente"
-                    subtitle="Toque el micrófono dentro de cada campo para dictar con su voz"
+                    subtitle="Toque el micrófono dentro de cada campo para dictar con su voz de forma rápida y cómoda"
                 >
-                    <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2">
                         <CampoVoz
                             id="nombreMujer"
                             etiqueta="Nombre de la mujer"
@@ -832,7 +810,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             onMic={() => startVoice((v) => { setNombreMujer(v); setErrorNombre(false); }, 'nombreMujer')}
                             escuchando={listeningField === 'nombreMujer'}
                             error={errorNombre}
-                            className="md:col-span-2"
+                            className="sm:col-span-2"
                         />
                         <CampoVoz
                             id="edad"
@@ -858,7 +836,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     setFecha(e.target.value);
                                     if (errorFecha) setErrorFecha(false);
                                 }}
-                                className={`${CLASE_SELECTOR} ${errorFecha ? 'border-red-500 pt-shake' : 'border-stone-200'}`}
+                                className={`${CLASE_SELECTOR} ${errorFecha ? 'border-red-500 pt-shake' : 'border-stone-200/90'}`}
                             />
                         </div>
                         <CampoVoz
@@ -890,15 +868,15 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     title="1. Embarazo normal y control prenatal"
                     subtitle="Mes de embarazo, micronutrientes, vacuna anti-tetánica y semáforo nutricional"
                 >
-                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-                        <div className="space-y-4 rounded-3xl border border-stone-200 bg-white/60 p-4 lg:col-span-2">
-                            <div className="flex items-center gap-4 border-b border-stone-200 pb-3">
-                                <span className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-5 lg:col-span-2">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b border-stone-200 pb-4">
+                                <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                     <Imagen src="/EmbarazoNormal.png" alt="Embarazo normal" />
                                 </span>
                                 <div>
-                                    <h3 className="text-base font-black text-stone-900">Embarazo normal (evolución fisiológica)</h3>
-                                    <p className="text-sm font-bold text-stone-700">Seleccione el mes de gestación activo (1º al 9º mes)</p>
+                                    <h3 className="text-base sm:text-lg font-black text-stone-900">Embarazo normal (evolución fisiológica)</h3>
+                                    <p className="text-xs sm:text-sm font-bold text-stone-600 mt-0.5">Seleccione el mes de gestación activo (1º al 9º mes)</p>
                                 </div>
                             </div>
                             <p className={CLASE_ETIQUETA}>Mes de embarazo activo</p>
@@ -909,8 +887,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                         activo={mesSeleccionado === m}
                                         onClick={() => setMesSeleccionado(m)}
                                         titulo={`${m}º Mes`}
-                                        tituloClassName="text-2xl"
-                                        className="min-h-[96px]"
+                                        tituloClassName="text-xl sm:text-2xl"
+                                        className="min-h-[88px] sm:min-h-[100px]"
                                     />
                                 ))}
                             </div>
@@ -924,9 +902,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 subtitulo={acidoFolico ? 'Entregado' : 'Pendiente'}
                                 img="/DuranteElEmbarazo-PrimerosMeses.png"
                                 icono={<Pill className="h-6 w-6 shrink-0 text-[#3F7048]" />}
-                                tono="verde"
                                 disposicion="fila"
-                                className="min-h-[112px] flex-1"
+                                className="min-h-[100px] flex-1"
                             />
                             <TarjetaOpcion
                                 activo={hierro}
@@ -935,38 +912,37 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 subtitulo={hierro ? 'Entregado' : 'Pendiente'}
                                 img="/DuranteElEmbarazo.png"
                                 icono={<Droplet className="h-6 w-6 shrink-0 text-[#C2603A]" />}
-                                tono="verde"
                                 disposicion="fila"
-                                className="min-h-[112px] flex-1"
+                                className="min-h-[100px] flex-1"
                             />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                        <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-5">
                             <div className="flex items-center gap-4">
-                                <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                                <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                     <Imagen src="/Aplicar-Toxoide-Tetanico.png" alt="Vacunación anti-tetánica" />
                                 </span>
-                                <h3 className="text-sm font-black uppercase text-stone-900">Vacunación anti-tetánica (Td/Tdap)</h3>
+                                <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Vacunación anti-tetánica (Td/Tdap)</h3>
                             </div>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 gap-2.5">
                                 {VACUNAS.map((v) => (
                                     <TarjetaOpcion
                                         key={v.id}
                                         activo={vacunaTetanos === v.id}
                                         onClick={() => setVacunaTetanos(v.id)}
                                         titulo={v.label}
-                                        className="min-h-[88px] px-2"
+                                        className="min-h-[80px] px-1 text-xs"
                                     />
                                 ))}
                             </div>
                         </div>
 
-                        <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
+                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-5">
                             <div className="flex items-center gap-2">
-                                <Ruler className="h-5 w-5 text-stone-800" />
-                                <h3 className="text-sm font-black uppercase text-stone-900">Estado nutricional madre (cinta MUAC tricolor)</h3>
+                                <Ruler className="h-5 w-5 text-stone-700" />
+                                <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Estado nutricional madre (Cinta MUAC)</h3>
                             </div>
                             <SemaforoMUAC value={cintaMUAC} onChange={setCintaMUAC} label="Estado nutricional de la madre" />
                         </div>
@@ -979,7 +955,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     delay={0.1}
                     icon={<AlertTriangle className="h-6 w-6" />}
                     title="2. Embarazo con complicaciones"
-                    subtitle="Toque los dibujos de los signos de alarma identificados en la valoración"
+                    subtitle="Toque los dibujos de los signos de alarma identificados en la valoración clínica"
                     action={
                         <div className="flex flex-wrap items-center gap-3">
                             <ContadorPill total={sintomasComplicaciones.length} />
@@ -987,9 +963,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                         </div>
                     }
                 >
-                    <div className="relative overflow-hidden rounded-3xl border border-[#C2603A]/25 bg-gradient-to-b from-orange-50/70 to-amber-50/70 p-4 md:p-8">
+                    <div className="relative overflow-hidden rounded-3xl border border-[#CC7A2C]/30 bg-gradient-to-b from-orange-50/80 to-amber-50/60 p-4 sm:p-8">
                         <svg
-                            className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
+                            className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block"
                             viewBox="0 0 100 100"
                             preserveAspectRatio="none"
                             aria-hidden="true"
@@ -1001,37 +977,37 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     y1="50"
                                     x2={x}
                                     y2={y}
-                                    stroke="#C2603A"
+                                    stroke="#CC7A2C"
                                     strokeWidth="2"
                                     strokeDasharray="6 5"
                                     strokeLinecap="round"
-                                    opacity="0.35"
+                                    opacity="0.4"
                                     vectorEffect="non-scaling-stroke"
                                 />
                             ))}
                         </svg>
 
-                        <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-6 md:gap-x-6 md:gap-y-8">
-                            {SINTOMAS_SUPERIORES.map((s) => renderSintoma(s, 'md:col-span-2'))}
-                            {renderSintoma(SINTOMA_IZQUIERDO, 'md:col-span-2')}
+                        <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6 lg:gap-x-6 lg:gap-y-8">
+                            {SINTOMAS_SUPERIORES.map((s) => renderSintoma(s, 'lg:col-span-2'))}
+                            {renderSintoma(SINTOMA_IZQUIERDO, 'lg:col-span-2')}
 
-                            <div className="order-first flex flex-col items-center justify-center gap-2 rounded-3xl border border-[#C2603A]/40 bg-gradient-to-b from-orange-100/90 to-amber-100 p-5 text-center shadow-2xl shadow-orange-900/15 sm:col-span-2 md:order-none md:col-span-2">
-                                <span className="pt-breathe flex h-11 w-11 items-center justify-center rounded-full bg-[#CC7A2C] text-white shadow-lg">
+                            <div className="order-first flex flex-col items-center justify-center gap-3 rounded-3xl border border-[#CC7A2C]/40 bg-gradient-to-b from-orange-100 to-amber-100 p-6 text-center shadow-2xl shadow-orange-950/15 sm:col-span-2 lg:order-none lg:col-span-2">
+                                <span className="pt-breathe flex h-12 w-12 items-center justify-center rounded-full bg-[#CC7A2C] text-white shadow-lg">
                                     <AlertTriangle className="h-6 w-6" />
                                 </span>
-                                <span className="flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                                <span className="flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                     <Imagen src="/EmbarazoConComplicaciones.png" alt="Embarazo con complicaciones" />
                                 </span>
-                                <span className={`rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-wider ${BOTON_TIERRA}`}>
+                                <span className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider ${BOTON_TIERRA}`}>
                                     Embarazo con complicaciones
                                 </span>
-                                <p className="max-w-xs text-xs font-bold text-stone-800">
-                                    Identificación de signos de alarma materna durante la valoración
+                                <p className="text-xs font-bold text-stone-700">
+                                    Identificación temprana de signos de alarma materna
                                 </p>
                             </div>
 
-                            {renderSintoma(SINTOMA_DERECHO, 'md:col-span-2')}
-                            {SINTOMAS_INFERIORES.map((s, i) => renderSintoma(s, i === 0 ? 'md:col-span-2 md:col-start-2' : 'md:col-span-2'))}
+                            {renderSintoma(SINTOMA_DERECHO, 'lg:col-span-2')}
+                            {SINTOMAS_INFERIORES.map((s, i) => renderSintoma(s, i === 0 ? 'lg:col-span-2 lg:col-start-2' : 'lg:col-span-2'))}
                         </div>
                     </div>
                 </SectionCard>
@@ -1042,7 +1018,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     delay={0.12}
                     icon={<ShieldAlert className="h-6 w-6" />}
                     title="3. Aborto, dolor y hemorragia"
-                    subtitle="Evaluación de complicaciones hemorrágicas o dolor agudo"
+                    subtitle="Evaluación clínica de complicaciones hemorrágicas o dolor agudo"
                     action={
                         <div className="flex flex-wrap items-center gap-3">
                             <ContadorPill total={tarjetasAborto.length} />
@@ -1058,9 +1034,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                 onClick={() => toggleTarjetaAborto(item.id)}
                                 titulo={item.title}
                                 img={item.img}
-                                altoImg="h-44"
+                                altoImg="h-40 sm:h-44"
                                 pie={{ off: 'Marcar', on: 'Registrado' }}
-                                className="min-h-[260px]"
+                                className="min-h-[240px]"
                             />
                         ))}
                     </div>
@@ -1071,27 +1047,31 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     acento="ocre"
                     delay={0.14}
                     icon={<HeartPulse className="h-6 w-6" />}
-                    title="4. Parto normal (posición vertical y horizontal)"
-                    subtitle="Posición del parto y resultado del recién nacido"
+                    title="4. Parto normal (vertical y horizontal)"
+                    subtitle="Posición de atención del parto y estado del recién nacido"
                 >
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                         {FILAS_PARTO.map((fila) => {
                             const filaActiva = partoNormalPosicion === fila.pos;
                             return (
                                 <div
                                     key={fila.pos}
-                                    className={`grid items-center gap-4 rounded-3xl border-2 p-4 transition-all duration-300 lg:grid-cols-2 ${filaActiva ? 'border-[#D69A1E] bg-gradient-to-b from-amber-50/80 to-orange-50/60 shadow-xl shadow-orange-900/10' : 'border-stone-200 bg-white/60'}`}
+                                    className={`grid items-center gap-5 rounded-3xl border-2 p-5 transition-all duration-300 lg:grid-cols-2 ${
+                                        filaActiva
+                                            ? 'border-[#CC7A2C] bg-gradient-to-br from-amber-50/90 to-orange-50/70 shadow-xl shadow-orange-950/10'
+                                            : 'border-stone-200/80 bg-white/70'
+                                    }`}
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <span className="flex h-36 w-40 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+                                        <span className="flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                             <Imagen src={fila.img} alt={fila.titulo} />
                                         </span>
                                         <div>
-                                            <span className="rounded-full border border-[#D69A1E]/50 bg-amber-50 px-3 py-1 text-xs font-black uppercase text-stone-900">
+                                            <span className="inline-block rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-black uppercase text-stone-800 mb-2">
                                                 {fila.etiqueta}
                                             </span>
-                                            <h3 className="mt-1.5 text-base font-black text-stone-900">{fila.titulo}</h3>
-                                            <p className="text-sm font-bold text-stone-700">{fila.descripcion}</p>
+                                            <h3 className="text-base sm:text-lg font-black text-stone-900">{fila.titulo}</h3>
+                                            <p className="text-xs sm:text-sm font-bold text-stone-600 mt-1">{fila.descripcion}</p>
                                         </div>
                                     </div>
 
@@ -1106,9 +1086,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                                 }}
                                                 titulo={r.titulo}
                                                 img={r.img}
-                                                altoImg="h-28"
-                                                icono={<Baby className="h-5 w-5 shrink-0 text-[#C2603A]" />}
-                                                className="min-h-[190px]"
+                                                altoImg="h-24 sm:h-28"
+                                                icono={<Baby className="h-5 w-5 shrink-0 text-[#CC7A2C]" />}
+                                                className="min-h-[170px]"
                                             />
                                         ))}
                                     </div>
@@ -1137,8 +1117,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     onClick={() => setPartoComplicadoOpcion(activo ? null : item.id)}
                                     titulo={item.title}
                                     img={item.img}
-                                    altoImg="h-36"
-                                    className="min-h-[230px]"
+                                    altoImg="h-32 sm:h-36"
+                                    className="min-h-[220px]"
                                 />
                             );
                         })}
@@ -1153,26 +1133,26 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     title="6. Puerperio normal y complicado"
                     subtitle="Primeros 40 días postparto: estado nutricional y signos de alarma"
                 >
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                        <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-5">
                             <div className="flex items-center gap-2">
-                                <Ruler className="h-5 w-5 text-stone-800" />
-                                <h3 className="text-sm font-black uppercase text-stone-900">Puerperio normal (cinta MUAC tricolor)</h3>
+                                <Ruler className="h-5 w-5 text-stone-700" />
+                                <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Puerperio normal (Cinta MUAC)</h3>
                             </div>
-                            <p className="text-sm font-bold text-stone-700">Evaluación del estado nutricio posparto materna</p>
+                            <p className="text-xs sm:text-sm font-bold text-stone-600">Evaluación del estado nutricio posparto</p>
                             <SemaforoMUAC value={cintaMUACPuerperio} onChange={setCintaMUACPuerperio} label="Estado nutricional en puerperio" />
                         </div>
 
-                        <div className="space-y-4 rounded-3xl border border-[#C2603A]/30 bg-gradient-to-b from-orange-50/70 to-amber-50/70 p-4">
+                        <div className="space-y-4 rounded-3xl border border-[#CC7A2C]/30 bg-gradient-to-br from-orange-50/80 to-amber-50/60 p-5">
                             <div className="flex flex-wrap items-center justify-between gap-3">
-                                <h3 className="text-sm font-black uppercase text-stone-900">Puerperio complicado</h3>
+                                <h3 className="text-xs sm:text-sm font-black uppercase text-stone-900">Puerperio complicado</h3>
                                 <ReferidoToggle label="Ref" value={referidoPuerperio} onChange={setReferidoPuerperio} />
                             </div>
-                            <div className="flex items-center gap-4">
-                                <span className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                            <div className="flex flex-col sm:flex-row items-center gap-4">
+                                <span className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
                                     <Imagen src="/PuerpericoComplicado.png" alt="Puerperio complicado" />
                                 </span>
-                                <div className="flex-1 space-y-3">
+                                <div className="w-full flex-1 space-y-3">
                                     {CHECKS_PUERPERIO.map((chk) => (
                                         <TarjetaOpcion
                                             key={chk.id}
@@ -1180,7 +1160,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                             onClick={() => togglePuerperioCheckbox(chk.id)}
                                             titulo={chk.label}
                                             disposicion="fila"
-                                            className="min-h-[72px]"
+                                            className="min-h-[64px]"
                                         />
                                     ))}
                                 </div>
@@ -1207,9 +1187,9 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                                     onClick={() => setMuerteMaternaEtapa(activo ? null : item.id)}
                                     titulo={item.title}
                                     img={item.img}
-                                    altoImg="h-44"
+                                    altoImg="h-40 sm:h-44"
                                     pie={{ off: 'Notificar', on: 'Notificado', iconoOff: <AlertTriangle className="h-3.5 w-3.5 text-[#CC7A2C]" /> }}
-                                    className="min-h-[260px]"
+                                    className="min-h-[240px]"
                                 />
                             );
                         })}
@@ -1219,22 +1199,22 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 {/* ================= 8. Cierre administrativo ================= */}
                 <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.22s' }}>
                     <TriStripe />
-                    <div className="space-y-5 p-4 sm:p-6">
-                        <div className="flex items-center gap-3 border-b border-stone-200 pb-4">
-                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D69A1E] to-[#C2603A] text-white shadow-lg shadow-orange-900/20">
+                    <div className="space-y-6 p-5 sm:p-8">
+                        <div className="flex items-center gap-3.5 border-b border-stone-200/80 pb-5">
+                            <span className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D69A1E] to-[#C2603A] text-white shadow-xl shadow-orange-900/15">
                                 <PenTool className="h-6 w-6" />
                             </span>
                             <div>
-                                <h2 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl">
+                                <h2 className="text-lg sm:text-2xl font-black leading-tight text-stone-900">
                                     Cierre administrativo del informe materno
                                 </h2>
-                                <p className="text-sm font-bold text-stone-700">
-                                    Datos de la partera acreditada, localidad, municipio y supervisión
+                                <p className="text-xs sm:text-sm font-bold text-stone-600 mt-0.5">
+                                    Datos de la partera acreditada, localidad, municipio y supervisión institucional
                                 </p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             {camposCierre.map((c) => (
                                 <CampoVoz
                                     key={c.key}
@@ -1255,20 +1235,21 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                 {errorServidor && (
                     <div
                         role="alert"
-                        className="pt-pop-in rounded-3xl border-2 border-red-400 bg-red-50 p-4 text-base font-bold text-stone-900 shadow-lg"
+                        className="pt-pop-in rounded-3xl border-2 border-red-300 bg-red-50 p-5 text-sm sm:text-base font-bold text-stone-900 shadow-xl flex items-center gap-3"
                     >
-                        {errorServidor}
+                        <AlertTriangle className="h-6 w-6 text-red-600 shrink-0" />
+                        <span>{errorServidor}</span>
                     </div>
                 )}
 
-                {/* ====================== Botón de envío ====================== */}
+                {/* ====================== Botón de envío Principal ====================== */}
                 <button
                     type="submit"
                     disabled={isSubmitting || exito}
-                    className={`pt-slide-up flex min-h-[88px] w-full cursor-pointer items-center justify-center gap-4 rounded-3xl px-6 py-5 text-xl font-black disabled:cursor-wait disabled:opacity-80 sm:text-2xl ${BOTON_TIERRA} ${nombreMujer.trim() && !isSubmitting ? 'pt-breathe' : ''}`}
+                    className={`pt-slide-up flex min-h-[96px] w-full cursor-pointer items-center justify-center gap-4 rounded-3xl px-6 py-6 text-xl sm:text-2xl font-black disabled:cursor-wait disabled:opacity-80 ${BOTON_TIERRA} ${nombreMujer.trim() && !isSubmitting ? 'pt-breathe' : ''}`}
                     style={{ animationDelay: '.25s' }}
                 >
-                    {isSubmitting ? <Loader2 className="h-7 w-7 animate-spin" /> : <Send className="h-7 w-7" />}
+                    {isSubmitting ? <Loader2 className="h-8 w-8 animate-spin" /> : <Send className="h-8 w-8" />}
                     <span>{isSubmitting ? 'Guardando en PostgreSQL (Render)…' : 'REGISTRAR CALENDARIO DE LA MUJER'}</span>
                 </button>
 
@@ -1277,19 +1258,19 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     <div
                         role="status"
                         aria-live="polite"
-                        className="pt-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4 backdrop-blur-sm"
+                        className="pt-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-950/60 p-4 backdrop-blur-md"
                     >
                         <div className={`pt-pop-in w-full max-w-md overflow-hidden text-center ${VIDRIO}`}>
                             <TriStripe className="h-2" />
                             <div className="p-8">
-                                <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl">
+                                <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600 text-white shadow-2xl">
                                     <Check className="h-14 w-14" strokeWidth={3.5} />
                                 </div>
-                                <h2 className="text-3xl font-black text-stone-900">¡Registro guardado!</h2>
-                                <p className="mt-2 text-lg font-bold text-stone-800">
-                                    El calendario de {nombreMujer || 'la paciente'} quedó guardado en la base de datos (PostgreSQL · Render).
+                                <h2 className="text-2xl sm:text-3xl font-black text-stone-900">¡Registro guardado!</h2>
+                                <p className="mt-3 text-base sm:text-lg font-bold text-stone-700">
+                                    El calendario de {nombreMujer || 'la paciente'} quedó guardado en la base de datos de forma exitosa.
                                 </p>
-                                <p className="mt-3 text-sm font-bold text-stone-600">Regresando al menú…</p>
+                                <p className="mt-4 text-xs sm:text-sm font-bold text-stone-500">Regresando al menú principal…</p>
                             </div>
                         </div>
                     </div>
