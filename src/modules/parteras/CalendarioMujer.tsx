@@ -29,10 +29,9 @@ import { http } from '../../services/http';
  * Servicios de Salud de Oaxaca · Programa de Parteras Tradicionales
  *
  * - Header simétrico institucional idéntico a FormatoReferencia
- * - Estética Glassmorphism clara, paleta tierra del Istmo + Guinda sutil
- * - Sin datos quemados: todo inicia vacío y listo para dictado por voz
- * - Micrófonos en tono Guinda institucional (#9D2449) con ondas animadas
- * - Sin botón de huella digital
+ * - Estética Glassmorphism clara, paleta tierra del Istmo
+ * - Micrófonos y ondas en tono Terracota/Ocre de referencia (#CC7A2C)
+ * - Sin datos quemados y sin botón de huella digital
  * - Conexión directa a PostgreSQL vía Axios (/api/v1/calendario-mujer)
  * ========================================================================== */
 
@@ -177,7 +176,7 @@ const ESTILOS = `
 @keyframes pt-pop-in { 0% { opacity: 0; transform: scale(.4) } 70% { transform: scale(1.18) } 100% { opacity: 1; transform: scale(1) } }
 @keyframes pt-breathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.03) } }
 @keyframes pt-wave { 0%,100% { transform: scaleY(.25) } 50% { transform: scaleY(1) } }
-@keyframes pt-ring { 0% { box-shadow: 0 0 0 0 rgba(157,36,73,.5) } 100% { box-shadow: 0 0 0 14px rgba(157,36,73,0) } }
+@keyframes pt-ring { 0% { box-shadow: 0 0 0 0 rgba(204,122,44,.5) } 100% { box-shadow: 0 0 0 14px rgba(204,122,44,0) } }
 @keyframes pt-shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
 .pt-fade-in { animation: pt-fade-in .5s ease-out both }
 .pt-slide-up { animation: pt-slide-up .55s cubic-bezier(.22,1,.36,1) both }
@@ -185,7 +184,7 @@ const ESTILOS = `
 .pt-breathe { animation: pt-breathe 2.8s ease-in-out infinite }
 .pt-ring { animation: pt-ring 1.2s ease-out infinite }
 .pt-shake { animation: pt-shake .4s ease-in-out }
-.pt-wave-bar { display: inline-block; width: 4px; height: 20px; border-radius: 4px; background: #9D2449; transform-origin: center; animation: pt-wave .9s ease-in-out infinite }
+.pt-wave-bar { display: inline-block; width: 4px; height: 20px; border-radius: 4px; background: #CC7A2C; transform-origin: center; animation: pt-wave .9s ease-in-out infinite }
 @media (prefers-reduced-motion: reduce) {
   .pt-fade-in, .pt-slide-up, .pt-pop-in, .pt-breathe, .pt-ring, .pt-shake, .pt-wave-bar { animation: none !important }
 }
@@ -198,7 +197,7 @@ const BOTON_TIERRA =
     'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-xl shadow-orange-900/40 border border-white/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl active:scale-[0.98]';
 
 const CLASE_SELECTOR =
-    'h-16 w-full rounded-2xl border-2 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#9D2449] focus:ring-4 focus:ring-[#9D2449]/20';
+    'h-16 w-full rounded-2xl border-2 bg-white/90 px-4 text-lg font-bold text-stone-900 outline-none transition-all duration-200 focus:border-[#CC7A2C] focus:ring-4 focus:ring-[#CC7A2C]/20';
 
 const CLASE_ETIQUETA = 'mb-1.5 block text-sm font-bold uppercase tracking-wide text-stone-800';
 
@@ -262,7 +261,7 @@ const CampoVoz: React.FC<CampoVozProps> = ({
     className = ''
 }) => {
     const borde = escuchando
-        ? 'border-[#9D2449] ring-4 ring-[#9D2449]/20 bg-rose-50/60'
+        ? 'border-[#CC7A2C] ring-4 ring-[#CC7A2C]/20 bg-amber-50/60'
         : error
             ? 'border-red-500 pt-shake'
             : 'border-stone-200';
@@ -299,7 +298,7 @@ const CampoVoz: React.FC<CampoVozProps> = ({
                     onClick={onMic}
                     aria-label={escuchando ? `Detener dictado de ${etiqueta}` : `Dictar ${etiqueta} por voz`}
                     aria-pressed={escuchando}
-                    className={`absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-xl text-white shadow-md transition-all duration-200 active:scale-[0.96] ${escuchando ? 'pt-ring bg-[#7A1B38]' : 'bg-[#9D2449] hover:bg-[#7A1B38] hover:shadow-lg'}`}
+                    className={`absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-xl text-white shadow-md transition-all duration-200 active:scale-[0.96] ${escuchando ? 'pt-ring bg-[#A85322]' : 'bg-[#CC7A2C] hover:bg-[#B56822] hover:shadow-lg'}`}
                 >
                     {escuchando ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-6 w-6" strokeWidth={2.4} />}
                 </button>
@@ -357,7 +356,7 @@ const ReferidoToggle: React.FC<{ label: string; value: boolean; onChange: (v: bo
             type="button"
             aria-pressed={value}
             onClick={() => onChange(true)}
-            className={`flex min-h-[56px] min-w-[80px] cursor-pointer items-center justify-center gap-1.5 rounded-xl px-5 text-sm font-black transition-all duration-200 active:scale-[0.98] ${value ? 'bg-[#9D2449] text-white shadow-md' : 'text-stone-700 hover:bg-amber-50'}`}
+            className={`flex min-h-[56px] min-w-[80px] cursor-pointer items-center justify-center gap-1.5 rounded-xl px-5 text-sm font-black transition-all duration-200 active:scale-[0.98] ${value ? 'bg-[#CC7A2C] text-white shadow-md' : 'text-stone-700 hover:bg-amber-50'}`}
         >
             <span>SÍ</span>
             <AlertTriangle className={`h-4 w-4 ${value ? 'text-amber-300' : 'text-[#D69A1E]'}`} />
@@ -398,17 +397,17 @@ const TarjetaOpcion: React.FC<TarjetaOpcionProps> = ({
     const seleccionada =
         tono === 'verde'
             ? 'border-emerald-600 bg-gradient-to-b from-emerald-50 to-green-50 shadow-xl shadow-emerald-900/10 ring-4 ring-emerald-500/10'
-            : 'border-[#9D2449] bg-gradient-to-b from-rose-50/80 to-amber-50 shadow-xl shadow-rose-900/10 ring-4 ring-[#9D2449]/10';
+            : 'border-[#CC7A2C] bg-gradient-to-b from-orange-50/80 to-amber-50 shadow-xl shadow-orange-900/10 ring-4 ring-[#CC7A2C]/10';
     const normal =
         'border-stone-200 bg-white/90 shadow-md hover:-translate-y-0.5 hover:border-[#C2603A]/50 hover:shadow-xl';
-    const insignia = tono === 'verde' ? 'bg-emerald-600' : 'bg-[#9D2449]';
+    const insignia = tono === 'verde' ? 'bg-emerald-600' : 'bg-[#CC7A2C]';
 
     return (
         <button
             type="button"
             onClick={onClick}
             aria-pressed={activo}
-            className={`relative min-h-[72px] w-full cursor-pointer touch-manipulation select-none rounded-3xl border-2 p-3 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#9D2449]/40 active:scale-[0.98] ${activo ? seleccionada : normal} ${fila
+            className={`relative min-h-[72px] w-full cursor-pointer touch-manipulation select-none rounded-3xl border-2 p-3 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#CC7A2C]/40 active:scale-[0.98] ${activo ? seleccionada : normal} ${fila
                 ? 'flex items-center gap-3 text-left'
                 : `flex flex-col items-center gap-2 text-center ${img || pie ? 'justify-between' : 'justify-center'}`
                 } ${className}`}
@@ -456,7 +455,7 @@ const SemaforoMUAC: React.FC<{ value: Muac | null; onChange: (v: Muac) => void; 
                     className={`relative flex min-h-[104px] cursor-pointer touch-manipulation flex-col items-center justify-center gap-1 rounded-3xl border-2 px-2 py-4 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${activo ? s.on : s.off}`}
                 >
                     {activo && (
-                        <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#9D2449] text-white shadow-lg">
+                        <span className="pt-pop-in absolute -right-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#CC7A2C] text-white shadow-lg">
                             <Check className="h-5 w-5" strokeWidth={3.5} />
                         </span>
                     )}
@@ -1017,7 +1016,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                             {renderSintoma(SINTOMA_IZQUIERDO, 'md:col-span-2')}
 
                             <div className="order-first flex flex-col items-center justify-center gap-2 rounded-3xl border border-[#C2603A]/40 bg-gradient-to-b from-orange-100/90 to-amber-100 p-5 text-center shadow-2xl shadow-orange-900/15 sm:col-span-2 md:order-none md:col-span-2">
-                                <span className="pt-breathe flex h-11 w-11 items-center justify-center rounded-full bg-[#9D2449] text-white shadow-lg">
+                                <span className="pt-breathe flex h-11 w-11 items-center justify-center rounded-full bg-[#CC7A2C] text-white shadow-lg">
                                     <AlertTriangle className="h-6 w-6" />
                                 </span>
                                 <span className="flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
@@ -1217,7 +1216,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 8. Cierre administrativo (Sin huella) ================= */}
+                {/* ================= 8. Cierre administrativo ================= */}
                 <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.22s' }}>
                     <TriStripe />
                     <div className="space-y-5 p-4 sm:p-6">
