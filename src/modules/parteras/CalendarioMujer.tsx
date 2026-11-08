@@ -26,8 +26,13 @@ import { handleVoiceInput } from '../../utils/voiceUtils';
 import { http } from '../../services/http';
 
 /* ============================================================================
- * CalendarioMujer — vidrio ligero, paleta tierra del Istmo + guinda sutil.
- * Sin datos quemados: todo inicia vacío / sin seleccionar.
+ * CalendarioMujer — Envoltorio y Formulario unificado
+ * Servicios de Salud de Oaxaca · Programa de Parteras Tradicionales
+ *
+ * - Header simétrico institucional idéntico a FormatoReferencia
+ * - Estética Glassmorphism clara, paleta tierra del Istmo + Guinda sutil
+ * - Sin datos quemados: todo inicia vacío y listo para dictado por voz
+ * - Conexión directa a PostgreSQL vía Axios (/api/v1/calendario-mujer)
  * ========================================================================== */
 
 /* ------------------------------ Tipos ------------------------------------ */
@@ -103,7 +108,6 @@ const SINTOMAS_INFERIORES: ItemCatalogo[] = [
     { id: 'DOLOR_ANTES_8_MESES', img: '/DolorAntesDeLos8Meses.png', label: 'Dolor antes de los 8 meses' }
 ];
 
-// Centros (en %) de cada tarjeta del mapa radial, para los conectores SVG
 const CONECTORES: [number, number][] = [
     [16.6, 17], [50, 17], [83.3, 17],
     [16.6, 50], [83.3, 50],
@@ -204,7 +208,7 @@ const ACENTOS: Record<Acento, string> = {
 };
 
 /* ------------------------- Componentes reutilizables ---------------------- */
-const TriStripe: React.FC<{ className?: string }> = ({ className = 'h-1.5' }) => (
+const TriStripe: React.FC<{ className?: string }> = ({ className = 'h-2.5' }) => (
     <div className={`w-full bg-gradient-to-r from-[#C2603A] via-[#D69A1E] to-[#5E8C61] ${className}`} aria-hidden="true" />
 );
 
@@ -522,7 +526,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
     const [huellaRegistrada, setHuellaRegistrada] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Estado de UI (no afecta el payload)
+    // Estado de UI
     const [hablando, setHablando] = useState(false);
     const [exito, setExito] = useState(false);
     const [errorServidor, setErrorServidor] = useState<string | null>(null);
@@ -543,7 +547,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         };
     }, []);
 
-    /* ----- Voz de salida (usa la del contenedor; si no, la del navegador) -- */
     const speakText = useCallback(
         (texto: string) => {
             if (hablarTexto) {
@@ -560,7 +563,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         [hablarTexto]
     );
 
-    /* ----- "Escuchar instrucciones" (siempre es-MX) ----- */
     const escucharInstrucciones = () => {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
         const synth = window.speechSynthesis;
@@ -581,7 +583,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         synth.speak(u);
     };
 
-    /* ----- Dictado: ondas en vivo + confirmación de voz al terminar ----- */
     const startVoice = (setter: (val: string) => void, fieldKey: string) => {
         let ultimo = '';
         let inicio = false;
@@ -627,7 +628,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         if (el instanceof HTMLInputElement) el.focus({ preventScroll: true });
     };
 
-    // Conexión real con el backend y PostgreSQL
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (isSubmitting || exito) return;
@@ -750,574 +750,577 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
 
     /* ------------------------------ Render ---------------------------------- */
     return (
-        <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-5">
+        <div className="relative min-h-screen w-full overflow-x-hidden px-3 py-4 sm:px-6 sm:py-8">
             <style>{ESTILOS}</style>
 
-            {/* ================= Cabecera institucional ================= */}
-            <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
-                <TriStripe />
-                <div className="grid grid-cols-1 items-center gap-4 p-4 sm:p-6 md:grid-cols-2">
-                    <div>
-                        <h1 className="text-xl font-black uppercase leading-tight text-stone-900 sm:text-2xl">
-                            Calendario de atención a la mujer
-                        </h1>
-                        <p className="mt-1 text-sm font-bold text-stone-700">
-                            Programa de Parteras Tradicionales · Servicios de Salud de Oaxaca
-                        </p>
+            <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+                
+                {/* ===================== Cabecera Simétrica Global ===================== */}
+                <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
+                    <TriStripe />
+                    <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
+                        <div className="min-w-0 text-center sm:text-left px-2">
+                            <h1 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl uppercase tracking-tight">
+                                Calendario de atención a la mujer
+                            </h1>
+                            <p className="mt-1 text-xs sm:text-sm font-bold text-stone-700">
+                                Programa de Parteras Tradicionales · Servicios de Salud de Oaxaca
+                            </p>
+                        </div>
+                        <div className="flex justify-center sm:justify-end">
+                            <button
+                                type="button"
+                                onClick={escucharInstrucciones}
+                                aria-pressed={hablando}
+                                className={`flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl px-6 text-base font-black ${BOTON_TIERRA} ${hablando ? 'pt-ring' : ''}`}
+                            >
+                                <Volume2 className="h-6 w-6" />
+                                <span>{hablando ? 'Detener instrucciones' : 'Escuchar instrucciones'}</span>
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex md:justify-end">
+                </header>
+
+                {/* ============ Vista Partera / Copia Centro de Salud ============ */}
+                <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+                    <div className="min-h-[40px]">
+                        {modoDuplicado && (
+                            <span className="pt-fade-in inline-flex items-center gap-2 rounded-full border border-[#D69A1E]/60 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-stone-900">
+                                <Award className="h-4 w-4 text-[#C2603A]" />
+                                Duplicado oficial SSO · Copia institucional
+                            </span>
+                        )}
+                    </div>
+                    <div role="group" aria-label="Tipo de vista" className="flex w-full items-center gap-1 rounded-2xl border border-stone-200 bg-white/70 p-1 sm:w-auto">
                         <button
                             type="button"
-                            onClick={escucharInstrucciones}
-                            aria-pressed={hablando}
-                            className={`flex min-h-[72px] w-full cursor-pointer items-center justify-center gap-3 rounded-2xl px-6 text-base font-black md:w-auto ${BOTON_TIERRA} ${hablando ? 'pt-ring' : ''}`}
+                            aria-pressed={!modoDuplicado}
+                            onClick={() => {
+                                setModoDuplicado(false);
+                                speakText('Vista Partera activa');
+                            }}
+                            className={`flex min-h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition-all duration-200 active:scale-[0.98] sm:flex-initial ${!modoDuplicado ? 'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-md' : 'text-stone-800 hover:bg-amber-50'}`}
                         >
-                            <Volume2 className="h-6 w-6" />
-                            <span>{hablando ? 'Detener instrucciones' : 'Escuchar instrucciones'}</span>
+                            <FileText className="h-4 w-4" />
+                            <span>Vista Partera</span>
+                        </button>
+                        <button
+                            type="button"
+                            aria-pressed={modoDuplicado}
+                            onClick={() => {
+                                setModoDuplicado(true);
+                                speakText('Mostrando copia oficial para el Centro de Salud');
+                            }}
+                            className={`flex min-h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition-all duration-200 active:scale-[0.98] sm:flex-initial ${modoDuplicado ? 'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-md' : 'text-stone-800 hover:bg-amber-50'}`}
+                        >
+                            <Building2 className="h-4 w-4" />
+                            <span>Copia para Centro de Salud</span>
                         </button>
                     </div>
                 </div>
-            </header>
 
-            {/* ============ Vista Partera / Copia Centro de Salud ============ */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-h-[40px]">
-                    {modoDuplicado && (
-                        <span className="pt-fade-in inline-flex items-center gap-2 rounded-full border border-[#D69A1E]/60 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-wide text-stone-900">
-                            <Award className="h-4 w-4 text-[#C2603A]" />
-                            Duplicado oficial SSO · Copia institucional
-                        </span>
-                    )}
-                </div>
-                <div role="group" aria-label="Tipo de vista" className="flex w-full items-center gap-1 rounded-2xl border border-stone-200 bg-white/70 p-1 sm:w-auto">
-                    <button
-                        type="button"
-                        aria-pressed={!modoDuplicado}
-                        onClick={() => {
-                            setModoDuplicado(false);
-                            speakText('Vista Partera activa');
-                        }}
-                        className={`flex min-h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition-all duration-200 active:scale-[0.98] sm:flex-initial ${!modoDuplicado ? 'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-md' : 'text-stone-800 hover:bg-amber-50'}`}
-                    >
-                        <FileText className="h-4 w-4" />
-                        <span>Vista Partera</span>
-                    </button>
-                    <button
-                        type="button"
-                        aria-pressed={modoDuplicado}
-                        onClick={() => {
-                            setModoDuplicado(true);
-                            speakText('Mostrando copia oficial para el Centro de Salud');
-                        }}
-                        className={`flex min-h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition-all duration-200 active:scale-[0.98] sm:flex-initial ${modoDuplicado ? 'bg-gradient-to-br from-[#D69A1E] via-[#CC7A2C] to-[#C2603A] text-white shadow-md' : 'text-stone-800 hover:bg-amber-50'}`}
-                    >
-                        <Building2 className="h-4 w-4" />
-                        <span>Copia para Centro de Salud</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* ================= Datos de identificación ================= */}
-            <SectionCard
-                acento="ocre"
-                delay={0.05}
-                icon={<User className="h-6 w-6" />}
-                title="Datos de identificación de la paciente"
-                subtitle="Toque el micrófono dentro de cada campo para dictar con su voz"
-            >
-                <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
-                    <CampoVoz
-                        id="nombreMujer"
-                        etiqueta="Nombre de la mujer"
-                        placeholder="Nombre completo de la mujer…"
-                        valor={nombreMujer}
-                        onCambio={(v) => {
-                            setNombreMujer(v);
-                            if (errorNombre) setErrorNombre(false);
-                        }}
-                        onMic={() => startVoice((v) => { setNombreMujer(v); setErrorNombre(false); }, 'nombreMujer')}
-                        escuchando={listeningField === 'nombreMujer'}
-                        error={errorNombre}
-                        className="md:col-span-2"
-                    />
-                    <CampoVoz
-                        id="edad"
-                        etiqueta="Edad (años)"
-                        placeholder="Ej. 26"
-                        inputMode="numeric"
-                        maxLength={3}
-                        valor={edad}
-                        onCambio={(v) => setEdad(v.replace(/\D/g, '').slice(0, 3))}
-                        onMic={() => startVoice((v) => setEdad(v.replace(/\D/g, '').slice(0, 3)), 'edad')}
-                        escuchando={listeningField === 'edad'}
-                    />
-                    <div>
-                        <label htmlFor="cm-fecha" className={CLASE_ETIQUETA}>
-                            Fecha de consulta
-                        </label>
-                        <input
-                            id="cm-fecha"
-                            type="date"
-                            value={fecha}
-                            aria-invalid={errorFecha}
-                            onChange={(e) => {
-                                setFecha(e.target.value);
-                                if (errorFecha) setErrorFecha(false);
+                {/* ================= Datos de identificación ================= */}
+                <SectionCard
+                    acento="ocre"
+                    delay={0.05}
+                    icon={<User className="h-6 w-6" />}
+                    title="Datos de identificación de la paciente"
+                    subtitle="Toque el micrófono dentro de cada campo para dictar con su voz"
+                >
+                    <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                        <CampoVoz
+                            id="nombreMujer"
+                            etiqueta="Nombre de la mujer"
+                            placeholder="Nombre completo de la mujer…"
+                            valor={nombreMujer}
+                            onCambio={(v) => {
+                                setNombreMujer(v);
+                                if (errorNombre) setErrorNombre(false);
                             }}
-                            className={`${CLASE_SELECTOR} ${errorFecha ? 'border-red-500 pt-shake' : 'border-stone-200'}`}
+                            onMic={() => startVoice((v) => { setNombreMujer(v); setErrorNombre(false); }, 'nombreMujer')}
+                            escuchando={listeningField === 'nombreMujer'}
+                            error={errorNombre}
+                            className="md:col-span-2"
                         />
-                    </div>
-                    <CampoVoz
-                        id="localidad"
-                        etiqueta="Localidad"
-                        placeholder="Localidad…"
-                        valor={localidad}
-                        onCambio={setLocalidad}
-                        onMic={() => startVoice(setLocalidad, 'localidad')}
-                        escuchando={listeningField === 'localidad'}
-                    />
-                    <CampoVoz
-                        id="municipio"
-                        etiqueta="Municipio"
-                        placeholder="Municipio…"
-                        valor={municipio}
-                        onCambio={setMunicipio}
-                        onMic={() => startVoice(setMunicipio, 'municipio')}
-                        escuchando={listeningField === 'municipio'}
-                    />
-                </div>
-            </SectionCard>
-
-            {/* ================= 1. Embarazo normal y control prenatal ================= */}
-            <SectionCard
-                acento="verde"
-                delay={0.08}
-                icon={<Calendar className="h-6 w-6" />}
-                title="1. Embarazo normal y control prenatal"
-                subtitle="Mes de embarazo, micronutrientes, vacuna anti-tetánica y semáforo nutricional"
-            >
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-                    <div className="space-y-4 rounded-3xl border border-stone-200 bg-white/60 p-4 lg:col-span-2">
-                        <div className="flex items-center gap-4 border-b border-stone-200 pb-3">
-                            <span className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
-                                <Imagen src="/EmbarazoNormal.png" alt="Embarazo normal" />
-                            </span>
-                            <div>
-                                <h3 className="text-base font-black text-stone-900">Embarazo normal (evolución fisiológica)</h3>
-                                <p className="text-sm font-bold text-stone-700">Seleccione el mes de gestación activo (1º al 9º mes)</p>
-                            </div>
-                        </div>
-                        <p className={CLASE_ETIQUETA}>Mes de embarazo activo</p>
-                        <div className="grid grid-cols-3 gap-3">
-                            {MESES.map((m) => (
-                                <TarjetaOpcion
-                                    key={m}
-                                    activo={mesSeleccionado === m}
-                                    onClick={() => setMesSeleccionado(m)}
-                                    titulo={`${m}º Mes`}
-                                    tituloClassName="text-2xl"
-                                    className="min-h-[96px]"
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        <TarjetaOpcion
-                            activo={acidoFolico}
-                            onClick={() => setAcidoFolico(!acidoFolico)}
-                            titulo="Ácido fólico (30 días)"
-                            subtitulo={acidoFolico ? 'Entregado' : 'Pendiente'}
-                            img="/DuranteElEmbarazo-PrimerosMeses.png"
-                            icono={<Pill className="h-6 w-6 shrink-0 text-[#3F7048]" />}
-                            tono="verde"
-                            disposicion="fila"
-                            className="min-h-[112px] flex-1"
+                        <CampoVoz
+                            id="edad"
+                            etiqueta="Edad (años)"
+                            placeholder="Ej. 26"
+                            inputMode="numeric"
+                            maxLength={3}
+                            valor={edad}
+                            onCambio={(v) => setEdad(v.replace(/\D/g, '').slice(0, 3))}
+                            onMic={() => startVoice((v) => setEdad(v.replace(/\D/g, '').slice(0, 3)), 'edad')}
+                            escuchando={listeningField === 'edad'}
                         />
-                        <TarjetaOpcion
-                            activo={hierro}
-                            onClick={() => setHierro(!hierro)}
-                            titulo="Sulfato ferroso"
-                            subtitulo={hierro ? 'Entregado' : 'Pendiente'}
-                            img="/DuranteElEmbarazo.png"
-                            icono={<Droplet className="h-6 w-6 shrink-0 text-[#C2603A]" />}
-                            tono="verde"
-                            disposicion="fila"
-                            className="min-h-[112px] flex-1"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
-                        <div className="flex items-center gap-4">
-                            <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
-                                <Imagen src="/Aplicar-Toxoide-Tetanico.png" alt="Vacunación anti-tetánica" />
-                            </span>
-                            <h3 className="text-sm font-black uppercase text-stone-900">Vacunación anti-tetánica (Td/Tdap)</h3>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                            {VACUNAS.map((v) => (
-                                <TarjetaOpcion
-                                    key={v.id}
-                                    activo={vacunaTetanos === v.id}
-                                    onClick={() => setVacunaTetanos(v.id)}
-                                    titulo={v.label}
-                                    className="min-h-[88px] px-2"
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
-                        <div className="flex items-center gap-2">
-                            <Ruler className="h-5 w-5 text-stone-800" />
-                            <h3 className="text-sm font-black uppercase text-stone-900">Estado nutricional madre (cinta MUAC tricolor)</h3>
-                        </div>
-                        <SemaforoMUAC value={cintaMUAC} onChange={setCintaMUAC} label="Estado nutricional de la madre" />
-                    </div>
-                </div>
-            </SectionCard>
-
-            {/* ================= 2. Embarazo con complicaciones (mapa radial) ================= */}
-            <SectionCard
-                acento="terracota"
-                delay={0.1}
-                icon={<AlertTriangle className="h-6 w-6" />}
-                title="2. Embarazo con complicaciones"
-                subtitle="Toque los dibujos de los signos de alarma identificados en la valoración"
-                action={
-                    <div className="flex flex-wrap items-center gap-3">
-                        <ContadorPill total={sintomasComplicaciones.length} />
-                        <ReferidoToggle label="Referido" value={referidoEmbarazo} onChange={setReferidoEmbarazo} />
-                    </div>
-                }
-            >
-                <div className="relative overflow-hidden rounded-3xl border border-[#C2603A]/25 bg-gradient-to-b from-orange-50/70 to-amber-50/70 p-4 md:p-8">
-                    <svg
-                        className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
-                        viewBox="0 0 100 100"
-                        preserveAspectRatio="none"
-                        aria-hidden="true"
-                    >
-                        {CONECTORES.map(([x, y], i) => (
-                            <line
-                                key={i}
-                                x1="50"
-                                y1="50"
-                                x2={x}
-                                y2={y}
-                                stroke="#C2603A"
-                                strokeWidth="2"
-                                strokeDasharray="6 5"
-                                strokeLinecap="round"
-                                opacity="0.35"
-                                vectorEffect="non-scaling-stroke"
+                        <div>
+                            <label htmlFor="cm-fecha" className={CLASE_ETIQUETA}>
+                                Fecha de consulta
+                            </label>
+                            <input
+                                id="cm-fecha"
+                                type="date"
+                                value={fecha}
+                                aria-invalid={errorFecha}
+                                onChange={(e) => {
+                                    setFecha(e.target.value);
+                                    if (errorFecha) setErrorFecha(false);
+                                }}
+                                className={`${CLASE_SELECTOR} ${errorFecha ? 'border-red-500 pt-shake' : 'border-stone-200'}`}
                             />
-                        ))}
-                    </svg>
-
-                    <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-6 md:gap-x-6 md:gap-y-8">
-                        {SINTOMAS_SUPERIORES.map((s) => renderSintoma(s, 'md:col-span-2'))}
-                        {renderSintoma(SINTOMA_IZQUIERDO, 'md:col-span-2')}
-
-                        <div className="order-first flex flex-col items-center justify-center gap-2 rounded-3xl border border-[#C2603A]/40 bg-gradient-to-b from-orange-100/90 to-amber-100 p-5 text-center shadow-2xl shadow-orange-900/15 sm:col-span-2 md:order-none md:col-span-2">
-                            <span className="pt-breathe flex h-11 w-11 items-center justify-center rounded-full bg-[#9D2449] text-white shadow-lg">
-                                <AlertTriangle className="h-6 w-6" />
-                            </span>
-                            <span className="flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
-                                <Imagen src="/EmbarazoConComplicaciones.png" alt="Embarazo con complicaciones" />
-                            </span>
-                            <span className={`rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-wider ${BOTON_TIERRA}`}>
-                                Embarazo con complicaciones
-                            </span>
-                            <p className="max-w-xs text-xs font-bold text-stone-800">
-                                Identificación de signos de alarma materna durante la valoración
-                            </p>
                         </div>
-
-                        {renderSintoma(SINTOMA_DERECHO, 'md:col-span-2')}
-                        {SINTOMAS_INFERIORES.map((s, i) => renderSintoma(s, i === 0 ? 'md:col-span-2 md:col-start-2' : 'md:col-span-2'))}
-                    </div>
-                </div>
-            </SectionCard>
-
-            {/* ================= 3. Aborto, dolor y hemorragia ================= */}
-            <SectionCard
-                acento="terracota"
-                delay={0.12}
-                icon={<ShieldAlert className="h-6 w-6" />}
-                title="3. Aborto, dolor y hemorragia"
-                subtitle="Evaluación de complicaciones hemorrágicas o dolor agudo"
-                action={
-                    <div className="flex flex-wrap items-center gap-3">
-                        <ContadorPill total={tarjetasAborto.length} />
-                        <ReferidoToggle label="Referido" value={referidoAborto} onChange={setReferidoAborto} />
-                    </div>
-                }
-            >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {TARJETAS_ABORTO.map((item) => (
-                        <TarjetaOpcion
-                            key={item.id}
-                            activo={tarjetasAborto.includes(item.id)}
-                            onClick={() => toggleTarjetaAborto(item.id)}
-                            titulo={item.title}
-                            img={item.img}
-                            altoImg="h-44"
-                            pie={{ off: 'Marcar', on: 'Registrado' }}
-                            className="min-h-[260px]"
+                        <CampoVoz
+                            id="localidad"
+                            etiqueta="Localidad"
+                            placeholder="Localidad…"
+                            valor={localidad}
+                            onCambio={setLocalidad}
+                            onMic={() => startVoice(setLocalidad, 'localidad')}
+                            escuchando={listeningField === 'localidad'}
                         />
-                    ))}
-                </div>
-            </SectionCard>
+                        <CampoVoz
+                            id="municipio"
+                            etiqueta="Municipio"
+                            placeholder="Municipio…"
+                            valor={municipio}
+                            onCambio={setMunicipio}
+                            onMic={() => startVoice(setMunicipio, 'municipio')}
+                            escuchando={listeningField === 'municipio'}
+                        />
+                    </div>
+                </SectionCard>
 
-            {/* ================= 4. Parto normal ================= */}
-            <SectionCard
-                acento="ocre"
-                delay={0.14}
-                icon={<HeartPulse className="h-6 w-6" />}
-                title="4. Parto normal (posición vertical y horizontal)"
-                subtitle="Posición del parto y resultado del recién nacido"
-            >
-                <div className="space-y-4">
-                    {FILAS_PARTO.map((fila) => {
-                        const filaActiva = partoNormalPosicion === fila.pos;
-                        return (
-                            <div
-                                key={fila.pos}
-                                className={`grid items-center gap-4 rounded-3xl border-2 p-4 transition-all duration-300 lg:grid-cols-2 ${filaActiva ? 'border-[#D69A1E] bg-gradient-to-b from-amber-50/80 to-orange-50/60 shadow-xl shadow-orange-900/10' : 'border-stone-200 bg-white/60'}`}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <span className="flex h-36 w-40 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
-                                        <Imagen src={fila.img} alt={fila.titulo} />
-                                    </span>
-                                    <div>
-                                        <span className="rounded-full border border-[#D69A1E]/50 bg-amber-50 px-3 py-1 text-xs font-black uppercase text-stone-900">
-                                            {fila.etiqueta}
-                                        </span>
-                                        <h3 className="mt-1.5 text-base font-black text-stone-900">{fila.titulo}</h3>
-                                        <p className="text-sm font-bold text-stone-700">{fila.descripcion}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    {RESULTADOS_PARTO.map((r) => (
-                                        <TarjetaOpcion
-                                            key={r.id}
-                                            activo={filaActiva && partoNormalResultado === r.id}
-                                            onClick={() => {
-                                                setPartoNormalPosicion(fila.pos);
-                                                setPartoNormalResultado(r.id);
-                                            }}
-                                            titulo={r.titulo}
-                                            img={r.img}
-                                            altoImg="h-28"
-                                            icono={<Baby className="h-5 w-5 shrink-0 text-[#C2603A]" />}
-                                            className="min-h-[190px]"
-                                        />
-                                    ))}
+                {/* ================= 1. Embarazo normal y control prenatal ================= */}
+                <SectionCard
+                    acento="verde"
+                    delay={0.08}
+                    icon={<Calendar className="h-6 w-6" />}
+                    title="1. Embarazo normal y control prenatal"
+                    subtitle="Mes de embarazo, micronutrientes, vacuna anti-tetánica y semáforo nutricional"
+                >
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                        <div className="space-y-4 rounded-3xl border border-stone-200 bg-white/60 p-4 lg:col-span-2">
+                            <div className="flex items-center gap-4 border-b border-stone-200 pb-3">
+                                <span className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                                    <Imagen src="/EmbarazoNormal.png" alt="Embarazo normal" />
+                                </span>
+                                <div>
+                                    <h3 className="text-base font-black text-stone-900">Embarazo normal (evolución fisiológica)</h3>
+                                    <p className="text-sm font-bold text-stone-700">Seleccione el mes de gestación activo (1º al 9º mes)</p>
                                 </div>
                             </div>
-                        );
-                    })}
-                </div>
-            </SectionCard>
-
-            {/* ================= 5. Parto complicado ================= */}
-            <SectionCard
-                acento="terracota"
-                delay={0.16}
-                icon={<AlertTriangle className="h-6 w-6" />}
-                title="5. Parto complicado (resultado de nacimiento)"
-                subtitle="Seleccione si el nacimiento presentó complicaciones o defunción"
-                action={<ReferidoToggle label="Referido" value={referidoPartoComplicado} onChange={setReferidoPartoComplicado} />}
-            >
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                    {OPCIONES_PARTO_COMPLICADO.map((item) => {
-                        const activo = partoComplicadoOpcion === item.id;
-                        return (
-                            <TarjetaOpcion
-                                key={item.id}
-                                activo={activo}
-                                onClick={() => setPartoComplicadoOpcion(activo ? null : item.id)}
-                                titulo={item.title}
-                                img={item.img}
-                                altoImg="h-36"
-                                className="min-h-[230px]"
-                            />
-                        );
-                    })}
-                </div>
-            </SectionCard>
-
-            {/* ================= 6. Puerperio normal y complicado ================= */}
-            <SectionCard
-                acento="verde"
-                delay={0.18}
-                icon={<HeartPulse className="h-6 w-6" />}
-                title="6. Puerperio normal y complicado"
-                subtitle="Primeros 40 días postparto: estado nutricional y signos de alarma"
-            >
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
-                        <div className="flex items-center gap-2">
-                            <Ruler className="h-5 w-5 text-stone-800" />
-                            <h3 className="text-sm font-black uppercase text-stone-900">Puerperio normal (cinta MUAC tricolor)</h3>
-                        </div>
-                        <p className="text-sm font-bold text-stone-700">Evaluación del estado nutricio posparto materna</p>
-                        <SemaforoMUAC value={cintaMUACPuerperio} onChange={setCintaMUACPuerperio} label="Estado nutricional en puerperio" />
-                    </div>
-
-                    <div className="space-y-4 rounded-3xl border border-[#C2603A]/30 bg-gradient-to-b from-orange-50/70 to-amber-50/70 p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <h3 className="text-sm font-black uppercase text-stone-900">Puerperio complicado</h3>
-                            <ReferidoToggle label="Ref" value={referidoPuerperio} onChange={setReferidoPuerperio} />
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <span className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
-                                <Imagen src="/PuerpericoComplicado.png" alt="Puerperio complicado" />
-                            </span>
-                            <div className="flex-1 space-y-3">
-                                {CHECKS_PUERPERIO.map((chk) => (
+                            <p className={CLASE_ETIQUETA}>Mes de embarazo activo</p>
+                            <div className="grid grid-cols-3 gap-3">
+                                {MESES.map((m) => (
                                     <TarjetaOpcion
-                                        key={chk.id}
-                                        activo={puerperioCheckboxes.includes(chk.id)}
-                                        onClick={() => togglePuerperioCheckbox(chk.id)}
-                                        titulo={chk.label}
-                                        disposicion="fila"
-                                        className="min-h-[72px]"
+                                        key={m}
+                                        activo={mesSeleccionado === m}
+                                        onClick={() => setMesSeleccionado(m)}
+                                        titulo={`${m}º Mes`}
+                                        tituloClassName="text-2xl"
+                                        className="min-h-[96px]"
                                     />
                                 ))}
                             </div>
                         </div>
-                    </div>
-                </div>
-            </SectionCard>
 
-            {/* ================= 7. Muerte materna ================= */}
-            <SectionCard
-                acento="terracota"
-                delay={0.2}
-                icon={<ShieldAlert className="h-6 w-6" />}
-                title="7. Muerte materna (alerta epidemiológica médica)"
-                subtitle="Registro prioritario inmediato ante fallecimiento materno ocurrido en la comunidad"
-            >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {ETAPAS_MUERTE_MATERNA.map((item) => {
-                        const activo = muerteMaternaEtapa === item.id;
-                        return (
+                        <div className="flex flex-col gap-4">
+                            <TarjetaOpcion
+                                activo={acidoFolico}
+                                onClick={() => setAcidoFolico(!acidoFolico)}
+                                titulo="Ácido fólico (30 días)"
+                                subtitulo={acidoFolico ? 'Entregado' : 'Pendiente'}
+                                img="/DuranteElEmbarazo-PrimerosMeses.png"
+                                icono={<Pill className="h-6 w-6 shrink-0 text-[#3F7048]" />}
+                                tono="verde"
+                                disposicion="fila"
+                                className="min-h-[112px] flex-1"
+                            />
+                            <TarjetaOpcion
+                                activo={hierro}
+                                onClick={() => setHierro(!hierro)}
+                                titulo="Sulfato ferroso"
+                                subtitulo={hierro ? 'Entregado' : 'Pendiente'}
+                                img="/DuranteElEmbarazo.png"
+                                icono={<Droplet className="h-6 w-6 shrink-0 text-[#C2603A]" />}
+                                tono="verde"
+                                disposicion="fila"
+                                className="min-h-[112px] flex-1"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                                    <Imagen src="/Aplicar-Toxoide-Tetanico.png" alt="Vacunación anti-tetánica" />
+                                </span>
+                                <h3 className="text-sm font-black uppercase text-stone-900">Vacunación anti-tetánica (Td/Tdap)</h3>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                {VACUNAS.map((v) => (
+                                    <TarjetaOpcion
+                                        key={v.id}
+                                        activo={vacunaTetanos === v.id}
+                                        onClick={() => setVacunaTetanos(v.id)}
+                                        titulo={v.label}
+                                        className="min-h-[88px] px-2"
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
+                            <div className="flex items-center gap-2">
+                                <Ruler className="h-5 w-5 text-stone-800" />
+                                <h3 className="text-sm font-black uppercase text-stone-900">Estado nutricional madre (cinta MUAC tricolor)</h3>
+                            </div>
+                            <SemaforoMUAC value={cintaMUAC} onChange={setCintaMUAC} label="Estado nutricional de la madre" />
+                        </div>
+                    </div>
+                </SectionCard>
+
+                {/* ================= 2. Embarazo con complicaciones ================= */}
+                <SectionCard
+                    acento="terracota"
+                    delay={0.1}
+                    icon={<AlertTriangle className="h-6 w-6" />}
+                    title="2. Embarazo con complicaciones"
+                    subtitle="Toque los dibujos de los signos de alarma identificados en la valoración"
+                    action={
+                        <div className="flex flex-wrap items-center gap-3">
+                            <ContadorPill total={sintomasComplicaciones.length} />
+                            <ReferidoToggle label="Referido" value={referidoEmbarazo} onChange={setReferidoEmbarazo} />
+                        </div>
+                    }
+                >
+                    <div className="relative overflow-hidden rounded-3xl border border-[#C2603A]/25 bg-gradient-to-b from-orange-50/70 to-amber-50/70 p-4 md:p-8">
+                        <svg
+                            className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
+                            viewBox="0 0 100 100"
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                        >
+                            {CONECTORES.map(([x, y], i) => (
+                                <line
+                                    key={i}
+                                    x1="50"
+                                    y1="50"
+                                    x2={x}
+                                    y2={y}
+                                    stroke="#C2603A"
+                                    strokeWidth="2"
+                                    strokeDasharray="6 5"
+                                    strokeLinecap="round"
+                                    opacity="0.35"
+                                    vectorEffect="non-scaling-stroke"
+                                />
+                            ))}
+                        </svg>
+
+                        <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-6 md:gap-x-6 md:gap-y-8">
+                            {SINTOMAS_SUPERIORES.map((s) => renderSintoma(s, 'md:col-span-2'))}
+                            {renderSintoma(SINTOMA_IZQUIERDO, 'md:col-span-2')}
+
+                            <div className="order-first flex flex-col items-center justify-center gap-2 rounded-3xl border border-[#C2603A]/40 bg-gradient-to-b from-orange-100/90 to-amber-100 p-5 text-center shadow-2xl shadow-orange-900/15 sm:col-span-2 md:order-none md:col-span-2">
+                                <span className="pt-breathe flex h-11 w-11 items-center justify-center rounded-full bg-[#9D2449] text-white shadow-lg">
+                                    <AlertTriangle className="h-6 w-6" />
+                                </span>
+                                <span className="flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                                    <Imagen src="/EmbarazoConComplicaciones.png" alt="Embarazo con complicaciones" />
+                                </span>
+                                <span className={`rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-wider ${BOTON_TIERRA}`}>
+                                    Embarazo con complicaciones
+                                </span>
+                                <p className="max-w-xs text-xs font-bold text-stone-800">
+                                    Identificación de signos de alarma materna durante la valoración
+                                </p>
+                            </div>
+
+                            {renderSintoma(SINTOMA_DERECHO, 'md:col-span-2')}
+                            {SINTOMAS_INFERIORES.map((s, i) => renderSintoma(s, i === 0 ? 'md:col-span-2 md:col-start-2' : 'md:col-span-2'))}
+                        </div>
+                    </div>
+                </SectionCard>
+
+                {/* ================= 3. Aborto, dolor y hemorragia ================= */}
+                <SectionCard
+                    acento="terracota"
+                    delay={0.12}
+                    icon={<ShieldAlert className="h-6 w-6" />}
+                    title="3. Aborto, dolor y hemorragia"
+                    subtitle="Evaluación de complicaciones hemorrágicas o dolor agudo"
+                    action={
+                        <div className="flex flex-wrap items-center gap-3">
+                            <ContadorPill total={tarjetasAborto.length} />
+                            <ReferidoToggle label="Referido" value={referidoAborto} onChange={setReferidoAborto} />
+                        </div>
+                    }
+                >
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {TARJETAS_ABORTO.map((item) => (
                             <TarjetaOpcion
                                 key={item.id}
-                                activo={activo}
-                                onClick={() => setMuerteMaternaEtapa(activo ? null : item.id)}
+                                activo={tarjetasAborto.includes(item.id)}
+                                onClick={() => toggleTarjetaAborto(item.id)}
                                 titulo={item.title}
                                 img={item.img}
                                 altoImg="h-44"
-                                pie={{ off: 'Notificar', on: 'Notificado', iconoOff: <AlertTriangle className="h-3.5 w-3.5 text-[#CC7A2C]" /> }}
+                                pie={{ off: 'Marcar', on: 'Registrado' }}
                                 className="min-h-[260px]"
-                            />
-                        );
-                    })}
-                </div>
-            </SectionCard>
-
-            {/* ================= 8. Cierre administrativo ================= */}
-            <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.22s' }}>
-                <TriStripe />
-                <div className="space-y-5 p-4 sm:p-6">
-                    <div className="flex items-center gap-3 border-b border-stone-200 pb-4">
-                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D69A1E] to-[#C2603A] text-white shadow-lg shadow-orange-900/20">
-                            <PenTool className="h-6 w-6" />
-                        </span>
-                        <div>
-                            <h2 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl">
-                                Cierre administrativo del informe materno
-                            </h2>
-                            <p className="text-sm font-bold text-stone-700">
-                                Datos de la partera acreditada, localidad, municipio y validación por huella digital
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
-                        {camposCierre.map((c) => (
-                            <CampoVoz
-                                key={c.key}
-                                id={c.key}
-                                etiqueta={c.label}
-                                placeholder={c.ph}
-                                valor={c.value}
-                                onCambio={c.set}
-                                onMic={() => startVoice(c.set, c.key)}
-                                escuchando={listeningField === c.key}
                             />
                         ))}
                     </div>
+                </SectionCard>
 
-                    <button
-                        type="button"
-                        aria-pressed={huellaRegistrada}
-                        onClick={() => {
-                            setHuellaRegistrada(!huellaRegistrada);
-                            speakText(huellaRegistrada ? 'Huella removida' : 'Huella digital registrada');
-                        }}
-                        className={`relative flex min-h-[88px] w-full cursor-pointer items-center justify-center gap-3 rounded-3xl border-2 px-6 text-base font-black transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${huellaRegistrada
-                            ? 'border-emerald-600 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-900/25'
-                            : 'border-[#D69A1E]/60 bg-gradient-to-b from-amber-50 to-orange-50 text-stone-900 shadow-md hover:border-[#C2603A]/60'
-                            }`}
-                    >
-                        <Fingerprint className="h-8 w-8" />
-                        <span>{huellaRegistrada ? 'HUELLA DIGITAL CAPTURADA' : 'CAPTURAR HUELLA DIGITAL DE LA PARTERA'}</span>
-                        {huellaRegistrada && <Check className="h-6 w-6" strokeWidth={3.5} />}
-                    </button>
-                </div>
-            </section>
-
-            {/* ================== Error del servidor ====================== */}
-            {errorServidor && (
-                <div
-                    role="alert"
-                    className="pt-pop-in rounded-3xl border-2 border-red-400 bg-red-50 p-4 text-base font-bold text-stone-900 shadow-lg"
+                {/* ================= 4. Parto normal ================= */}
+                <SectionCard
+                    acento="ocre"
+                    delay={0.14}
+                    icon={<HeartPulse className="h-6 w-6" />}
+                    title="4. Parto normal (posición vertical y horizontal)"
+                    subtitle="Posición del parto y resultado del recién nacido"
                 >
-                    {errorServidor}
-                </div>
-            )}
+                    <div className="space-y-4">
+                        {FILAS_PARTO.map((fila) => {
+                            const filaActiva = partoNormalPosicion === fila.pos;
+                            return (
+                                <div
+                                    key={fila.pos}
+                                    className={`grid items-center gap-4 rounded-3xl border-2 p-4 transition-all duration-300 lg:grid-cols-2 ${filaActiva ? 'border-[#D69A1E] bg-gradient-to-b from-amber-50/80 to-orange-50/60 shadow-xl shadow-orange-900/10' : 'border-stone-200 bg-white/60'}`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <span className="flex h-36 w-40 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                                            <Imagen src={fila.img} alt={fila.titulo} />
+                                        </span>
+                                        <div>
+                                            <span className="rounded-full border border-[#D69A1E]/50 bg-amber-50 px-3 py-1 text-xs font-black uppercase text-stone-900">
+                                                {fila.etiqueta}
+                                            </span>
+                                            <h3 className="mt-1.5 text-base font-black text-stone-900">{fila.titulo}</h3>
+                                            <p className="text-sm font-bold text-stone-700">{fila.descripcion}</p>
+                                        </div>
+                                    </div>
 
-            {/* ====================== Botón de envío ====================== */}
-            <button
-                type="submit"
-                disabled={isSubmitting || exito}
-                className={`pt-slide-up flex min-h-[88px] w-full cursor-pointer items-center justify-center gap-4 rounded-3xl px-6 py-5 text-xl font-black disabled:cursor-wait disabled:opacity-80 sm:text-2xl ${BOTON_TIERRA} ${nombreMujer.trim() && !isSubmitting ? 'pt-breathe' : ''}`}
-                style={{ animationDelay: '.25s' }}
-            >
-                {isSubmitting ? <Loader2 className="h-7 w-7 animate-spin" /> : <Send className="h-7 w-7" />}
-                <span>{isSubmitting ? 'Guardando en PostgreSQL (Render)…' : 'REGISTRAR CALENDARIO DE LA MUJER'}</span>
-            </button>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {RESULTADOS_PARTO.map((r) => (
+                                            <TarjetaOpcion
+                                                key={r.id}
+                                                activo={filaActiva && partoNormalResultado === r.id}
+                                                onClick={() => {
+                                                    setPartoNormalPosicion(fila.pos);
+                                                    setPartoNormalResultado(r.id);
+                                                }}
+                                                titulo={r.titulo}
+                                                img={r.img}
+                                                altoImg="h-28"
+                                                icono={<Baby className="h-5 w-5 shrink-0 text-[#C2603A]" />}
+                                                className="min-h-[190px]"
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </SectionCard>
 
-            {/* ================== Confirmación de envío ======================= */}
-            {exito && (
-                <div
-                    role="status"
-                    aria-live="polite"
-                    className="pt-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4 backdrop-blur-sm"
+                {/* ================= 5. Parto complicado ================= */}
+                <SectionCard
+                    acento="terracota"
+                    delay={0.16}
+                    icon={<AlertTriangle className="h-6 w-6" />}
+                    title="5. Parto complicado (resultado de nacimiento)"
+                    subtitle="Seleccione si el nacimiento presentó complicaciones o defunción"
+                    action={<ReferidoToggle label="Referido" value={referidoPartoComplicado} onChange={setReferidoPartoComplicado} />}
                 >
-                    <div className={`pt-pop-in w-full max-w-md overflow-hidden text-center ${VIDRIO}`}>
-                        <TriStripe className="h-2" />
-                        <div className="p-8">
-                            <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl">
-                                <Check className="h-14 w-14" strokeWidth={3.5} />
+                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                        {OPCIONES_PARTO_COMPLICADO.map((item) => {
+                            const activo = partoComplicadoOpcion === item.id;
+                            return (
+                                <TarjetaOpcion
+                                    key={item.id}
+                                    activo={activo}
+                                    onClick={() => setPartoComplicadoOpcion(activo ? null : item.id)}
+                                    titulo={item.title}
+                                    img={item.img}
+                                    altoImg="h-36"
+                                    className="min-h-[230px]"
+                                />
+                            );
+                        })}
+                    </div>
+                </SectionCard>
+
+                {/* ================= 6. Puerperio normal y complicado ================= */}
+                <SectionCard
+                    acento="verde"
+                    delay={0.18}
+                    icon={<HeartPulse className="h-6 w-6" />}
+                    title="6. Puerperio normal y complicado"
+                    subtitle="Primeros 40 días postparto: estado nutricional y signos de alarma"
+                >
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/60 p-4">
+                            <div className="flex items-center gap-2">
+                                <Ruler className="h-5 w-5 text-stone-800" />
+                                <h3 className="text-sm font-black uppercase text-stone-900">Puerperio normal (cinta MUAC tricolor)</h3>
                             </div>
-                            <h2 className="text-3xl font-black text-stone-900">¡Registro guardado!</h2>
-                            <p className="mt-2 text-lg font-bold text-stone-800">
-                                El calendario de {nombreMujer || 'la paciente'} quedó guardado en la base de datos (PostgreSQL · Render).
-                            </p>
-                            <p className="mt-3 text-sm font-bold text-stone-600">Regresando al menú…</p>
+                            <p className="text-sm font-bold text-stone-700">Evaluación del estado nutricio posparto materna</p>
+                            <SemaforoMUAC value={cintaMUACPuerperio} onChange={setCintaMUACPuerperio} label="Estado nutricional en puerperio" />
+                        </div>
+
+                        <div className="space-y-4 rounded-3xl border border-[#C2603A]/30 bg-gradient-to-b from-orange-50/70 to-amber-50/70 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <h3 className="text-sm font-black uppercase text-stone-900">Puerperio complicado</h3>
+                                <ReferidoToggle label="Ref" value={referidoPuerperio} onChange={setReferidoPuerperio} />
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/80">
+                                    <Imagen src="/PuerpericoComplicado.png" alt="Puerperio complicado" />
+                                </span>
+                                <div className="flex-1 space-y-3">
+                                    {CHECKS_PUERPERIO.map((chk) => (
+                                        <TarjetaOpcion
+                                            key={chk.id}
+                                            activo={puerperioCheckboxes.includes(chk.id)}
+                                            onClick={() => togglePuerperioCheckbox(chk.id)}
+                                            titulo={chk.label}
+                                            disposicion="fila"
+                                            className="min-h-[72px]"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </form>
+                </SectionCard>
+
+                {/* ================= 7. Muerte materna ================= */}
+                <SectionCard
+                    acento="terracota"
+                    delay={0.2}
+                    icon={<ShieldAlert className="h-6 w-6" />}
+                    title="7. Muerte materna (alerta epidemiológica médica)"
+                    subtitle="Registro prioritario inmediato ante fallecimiento materno ocurrido en la comunidad"
+                >
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {ETAPAS_MUERTE_MATERNA.map((item) => {
+                            const activo = muerteMaternaEtapa === item.id;
+                            return (
+                                <TarjetaOpcion
+                                    key={item.id}
+                                    activo={activo}
+                                    onClick={() => setMuerteMaternaEtapa(activo ? null : item.id)}
+                                    titulo={item.title}
+                                    img={item.img}
+                                    altoImg="h-44"
+                                    pie={{ off: 'Notificar', on: 'Notificado', iconoOff: <AlertTriangle className="h-3.5 w-3.5 text-[#CC7A2C]" /> }}
+                                    className="min-h-[260px]"
+                                />
+                            );
+                        })}
+                    </div>
+                </SectionCard>
+
+                {/* ================= 8. Cierre administrativo ================= */}
+                <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.22s' }}>
+                    <TriStripe />
+                    <div className="space-y-5 p-4 sm:p-6">
+                        <div className="flex items-center gap-3 border-b border-stone-200 pb-4">
+                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D69A1E] to-[#C2603A] text-white shadow-lg shadow-orange-900/20">
+                                <PenTool className="h-6 w-6" />
+                            </span>
+                            <div>
+                                <h2 className="text-xl font-black leading-tight text-stone-900 sm:text-2xl">
+                                    Cierre administrativo del informe materno
+                                </h2>
+                                <p className="text-sm font-bold text-stone-700">
+                                    Datos de la partera acreditada, localidad, municipio y validación por huella digital
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                            {camposCierre.map((c) => (
+                                <CampoVoz
+                                    key={c.key}
+                                    id={c.key}
+                                    etiqueta={c.label}
+                                    placeholder={c.ph}
+                                    valor={c.value}
+                                    onCambio={c.set}
+                                    onMic={() => startVoice(c.set, c.key)}
+                                    escuchando={listeningField === c.key}
+                                />
+                            ))}
+                        </div>
+
+                        <button
+                            type="button"
+                            aria-pressed={huellaRegistrada}
+                            onClick={() => {
+                                setHuellaRegistrada(!huellaRegistrada);
+                                speakText(huellaRegistrada ? 'Huella removida' : 'Huella digital registrada');
+                            }}
+                            className={`relative flex min-h-[88px] w-full cursor-pointer items-center justify-center gap-3 rounded-3xl border-2 px-6 text-base font-black transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${huellaRegistrada
+                                ? 'border-emerald-600 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-900/25'
+                                : 'border-[#D69A1E]/60 bg-gradient-to-b from-amber-50 to-orange-50 text-stone-900 shadow-md hover:border-[#C2603A]/60'
+                                }`}
+                        >
+                            <Fingerprint className="h-8 w-8" />
+                            <span>{huellaRegistrada ? 'HUELLA DIGITAL CAPTURADA' : 'CAPTURAR HUELLA DIGITAL DE LA PARTERA'}</span>
+                            {huellaRegistrada && <Check className="h-6 w-6" strokeWidth={3.5} />}
+                        </button>
+                    </div>
+                </section>
+
+                {/* ================== Error del servidor ====================== */}
+                {errorServidor && (
+                    <div
+                        role="alert"
+                        className="pt-pop-in rounded-3xl border-2 border-red-400 bg-red-50 p-4 text-base font-bold text-stone-900 shadow-lg"
+                    >
+                        {errorServidor}
+                    </div>
+                )}
+
+                {/* ====================== Botón de envío ====================== */}
+                <button
+                    type="submit"
+                    disabled={isSubmitting || exito}
+                    className={`pt-slide-up flex min-h-[88px] w-full cursor-pointer items-center justify-center gap-4 rounded-3xl px-6 py-5 text-xl font-black disabled:cursor-wait disabled:opacity-80 sm:text-2xl ${BOTON_TIERRA} ${nombreMujer.trim() && !isSubmitting ? 'pt-breathe' : ''}`}
+                    style={{ animationDelay: '.25s' }}
+                >
+                    {isSubmitting ? <Loader2 className="h-7 w-7 animate-spin" /> : <Send className="h-7 w-7" />}
+                    <span>{isSubmitting ? 'Guardando en PostgreSQL (Render)…' : 'REGISTRAR CALENDARIO DE LA MUJER'}</span>
+                </button>
+
+                {/* ================== Confirmación de éxito ======================= */}
+                {exito && (
+                    <div
+                        role="status"
+                        aria-live="polite"
+                        className="pt-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4 backdrop-blur-sm"
+                    >
+                        <div className={`pt-pop-in w-full max-w-md overflow-hidden text-center ${VIDRIO}`}>
+                            <TriStripe className="h-2" />
+                            <div className="p-8">
+                                <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl">
+                                    <Check className="h-14 w-14" strokeWidth={3.5} />
+                                </div>
+                                <h2 className="text-3xl font-black text-stone-900">¡Registro guardado!</h2>
+                                <p className="mt-2 text-lg font-bold text-stone-800">
+                                    El calendario de {nombreMujer || 'la paciente'} quedó guardado en la base de datos (PostgreSQL · Render).
+                                </p>
+                                <p className="mt-3 text-sm font-bold text-stone-600">Regresando al menú…</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </form>
+        </div>
     );
 };
 
