@@ -18,10 +18,10 @@ import {
 import { FormatoReferencia } from './components/FormatoReferencia';
 import { CalendarioMujer } from './CalendarioMujer';
 import { FormatoCalendarioNino } from './components/FormatoCalendarioNino';
-import { handleVoiceInput } from '../../utils/voiceUtils';
+import { useAuth } from '../../context/AuthContext'; // 👈 1. Importamos tu contexto de autenticación
 
 /* ------------------------------------------------------------------ */
-/* Tipos                                                              */
+/* Tipos y Constantes del Menú                                        */
 /* ------------------------------------------------------------------ */
 
 type Vista = 'HOME' | 'REFERENCIA' | 'MUJER' | 'NINO';
@@ -53,12 +53,6 @@ interface CardImageProps {
     className?: string;
 }
 
-interface DashboardParteraProps {
-    nombrePartera?: string;
-    comunidad?: string;
-    avatarSrc?: string;
-}
-
 interface AvatarParteraProps {
     src: string;
     nombre: string;
@@ -67,10 +61,6 @@ interface AvatarParteraProps {
 interface OndasVozProps {
     className?: string;
 }
-
-/* ------------------------------------------------------------------ */
-/* Paleta cálida: terracota · ocre · verde natural                    */
-/* ------------------------------------------------------------------ */
 
 const TARJETAS: TarjetaMenu[] = [
     {
@@ -154,10 +144,6 @@ const ESTILOS_ANIMACION = `
 }
 `;
 
-/* ------------------------------------------------------------------ */
-/* Subcomponentes de presentación                                     */
-/* ------------------------------------------------------------------ */
-
 const OndasVoz: React.FC<OndasVozProps> = ({ className = '' }) => (
     <span className={`inline-flex items-end gap-[3px] h-5 ${className}`} aria-hidden="true">
         {[0, 0.15, 0.3, 0.1, 0.25].map((delay, i) => (
@@ -219,10 +205,6 @@ const CardImage: React.FC<CardImageProps> = ({ src, alt, FallbackIcon, className
     );
 };
 
-/* ------------------------------------------------------------------ */
-/* Selección de voz es-MX                                             */
-/* ------------------------------------------------------------------ */
-
 const normalizarLang = (lang: string): string => lang.replace('_', '-').toLowerCase();
 
 const puntuarVoz = (voz: SpeechSynthesisVoice): number => {
@@ -260,20 +242,17 @@ const elegirMejorVoz = (voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | n
 /* Componente principal                                               */
 /* ------------------------------------------------------------------ */
 
-export const DashboardPartera: React.FC<DashboardParteraProps> = ({
-    nombrePartera = 'Doña María Eustolia Jiménez',
-    comunidad = 'Santa Catarina Juquila, Oaxaca',
-    avatarSrc = '/avatar-partera-default.png'
-}) => {
-    const [pinIngresado, setPinIngresado] = useState<string>('');
-    const [autenticado, setAutenticado] = useState<boolean>(true);
-    const [errorPin, setErrorPin] = useState<boolean>(false);
+export const DashboardPartera: React.FC = () => {
+    const { user, logout } = useAuth(); // 👈 2. Obtenemos la usuaria real autenticada desde el contexto
+
+    // 👈 3. Extraemos dinámicamente los datos reales (nombre, comunidad y foto) devueltos por tu backend
+    const nombrePartera = (user as any)?.nombre || (user as any)?.nombreCompleto || 'Partera Tradicional';
+    const comunidad = (user as any)?.localidad || (user as any)?.municipio || 'Juchitán de Zaragoza, Oaxaca';
+    const avatarSrc = (user as any)?.avatar || (user as any)?.foto || '/avatar-partera-default.png';
 
     const [vistaActiva, setVistaActiva] = useState<Vista>('HOME');
-
     const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
     const vozRef = useRef<SpeechSynthesisVoice | null>(null);
-
     const [registroExitoso, setRegistroExitoso] = useState<boolean>(false);
 
     useEffect(() => {
@@ -324,23 +303,9 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
         setIsSpeaking(false);
     }, []);
 
-    const handleValidarPin = (pin: string): void => {
-        if (pin === '1234' || pin.length === 4) {
-            setAutenticado(true);
-            setErrorPin(false);
-            hablarTexto(`Acceso verificado. Bienvenida, ${nombrePartera}.`);
-        } else {
-            setErrorPin(true);
-        }
-    };
-
     const handleSalir = (): void => {
         hablarTexto('Cerrando sesión de forma segura');
-        setRegistroExitoso(false);
-        setVistaActiva('HOME');
-        setPinIngresado('');
-        setErrorPin(false);
-        setAutenticado(false);
+        logout(); // 👈 4. Cerramos la sesión limpiando el token y contexto global de manera segura
     };
 
     const handleFormSuccess = (): void => {
@@ -376,65 +341,6 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
         </>
     );
 
-    if (!autenticado) {
-        return (
-            <div className="relative min-h-screen flex items-center justify-center p-4 text-stone-900">
-                <style>{ESTILOS_ANIMACION}</style>
-                {fondo}
-
-                <main className="relative z-10 w-full max-w-md pt-pop-in">
-                    <div className="bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-[#8F3F1E]/15 rounded-3xl p-8 text-center space-y-6">
-                        <div className="w-20 h-20 bg-gradient-to-br from-[#C2603A] to-[#8F3F1E] rounded-3xl mx-auto flex items-center justify-center text-white shadow-lg shadow-[#8F3F1E]/35">
-                            <KeyRound className="w-10 h-10" aria-hidden="true" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-black text-stone-900">Espacio Exclusivo Parteras</h1>
-                            <p className="text-sm text-stone-600 mt-1">
-                                Ingrese su PIN de 4 dígitos o escanee su tarjeta QR
-                            </p>
-                        </div>
-
-                        <div className="space-y-3">
-                            <label htmlFor="pin-partera" className="sr-only">
-                                PIN de 4 dígitos
-                            </label>
-                            <input
-                                id="pin-partera"
-                                type="password"
-                                inputMode="numeric"
-                                autoComplete="one-time-code"
-                                maxLength={4}
-                                placeholder="••••"
-                                value={pinIngresado}
-                                aria-invalid={errorPin}
-                                aria-describedby={errorPin ? 'pin-error' : undefined}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                    setPinIngresado(e.target.value);
-                                    if (e.target.value.length === 4) handleValidarPin(e.target.value);
-                                }}
-                                className="w-full bg-white/90 border-2 border-orange-200 rounded-2xl py-4 text-center text-4xl font-black tracking-[0.5em] text-stone-900 placeholder:text-stone-300 focus:outline-none focus:border-[#C2603A] focus:ring-4 focus:ring-[#C2603A]/20 transition"
-                            />
-                            {errorPin && (
-                                <p id="pin-error" role="alert" className="text-sm font-bold text-red-700">
-                                    PIN incorrecto. Pruebe 1234
-                                </p>
-                            )}
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => handleValidarPin('1234')}
-                            className="w-full py-4 bg-gradient-to-r from-[#C2603A] to-[#8F3F1E] hover:from-[#AD5230] hover:to-[#7A3418] text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#8F3F1E]/30 transition-all active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C2603A]/40"
-                        >
-                            <QrCode className="w-5 h-5" aria-hidden="true" />
-                            <span>Escanear Tarjeta QR / Ingresar Demo (1234)</span>
-                        </button>
-                    </div>
-                </main>
-            </div>
-        );
-    }
-
     return (
         <div className="relative min-h-screen text-stone-900 pb-12 selection:bg-[#C2603A] selection:text-white">
             <style>{ESTILOS_ANIMACION}</style>
@@ -450,7 +356,7 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                     </div>
 
                     <div className="p-3 sm:p-5 grid grid-cols-[1fr_auto] lg:grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3 lg:gap-x-6">
-                        {/* IZQUIERDA: avatar + identidad (Si estamos en módulo, aparece el botón Menú) */}
+                        {/* IZQUIERDA: avatar + identidad */}
                         <div className="col-start-1 row-start-1 flex items-center gap-3 sm:gap-4 min-w-0">
                             {vistaActiva !== 'HOME' && (
                                 <button
@@ -471,7 +377,7 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                                 <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#8F3F1E]">
                                     Partera Tradicional
                                 </p>
-                                <h1 className="text-base sm:text-xl font-black text-stone-900 leading-tight">
+                                <h1 className="text-base sm:text-xl font-black text-stone-900 leading-tight truncate">
                                     {nombrePartera}
                                 </h1>
                                 <p className="text-xs text-stone-600 font-medium truncate">{comunidad}</p>
@@ -482,7 +388,7 @@ export const DashboardPartera: React.FC<DashboardParteraProps> = ({
                             </div>
                         </div>
 
-                        {/* EXTREMA DERECHA: SALIR (Solo se muestra en el HOME / Menú Principal) */}
+                        {/* EXTREMA DERECHA: SALIR */}
                         {vistaActiva === 'HOME' && (
                             <button
                                 type="button"
