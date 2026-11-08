@@ -18,7 +18,7 @@ import {
 import { FormatoReferencia } from './components/FormatoReferencia';
 import { CalendarioMujer } from './CalendarioMujer';
 import { FormatoCalendarioNino } from './components/FormatoCalendarioNino';
-import { useAuth } from '../../context/AuthContext'; // 👈 Contexto de autenticación para datos reales
+import { useAuth } from '../../context/AuthContext'; // 👈 1. Importamos tu contexto de autenticación
 
 /* ------------------------------------------------------------------ */
 /* Tipos y Constantes del Menú                                        */
@@ -118,6 +118,9 @@ const TARJETAS: TarjetaMenu[] = [
         foco: 'focus-visible:ring-[#3E8E7E]'
     }
 ];
+
+const TEXTO_BIENVENIDA =
+    'Bienvenida. Toque una de las tres tarjetas. La uno, para enviar a una paciente al hospital. La dos, para la mamá embarazada. La tres, para el bebé o niño menor de dos años.';
 
 /* ------------------------------------------------------------------ */
 /* Animaciones                                                        */
@@ -240,15 +243,12 @@ const elegirMejorVoz = (voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | n
 /* ------------------------------------------------------------------ */
 
 export const DashboardPartera: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { user, logout } = useAuth(); // 👈 2. Obtenemos la usuaria real autenticada desde el contexto
 
-    // Datos reales obtenidos del backend al iniciar sesión
+    // 👈 3. Extraemos dinámicamente los datos reales (nombre, comunidad y foto) devueltos por tu backend
     const nombrePartera = (user as any)?.nombre || (user as any)?.nombreCompleto || 'Partera Tradicional';
     const comunidad = (user as any)?.localidad || (user as any)?.municipio || 'Juchitán de Zaragoza, Oaxaca';
     const avatarSrc = (user as any)?.avatar || (user as any)?.foto || '/avatar-partera-default.png';
-
-    // Texto dinámico de bienvenida por voz con el nombre real de la partera
-    const textoBienvenidaDinamico = `Bienvenida, ${nombrePartera}. Toque una de las tres tarjetas. La uno, para enviar a una paciente al hospital. La dos, para la mamá embarazada. La tres, para el bebé o niño menor de dos años.`;
 
     const [vistaActiva, setVistaActiva] = useState<Vista>('HOME');
     const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
@@ -305,7 +305,7 @@ export const DashboardPartera: React.FC = () => {
 
     const handleSalir = (): void => {
         hablarTexto('Cerrando sesión de forma segura');
-        logout();
+        logout(); // 👈 4. Cerramos la sesión limpiando el token y contexto global de manera segura
     };
 
     const handleFormSuccess = (): void => {
@@ -411,7 +411,7 @@ export const DashboardPartera: React.FC = () => {
                             )}
                             <button
                                 type="button"
-                                onClick={() => (isSpeaking ? detenerVoz() : hablarTexto(textoBienvenidaDinamico))}
+                                onClick={() => (isSpeaking ? detenerVoz() : hablarTexto(TEXTO_BIENVENIDA))}
                                 aria-pressed={isSpeaking}
                                 aria-label={isSpeaking ? 'Detener la voz' : 'Escuchar instrucciones por voz'}
                                 className={`relative w-full px-5 py-4 rounded-3xl font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg border-2 transition-all duration-300 active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-4 ${isSpeaking
