@@ -577,7 +577,6 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         );
     };
 
-    // Funciones de selección con retroalimentación auditiva inmediata
     const handleSelectMes = (m: number) => {
         setMesSeleccionado(m);
         speakText(`Seleccionado: ${m}º mes de embarazo`);
@@ -713,7 +712,8 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
         };
 
         try {
-            await http.post('/api/v1/calendario-mujer', payload);
+            // CORREGIDO: Ruta relativa limpia sin duplicar /api/v1
+            await http.post('/calendario-mujer', payload);
             if (!montadoRef.current) return;
 
             setExito(true);
@@ -765,7 +765,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
 
             <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-6 sm:gap-7">
                 
-                {/* ===================== Cabecera Compacta ===================== */}
+                {/* Cabecera */}
                 <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
                     <TriStripe />
                     <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
@@ -794,7 +794,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </header>
 
-                {/* ============ Selector de Vista ================= */}
+                {/* Selector de Vista */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
                     <div className="min-h-[32px] flex items-center">
                         {modoDuplicado && (
@@ -832,7 +832,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </div>
 
-                {/* ================= Datos de identificación ================= */}
+                {/* Datos de identificación */}
                 <SectionCard
                     acento="ocre"
                     delay={0.05}
@@ -904,7 +904,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 1. Embarazo normal y control prenatal ================= */}
+                {/* 1. Embarazo normal y control prenatal */}
                 <SectionCard
                     acento="verde"
                     delay={0.08}
@@ -997,7 +997,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 2. Embarazo con complicaciones ================= */}
+                {/* 2. Embarazo con complicaciones */}
                 <SectionCard
                     acento="terracota"
                     delay={0.1}
@@ -1067,7 +1067,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 3. Aborto, dolor y hemorragia ================= */}
+                {/* 3. Aborto, dolor y hemorragia */}
                 <SectionCard
                     acento="terracota"
                     delay={0.12}
@@ -1104,7 +1104,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 4. Parto normal ================= */}
+                {/* 4. Parto normal */}
                 <SectionCard
                     acento="ocre"
                     delay={0.14}
@@ -1157,7 +1157,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 5. Parto complicado ================= */}
+                {/* 5. Parto complicado */}
                 <SectionCard
                     acento="terracota"
                     delay={0.16}
@@ -1196,7 +1196,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 6. Puerperio normal y complicado ================= */}
+                {/* 6. Puerperio normal y complicado */}
                 <SectionCard
                     acento="verde"
                     delay={0.18}
@@ -1254,7 +1254,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 7. Muerte materna ================= */}
+                {/* 7. Muerte materna */}
                 <SectionCard
                     acento="terracota"
                     delay={0.2}
@@ -1284,7 +1284,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= 8. Cierre administrativo ================= */}
+                {/* 8. Cierre administrativo */}
                 <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.22s' }}>
                     <TriStripe />
                     <div className="space-y-5 p-4 sm:p-6">
@@ -1319,7 +1319,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 </section>
 
-                {/* ================== Error del servidor ====================== */}
+                {/* Error del servidor */}
                 {errorServidor && (
                     <div
                         role="alert"
@@ -1330,7 +1330,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     </div>
                 )}
 
-                {/* ====================== Botón de envío Principal ====================== */}
+                {/* Botón de envío Principal */}
                 <button
                     type="submit"
                     disabled={isSubmitting || exito}
@@ -1341,7 +1341,7 @@ export const CalendarioMujer: React.FC<CalendarioMujerProps> = ({
                     <span>{isSubmitting ? 'Guardando en PostgreSQL (Render)…' : 'REGISTRAR CALENDARIO DE LA MUJER'}</span>
                 </button>
 
-                {/* ================== Confirmación de éxito (Alerta Visual y Auditiva) ======================= */}
+                {/* Confirmación de éxito */}
                 {exito && (
                     <div
                         role="status"
