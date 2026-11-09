@@ -554,7 +554,8 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
         };
 
         try {
-            await http.post('/api/v1/calendario-nino', payload);
+            // CORREGIDO: Ruta relativa limpia sin duplicar /api/v1
+            await http.post('/calendario-nino', payload);
             if (!montadoRef.current) return;
 
             setExito(true);
@@ -610,7 +611,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
 
             <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-5xl flex-col gap-6 sm:gap-7">
                 
-                {/* ===================== Cabecera Compacta ===================== */}
+                {/* Cabecera */}
                 <header className={`pt-slide-up overflow-hidden ${VIDRIO}`}>
                     <TriStripe />
                     <div className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6">
@@ -639,7 +640,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </header>
 
-                {/* ============ Selector de Vista ================= */}
+                {/* Selector de Vista */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
                     <div className="min-h-[32px] flex items-center">
                         {modoDuplicado && (
@@ -677,7 +678,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </div>
 
-                {/* ================= Datos de identificación del niño ================= */}
+                {/* Datos de identificación del niño */}
                 <SectionCard
                     acento="ocre"
                     delay={0.05}
@@ -759,7 +760,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= Control Nutricional y Vacunación (Diseño Simétrico Optimizado) ================= */}
+                {/* Control Nutricional y Vacunación */}
                 <SectionCard
                     acento="verde"
                     delay={0.08}
@@ -767,7 +768,6 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     title="Control de crecimiento y vacunación"
                     subtitle="Seleccione el mes de vida, evaluación nutricional con cinta MUAC y esquema de vacunación"
                 >
-                    {/* 1. Mes de control */}
                     <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-5">
                         <div className="flex items-center gap-3 border-b border-stone-200 pb-3">
                             <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-inner ring-1 ring-stone-200/70">
@@ -792,7 +792,6 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </div>
                     </div>
 
-                    {/* 2. Estado Nutricional (Cinta MUAC) a lo ancho simétricamente */}
                     <div className="space-y-3 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-6">
                         <div className="flex items-center gap-2.5">
                             <Ruler className="h-6 w-6 text-[#CC7A2C]" />
@@ -826,7 +825,6 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                         </div>
                     </div>
 
-                    {/* 3. Esquema de Vacunación en Grid Equilibrado */}
                     <div className="space-y-4 rounded-3xl border border-stone-200/80 bg-white/70 p-4 sm:p-6">
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3">
                             <div className="flex items-center gap-2.5">
@@ -859,7 +857,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= Signos de Alarma Infantil con Tarjetas Grandes ================= */}
+                {/* Signos de Alarma Infantil */}
                 <SectionCard
                     acento="terracota"
                     delay={0.1}
@@ -885,7 +883,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </SectionCard>
 
-                {/* ================= Cierre Administrativo ================= */}
+                {/* Cierre Administrativo */}
                 <section className={`pt-slide-up overflow-hidden ${VIDRIO}`} style={{ animationDelay: '.15s' }}>
                     <TriStripe />
                     <div className="space-y-5 p-4 sm:p-6">
@@ -920,7 +918,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 </section>
 
-                {/* ================== Error del servidor ====================== */}
+                {/* Error del servidor */}
                 {errorServidor && (
                     <div
                         role="alert"
@@ -931,7 +929,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     </div>
                 )}
 
-                {/* ====================== Botón de envío Principal ====================== */}
+                {/* Botón de envío Principal */}
                 <button
                     type="submit"
                     disabled={isSubmitting || exito}
@@ -942,7 +940,7 @@ export const FormatoCalendarioNino: React.FC<FormatoCalendarioNinoProps> = ({
                     <span>{isSubmitting ? 'Guardando en PostgreSQL (Render)…' : 'REGISTRAR CALENDARIO DEL NIÑO/A'}</span>
                 </button>
 
-                {/* ================== Confirmación de éxito ======================= */}
+                {/* Confirmación de éxito */}
                 {exito && (
                     <div
                         role="status"
